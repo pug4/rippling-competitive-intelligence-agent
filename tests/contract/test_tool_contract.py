@@ -31,18 +31,57 @@ from competitive_agent.tools import BaseTool, ToolContext, ToolRegistry
 
 
 class InMemoryRepository:
-    """Minimal RepositoryLike stand-in until storage/repository.py lands."""
+    """Minimal RepositoryLike stand-in matching the real Repository API.
+
+    ``record_tool_call`` takes keyword args and stores an ``args_hash`` derived
+    from ``args`` (same canonicalization as the real repository), so cache
+    lookups by ``action_args_hash`` resolve correctly.
+    """
 
     def __init__(self) -> None:
         self.tool_calls: list[dict[str, Any]] = []
         self.cached: dict[tuple[str, str], Any] = {}
         self.artifacts: dict[str, RawArtifact] = {}
 
-    def record_tool_call(self, record: dict[str, Any]) -> None:
-        self.tool_calls.append(record)
+    def record_tool_call(
+        self,
+        *,
+        run_id: str,
+        action_id: str,
+        tool_name: str,
+        execution_mode: str,
+        args: dict[str, Any],
+        status: str,
+        latency_ms: int = 0,
+        cost_usd: float = 0.0,
+        error_type: str | None = None,
+        error_message: str | None = None,
+        artifact_ids: list[str] | None = None,
+    ) -> str:
+        from competitive_agent.storage.repository import canonical_args_hash
 
-    def find_cached_tool_call(self, tool_name: str, args_hash: str) -> Any | None:
+        record = {
+            "run_id": run_id,
+            "action_id": action_id,
+            "tool_name": tool_name,
+            "execution_mode": execution_mode,
+            "args_hash": canonical_args_hash(args),
+            "args_json": json.dumps(args, sort_keys=True, default=str),
+            "status": status,
+            "latency_ms": latency_ms,
+            "cost_usd": cost_usd,
+            "error_type": error_type,
+            "error_message": error_message,
+            "artifact_ids_json": json.dumps(list(artifact_ids or [])),
+        }
+        self.tool_calls.append(record)
+        return f"tc-{len(self.tool_calls)}"
+
+    def find_cached_tool_call(self, tool_name: str, args_hash: str, **_: Any) -> Any | None:
         return self.cached.get((tool_name, args_hash))
+
+    def get_artifact(self, artifact_id: str) -> RawArtifact | None:
+        return self.artifacts.get(artifact_id)
 
     def get_artifacts(self, artifact_ids: list[str]) -> list[RawArtifact]:
         return [self.artifacts[i] for i in artifact_ids if i in self.artifacts]
@@ -373,14 +412,21 @@ async def test_cached_hit_reconstructs_result(tmp_path: Path) -> None:
         status="success",
         artifacts=[make_artifact()],
     )
+    # The real tool_calls row stores status + artifact_ids (not the full
+    # result); artifacts are reloaded from the artifacts table.
+    art = cached_result.artifacts[0]
+    repo.artifacts[art.artifact_id] = art
     repo.cached[("dummy", action_args_hash("dummy", action))] = {
-        "result_json": cached_result.model_dump_json()
+        "status": "success",
+        "artifact_ids_json": json.dumps([art.artifact_id]),
+        "latency_ms": 3,
     }
     context = make_context(tmp_path, mode="cached", repository=repo)
     result = await tool.execute(action, context)
     assert result.status == "success"
     assert result.capability_snapshot.get("cache_hit") is True
     assert result.action_id == action.action_id  # rebound to the requesting action
+    assert len(result.artifacts) == 1
     assert tool.live_calls == 0
 
 

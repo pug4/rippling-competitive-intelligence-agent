@@ -1,0 +1,7 @@
+{
+  "observations": [
+    {"exact_excerpt": "all-in-one workforce platform", "normalized_statement": "Example HR positions itself as an all-in-one workforce platform.", "evidence_type": "positioning", "extraction_confidence": "high"},
+    {"exact_excerpt": "Stop juggling a dozen HR tools", "normalized_statement": "Example HR frames the status quo as juggling many disconnected HR tools.", "evidence_type": "villain", "extraction_confidence": "medium"},
+    {"exact_excerpt": "Contact our sales team for a custom quote", "normalized_statement": "Pricing is sales-gated behind a custom quote.", "evidence_type": "commercial_motion", "extraction_confidence": "high"}
+  ]
+}

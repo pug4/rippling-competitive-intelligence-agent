@@ -1,0 +1,28 @@
+{
+  "action_id": "ACT-fixture-news",
+  "tool_name": "exa_search",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxnews01",
+      "company_id": "example-hr",
+      "source_type": "news",
+      "source_name": "exa_search",
+      "url": "https://press.example-hr.com/example-hr-launches-workforce-platform",
+      "final_url": "https://press.example-hr.com/example-hr-launches-workforce-platform",
+      "title": "Example HR launches all-in-one workforce platform",
+      "published_at": "2026-05-20T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Example HR today announced its all-in-one workforce platform, expanding beyond contractor payments into full HR, payroll, and benefits. The company said the platform unifies previously separate products into one system, positioning Example HR against legacy HR suites.",
+      "normalized_text": "Example HR today announced its all-in-one workforce platform, expanding beyond contractor payments into full HR, payroll, and benefits. The company said the platform unifies previously separate products into one system, positioning Example HR against legacy HR suites.",
+      "content_hash": "fxnews00000000000000000000000000000000000000000000000000000000001",
+      "metadata": {"exa_query": "\"Example HR\" product launch OR announcement", "source_perspective": "company_press"},
+      "collection_method": "exa_search",
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

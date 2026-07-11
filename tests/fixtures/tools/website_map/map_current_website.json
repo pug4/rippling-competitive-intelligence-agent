@@ -1,0 +1,36 @@
+{
+  "action_id": "ACT-fixture-map",
+  "tool_name": "website_map",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxmap01",
+      "company_id": "example-hr",
+      "source_type": "sitemap",
+      "source_name": "website_map",
+      "url": "https://www.example-hr.com/",
+      "final_url": "https://www.example-hr.com/",
+      "title": "Page map for example-hr.com",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "https://www.example-hr.com/\nhttps://www.example-hr.com/pricing\nhttps://www.example-hr.com/platform\nhttps://www.example-hr.com/compare/example-hr-vs-competitor\nhttps://www.example-hr.com/customers",
+      "normalized_text": "https://www.example-hr.com/ https://www.example-hr.com/pricing https://www.example-hr.com/platform https://www.example-hr.com/compare/example-hr-vs-competitor https://www.example-hr.com/customers",
+      "content_hash": "fxmap0000000000000000000000000000000000000000000000000000000001",
+      "metadata": {
+        "page_map": [
+          {"url": "https://www.example-hr.com/", "path": "/", "category": "home", "score": 0.95},
+          {"url": "https://www.example-hr.com/pricing", "path": "/pricing", "category": "pricing", "score": 1.0},
+          {"url": "https://www.example-hr.com/platform", "path": "/platform", "category": "platform", "score": 0.9},
+          {"url": "https://www.example-hr.com/compare/example-hr-vs-competitor", "path": "/compare/example-hr-vs-competitor", "category": "comparison", "score": 0.85},
+          {"url": "https://www.example-hr.com/customers", "path": "/customers", "category": "customers", "score": 0.75}
+        ],
+        "map_size": 5
+      },
+      "collection_method": "sitemap_map",
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

@@ -1,0 +1,61 @@
+{
+  "action_id": "ACT-fixture-fetch",
+  "tool_name": "webpage_fetch",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxhome01",
+      "company_id": "example-hr",
+      "source_type": "webpage",
+      "source_name": "webpage_fetch",
+      "url": "https://www.example-hr.com/",
+      "final_url": "https://www.example-hr.com/",
+      "title": "Example HR | One platform to run your entire workforce",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "<html><head><title>Example HR | One platform to run your entire workforce</title></head><body><h1>One platform to run your entire workforce</h1><p>Example HR is the all-in-one workforce platform. Run HR, payroll, contractors, and benefits for your whole team in one place. Stop juggling a dozen HR tools.</p><a href=\"/demo\">Book a demo</a><section><h2>Everything your team needs</h2><ul><li>Global payroll in 150+ countries</li><li>Contractor management and compliance</li><li>Benefits administration</li></ul></section><section><h2>Trusted by modern teams</h2><p>Join thousands of companies running their workforce on Example HR.</p></section></body></html>",
+      "normalized_text": "One platform to run your entire workforce Example HR is the all-in-one workforce platform. Run HR, payroll, contractors, and benefits for your whole team in one place. Stop juggling a dozen HR tools. Book a demo Everything your team needs - Global payroll in 150+ countries - Contractor management and compliance - Benefits administration Trusted by modern teams Join thousands of companies running their workforce on Example HR.",
+      "content_hash": "fxhome0000000000000000000000000000000000000000000000000000000001",
+      "metadata": {"page_category": "home", "http_status": 200, "final_url": "https://www.example-hr.com/"},
+      "collection_method": "webpage_fetch",
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxprice01",
+      "company_id": "example-hr",
+      "source_type": "webpage",
+      "source_name": "webpage_fetch",
+      "url": "https://www.example-hr.com/pricing",
+      "final_url": "https://www.example-hr.com/pricing",
+      "title": "Pricing | Example HR",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "<html><head><title>Pricing | Example HR</title></head><body><h1>Pricing that scales with your workforce</h1><p>Example HR is the all-in-one workforce platform priced per employee. Contact our sales team for a custom quote tailored to your team size and product mix.</p><a href=\"/demo\">Talk to sales</a><p>Plans include HR, payroll, and contractor management. Enterprise plans add advanced security and dedicated support.</p></body></html>",
+      "normalized_text": "Pricing that scales with your workforce Example HR is the all-in-one workforce platform priced per employee. Contact our sales team for a custom quote tailored to your team size and product mix. Talk to sales Plans include HR, payroll, and contractor management. Enterprise plans add advanced security and dedicated support.",
+      "content_hash": "fxprice000000000000000000000000000000000000000000000000000000001",
+      "metadata": {"page_category": "pricing", "http_status": 200, "final_url": "https://www.example-hr.com/pricing"},
+      "collection_method": "webpage_fetch",
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxcompare01",
+      "company_id": "example-hr",
+      "source_type": "webpage",
+      "source_name": "webpage_fetch",
+      "url": "https://www.example-hr.com/compare/example-hr-vs-competitor",
+      "final_url": "https://www.example-hr.com/compare/example-hr-vs-competitor",
+      "title": "Example HR vs legacy HR suites",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "<html><head><title>Example HR vs legacy HR suites</title></head><body><h1>Why teams switch from legacy HR systems to Example HR</h1><p>Legacy HR systems force you to juggle a dozen disconnected HR tools. Example HR is the all-in-one workforce platform that replaces them with one system for HR, payroll, and contractors.</p><a href=\"/demo\">Book a demo</a></body></html>",
+      "normalized_text": "Why teams switch from legacy HR systems to Example HR Legacy HR systems force you to juggle a dozen disconnected HR tools. Example HR is the all-in-one workforce platform that replaces them with one system for HR, payroll, and contractors. Book a demo",
+      "content_hash": "fxcompare00000000000000000000000000000000000000000000000000000001",
+      "metadata": {"page_category": "comparison", "http_status": 200, "final_url": "https://www.example-hr.com/compare/example-hr-vs-competitor"},
+      "collection_method": "webpage_fetch",
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

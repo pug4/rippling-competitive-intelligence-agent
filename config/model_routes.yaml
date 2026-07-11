@@ -17,6 +17,7 @@ routes:
   classify_competitive: tier1
   resolve_company: tier1
   plan_research: tier2
+  build_claims: tier2
   judge_claim: tier2
   judge_temporal: tier2
   infer_commercial_motion: tier2

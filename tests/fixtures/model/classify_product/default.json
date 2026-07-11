@@ -1,0 +1,16 @@
+{
+  "artifact_id": "pending",
+  "company_id": "pending",
+  "products": ["HR", "Payroll", "Contractor Management", "Benefits"],
+  "pricing_disclosure_level": "sales_gated",
+  "packaging_signals": ["per employee", "enterprise tier"],
+  "commercial_motion_signals": ["book a demo", "talk to sales"],
+  "cta": "Book a demo",
+  "secondary_ctas": ["Talk to sales"],
+  "launch_type": "not_observed",
+  "availability_status": "ga",
+  "launch_signals": [],
+  "supporting_excerpts": ["Contact our sales team for a custom quote"],
+  "unclassified_signals": [],
+  "classifier_confidence": "high"
+}

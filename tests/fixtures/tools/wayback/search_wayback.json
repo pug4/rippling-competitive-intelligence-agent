@@ -1,0 +1,43 @@
+{
+  "action_id": "ACT-fixture-wayback",
+  "tool_name": "wayback",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fx0wayback01",
+      "company_id": "example-hr",
+      "source_type": "wayback",
+      "source_name": "wayback",
+      "url": "https://web.archive.org/web/20240312094500id_/https://example-hr.com/",
+      "final_url": "https://web.archive.org/web/20240312094500id_/https://example-hr.com/",
+      "title": "Example HR | Global Contractor Payments in 150+ Countries",
+      "published_at": "2024-03-12T09:45:00Z",
+      "first_observed_at": null,
+      "last_observed_at": null,
+      "retrieved_at": "2026-07-01T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "<html>\n<head>\n<title>Example HR | Global Contractor Payments in 150+ Countries</title>\n<meta name=\"description\" content=\"Pay international contractors compliantly in minutes.\">\n</head>\n<body>\n<nav>Product Pricing Customers Resources Login</nav>\n<main>\n<h1>Global contractor payments, minus the paperwork</h1>\n<p>Example HR helps fast-growing teams onboard and pay international contractors\nin 150+ countries. Localized contracts, automated invoicing, and payouts in 90\ncurrencies &mdash; all compliant from day one.</p>\n<a href=\"/signup\">Start paying contractors</a>\n<section>\n<h2>Why teams choose Example HR</h2>\n<ul>\n<li>Compliant contractor agreements generated for each country</li>\n<li>Batch payouts in 90 currencies with transparent FX</li>\n<li>Tax form collection (W-8, W-9) handled automatically</li>\n</ul>\n</section>\n<section>\n<h2>Trusted by 2,000+ distributed teams</h2>\n<p>&ldquo;We onboarded 40 contractors across 12 countries in our first\nweek.&rdquo; &mdash; Head of Ops, Northwind Labs</p>\n</section>\n</main>\n<footer>&copy; 2024 Example HR, Inc.</footer>\n</body>\n</html>",
+      "normalized_text": "Global contractor payments, minus the paperwork Example HR helps fast-growing teams onboard and pay international contractors in 150+ countries. Localized contracts, automated invoicing, and payouts in 90 currencies - all compliant from day one. Start paying contractorsWhy teams choose Example HR - Compliant contractor agreements generated for each country - Batch payouts in 90 currencies with transparent FX - Tax form collection (W-8, W-9) handled automatically Trusted by 2,000+ distributed teams \"We onboarded 40 contractors across 12 countries in our first week.\" - Head of Ops, Northwind Labs",
+      "content_hash": "536a18cb17d842b6dbf07aa1cff752386bbf80e24649218503cf7cc320f4bb31",
+      "metadata": {
+        "original_url": "https://example-hr.com/",
+        "cdx_timestamp": "20240312094500",
+        "wayback_url": "https://web.archive.org/web/20240312094500id_/https://example-hr.com/"
+      },
+      "screenshot_path": null,
+      "collection_method": "wayback_snapshot",
+      "is_partial": false,
+      "is_fixture": true,
+      "archive_capture_at": "2024-03-12T09:45:00Z"
+    }
+  ],
+  "error_type": null,
+  "error_message": null,
+  "retryable": false,
+  "fallback_actions": [],
+  "capability_snapshot": {},
+  "latency_ms": 0,
+  "cost_usd": 0.0,
+  "coverage_delta": {},
+  "negative_observations": []
+}

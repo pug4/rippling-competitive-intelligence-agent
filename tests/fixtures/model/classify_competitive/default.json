@@ -1,0 +1,13 @@
+{
+  "artifact_id": "pending",
+  "company_id": "pending",
+  "villain_exact_wording": ["legacy HR systems"],
+  "villain_normalized": ["legacy_software"],
+  "named_competitors": [],
+  "implied_competitor_classes": ["legacy HR suites", "point solutions"],
+  "competitive_stance": "category_attack",
+  "proof_observations": [{"proof_type": "customer_logo", "exact_excerpt": "Trusted by modern teams"}],
+  "alternative_target_interpretations": ["may target point-solution vendors rather than a single named competitor"],
+  "unclassified_signals": [],
+  "classifier_confidence": "medium"
+}

@@ -1,0 +1,28 @@
+{
+  "action_id": "ACT-fixture-compare",
+  "tool_name": "exa_search",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxcmp01",
+      "company_id": "example-hr",
+      "source_type": "comparison",
+      "source_name": "exa_search",
+      "url": "https://www.example-hr.com/compare/example-hr-vs-competitor",
+      "final_url": "https://www.example-hr.com/compare/example-hr-vs-competitor",
+      "title": "Example HR vs legacy HR suites",
+      "published_at": "2026-06-01T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Example HR is the all-in-one workforce platform that replaces legacy HR systems. Unlike point solutions, Example HR runs HR, payroll, and contractors in one place.",
+      "normalized_text": "Example HR is the all-in-one workforce platform that replaces legacy HR systems. Unlike point solutions, Example HR runs HR, payroll, and contractors in one place.",
+      "content_hash": "fxcmp000000000000000000000000000000000000000000000000000000000001",
+      "metadata": {"exa_query": "\"Example HR\" vs OR alternative comparison", "source_perspective": "competitor_authored"},
+      "collection_method": "exa_search",
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

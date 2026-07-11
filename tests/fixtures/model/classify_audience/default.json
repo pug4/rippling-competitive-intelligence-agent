@@ -1,0 +1,13 @@
+{
+  "artifact_id": "pending",
+  "company_id": "pending",
+  "segments": ["mid_market"],
+  "personas": ["hr_leader"],
+  "buyer_jobs": ["consolidate HR and payroll tools into one system"],
+  "pains": ["tool sprawl"],
+  "category_entry_points": ["consolidating_hr_tools"],
+  "funnel_stages": ["consideration"],
+  "supporting_excerpts": [],
+  "unclassified_signals": [],
+  "classifier_confidence": "medium"
+}

@@ -28,7 +28,6 @@ from typing import Any, ClassVar, Protocol
 import httpx
 
 from ..config import AppConfig, ExecutionMode, Settings
-from ..schemas.common import utcnow
 from ..schemas.source import ResearchAction, ToolCapabilities, ToolResult
 from ..security import redact_secrets
 from .http import SharedHttp
@@ -70,18 +69,52 @@ class ToolContext:
     tool_timeout_seconds: int = 60
 
 
-def action_args_hash(tool_name: str, action: ResearchAction) -> str:
-    """Deterministic cache key over the semantically meaningful arguments."""
-    payload = {
+_SECRET_KEY_RE = re.compile(r"(?i)(api[_-]?key|secret|token|authorization|password|bearer)")
+
+
+def _redact_params(value: Any) -> Any:
+    """Recursively replace secret-looking parameter values with [REDACTED].
+
+    Applied before both hashing and storage so a secret never reaches the
+    tool_calls table AND the stored/looked-up hashes stay consistent.
+    """
+    if isinstance(value, dict):
+        return {
+            k: ("[REDACTED]" if _SECRET_KEY_RE.search(str(k)) else _redact_params(v))
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_params(v) for v in value]
+    return value
+
+
+def action_args_payload(tool_name: str, action: ResearchAction) -> dict[str, Any]:
+    """The semantically meaningful arguments used for cache keying + recording."""
+    return {
         "tool": tool_name,
         "action_type": action.action_type,
         "company_id": action.company_id,
         "source_name": action.source_name,
         "time_window_ids": sorted(action.time_window_ids),
-        "parameters": action.parameters,
+        "parameters": _redact_params(action.parameters),
     }
-    canonical = json.dumps(payload, sort_keys=True, default=str)
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def action_args_hash(tool_name: str, action: ResearchAction) -> str:
+    """Deterministic cache key over the semantically meaningful arguments.
+
+    Delegates to the repository's canonical hash so the key stored by
+    ``record_tool_call`` and the key used for ``find_cached_tool_call`` are
+    guaranteed identical (they use the same canonicalization).
+    """
+    from ..storage.repository import canonical_args_hash
+
+    return canonical_args_hash(action_args_payload(tool_name, action))
+
+
+def _fixture_artifact_id(action_id: str, original_id: str, index: int) -> str:
+    digest = hashlib.sha256(f"{action_id}:{original_id}:{index}".encode()).hexdigest()[:12]
+    return f"ART-{digest}"
 
 
 def _slugify(value: str) -> str:
@@ -240,7 +273,21 @@ class BaseTool(abc.ABC):
                 error_type=type(exc).__name__,
                 error_message=redact_secrets(f"Fixture {path} could not be validated: {exc}"),
             )
-        artifacts = [a.model_copy(update={"is_fixture": True}) for a in fixture_result.artifacts]
+        # Artifact IDs are derived deterministically from the action id so a
+        # replay of the SAME action yields identical ids (fixture determinism,
+        # §37.8) while distinct actions/runs never collide on the primary key.
+        # The action's company_id is stamped so shared fixture content is
+        # attributed to whichever company is running (competitor vs. focal).
+        artifacts = [
+            a.model_copy(
+                update={
+                    "artifact_id": _fixture_artifact_id(action.action_id, a.artifact_id, i),
+                    "is_fixture": True,
+                    "company_id": action.company_id,
+                }
+            )
+            for i, a in enumerate(fixture_result.artifacts)
+        ]
         return fixture_result.model_copy(
             update={"action_id": action.action_id, "tool_name": self.name, "artifacts": artifacts}
         )
@@ -283,35 +330,34 @@ class BaseTool(abc.ABC):
     def _result_from_cached(
         self, action: ResearchAction, context: ToolContext, record: Any
     ) -> ToolResult | None:
-        """Reconstruct a ToolResult from a cached record; None = treat as miss."""
-        try:
-            if isinstance(record, ToolResult):
-                result = record
-            else:
-                if isinstance(record, dict):
-                    payload = record.get("result_json") or record.get("result") or record
-                else:
-                    payload = getattr(record, "result_json", None) or getattr(
-                        record, "result", None
-                    )
-                if isinstance(payload, str):
-                    payload = json.loads(payload)
-                if not isinstance(payload, dict):
-                    return None
-                result = ToolResult.model_validate(payload)
+        """Reconstruct a ToolResult from a cached ``tool_calls`` row.
 
-            if not result.artifacts:
-                if isinstance(record, dict):
-                    artifact_ids = record.get("artifact_ids")
-                else:
-                    artifact_ids = getattr(record, "artifact_ids", None)
-                if artifact_ids:
-                    loader = getattr(context.repository, "get_artifacts", None) or getattr(
-                        context.repository, "load_artifacts", None
-                    )
-                    if loader is not None:
-                        result = result.model_copy(update={"artifacts": list(loader(artifact_ids))})
-            return result.model_copy(update={"action_id": action.action_id, "tool_name": self.name})
+        The row stores status + ``artifact_ids_json`` (not the full result
+        payload); artifacts are reloaded from the ``artifacts`` table. Returns
+        None to signal "treat as a cache miss".
+        """
+        try:
+            row = dict(record) if not isinstance(record, dict) else record
+            status = row.get("status")
+            if status not in ("success", "partial", "empty"):
+                return None
+            raw_ids = row.get("artifact_ids_json") or "[]"
+            artifact_ids = json.loads(raw_ids) if isinstance(raw_ids, str) else list(raw_ids or [])
+
+            from ..schemas.artifact import RawArtifact
+
+            artifacts: list[RawArtifact] = []
+            for artifact_id in artifact_ids:
+                loaded = context.repository.get_artifact(artifact_id)
+                if isinstance(loaded, RawArtifact):
+                    artifacts.append(loaded)
+            return self._result(
+                action,
+                status=status,
+                artifacts=artifacts,
+                latency_ms=int(row.get("latency_ms") or 0),
+                cost_usd=0.0,  # replay is free
+            )
         except Exception:
             return None
 
@@ -352,37 +398,18 @@ class BaseTool(abc.ABC):
         cache_status: str,
     ) -> None:
         try:
-            args_json = redact_secrets(
-                json.dumps(
-                    {
-                        "action_type": action.action_type,
-                        "company_id": action.company_id,
-                        "source_name": action.source_name,
-                        "time_window_ids": action.time_window_ids,
-                        "parameters": action.parameters,
-                    },
-                    sort_keys=True,
-                    default=str,
-                )
-            )
             context.repository.record_tool_call(
-                {
-                    "run_id": context.run_id,
-                    "company_id": context.company_id,
-                    "tool_name": self.name,
-                    "adapter_version": self.adapter_version,
-                    "action_id": action.action_id,
-                    "action_type": action.action_type,
-                    "args_hash": action_args_hash(self.name, action),
-                    "args_json": args_json,
-                    "status": result.status,
-                    "cache_status": cache_status,
-                    "latency_ms": result.latency_ms,
-                    "cost_usd": result.cost_usd,
-                    "artifact_ids": [a.artifact_id for a in result.artifacts],
-                    "result_json": redact_secrets(result.model_dump_json()),
-                    "recorded_at": utcnow().isoformat(),
-                }
+                run_id=context.run_id,
+                action_id=action.action_id,
+                tool_name=self.name,
+                execution_mode=str(context.mode),
+                args=action_args_payload(self.name, action),
+                status=result.status,
+                latency_ms=result.latency_ms,
+                cost_usd=result.cost_usd,
+                error_type=result.error_type,
+                error_message=redact_secrets(result.error_message or "") or None,
+                artifact_ids=[a.artifact_id for a in result.artifacts],
             )
         except Exception:  # recording must never break the tool boundary
             self._trace(
@@ -397,7 +424,8 @@ class BaseTool(abc.ABC):
             return
         try:
             emit = (
-                getattr(trace, "emit", None)
+                getattr(trace, "append", None)
+                or getattr(trace, "emit", None)
                 or getattr(trace, "write", None)
                 or getattr(trace, "event", None)
             )
