@@ -30,3 +30,5 @@ routes:
 max_output_tokens:
   tier1: 4096
   tier2: 8192
+
+request_timeout_seconds: 90

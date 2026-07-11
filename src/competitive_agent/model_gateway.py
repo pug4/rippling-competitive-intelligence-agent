@@ -15,6 +15,7 @@ optionally escalates ONCE to the configured escalation model, after which
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import time
@@ -118,6 +119,7 @@ class AnthropicGateway:
     def __init__(self, settings: Settings, routes: dict[str, Any]) -> None:
         self._settings = settings
         self._routes = routes
+        self._request_timeout: float = float(routes.get("request_timeout_seconds", 90))
         # Created lazily so tests can inject a fake client object before any
         # network-capable client is constructed.
         self._client: Any = None
@@ -170,14 +172,18 @@ class AnthropicGateway:
 
         async def attempt(model: str, messages: list[dict[str, Any]]) -> Any:
             nonlocal input_tokens, output_tokens, cost_usd
-            response = await self._get_client().messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                system=system,
-                messages=messages,
-                tools=[tool],
-                tool_choice={"type": "tool", "name": EMIT_TOOL_NAME},
-            )
+            # Explicit per-request timeout so a hung API call can never block
+            # the whole research loop; the SDK timeout is a second backstop.
+            async with asyncio.timeout(self._request_timeout):
+                response = await self._get_client().messages.create(
+                    model=model,
+                    max_tokens=max_tokens,
+                    system=system,
+                    messages=messages,
+                    tools=[tool],
+                    tool_choice={"type": "tool", "name": EMIT_TOOL_NAME},
+                    timeout=self._request_timeout,
+                )
             usage = getattr(response, "usage", None)
             attempt_in = int(getattr(usage, "input_tokens", 0) or 0)
             attempt_out = int(getattr(usage, "output_tokens", 0) or 0)
@@ -210,10 +216,15 @@ class AnthropicGateway:
         if parsed is not None:
             return result(parsed, model_id, repaired=False, escalated=False)
 
-        # Exactly one repair retry carrying the validation errors back.
-        repair_messages = base_messages + [
-            {"role": "assistant", "content": response.content},
-            {"role": "user", "content": _repair_instruction(error or "unknown error")},
+        # Exactly one repair retry carrying the validation errors back. The
+        # failed attempt is NOT replayed as an assistant tool_use turn (that
+        # would require a matching tool_result block); instead the task is
+        # re-sent as a single user turn with the validation error appended.
+        repair_messages: list[dict[str, Any]] = [
+            {
+                "role": "user",
+                "content": user_content + "\n\n" + _repair_instruction(error or "unknown error"),
+            }
         ]
         response = await attempt(model_id, repair_messages)
         parsed, error = _validate_emit(response, output_model)

@@ -127,11 +127,14 @@ async def test_first_invalid_then_valid_uses_exactly_one_repair_retry() -> None:
     repair_call = fake.messages.calls[1]
     assert repair_call["model"] == "model-tier1"
     messages = repair_call["messages"]
-    assert messages[0] == {"role": "user", "content": "body"}
-    assert messages[1]["role"] == "assistant"  # the failed turn is echoed back
-    assert messages[2]["role"] == "user"
-    assert "validation" in messages[2]["content"].lower()
-    assert "confidence" in messages[2]["content"]  # pydantic error names the field
+    # The repair is a single clean user turn (re-sending the task with the
+    # validation error appended) — NOT an assistant tool_use turn, which would
+    # need a matching tool_result block and 400 the API.
+    assert len(messages) == 1
+    assert messages[0]["role"] == "user"
+    assert messages[0]["content"].startswith("body")
+    assert "validation" in messages[0]["content"].lower()
+    assert "confidence" in messages[0]["content"]  # pydantic error names the field
 
     # Token usage and cost accumulate across both attempts.
     assert result.input_tokens == 200
