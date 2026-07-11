@@ -55,6 +55,10 @@ _PAGE_CATEGORY_COVERAGE = {
 }
 
 _MIN_CLASSIFIABLE_CHARS = 200
+# The site map / robots artifacts are URL lists, not marketing content.
+_NON_CLASSIFIABLE_SOURCES = {"sitemap", "robots"}
+# Cap classifier input so one huge page can't blow up a model call / cost.
+_MAX_CLASSIFY_CHARS = 12000
 
 # Family model class name -> classifications.family column value.
 _FAMILY_TABLE = {
@@ -335,7 +339,14 @@ async def normalize_and_deduplicate(state: DirectorState, ctx: GraphContext):
 
 async def extract_and_classify(state: DirectorState, ctx: GraphContext):
     new_artifacts = ctx.scratch.get("new_artifacts") or []
-    classifiable = [a for a in new_artifacts if len(a.normalized_text) >= _MIN_CLASSIFIABLE_CHARS]
+    # The site map is a URL list, not marketing content — never classify it.
+    # Truncate very long pages so one artifact can't blow up a model call.
+    classifiable = [
+        a
+        for a in new_artifacts
+        if a.source_type not in _NON_CLASSIFIABLE_SOURCES
+        and len(a.normalized_text) >= _MIN_CLASSIFIABLE_CHARS
+    ]
     if not classifiable or ctx.gateway is None:
         return state, "validate_evidence"
 
@@ -353,6 +364,12 @@ async def extract_and_classify(state: DirectorState, ctx: GraphContext):
     sem = asyncio.Semaphore(max_parallel)
 
     async def process(artifact):
+        # Cap the text the model sees; excerpt verification still runs against
+        # the full stored artifact text, so grounding is unaffected.
+        if len(artifact.normalized_text) > _MAX_CLASSIFY_CHARS:
+            artifact = artifact.model_copy(
+                update={"normalized_text": artifact.normalized_text[:_MAX_CLASSIFY_CHARS]}
+            )
         async with sem:
             evidence, extraction_report = await extract_evidence(
                 artifact,
