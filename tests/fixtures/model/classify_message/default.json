@@ -2,13 +2,30 @@
   "artifact_id": "pending",
   "company_id": "pending",
   "primary_message": "all-in-one workforce platform",
-  "secondary_messages": ["global payroll", "compliance"],
-  "salience_evidence": {"headline_prominence": "headline", "repetition_count": 3, "cta_proximity": "near", "structural_prominence": "hero"},
-  "claim_types": ["category", "capability"],
-  "rhetorical_moves": ["all_in_one", "status_quo_attack"],
+  "secondary_messages": [
+    "global payroll",
+    "compliance"
+  ],
+  "salience_evidence": {
+    "headline_prominence": "headline",
+    "repetition_count": 3,
+    "cta_proximity": "near",
+    "structural_prominence": "hero"
+  },
+  "claim_types": [
+    "category",
+    "capability"
+  ],
+  "rhetorical_moves": [
+    "all_in_one",
+    "status_quo_attack"
+  ],
   "promised_transformation_from": "juggling a dozen disconnected HR tools",
   "promised_transformation_to": "one platform for the whole workforce",
-  "supporting_excerpts": ["all-in-one workforce platform"],
+  "supporting_excerpts": [
+    "all-in-one workforce platform"
+  ],
   "unclassified_signals": [],
-  "classifier_confidence": "high"
+  "classifier_confidence": "high",
+  "primary_theme": "consolidation"
 }

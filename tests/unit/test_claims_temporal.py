@@ -108,35 +108,35 @@ async def test_judge_applies_acceptance_policy(verdict, expected_status):
 class _C:
     """Minimal classification stand-in for temporal candidate detection."""
 
-    def __init__(self, artifact_id, primary_message):
+    def __init__(self, artifact_id, primary_theme):
         self.artifact_id = artifact_id
-        self.primary_message = primary_message
+        self.primary_theme = primary_theme
         self.pricing_disclosure_level = None
         self.competitive_stance = None
 
 
 def test_temporal_requires_both_periods():
     # only a current window populated -> no candidate (Rule 8)
-    by_window = {"current": [_C("a", "all-in-one platform")], "comparison": []}
+    by_window = {"current": [_C("a", "consolidation")], "comparison": []}
     assert detect_candidate_changes(by_window) == []
 
 
 def test_temporal_detects_message_change_across_periods():
     by_window = {
-        "comparison": [_C("old", "global contractor payments")],
-        "current": [_C("new", "all-in-one workforce platform")],
+        "comparison": [_C("old", "global_hiring")],
+        "current": [_C("new", "consolidation")],
     }
     candidates = detect_candidate_changes(by_window)
     dims = {c["dimension"] for c in candidates}
-    assert "primary_message" in dims
-    change = next(c for c in candidates if c["dimension"] == "primary_message")
-    assert change["prior_state"] == "global contractor payments"
-    assert change["current_state"] == "all-in-one workforce platform"
+    assert "primary_theme" in dims
+    change = next(c for c in candidates if c["dimension"] == "primary_theme")
+    assert change["prior_state"] == "global_hiring"
+    assert change["current_state"] == "consolidation"
 
 
 def test_temporal_no_candidate_when_message_unchanged():
     by_window = {
-        "comparison": [_C("old", "all-in-one platform")],
-        "current": [_C("new", "all-in-one platform")],
+        "comparison": [_C("old", "consolidation")],
+        "current": [_C("new", "consolidation")],
     }
     assert detect_candidate_changes(by_window) == []

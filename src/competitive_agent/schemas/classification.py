@@ -45,6 +45,9 @@ class MessageFamily(VersionedModel):
 
     artifact_id: str
     company_id: str
+    # Normalized theme from the taxonomy (e.g. "consolidation") — the value the
+    # comparison/temporal engines group on, so themes recur across pages.
+    primary_theme: str | None = None
     primary_message: str | None = None
     secondary_messages: list[str] = Field(default_factory=list)
     salience_evidence: MessageSalienceEvidence = Field(default_factory=MessageSalienceEvidence)
@@ -125,6 +128,7 @@ class MarketingClassification(VersionedModel):
     artifact_id: str
     company_id: str
 
+    primary_theme: str | None = None
     primary_message: str | None = None
     secondary_messages: list[str] = Field(default_factory=list)
     message_salience: float | None = None
@@ -194,6 +198,7 @@ class MarketingClassification(VersionedModel):
             classification_id=classification_id or new_id("cls"),
             artifact_id=message.artifact_id,
             company_id=message.company_id,
+            primary_theme=message.primary_theme,
             primary_message=message.primary_message,
             secondary_messages=list(message.secondary_messages),
             message_salience=message.message_salience,

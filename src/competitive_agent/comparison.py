@@ -100,28 +100,41 @@ def _proof_strength(proof_types: set[str]) -> ProofStrength:
 
 
 def _message_index(classifications: list[MarketingClassification]) -> dict[str, dict[str, Any]]:
-    """message -> {artifact_ids, proof_types, count, classification_ids}"""
+    """theme -> {message, artifact_ids, proof_types, count, classification_ids}.
+
+    Keyed on the NORMALIZED theme so a theme recurs across pages (free-form
+    primary messages are unique per page and would never form a repeated
+    claim). The human-readable ``message`` keeps the most salient descriptive
+    sentence seen for the theme.
+    """
     index: dict[str, dict[str, Any]] = {}
     for c in classifications:
-        messages = [m for m in ([c.primary_message] + c.secondary_messages) if m]
-        for rank, msg in enumerate(messages):
-            key = msg.strip().lower()
-            slot = index.setdefault(
-                key,
-                {
-                    "message": msg,
-                    "artifact_ids": set(),
-                    "proof_types": set(),
-                    "primary_count": 0,
-                    "count": 0,
-                    "classification_ids": [],
-                },
-            )
-            slot["artifact_ids"].add(c.artifact_id)
-            slot["proof_types"] |= set(c.proof_types)
-            slot["count"] += 1
-            slot["primary_count"] += 1 if rank == 0 else 0
-            slot["classification_ids"].append(c.classification_id)
+        theme = (c.primary_theme or c.primary_message or "").strip().lower()
+        if not theme:
+            continue
+        label = c.primary_message or c.primary_theme or theme
+        slot = index.setdefault(
+            theme,
+            {
+                "message": label,
+                "best_salience": -1.0,
+                "artifact_ids": set(),
+                "proof_types": set(),
+                "primary_count": 0,
+                "count": 0,
+                "classification_ids": [],
+            },
+        )
+        # Keep the descriptive message from the most salient artifact.
+        sal = c.message_salience if c.message_salience is not None else 0.0
+        if sal > slot["best_salience"]:
+            slot["best_salience"] = sal
+            slot["message"] = label
+        slot["artifact_ids"].add(c.artifact_id)
+        slot["proof_types"] |= set(c.proof_types)
+        slot["count"] += 1
+        slot["primary_count"] += 1
+        slot["classification_ids"].append(c.classification_id)
     return index
 
 

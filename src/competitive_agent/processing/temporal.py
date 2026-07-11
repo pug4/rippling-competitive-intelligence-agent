@@ -31,8 +31,9 @@ JUDGE_SYSTEM = (
     "disappearance with failure. Respond only via the structured tool."
 )
 
-# Scalar dimensions compared as prior-vs-current single values.
-_SCALAR_DIMENSIONS = ("primary_message", "pricing_disclosure_level", "competitive_stance")
+# Scalar dimensions compared as prior-vs-current single values. Message change
+# is compared on the NORMALIZED theme (free-form messages are unique per page).
+_SCALAR_DIMENSIONS = ("primary_theme", "pricing_disclosure_level", "competitive_stance")
 
 _VALID_LIFECYCLES = {
     "emerging",
