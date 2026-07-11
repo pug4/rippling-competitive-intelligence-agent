@@ -120,6 +120,8 @@ def _message_index(classifications: list[MarketingClassification]) -> dict[str, 
                 "best_salience": -1.0,
                 "artifact_ids": set(),
                 "proof_types": set(),
+                # Per-page proof strengths, so the theme's strength is the modal
+                "per_page_strength": [],  # per-page value, not the inflated union
                 "primary_count": 0,
                 "count": 0,
                 "classification_ids": [],
@@ -132,10 +134,26 @@ def _message_index(classifications: list[MarketingClassification]) -> dict[str, 
             slot["message"] = label
         slot["artifact_ids"].add(c.artifact_id)
         slot["proof_types"] |= set(c.proof_types)
+        slot["per_page_strength"].append(_proof_strength(set(c.proof_types)))
         slot["count"] += 1
         slot["primary_count"] += 1
         slot["classification_ids"].append(c.classification_id)
     return index
+
+
+def _theme_strength(slot: dict[str, Any]) -> ProofStrength:
+    """A theme's proof strength = the modal per-page strength (a single strongly
+    proven page does not make a repeated theme uniformly strong)."""
+    from collections import Counter
+
+    strengths = slot.get("per_page_strength") or []
+    if not strengths:
+        return _proof_strength(slot["proof_types"])
+    # Most common; ties break toward the weaker rating (more honest / cautious).
+    order = {"strong": 3, "moderate": 2, "weak": 1, "none": 0}
+    counts = Counter(strengths)
+    top = max(counts.values())
+    return min((s for s, n in counts.items() if n == top), key=lambda s: order[s])  # type: ignore[return-value]
 
 
 def already_saying_it(message: str, focal_index: dict[str, dict[str, Any]]) -> str:
@@ -156,6 +174,9 @@ def already_saying_it(message: str, focal_index: dict[str, dict[str, Any]]) -> s
     return "underweighted"
 
 
+MAX_GAPS = 6
+
+
 def build_message_proof_gaps(
     competitor_run_id: str,
     focal_run_id: str | None,
@@ -163,27 +184,55 @@ def build_message_proof_gaps(
     competitor_name: str,
     focal_name: str,
 ) -> list[MessageProofGap]:
-    """Repeated competitor claims joined to observed proof, matched against
-    the focal company's proof inventory (§19, §22.2)."""
+    """Join each repeated competitor theme to its observed proof and the focal
+    company's proof on the same theme, producing a comparison (§19, §22.2).
+
+    A gap is NOT only "competitor proof is weak". Per §19, the opportunity comes
+    from the comparison: a weakly-proven repeated claim is directly attackable;
+    a strongly-proven dominant theme is still an opportunity to out-prove or
+    reframe where the focal company has a structural angle. So every repeated
+    theme is surfaced, ranked by attackability then prominence, and the critic /
+    opportunity stage decides what to do with it.
+    """
     comp = _message_index(_classifications(repository, competitor_run_id))
     focal = _message_index(_classifications(repository, focal_run_id)) if focal_run_id else {}
 
     gaps: list[MessageProofGap] = []
-    for key, slot in comp.items():
+    for theme, slot in comp.items():
         if slot["count"] < 2:  # a gap needs a REPEATED claim (§19.1)
             continue
-        strength = _proof_strength(slot["proof_types"])
-        if strength in ("strong",):
-            continue  # no gap when proof is strong
-        focal_slot = focal.get(key)
-        focal_strength = _proof_strength(focal_slot["proof_types"]) if focal_slot else "none"
+        strength = _theme_strength(slot)
+        focal_slot = focal.get(theme)
+        focal_strength = _theme_strength(focal_slot) if focal_slot else "none"
         missing = [p for p in _PROOF_STRENGTH_ORDER[:4] if p not in slot["proof_types"]]
+
+        if strength in ("weak", "none") and focal_strength in ("strong", "moderate"):
+            attackability: ProofStrength | str = "high"
+            interpretation = (
+                f"{competitor_name} repeats the “{theme}” message with {strength} public proof, "
+                f"while {focal_name} shows {focal_strength} proof on the same theme — a direct "
+                "out-prove opportunity."
+            )
+        elif strength in ("weak", "none"):
+            attackability = "medium"
+            interpretation = (
+                f"{competitor_name} repeats “{theme}” with {strength} public proof; {focal_name} "
+                f"proof is {focal_strength}. Treat as a proof-building play, not a ready comparative claim."
+            )
+        else:  # competitor proof is strong
+            attackability = "low"
+            interpretation = (
+                f"{competitor_name} proves “{theme}” strongly; {focal_name}'s observed proof is "
+                f"{focal_strength}. Don't attack the claim head-on — reframe around a structural "
+                f"advantage {competitor_name} can't easily copy, or concede this ground."
+            )
+
         gaps.append(
             MessageProofGap(
                 claim_id=new_id("GAP"),
                 claim_text=slot["message"],
-                claim_type="category" if "platform" in key else "capability",
-                repetition=f"observed in {len(slot['artifact_ids'])} of the collected artifacts",
+                claim_type="category" if theme in ("consolidation", "integration_breadth") else "capability",
+                repetition=f"“{theme}” theme observed in {len(slot['artifact_ids'])} collected artifacts",
                 lifecycle="stable",
                 proof_types_observed=sorted(slot["proof_types"]),
                 strongest_proof_id=None,
@@ -191,23 +240,8 @@ def build_message_proof_gaps(
                 missing_proof=missing,
                 rippling_equivalent_claim=(focal_slot["message"] if focal_slot else None),
                 rippling_proof_ids=(focal_slot["classification_ids"][:5] if focal_slot else []),
-                actionable_interpretation=(
-                    f"{competitor_name} repeats “{slot['message']}” with {strength} public proof; "
-                    f"{focal_name}'s observed proof on the equivalent message is {focal_strength}. "
-                    + (
-                        "Opportunity: out-prove rather than out-claim."
-                        if focal_strength in ("strong", "moderate")
-                        else f"{focal_name} proof was not observed either — treat as a proof-building "
-                        "hypothesis, not a ready-to-launch attack."
-                    )
-                ),
-                attackability=(
-                    "high"
-                    if strength in ("weak", "none") and focal_strength in ("strong", "moderate")
-                    else "medium"
-                    if strength in ("weak", "none")
-                    else "low"
-                ),
+                actionable_interpretation=interpretation,
+                attackability=attackability,  # type: ignore[arg-type]
                 why_attack_might_backfire=(
                     f"If {competitor_name} holds unpublished proof, a comparative claim invites a "
                     "documented counterattack; comparative copy also requires legal substantiation."
@@ -215,8 +249,12 @@ def build_message_proof_gaps(
             )
         )
     order = {"high": 0, "medium": 1, "low": 2}
-    gaps.sort(key=lambda g: order.get(g.attackability, 3))
-    return gaps
+    # Rank by attackability, then by how dominant the theme is in the corpus.
+    count_by_message = {slot["message"]: slot["count"] for slot in comp.values()}
+    gaps.sort(
+        key=lambda g: (order.get(g.attackability, 3), -count_by_message.get(g.claim_text, 0))
+    )
+    return gaps[:MAX_GAPS]
 
 
 def utc_stamp() -> str:
