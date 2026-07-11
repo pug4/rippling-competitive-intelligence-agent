@@ -32,6 +32,12 @@ MAX_FETCH_URLS_PER_ACTION = 6
 # comparison/customers/home ≈ 0.4+). Blog/other pages (0.1) are never worth a
 # model-classification budget and would loop forever on a large site.
 FETCH_SCORE_THRESHOLD = 0.4
+# Hard cap on pages fetched per company — enough to characterize positioning,
+# pricing, and products without drowning in a large site's long tail.
+MAX_TOTAL_FETCHED_PAGES = 12
+# Fetch at least this many pages before moving on, even if the coarse coverage
+# dimensions already read "sufficient" from the homepage alone.
+MIN_PAGES_BEFORE_MOVING_ON = 5
 
 
 def action_key(action_type: str, parameters: dict[str, Any]) -> str:
@@ -114,28 +120,26 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     page_map = ctx.scratch.get(f"page_map:{company.company_id}") or []
 
     # 2. Fetch the highest-priority unfetched pages once a map exists. Only
-    # PRIORITY pages (score above threshold) are eligible: fetching low-value
-    # blog/"other" pages never advances the needed coverage dimensions and
-    # would loop forever on a large site. Once priority pages are exhausted,
-    # the agent moves on to historical / news / comparison sources.
+    # PRIORITY pages (score above threshold) are eligible, and only up to a
+    # total page cap: a large site has dozens of product/solution pages with
+    # diminishing marginal signal, so we stop after enough are classified and
+    # move on to historical / news / comparison sources ("stop when incremental
+    # information gain is low", §5.1).
     if page_map:
         fetched: set[str] = set(ctx.scratch.get(f"fetched_urls:{company.company_id}", []))
+        real_fetched = {u for u in fetched if "sitemap" not in u}
         pending = [
             p
             for p in page_map
             if p["url"] not in fetched and float(p.get("score", 0)) >= FETCH_SCORE_THRESHOLD
         ]
+        # Page fetches serve current-site dimensions; competitive stance and
+        # customer proof are better served by targeted Exa search below.
         need_dims = [
-            d
-            for d in (
-                "current_product",
-                "pricing_and_packaging",
-                "customer_proof",
-                "competitive_stance",
-            )
-            if _needs(state, d)
+            d for d in ("current_product", "pricing_and_packaging") if _needs(state, d)
         ]
-        if pending and need_dims:
+        under_cap = len(real_fetched) < MAX_TOTAL_FETCHED_PAGES
+        if pending and (need_dims or len(real_fetched) < MIN_PAGES_BEFORE_MOVING_ON) and under_cap:
             batch = [p["url"] for p in pending[:MAX_FETCH_URLS_PER_ACTION]]
             proposals.append(
                 _mk(
@@ -144,7 +148,8 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                     "webpage_fetch",
                     "current_product",
                     {"urls": batch, "source_type": "webpage"},
-                    f"Priority mapped pages are unfetched and {', '.join(need_dims)} coverage is below target.",
+                    f"Priority pages unfetched ({len(real_fetched)} fetched so far, "
+                    f"cap {MAX_TOTAL_FETCHED_PAGES}); current-site coverage below target.",
                     latency=10.0,
                 )
             )
