@@ -3,8 +3,6 @@ scoring, robots skip, fixture determinism)."""
 
 from __future__ import annotations
 
-import pytest
-
 from competitive_agent.schemas.source import ResearchAction
 from competitive_agent.tools.webpage import _score_path
 
@@ -88,8 +86,11 @@ async def test_sitemap_map_scores_and_orders(tmp_path):
     )
     tool = WebsiteMapTool()
     action = ResearchAction(
-        action_id="a1", action_type="map_current_website", company_id="c1",
-        source_name="website_map", parameters={"domain": "example-hr.com"},
+        action_id="a1",
+        action_type="map_current_website",
+        company_id="c1",
+        source_name="website_map",
+        parameters={"domain": "example-hr.com"},
     )
     result = await tool._execute_live(action, _ctx(http, tmp_path))
     assert result.status == "success"
@@ -102,12 +103,17 @@ async def test_sitemap_map_scores_and_orders(tmp_path):
 async def test_homepage_anchor_fallback_when_no_sitemap(tmp_path):
     from competitive_agent.tools.webpage import WebsiteMapTool
 
-    html = '<html><body><a href="/pricing">Pricing</a><a href="/platform">Platform</a></body></html>'
+    html = (
+        '<html><body><a href="/pricing">Pricing</a><a href="/platform">Platform</a></body></html>'
+    )
     http = FakeHttp({"https://www.example-hr.com/": FakeResponse(html)})
     tool = WebsiteMapTool()
     action = ResearchAction(
-        action_id="a1", action_type="map_current_website", company_id="c1",
-        source_name="website_map", parameters={"domain": "example-hr.com"},
+        action_id="a1",
+        action_type="map_current_website",
+        company_id="c1",
+        source_name="website_map",
+        parameters={"domain": "example-hr.com"},
     )
     result = await tool._execute_live(action, _ctx(http, tmp_path))
     assert result.status == "success"
@@ -119,13 +125,24 @@ async def test_fetch_skips_robots_disallowed(tmp_path):
     from competitive_agent.tools.webpage import WebpageFetchTool
 
     http = FakeHttp(
-        {"https://www.example-hr.com/pricing": FakeResponse("<html><title>P</title>Pricing copy</html>", url="https://www.example-hr.com/pricing")},
+        {
+            "https://www.example-hr.com/pricing": FakeResponse(
+                "<html><title>P</title>Pricing copy</html>",
+                url="https://www.example-hr.com/pricing",
+            )
+        },
         disallow={"https://www.example-hr.com/secret"},
     )
     tool = WebpageFetchTool()
     action = ResearchAction(
-        action_id="a2", action_type="fetch_webpage", company_id="c1", source_name="webpage_fetch",
-        parameters={"urls": ["https://www.example-hr.com/pricing", "https://www.example-hr.com/secret"], "source_type": "webpage"},
+        action_id="a2",
+        action_type="fetch_webpage",
+        company_id="c1",
+        source_name="webpage_fetch",
+        parameters={
+            "urls": ["https://www.example-hr.com/pricing", "https://www.example-hr.com/secret"],
+            "source_type": "webpage",
+        },
     )
     result = await tool._execute_live(action, _ctx(http, tmp_path))
     assert result.status == "partial"
@@ -137,12 +154,22 @@ async def test_fetch_partial_when_one_url_fails(tmp_path):
     from competitive_agent.tools.webpage import WebpageFetchTool
 
     http = FakeHttp(
-        {"https://www.example-hr.com/a": FakeResponse("<html>ok body</html>", url="https://www.example-hr.com/a")},
+        {
+            "https://www.example-hr.com/a": FakeResponse(
+                "<html>ok body</html>", url="https://www.example-hr.com/a"
+            )
+        },
     )
     tool = WebpageFetchTool()
     action = ResearchAction(
-        action_id="a3", action_type="fetch_webpage", company_id="c1", source_name="webpage_fetch",
-        parameters={"urls": ["https://www.example-hr.com/a", "https://www.example-hr.com/missing"], "source_type": "webpage"},
+        action_id="a3",
+        action_type="fetch_webpage",
+        company_id="c1",
+        source_name="webpage_fetch",
+        parameters={
+            "urls": ["https://www.example-hr.com/a", "https://www.example-hr.com/missing"],
+            "source_type": "webpage",
+        },
     )
     result = await tool._execute_live(action, _ctx(http, tmp_path))
     assert result.status == "partial"
