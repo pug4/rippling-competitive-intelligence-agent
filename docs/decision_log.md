@@ -55,3 +55,39 @@ Format: date · decision · rationale · reversibility.
     raw salience evidence (§37.19); enums use StrEnum (py3.12+).
 12. **Anthropic key initially rejected (401, truncated paste); user re-sent
     full key, validated live 2026-07-11.** Both providers confirmed working.
+
+### Phase 1 judgment calls (2026-07-11)
+
+13. **Classify a normalized `primary_theme` (from taxonomy) alongside the
+    free-form `primary_message`.** The gap engine needs a claim observed ≥2×;
+    free-form messages are unique per page so nothing ever repeated (live Deel
+    run produced 0 gaps from 19 classifications). Gaps + temporal now group on
+    the theme. Threshold: a theme must appear in ≥2 artifacts to be a gap.
+14. **A theme's proof strength = MODAL per-page strength, not the union.**
+    Unioning proof types across a theme's pages made every theme "strong" (one
+    quantified-outcome page inflated the whole theme), which the old gap builder
+    then skipped → 0 gaps. Modal per-page strength is honest and ties break
+    toward the weaker rating.
+15. **Surface all repeated themes as gaps, ranked by attackability — don't drop
+    strongly-proven ones (§22.9).** A well-proven competitor theme is still an
+    opportunity to reframe around a structural advantage; the interpretation
+    tells the reader to reframe/concede rather than attack head-on.
+16. **Page-fetch bounding (quality + cost):** deprioritize non-English locale
+    paths (/es/, /sv-se/…, score 0.05), seed canonical English paths, fetch only
+    priority pages (score ≥0.4), cap total fetched at 12/company. Without these
+    the agent drowned in localized blog posts and never reached Wayback/mirror.
+17. **Focal mirror runs LATE (after competitor coverage sufficient) and
+    budget-bounded** (½ remaining runtime, 12 iterations, 40 tool calls). It ran
+    on iteration 1 before and starved the competitor's own collection.
+18. **Claim judging parallelized (semaphore), capped at 10 evidence-richest
+    candidates.** Sequential judging over 24 evidence items stalled the loop.
+19. **Model gateway repair retry re-sends the task as one clean user turn** with
+    the validation error appended — replaying the assistant tool_use turn
+    without a matching tool_result block caused an Anthropic 400 on every repair
+    path. Added a 90s per-request asyncio timeout (a hung call had frozen a run).
+20. **Live runtime budget raised to 1200s**; the sitemap URL-list artifact is
+    never classified (a 500-URL blob wasted the whole budget on one nonsense
+    call); classifier input capped at 12k chars (excerpt verification still uses
+    full raw text, so grounding is unaffected).
+21. **JSON deliverable drops full raw HTML** (keeps provenance + a 1500-char
+    normalized excerpt): the reference package went 21MB → 294KB.
