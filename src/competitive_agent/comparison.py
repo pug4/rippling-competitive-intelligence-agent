@@ -231,7 +231,9 @@ def build_message_proof_gaps(
             MessageProofGap(
                 claim_id=new_id("GAP"),
                 claim_text=slot["message"],
-                claim_type="category" if theme in ("consolidation", "integration_breadth") else "capability",
+                claim_type="category"
+                if theme in ("consolidation", "integration_breadth")
+                else "capability",
                 repetition=f"“{theme}” theme observed in {len(slot['artifact_ids'])} collected artifacts",
                 lifecycle="stable",
                 proof_types_observed=sorted(slot["proof_types"]),
@@ -251,9 +253,7 @@ def build_message_proof_gaps(
     order = {"high": 0, "medium": 1, "low": 2}
     # Rank by attackability, then by how dominant the theme is in the corpus.
     count_by_message = {slot["message"]: slot["count"] for slot in comp.values()}
-    gaps.sort(
-        key=lambda g: (order.get(g.attackability, 3), -count_by_message.get(g.claim_text, 0))
-    )
+    gaps.sort(key=lambda g: (order.get(g.attackability, 3), -count_by_message.get(g.claim_text, 0)))
     return gaps[:MAX_GAPS]
 
 

@@ -520,7 +520,9 @@ async def refresh_claims(state: DirectorState, ctx: GraphContext):
 
     # Judge the strongest candidates concurrently (independent calls); cap the
     # count so a claim-heavy corpus can't stall the loop.
-    candidates = sorted(candidates, key=lambda c: len(c.evidence_ids), reverse=True)[:_MAX_CLAIMS_JUDGED]
+    candidates = sorted(candidates, key=lambda c: len(c.evidence_ids), reverse=True)[
+        :_MAX_CLAIMS_JUDGED
+    ]
     evidence_by_id = {e.evidence_id: e for e in evidence}
     sem = asyncio.Semaphore(ctx.settings.max_parallel_extractions if ctx.settings else 4)
 
@@ -540,12 +542,20 @@ async def refresh_claims(state: DirectorState, ctx: GraphContext):
             if ctx.trace:
                 ctx.trace.append(
                     "claim_created",
-                    {"claim_id": judged.claim_id, "status": judged.status, "statement": judged.statement[:200]},
+                    {
+                        "claim_id": judged.claim_id,
+                        "status": judged.status,
+                        "statement": judged.statement[:200],
+                    },
                 )
         elif ctx.trace:
             ctx.trace.append(
                 "claim_rejected",
-                {"claim_id": judged.claim_id, "status": judged.status, "statement": judged.statement[:200]},
+                {
+                    "claim_id": judged.claim_id,
+                    "status": judged.status,
+                    "statement": judged.statement[:200],
+                },
             )
     state.claim_ids = list(dict.fromkeys(state.claim_ids + kept))
     ctx.scratch["claims_built_at_count"] = len(evidence)

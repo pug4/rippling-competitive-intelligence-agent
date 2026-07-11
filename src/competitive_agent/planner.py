@@ -135,9 +135,7 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         ]
         # Page fetches serve current-site dimensions; competitive stance and
         # customer proof are better served by targeted Exa search below.
-        need_dims = [
-            d for d in ("current_product", "pricing_and_packaging") if _needs(state, d)
-        ]
+        need_dims = [d for d in ("current_product", "pricing_and_packaging") if _needs(state, d)]
         under_cap = len(real_fetched) < MAX_TOTAL_FETCHED_PAGES
         if pending and (need_dims or len(real_fetched) < MIN_PAGES_BEFORE_MOVING_ON) and under_cap:
             batch = [p["url"] for p in pending[:MAX_FETCH_URLS_PER_ACTION]]

@@ -32,7 +32,7 @@ def _runs_dir() -> Path:
 
 @app.get("/api/runs")
 def list_runs() -> list[dict[str, Any]]:
-    out = []
+    out: list[dict[str, Any]] = []
     runs = _runs_dir()
     if not runs.exists():
         return out

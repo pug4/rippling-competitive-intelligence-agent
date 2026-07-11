@@ -26,9 +26,10 @@ SINGLE_LABEL_FIELDS = (
     "competitive_stance",
 )
 MULTI_LABEL_FIELDS = ("secondary_messages", "proof_types")
-ORDINAL_FIELDS = {"salience_band": ["low", "medium", "high"], "funnel_stage": [
-    "awareness", "consideration", "evaluation", "decision", "retention_expansion"
-]}
+ORDINAL_FIELDS = {
+    "salience_band": ["low", "medium", "high"],
+    "funnel_stage": ["awareness", "consideration", "evaluation", "decision", "retention_expansion"],
+}
 
 
 def _norm(v: Any) -> str:

@@ -34,9 +34,14 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     proof_gaps: list[dict] = []
     classifications: list[dict] = []
     if repo is not None:
-        artifacts = [
-            json.loads(m.model_dump_json()) for m in repo.list_artifacts(run_id=state.run_id)
-        ]
+        for m in repo.list_artifacts(run_id=state.run_id):
+            a = json.loads(m.model_dump_json())
+            # The JSON deliverable carries provenance + a text excerpt, not the
+            # full raw HTML (keeps the package to a reviewable size).
+            a.pop("raw_text", None)
+            if a.get("normalized_text"):
+                a["normalized_text"] = a["normalized_text"][:1500]
+            artifacts.append(a)
         # The claims table holds both strategic claims and temporal change events.
         for m in repo.list_claims(run_id=state.run_id):
             payload = json.loads(m.model_dump_json())

@@ -1,12 +1,15 @@
 {
-  "sequence": 1,
-  "task_objective": "Phase 0 — Foundation: schemas, storage, gateway, tool contract, graph driver, CLI, fixture execution",
+  "sequence": 2,
+  "task_objective": "Phase 1 \u2014 accurate vertical slice: live Deel-vs-Rippling comparative+longitudinal brief",
   "repository_commit": "pending-first-commit",
   "gates_passed": [
-    "task_group_A: clean fixture run initializes, persists state, writes trace events, renders valid output package",
-    "make quality: format, lint (ruff), typecheck (mypy), 79 tests, eval-smoke, demo-fixture"
+    "task_group_B: agent analyze deel.com --compare rippling.com --execution-mode live produces a useful report, validated JSON, and trace",
+    "make quality green (format, lint, mypy, 99 tests, eval-smoke, demo-fixture)",
+    "grounding: 100% material-claim citation coverage, 0 broken refs"
   ],
-  "schema_versions": {"default": "1.0.0"},
+  "schema_versions": {
+    "default": "1.0.0"
+  },
   "prompt_versions": {
     "extractor": "1.0.0",
     "classifier_message": "1.0.0",
@@ -30,10 +33,9 @@
   ],
   "open_decisions": [],
   "next_task_candidates": [
-    "Phase 1: webpage+sitemap collection tool, wayback tool, exa search tool",
-    "Phase 1: extraction + staged classification wiring through model gateway",
-    "Phase 1: claim builder/judge with excerpt containment, minimal temporal diff",
-    "Phase 1: Deel-vs-Rippling comparative reference run (live), fixture recording"
+    "Phase 2: Similarweb/Google Ads/LinkedIn/reviews/jobs/events/OOH adapters + Exa monitors",
+    "Phase 3: product intelligence (\u00a738) + temporal depth",
+    "Phase 4: conversation/challenge/retry"
   ],
   "contracts_downstream_must_preserve": [
     "Repository payload discipline: BaseModel-only writes, (schema_name, schema_version) registry reads",

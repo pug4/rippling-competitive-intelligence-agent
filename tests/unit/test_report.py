@@ -24,12 +24,18 @@ def _state() -> DirectorState:
         execution_mode="fixture",
     )
     s.company = Company(
-        company_id=new_id("CO"), canonical_name="Deel", primary_domain="deel.com",
-        resolved_at=now, resolution_confidence="high",
+        company_id=new_id("CO"),
+        canonical_name="Deel",
+        primary_domain="deel.com",
+        resolved_at=now,
+        resolution_confidence="high",
     )
     s.focal_company = Company(
-        company_id=new_id("CO"), canonical_name="Rippling", primary_domain="rippling.com",
-        resolved_at=now, resolution_confidence="high",
+        company_id=new_id("CO"),
+        canonical_name="Rippling",
+        primary_domain="rippling.com",
+        resolved_at=now,
+        resolution_confidence="high",
     )
     s.coverage = {"current_website": "high", "pricing_and_packaging": "medium"}
     s.stop_reason = "required_coverage_reached"
@@ -40,10 +46,26 @@ def _state() -> DirectorState:
 def test_json_package_has_required_top_level_keys():
     pkg = build_json_package(_state(), _Ctx())
     for key in (
-        "schema_version", "run", "scope", "companies", "sources", "artifacts",
-        "evidence", "classifications", "claims", "product_portfolios", "launches",
-        "change_events", "matrices", "proof_gaps", "opportunities", "coverage",
-        "limitations", "tool_failures", "trace_summary", "eval_summary",
+        "schema_version",
+        "run",
+        "scope",
+        "companies",
+        "sources",
+        "artifacts",
+        "evidence",
+        "classifications",
+        "claims",
+        "product_portfolios",
+        "launches",
+        "change_events",
+        "matrices",
+        "proof_gaps",
+        "opportunities",
+        "coverage",
+        "limitations",
+        "tool_failures",
+        "trace_summary",
+        "eval_summary",
     ):
         assert key in pkg, f"missing required JSON key: {key}"
     assert pkg["run"]["execution_mode"] == "fixture"
