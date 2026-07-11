@@ -28,6 +28,10 @@ _IMPORTANCE = {
 }
 
 MAX_FETCH_URLS_PER_ACTION = 6
+# Only fetch pages scored as genuine priority pages (pricing/product/platform/
+# comparison/customers/home ≈ 0.4+). Blog/other pages (0.1) are never worth a
+# model-classification budget and would loop forever on a large site.
+FETCH_SCORE_THRESHOLD = 0.4
 
 
 def action_key(action_type: str, parameters: dict[str, Any]) -> str:
@@ -109,10 +113,18 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
 
     page_map = ctx.scratch.get(f"page_map:{company.company_id}") or []
 
-    # 2. Fetch the highest-priority unfetched pages once a map exists.
+    # 2. Fetch the highest-priority unfetched pages once a map exists. Only
+    # PRIORITY pages (score above threshold) are eligible: fetching low-value
+    # blog/"other" pages never advances the needed coverage dimensions and
+    # would loop forever on a large site. Once priority pages are exhausted,
+    # the agent moves on to historical / news / comparison sources.
     if page_map:
         fetched: set[str] = set(ctx.scratch.get(f"fetched_urls:{company.company_id}", []))
-        pending = [p for p in page_map if p["url"] not in fetched]
+        pending = [
+            p
+            for p in page_map
+            if p["url"] not in fetched and float(p.get("score", 0)) >= FETCH_SCORE_THRESHOLD
+        ]
         need_dims = [
             d
             for d in (
@@ -132,7 +144,7 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                     "webpage_fetch",
                     "current_product",
                     {"urls": batch, "source_type": "webpage"},
-                    f"Highest-priority mapped pages are unfetched and {', '.join(need_dims)} coverage is below target.",
+                    f"Priority mapped pages are unfetched and {', '.join(need_dims)} coverage is below target.",
                     latency=10.0,
                 )
             )

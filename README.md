@@ -58,6 +58,17 @@ uv run competitive-agent render RUN_ID      # re-render a stored run
 
 Outputs land in `outputs/runs/<RUN_ID>/` (`brief.md`, `data.json`, `trace.jsonl`).
 
+### Optional React UI (bonus)
+
+A Vite React app reads the same validated packages (Action Board, positioning,
+coverage, evidence drill-down) — no separate analytical logic (§40.6):
+
+```bash
+make api          # FastAPI on :8000 serving stored packages
+make ui-install   # one-time: npm install in ui/
+make ui-dev       # Vite dev server on :5173 (proxies /api → :8000)
+```
+
 ## Execution modes
 
 - `live` — calls enabled providers, writes fresh artifacts.
