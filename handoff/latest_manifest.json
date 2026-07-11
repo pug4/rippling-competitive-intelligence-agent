@@ -1,0 +1,45 @@
+{
+  "sequence": 1,
+  "task_objective": "Phase 0 — Foundation: schemas, storage, gateway, tool contract, graph driver, CLI, fixture execution",
+  "repository_commit": "pending-first-commit",
+  "gates_passed": [
+    "task_group_A: clean fixture run initializes, persists state, writes trace events, renders valid output package",
+    "make quality: format, lint (ruff), typecheck (mypy), 79 tests, eval-smoke, demo-fixture"
+  ],
+  "schema_versions": {"default": "1.0.0"},
+  "prompt_versions": {
+    "extractor": "1.0.0",
+    "classifier_message": "1.0.0",
+    "classifier_audience": "1.0.0",
+    "classifier_product": "1.0.0",
+    "classifier_competitive": "1.0.0",
+    "claim_builder": "1.0.0",
+    "claim_judge": "1.0.0",
+    "temporal_judge": "1.0.0"
+  },
+  "models_selected": {
+    "tier1": "claude-haiku-4-5-20251001",
+    "tier2": "claude-sonnet-5",
+    "rationale": "docs/adr/0002-model-routing.md"
+  },
+  "known_failures": [],
+  "deferred": [
+    "research nodes are traced passthroughs until Phase 1/4",
+    "CLI deepen/challenge/feedback/retry exit code 2 until Phase 4",
+    "see IMPLEMENTATION_STATUS.md"
+  ],
+  "open_decisions": [],
+  "next_task_candidates": [
+    "Phase 1: webpage+sitemap collection tool, wayback tool, exa search tool",
+    "Phase 1: extraction + staged classification wiring through model gateway",
+    "Phase 1: claim builder/judge with excerpt containment, minimal temporal diff",
+    "Phase 1: Deel-vs-Rippling comparative reference run (live), fixture recording"
+  ],
+  "contracts_downstream_must_preserve": [
+    "Repository payload discipline: BaseModel-only writes, (schema_name, schema_version) registry reads",
+    "ToolResult envelope statuses and non-blocking failure conversion at adapter boundary",
+    "Graph nodes are (state, ctx) -> (state, next_node); driver persists after every node",
+    "normalize.py is the single normalization path for storage AND excerpt verification",
+    "trace.jsonl event types from schemas.trace.TRACE_EVENT_TYPES"
+  ]
+}

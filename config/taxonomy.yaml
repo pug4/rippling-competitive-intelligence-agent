@@ -1,0 +1,126 @@
+# Classification taxonomy. Fully swappable: the pipeline reads every list from
+# this file so the tool can retarget to a different focal company or industry
+# without code changes. Classifiers may return values outside these lists as
+# `unclassified_signals` — the taxonomy guides, it does not force (§10.3).
+
+taxonomy_version: "1.0.0"
+
+themes:
+  - consolidation
+  - compliance
+  - cost_reduction
+  - global_hiring
+  - automation
+  - employee_experience
+  - data_accuracy
+  - speed_to_value
+  - security_and_control
+  - scalability
+  - integration_breadth
+  - workforce_visibility
+
+personas:
+  - hr_leader
+  - finance_leader
+  - it_leader
+  - security_leader
+  - operations_leader
+  - founder_or_ceo
+  - people_ops_manager
+  - payroll_manager
+  - recruiter
+  - legal_or_compliance
+
+segments:
+  - smb
+  - mid_market
+  - enterprise
+  - global_teams
+  - startups
+
+funnel_stages:
+  - awareness
+  - consideration
+  - evaluation
+  - decision
+  - retention_expansion
+
+claim_types:
+  - capability
+  - outcome
+  - status
+  - fear
+  - identity
+  - cost
+  - risk
+  - category
+
+rhetorical_moves:
+  - category_creation
+  - category_redefinition
+  - status_quo_attack
+  - named_comparison
+  - implicit_comparison
+  - all_in_one
+  - best_of_breed
+  - incumbent_flank
+  - proof_led
+  - educational
+
+proof_types:
+  - quantified_customer_outcome
+  - independent_validation
+  - product_demonstration
+  - named_customer_story
+  - certification_or_compliance_record
+  - customer_quotation
+  - customer_logo
+  - feature_assertion
+  - unsupported_assertion
+
+villain_categories:
+  - point_solution_sprawl
+  - legacy_software
+  - manual_work
+  - compliance_risk
+  - cost_and_waste
+  - complexity
+  - global_expansion_friction
+  - named_company
+  - incumbent_category
+
+competitive_stances:
+  - ignores
+  - implicit_contrast
+  - category_attack
+  - named_comparison
+  - direct_attack
+  - defensive_response
+
+channels:
+  - website
+  - organic_linkedin
+  - paid_linkedin
+  - google_ads
+  - meta_instagram
+  - events
+  - ooh
+  - press
+  - review_sites
+  - email
+  - webinar
+  - podcast
+
+category_entry_points:
+  - hiring_first_international_employee
+  - opening_new_country
+  - replacing_a_peo
+  - preparing_for_audit
+  - reducing_payroll_errors
+  - consolidating_hr_tools
+  - automating_onboarding_offboarding
+  - controlling_app_access
+  - integrating_an_acquisition
+  - reducing_software_spend
+  - moving_upmarket
+  - managing_contractors_and_employees

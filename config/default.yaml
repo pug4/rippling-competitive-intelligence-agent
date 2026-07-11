@@ -1,0 +1,45 @@
+# Feature flags and run defaults. A disabled source returns a traceable
+# skipped_disabled ToolResult; it never silently disappears (§37.7).
+
+focal_company:
+  name: Rippling
+  domain: rippling.com
+
+sources:
+  website: true
+  wayback: true
+  exa_web: true
+  exa_linkedin: true
+  similarweb: true
+  google_ads: true
+  meta_ads: false
+  linkedin_ads: false
+  reviews: true
+  jobs: true
+  events: true
+  ooh: true
+  monitors: true
+
+execution:
+  live_tools: false
+  allow_browser: false
+  allow_model_repair_retry: true
+  render_html: true
+  persist_raw_content: true
+  refresh_rippling: false
+
+budgets:
+  research_budget_usd: 5.00
+  max_runtime_seconds: 600
+  max_iterations: 40
+  max_tool_calls: 120
+  max_retries_per_source: 2
+
+portfolio:
+  max_concurrent_company_runs: 2
+  max_competitors_per_demo: 3
+  max_exa_agent_runs: 2
+
+windows:
+  lookback_days: 365
+  current_days: 90

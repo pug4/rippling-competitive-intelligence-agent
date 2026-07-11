@@ -1,0 +1,61 @@
+# Source feasibility ledger (§3.1, §36.7). Drives feasibility badges on report
+# fields and coverage expectations. `historical` = can this source see the past.
+
+sources:
+  website:
+    badge: RELIABLE_PUBLIC
+    historical: false
+    limitations: [dynamic pages may need browser, geo variants possible]
+  wayback:
+    badge: DISCOVERABLE_PARTIAL
+    historical: true
+    limitations: [archive gaps, JS-rendered pages may fail, changed URLs]
+  exa_web:
+    badge: RELIABLE_PUBLIC
+    historical: partial
+    limitations: [indexed subset of the public web]
+  exa_linkedin:
+    badge: DISCOVERABLE_PARTIAL
+    historical: partial
+    limitations: [indexed public posts only, never exhaustive, deletions invisible]
+  similarweb:
+    badge: ESTIMATED
+    historical: partial
+    limitations: [modeled estimates, field availability varies by plan and domain]
+  google_ads:
+    badge: RELIABLE_PUBLIC
+    historical: limited
+    limitations: [creative repository only, no bid keywords, no performance]
+  meta_ads:
+    badge: DISCOVERABLE_PARTIAL
+    historical: limited
+    limitations: [API covers political/EU windows, US commercial via UI only, no spend]
+  linkedin_ads:
+    badge: DISCOVERABLE_PARTIAL
+    historical: limited
+    limitations: [availability varies by geography, brittle automation]
+  reviews:
+    badge: DISCOVERABLE_PARTIAL
+    historical: partial
+    limitations: [selection bias, not representative of customer base]
+  jobs:
+    badge: DISCOVERABLE_PARTIAL
+    historical: false
+    limitations: [leading indicator only, evergreen postings]
+  events:
+    badge: DISCOVERABLE_PARTIAL
+    historical: partial
+    limitations: [sponsor pages disappear, private events invisible, no spend data]
+  ooh:
+    badge: DISCOVERABLE_PARTIAL
+    historical: limited
+    limitations: [no universal registry, no spend/reach/flight data]
+
+never_publicly_knowable:
+  - actual_ad_performance_roas_cpa_conversion
+  - exact_cross_channel_spend
+  - complete_ooh_inventory_reach_frequency
+  - event_spend_booth_traffic_pipeline
+  - complete_employee_post_corpus
+  - negotiated_enterprise_pricing
+  - internal_strategy_rationale

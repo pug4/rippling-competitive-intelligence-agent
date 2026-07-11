@@ -1,0 +1,31 @@
+# Task-family -> model routing. Model IDs are configuration, not architecture
+# (§28, §37.28). Rationale lives in docs/adr/0002-model-routing.md.
+#
+# tier1: high-volume bounded structured extraction/classification
+# tier2: ambiguous planning, temporal judgment, contradiction, synthesis, critique
+
+models:
+  tier1: claude-haiku-4-5-20251001
+  tier2: claude-sonnet-5
+  escalation: claude-sonnet-5
+
+routes:
+  extract_evidence: tier1
+  classify_message: tier1
+  classify_audience: tier1
+  classify_product: tier1
+  classify_competitive: tier1
+  resolve_company: tier1
+  plan_research: tier2
+  judge_claim: tier2
+  judge_temporal: tier2
+  infer_commercial_motion: tier2
+  infer_product_motion: tier2
+  generate_opportunities: tier2
+  critique_opportunities: tier2
+  challenge_conclusion: tier2
+  synthesize_portfolio: tier2
+
+max_output_tokens:
+  tier1: 4096
+  tier2: 8192
