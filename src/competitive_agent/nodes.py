@@ -591,8 +591,15 @@ async def build_matrices(state: DirectorState, ctx: GraphContext):
 async def run_focal_mirror_check(state: DirectorState, ctx: GraphContext):
     if state.focal_company is None or ctx.scratch.get("focal_run_id"):
         return state, "generate_opportunities"
-    # Mirror only once the competitor side has something to compare.
     if not state.classification_ids:
+        return state, "generate_opportunities"
+    # Run the mirror only when the COMPETITOR side is fully collected — the
+    # focal pipeline is expensive and would otherwise starve the competitor's
+    # own collection if it ran on iteration 1. Trigger when competitor coverage
+    # is sufficient OR no competitor actions remain.
+    ok, _ = cov.sufficient(state.coverage, state.mode, compare=False)
+    remaining = planner.propose_actions(state, ctx)
+    if not ok and remaining:
         return state, "generate_opportunities"
 
     from .comparison import run_focal_mirror

@@ -48,15 +48,47 @@ _SITEMAP_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 _HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.IGNORECASE)
 _TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 
+# Locale-prefixed paths (/es/, /fr/, /pt-br/, /sv-se/ …) are non-canonical
+# translations of the English pages; we want the English source, not a Swedish
+# blog post. A first segment matching this and not English is heavily penalized
+# so canonical pages win the fetch budget.
+_LOCALE_RE = re.compile(r"^[a-z]{2}(-[a-z]{2})?$")
+_ENGLISH_LOCALES = {"en", "en-us", "en-gb"}
+
+# Canonical high-value English paths worth trying on any B2B SaaS site,
+# independent of sitemap quality. 404s become negative observations, not fake
+# data. Data, not logic: retargeting to another industry edits this list.
+_CANONICAL_SEED_PATHS = (
+    "/",
+    "/pricing",
+    "/platform",
+    "/products",
+    "/customers",
+    "/why",
+)
+
+
+def _is_non_english_locale_path(path: str) -> bool:
+    segments = [s for s in path.split("/") if s]
+    if not segments:
+        return False
+    first = segments[0].lower()
+    return bool(_LOCALE_RE.match(first)) and first not in _ENGLISH_LOCALES
+
 
 def _score_path(url: str) -> tuple[str, float]:
     path = urlsplit(url).path or "/"
     if path in ("", "/"):
         return "home", 0.95
-    for pattern, category, score in PRIORITY_PATTERNS:
+    category, score = "other", 0.1
+    for pattern, cat, sc in PRIORITY_PATTERNS:
         if re.search(pattern, path, re.IGNORECASE):
-            return category, score
-    return "other", 0.1
+            category, score = cat, sc
+            break
+    # Push non-English locale variants to the bottom of the fetch queue.
+    if _is_non_english_locale_path(path):
+        score = min(score, 0.05)
+    return category, score
 
 
 def _extract_title(html: str) -> str | None:
@@ -119,6 +151,10 @@ class WebsiteMapTool(BaseTool):
         if homepage_html:
             urls.add(origin + "/")
             urls |= self._anchor_urls(homepage_html, origin)
+        # 3. Always seed canonical high-value English paths so the core pages
+        # are tried even when the sitemap is locale-heavy or missing. Non-
+        # existent seeds simply 404 into negative observations on fetch.
+        urls |= {origin.rstrip("/") + p for p in _CANONICAL_SEED_PATHS}
 
         if not urls:
             return self._result(

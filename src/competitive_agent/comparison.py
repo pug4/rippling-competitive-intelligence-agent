@@ -59,6 +59,13 @@ async def run_focal_mirror(state: DirectorState, ctx: Any) -> str | None:
         compare_to=None,  # the mirror never mirrors itself
         lookback_days=state.lookback_days,
     )
+    # The focal mirror is a bounded baseline, not the star of the run: cap its
+    # budget to a fraction of the parent so it can never starve the competitor
+    # analysis (§38.27 bounded concurrency, §39.7 bounded runs).
+    remaining = max(60.0, state.max_runtime_seconds - (utcnow() - state.started_at).total_seconds())
+    focal_state.max_runtime_seconds = int(min(focal_state.max_runtime_seconds, remaining * 0.5))
+    focal_state.max_iterations = min(focal_state.max_iterations, 12)
+    focal_state.max_tool_calls = min(focal_state.max_tool_calls, 40)
     if ctx.trace:
         ctx.trace.append(
             "company_pipeline_created",
