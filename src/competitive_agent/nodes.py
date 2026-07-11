@@ -59,6 +59,8 @@ _MIN_CLASSIFIABLE_CHARS = 200
 _NON_CLASSIFIABLE_SOURCES = {"sitemap", "robots"}
 # Cap classifier input so one huge page can't blow up a model call / cost.
 _MAX_CLASSIFY_CHARS = 12000
+# Cap claims judged per refresh so a claim-heavy corpus can't stall the loop.
+_MAX_CLAIMS_JUDGED = 10
 
 # Family model class name -> classifications.family column value.
 _FAMILY_TABLE = {
@@ -516,33 +518,34 @@ async def refresh_claims(state: DirectorState, ctx: GraphContext):
         state.limitations.append(f"claim building unavailable: {type(exc).__name__}")
         return state, "check_contradictions"
 
+    # Judge the strongest candidates concurrently (independent calls); cap the
+    # count so a claim-heavy corpus can't stall the loop.
+    candidates = sorted(candidates, key=lambda c: len(c.evidence_ids), reverse=True)[:_MAX_CLAIMS_JUDGED]
     evidence_by_id = {e.evidence_id: e for e in evidence}
+    sem = asyncio.Semaphore(ctx.settings.max_parallel_extractions if ctx.settings else 4)
+
+    async def judge(claim):
+        async with sem:
+            try:
+                return await judge_claim(claim, evidence_by_id, ctx.gateway, prompts)
+            except Exception:
+                return claim.model_copy(update={"status": "hypothesis", "claim_confidence": "low"})
+
+    judged_claims = await asyncio.gather(*(judge(c) for c in candidates))
     kept: list[str] = []
-    for claim in candidates:
-        try:
-            judged = await judge_claim(claim, evidence_by_id, ctx.gateway, prompts)
-        except Exception:
-            judged = claim.model_copy(update={"status": "hypothesis", "claim_confidence": "low"})
+    for judged in judged_claims:
         ctx.repository.save_claim(state.run_id, judged)
         if judged.status in ("observed", "supported_inference", "hypothesis"):
             kept.append(judged.claim_id)
             if ctx.trace:
                 ctx.trace.append(
                     "claim_created",
-                    {
-                        "claim_id": judged.claim_id,
-                        "status": judged.status,
-                        "statement": judged.statement[:200],
-                    },
+                    {"claim_id": judged.claim_id, "status": judged.status, "statement": judged.statement[:200]},
                 )
         elif ctx.trace:
             ctx.trace.append(
                 "claim_rejected",
-                {
-                    "claim_id": judged.claim_id,
-                    "status": judged.status,
-                    "statement": judged.statement[:200],
-                },
+                {"claim_id": judged.claim_id, "status": judged.status, "statement": judged.statement[:200]},
             )
     state.claim_ids = list(dict.fromkeys(state.claim_ids + kept))
     ctx.scratch["claims_built_at_count"] = len(evidence)

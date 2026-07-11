@@ -187,7 +187,7 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                 "news_and_launches",
                 {
                     "query": f'"{company.canonical_name}" product launch OR announcement OR press release',
-                    "num_results": 8,
+                    "num_results": 5,
                     "start_published_date": (
                         state.time_windows[-1].start_at.date().isoformat()
                         if state.time_windows
@@ -210,7 +210,7 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                 "competitive_stance",
                 {
                     "query": f'"{company.canonical_name}" vs OR versus OR alternative comparison',
-                    "num_results": 6,
+                    "num_results": 5,
                 },
                 "No competitive-stance evidence collected; comparison pages are the strongest public source (§18.2).",
                 reliability=0.65,
