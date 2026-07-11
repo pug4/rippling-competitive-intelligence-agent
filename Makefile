@@ -34,4 +34,13 @@ demo-fixture:
 demo-cached:
 	uv run competitive-agent demo-check --mode cached
 
+api:
+	uv run competitive-agent-api
+
+ui-install:
+	cd ui && npm install
+
+ui-dev:
+	cd ui && npm run dev
+
 quality: format lint typecheck test eval-smoke demo-fixture

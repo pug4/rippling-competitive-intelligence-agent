@@ -19,6 +19,7 @@ dependencies = [
 
 [project.scripts]
 competitive-agent = "competitive_agent.cli:app"
+competitive-agent-api = "competitive_agent.api:main"
 
 [dependency-groups]
 dev = [
