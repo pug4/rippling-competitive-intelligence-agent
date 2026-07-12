@@ -300,10 +300,18 @@ async def chat_about_run(
     cross = cross_competitor_summaries(run_id, competitor_id)
     context = build_context(pkg, cross=cross, vertical=vertical)
     if vertical:
+        by_artifact = (pkg.get("product_vertical_analysis") or {}).get("by_artifact") or {}
+        unmapped = sum(1 for a in pkg.get("artifacts", []) if a.get("artifact_id") not in by_artifact)
         context = (
             f"FOCUS: the user has scoped this conversation to the '{vertical}' product "
             "vertical — the sources/classifications/evidence/posts below are filtered to it. "
-            "Gaps/opportunities/dominant-message remain corpus-wide; say so if you cite them.\n\n"
+            "Gaps/opportunities/dominant-message remain corpus-wide; say so if you cite them. "
+            + (
+                f"Note: {unmapped} artifacts matched NO vertical and are excluded from this "
+                "scoped view — mention this if coverage seems thin.\n\n"
+                if unmapped
+                else "\n\n"
+            )
             + context
         )
 

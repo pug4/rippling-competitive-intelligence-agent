@@ -147,6 +147,10 @@ def dominant_message(
                 or None
                 or art.source_type
             )
+        # Filter the literal string "None" (from str(metadata.get(...))) so JSON
+        # consumers never see a bogus surface (audit polish).
+        if surface in ("None", "none", ""):
+            surface = None
         theme_surfaces.setdefault(theme, set()).add(surface or "unknown")
         theme_source_classes.setdefault(theme, set()).add(art.source_type if art else "unknown")
         # The human-readable LABEL comes from the page that best REPRESENTS the
@@ -453,6 +457,7 @@ def commercial_motion(classifications: list[MarketingClassification]) -> dict[st
         "fully_public",
         "calculator",
         "starting_price_only",
+        "mixed_by_product",
         "partially_public",
         "sales_gated",
         "hidden",
@@ -588,23 +593,43 @@ def _vertical_matchers(taxonomy: dict[str, Any]) -> dict[str, list[re.Pattern[st
 def verticals_for_classification(
     c: MarketingClassification, artifact: RawArtifact | None, matchers: dict[str, list[re.Pattern[str]]]
 ) -> list[str]:
-    """Deterministic vertical tags for one classified artifact: keyword match
-    over its products, themes, messages, and URL path. Retroactive — needs no
-    reclassification, so it works on any stored run."""
-    hay_parts: list[str] = []
-    hay_parts.extend(c.products or [])
-    hay_parts.extend(c.supporting_themes or [])
-    if c.primary_theme:
-        hay_parts.append(c.primary_theme)
-    if c.primary_message:
-        hay_parts.append(c.primary_message)
-    hay_parts.extend(c.secondary_messages or [])
+    """Deterministic vertical tags for one classified artifact. Precision rules
+    (audit: ~6% single-keyword false positives, compliance as a catch-all):
+    - a match in PRODUCTS or the URL PATH tags directly (high-specificity);
+    - a match only in message/theme TEXT needs >=2 distinct keyword hits;
+    - 'compliance_legal' additionally requires a legal/regulatory co-occurrence
+      so the bare word 'compliance' (used everywhere) can't tag alone.
+    Retroactive — needs no reclassification."""
+    strong_parts: list[str] = list(c.products or [])
     if artifact is not None:
-        hay_parts.append(_url_path(artifact.final_url or artifact.url))
-        if artifact.title:
-            hay_parts.append(artifact.title)
-    hay = " ".join(str(p) for p in hay_parts).lower().replace("_", " ").replace("-", " ")
-    hits = [v for v, pats in matchers.items() if any(p.search(hay) for p in pats)]
+        strong_parts.append(_url_path(artifact.final_url or artifact.url))
+    text_parts: list[str] = list(c.supporting_themes or [])
+    if c.primary_theme:
+        text_parts.append(c.primary_theme)
+    if c.primary_message:
+        text_parts.append(c.primary_message)
+    text_parts.extend(c.secondary_messages or [])
+    if artifact is not None and artifact.title:
+        text_parts.append(artifact.title)
+
+    def _norm(parts: list[str]) -> str:
+        return " ".join(str(p) for p in parts).lower().replace("_", " ").replace("-", " ")
+
+    strong_hay = _norm(strong_parts)
+    text_hay = _norm(text_parts)
+    _LEGAL_CTX = re.compile(r"\b(legal|regulat|gdpr|soc ?2|audit|law|statut)")
+
+    hits: list[str] = []
+    for v, pats in matchers.items():
+        strong_hits = sum(1 for p in pats if p.search(strong_hay))
+        text_hits = sum(1 for p in pats if p.search(text_hay))
+        matched = strong_hits >= 1 or text_hits >= 2
+        if matched and v == "compliance_legal" and strong_hits == 0:
+            # generic 'compliance' language alone isn't the legal/compliance
+            # product vertical — require legal/regulatory context.
+            matched = bool(_LEGAL_CTX.search(text_hay))
+        if matched:
+            hits.append(v)
     return hits
 
 

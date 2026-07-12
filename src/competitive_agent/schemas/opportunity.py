@@ -9,7 +9,7 @@ the focal-generic rename applies only to ``focal.py`` (logged decision).
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -98,6 +98,11 @@ class MessageProofGap(VersionedModel):
     focal_proof_strength: ProofStrength = "none"
     product_comparability: ProductComparability | None = None  # feedback #3
     actionable_interpretation: str
+    # Per-product-vertical proof strengths (vertical -> {n_pages, strength}) and
+    # the divergent weakest vertical — a corpus-wide verdict must not hide
+    # 'weak in EOR, strong in payroll' (audit HIGH fix).
+    vertical_strengths: dict[str, Any] = Field(default_factory=dict)
+    weakest_vertical: str | None = None
     attackability: ConfidenceLevel
     attackability_detail: AttackabilityAssessment | None = None  # feedback #17
     why_attack_might_backfire: str

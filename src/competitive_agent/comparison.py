@@ -155,6 +155,8 @@ def _message_index(
         slot["source_types"].add(source_type)
         slot["proof_types"] |= set(c.proof_types)
         slot["per_page_strength"].append(_proof_strength(set(c.proof_types)))
+        # Parallel to per_page_strength — enables per-VERTICAL strength splits.
+        slot.setdefault("per_page_artifact_ids", []).append(c.artifact_id)
         slot.setdefault("per_page_proof", []).append(list(c.proof_types))
         slot.setdefault("specificities", []).append(c.claim_specificity)
         slot["count"] += 1
@@ -199,12 +201,47 @@ def already_saying_it(message: str, focal_index: dict[str, dict[str, Any]]) -> s
 MAX_GAPS = 6
 
 
+_STRENGTH_ORDER = {"none": 0, "weak": 1, "moderate": 2, "strong": 3}
+
+
+def _vertical_strengths(
+    slot: dict[str, Any], verticals_by_artifact: dict[str, list[str]] | None
+) -> tuple[dict[str, Any], str | None]:
+    """Per-product-vertical modal proof strength for one theme (audit HIGH fix:
+    a corpus-wide verdict can hide 'weak in EOR, strong in payroll'). Only
+    verticals with >=2 pages get a verdict; weakest_vertical is set when a
+    vertical is strictly weaker than at least one other (a real divergence)."""
+    if not verticals_by_artifact:
+        return {}, None
+    per_v: dict[str, list[str]] = {}
+    for aid, s in zip(
+        slot.get("per_page_artifact_ids", []), slot.get("per_page_strength", []), strict=False
+    ):
+        for v in verticals_by_artifact.get(aid, []):
+            per_v.setdefault(v, []).append(s)
+    out = {
+        v: {"n_pages": len(strengths), "strength": _modal(strengths)}
+        for v, strengths in per_v.items()
+        if len(strengths) >= 2
+    }
+    if not out:
+        return {}, None
+    ranked = sorted(out, key=lambda v: _STRENGTH_ORDER.get(str(out[v]["strength"]), 0))
+    weakest = ranked[0]
+    strongest = ranked[-1]
+    divergent = _STRENGTH_ORDER.get(str(out[weakest]["strength"]), 0) < _STRENGTH_ORDER.get(
+        str(out[strongest]["strength"]), 0
+    )
+    return out, (weakest if divergent else None)
+
+
 def build_message_proof_gaps(
     competitor_run_id: str,
     focal_run_id: str | None,
     repository: Any,
     competitor_name: str,
     focal_name: str,
+    verticals_by_artifact: dict[str, list[str]] | None = None,
 ) -> list[MessageProofGap]:
     """Join each repeated competitor theme to its observed proof and the focal
     company's proof on the same theme, producing a comparison (§19, §22.2).
@@ -258,6 +295,13 @@ def build_message_proof_gaps(
             has_strong_page=has_strong_page,
             news_only=news_only,
         )
+        v_strengths, weakest_v = _vertical_strengths(slot, verticals_by_artifact)
+        if weakest_v:
+            interpretation += (
+                f" Per-vertical: proof is {v_strengths[weakest_v]['strength']} in "
+                f"{weakest_v.replace('_', ' ')} ({v_strengths[weakest_v]['n_pages']} pages) — "
+                "attack there even if the corpus-wide read says otherwise."
+            )
         detail = AttackabilityAssessment(
             proof_gap="high" if strength in ("weak", "none") else "low",
             focal_proof="high" if focal_strength in ("strong", "moderate") else "low",
@@ -288,6 +332,8 @@ def build_message_proof_gaps(
                 focal_proof_ids=(focal_slot["classification_ids"][:5] if focal_slot else []),
                 focal_proof_strength=focal_strength,
                 actionable_interpretation=interpretation,
+                vertical_strengths=v_strengths,
+                weakest_vertical=weakest_v,
                 attackability=attack_level,  # type: ignore[arg-type]
                 attackability_detail=detail,
                 why_attack_might_backfire=(

@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T09:10:48.935326+00:00",
+    "generated_at": "2026-07-12T09:35:14.234730+00:00",
     "stop_reason": "runtime_exhausted",
     "iterations": 11,
     "tool_cost_usd": 0.105,
@@ -61,12 +61,12 @@
     "label": "Deel is an all-in-one Global People Platform that enables companies to expand globally with speed, compliance, and simplified payroll and HR management across 150 countries.",
     "is_company_level": true,
     "surfaces": [
-      "None",
       "customers",
       "home",
       "pricing",
       "product",
-      "segment"
+      "segment",
+      "unknown"
     ],
     "source_classes": [
       "events",
@@ -97,9 +97,9 @@
   ],
   "coverage": {
     "identity": "high",
-    "current_website": "high",
+    "current_website": "medium",
     "current_product": "medium",
-    "pricing_and_packaging": "high",
+    "pricing_and_packaging": "medium",
     "customer_proof": "medium",
     "paid_media": "not_attempted",
     "public_linkedin": "not_attempted",
@@ -381,8 +381,8 @@
     }
   ],
   "commercial_motion": {
-    "primary_motion": "sales_led",
-    "pricing_disclosure": "sales_gated",
+    "primary_motion": "hybrid",
+    "pricing_disclosure": "mixed_by_product",
     "pricing_disclosure_mix": {
       "sales_gated": 3,
       "hidden": 30,
@@ -694,103 +694,153 @@
       "cep": "consolidating_hr_tools",
       "competitor_pages": 28,
       "focal_pages": 31,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "automating_onboarding_offboarding",
       "competitor_pages": 21,
       "focal_pages": 18,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "hris_core_hr"
+      ]
     },
     {
       "cep": "opening_new_country",
       "competitor_pages": 31,
       "focal_pages": 3,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "hiring_first_international_employee",
       "competitor_pages": 15,
       "focal_pages": 3,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "reducing_payroll_errors",
       "competitor_pages": 8,
       "focal_pages": 9,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "preparing_for_audit",
       "competitor_pages": 8,
       "focal_pages": 8,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "hris_core_hr"
+      ]
     },
     {
       "cep": "not_observed",
       "competitor_pages": 4,
       "focal_pages": 9,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": []
     },
     {
       "cep": "controlling_app_access",
       "competitor_pages": 3,
       "focal_pages": 9,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "it_device_management",
+        "identity_security"
+      ]
     },
     {
       "cep": "managing_contractors_and_employees",
       "competitor_pages": 7,
       "focal_pages": 3,
-      "ownership": "contested"
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "integrating_an_acquisition",
       "competitor_pages": 7,
       "focal_pages": 0,
-      "ownership": "competitor_advantage"
-    },
-    {
-      "cep": "replacing_a_peo",
-      "competitor_pages": 2,
-      "focal_pages": 2,
-      "ownership": "contested"
+      "ownership": "competitor_advantage",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "reducing_software_spend",
       "competitor_pages": 0,
       "focal_pages": 4,
-      "ownership": "focal_owns"
+      "ownership": "focal_owns",
+      "top_verticals": []
+    },
+    {
+      "cep": "replacing_a_peo",
+      "competitor_pages": 2,
+      "focal_pages": 2,
+      "ownership": "contested",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "moving_upmarket",
       "competitor_pages": 0,
       "focal_pages": 2,
-      "ownership": "focal_owns"
-    },
-    {
-      "cep": "expanding_globally",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage"
-    },
-    {
-      "cep": "reducing_operational_friction",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage"
+      "ownership": "focal_owns",
+      "top_verticals": []
     },
     {
       "cep": "automating_workflows",
       "competitor_pages": 1,
       "focal_pages": 0,
-      "ownership": "competitor_advantage"
+      "ownership": "competitor_advantage",
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_globally",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "reducing_operational_friction",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": []
     },
     {
       "cep": "paying_global_contractors",
       "competitor_pages": 1,
       "focal_pages": 0,
-      "ownership": "competitor_advantage"
+      "ownership": "competitor_advantage",
+      "top_verticals": []
     }
   ],
   "persona_channel_matrix": {
@@ -25934,10 +25984,7 @@
         "hr_leader"
       ],
       "excerpt": "# Post by Harneet Singh Kalra \u00b7 LinkedIn \u00b7 2026-06-09 **Harneet Singh Kalra**: Payroll Implementation Manager at Deel with 13 years 9 months of experience. Previous roles include Manager at PwC India, Assistant Manager at PwC India, and Senior Associate at PwC India. Based in Del",
-      "verticals": [
-        "talent_performance",
-        "workforce_analytics"
-      ]
+      "verticals": []
     },
     {
       "artifact_id": "ART-a184aaba607d",
@@ -25952,9 +25999,7 @@
         "payroll_manager"
       ],
       "excerpt": "# Post by Ashish Jeet Mitra \u00b7 LinkedIn \u00b7 2026-06-10 **Ashish Jeet Mitra**: Payroll Operations Manager at Deel with 6 years 1 month of experience. Previous roles include Global Payroll Operations Team Leader at Deel, Global Payroll Operations Team Leader at Safeguard Global, and G",
-      "verticals": [
-        "talent_performance"
-      ]
+      "verticals": []
     },
     {
       "artifact_id": "ART-3c7cea414238",
@@ -25973,9 +26018,7 @@
       ],
       "excerpt": "We just made it possible for a company in New York to fund payroll in dollars, and for their employee in Berlin to receive it in stablecoins within minutes \ud83e\udd2f On one platform with no workarounds... | Alex Bouaziz | 320 comments Agree & Join LinkedIn By clicking Continue to join or",
       "verticals": [
-        "payroll",
-        "global_eor_contractors",
-        "compliance_legal"
+        "payroll"
       ]
     },
     {
@@ -25993,7 +26036,6 @@
       ],
       "excerpt": "Deel Launches Native ATS for Streamlined Hiring | Yaron Lavi posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. ` `` `` `` `` `` `` ` # Deel Launches Native ATS f",
       "verticals": [
-        "hris_core_hr",
         "talent_performance"
       ]
     },
@@ -26034,9 +26076,7 @@
         "security_or_compliance"
       ],
       "excerpt": "# Post by Shirley Alexander (she/her) \u00b7 LinkedIn \u00b7 2026-07-09 **Shirley Alexander (she/her)**: Shirley Alexander currently works as Senior Talent Acquisition Specialist at Deel with 25 years 6 months of experience. Previous roles include Senior Talent Acquisition Partner at Qualc",
-      "verticals": [
-        "compliance_legal"
-      ]
+      "verticals": []
     },
     {
       "artifact_id": "ART-5d392e2953ec",
@@ -26052,9 +26092,7 @@
         "people_ops_manager"
       ],
       "excerpt": "# Shahriyar M. \u00b7 LinkedIn \u00b7 2026-06-05 ## Author **Shahriyar M.** *Design @ Deel | Mentor | MSc in Computer Science* Current role: Staff Product Designer at Deel ## Post Yesterday we launched the new Deel app. We've been rebuilding it from the ground up with one goal in mind: red",
-      "verticals": [
-        "spend_expense"
-      ]
+      "verticals": []
     },
     {
       "artifact_id": "ART-2021b1e00f1e",
@@ -26071,9 +26109,7 @@
       ],
       "excerpt": "Big milestone for us at Deel \ud83d\ude4c Last week during The Big Deel we showed off a new pillar of Deel HR: our native ATS. Recruiting sits at the beginning of the HR journey. We know how important (and... | Dan Westgarth | 44 comments Agree & Join LinkedIn By clicking Continue to join o",
       "verticals": [
-        "hris_core_hr",
-        "talent_performance",
-        "workforce_analytics"
+        "talent_performance"
       ]
     },
     {
@@ -26123,10 +26159,7 @@
       ],
       "excerpt": "Deel Expands to ChatGPT with Global Employment Platform | Lauren Zamora-Kelso posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. # Deel Expands to ChatGPT with Gl",
       "verticals": [
-        "payroll",
-        "global_eor_contractors",
-        "hris_core_hr",
-        "compliance_legal"
+        "payroll"
       ]
     },
     {
@@ -26167,10 +26200,7 @@
       ],
       "excerpt": "Deel AI Workforce launches with AI agents for HR, payroll, operations | Deel posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. 775,602 followers 9mo \ud83d\udd0a Deel AI Wo",
       "verticals": [
-        "payroll",
-        "hris_core_hr",
-        "time_attendance",
-        "compliance_legal"
+        "payroll"
       ]
     },
     {
@@ -26187,44 +26217,15 @@
         "founder_or_ceo"
       ],
       "excerpt": "Deel Stablecoin Wallet Eliminates Global Payout Fees | Rohit Jain posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. Full Stack Engineer @ Deel | React, Node, Nex",
-      "verticals": [
-        "spend_expense"
-      ]
+      "verticals": []
     }
   ],
   "similarweb": {},
   "product_vertical_analysis": {
     "verticals": [
       {
-        "vertical": "compliance_legal",
-        "n_artifacts": 35,
-        "n_linkedin_posts": 5,
-        "top_themes": [
-          "consolidation",
-          "automation",
-          "native_platform_breadth"
-        ],
-        "stance_mix": {
-          "implicit_contrast": 18,
-          "named_comparison": 2,
-          "ignores": 2,
-          "category_attack": 4
-        },
-        "personas": [
-          "hr_leader",
-          "operations_leader",
-          "finance_leader"
-        ],
-        "example_urls": [
-          "https://www.deel.com/pricing",
-          "https://www.deel.com/hr-platform/workflows/",
-          "https://www.deel.com/solutions/compensation/"
-        ],
-        "sample_message": "Deel offers transparent, flexible, scalable pricing for global hiring across contractors, full-time employees, and payroll with no hidden fees."
-      },
-      {
         "vertical": "payroll",
-        "n_artifacts": 32,
+        "n_artifacts": 29,
         "n_linkedin_posts": 6,
         "top_themes": [
           "consolidation",
@@ -26232,7 +26233,7 @@
           "data_unification"
         ],
         "stance_mix": {
-          "implicit_contrast": 18,
+          "implicit_contrast": 17,
           "named_comparison": 2,
           "ignores": 2,
           "category_attack": 3
@@ -26244,25 +26245,51 @@
         ],
         "example_urls": [
           "https://www.deel.com/pricing",
-          "https://www.deel.com/hr-platform/workflows/",
-          "https://www.deel.com/solutions/compensation/"
+          "https://www.deel.com/solutions/compensation/",
+          "https://www.deel.com/case-studies/clara/"
+        ],
+        "sample_message": "Deel offers transparent, flexible, scalable pricing for global hiring across contractors, full-time employees, and payroll with no hidden fees."
+      },
+      {
+        "vertical": "global_eor_contractors",
+        "n_artifacts": 18,
+        "n_linkedin_posts": 1,
+        "top_themes": [
+          "consolidation",
+          "native_platform_breadth",
+          "data_unification"
+        ],
+        "stance_mix": {
+          "implicit_contrast": 12,
+          "named_comparison": 1,
+          "ignores": 2,
+          "category_attack": 1
+        },
+        "personas": [
+          "operations_leader",
+          "hr_leader",
+          "finance_leader"
+        ],
+        "example_urls": [
+          "https://www.deel.com/pricing",
+          "https://www.deel.com/deel-vs-competitors/oyster/",
+          "https://www.deel.com/segments/startups/"
         ],
         "sample_message": "Deel offers transparent, flexible, scalable pricing for global hiring across contractors, full-time employees, and payroll with no hidden fees."
       },
       {
         "vertical": "hris_core_hr",
-        "n_artifacts": 28,
-        "n_linkedin_posts": 5,
+        "n_artifacts": 17,
+        "n_linkedin_posts": 1,
         "top_themes": [
           "consolidation",
           "data_unification",
           "native_platform_breadth"
         ],
         "stance_mix": {
-          "implicit_contrast": 15,
-          "named_comparison": 2,
-          "ignores": 2,
-          "category_attack": 2
+          "implicit_contrast": 9,
+          "named_comparison": 1,
+          "ignores": 2
         },
         "personas": [
           "hr_leader",
@@ -26277,19 +26304,18 @@
         "sample_message": "Deel offers transparent, flexible, scalable pricing for global hiring across contractors, full-time employees, and payroll with no hidden fees."
       },
       {
-        "vertical": "global_eor_contractors",
-        "n_artifacts": 25,
-        "n_linkedin_posts": 3,
+        "vertical": "talent_performance",
+        "n_artifacts": 14,
+        "n_linkedin_posts": 4,
         "top_themes": [
           "consolidation",
-          "native_platform_breadth",
-          "data_unification"
+          "data_unification",
+          "native_platform_breadth"
         ],
         "stance_mix": {
-          "implicit_contrast": 16,
+          "implicit_contrast": 11,
           "named_comparison": 1,
-          "ignores": 2,
-          "category_attack": 1
+          "ignores": 1
         },
         "personas": [
           "hr_leader",
@@ -26298,61 +26324,37 @@
         ],
         "example_urls": [
           "https://www.deel.com/pricing",
-          "https://www.deel.com/case-studies/clara/",
+          "https://www.deel.com/solutions/compensation/",
           "https://www.deel.com/deel-vs-competitors/oyster/"
         ],
         "sample_message": "Deel offers transparent, flexible, scalable pricing for global hiring across contractors, full-time employees, and payroll with no hidden fees."
       },
       {
-        "vertical": "talent_performance",
-        "n_artifacts": 19,
-        "n_linkedin_posts": 6,
+        "vertical": "compliance_legal",
+        "n_artifacts": 14,
+        "n_linkedin_posts": 1,
         "top_themes": [
           "consolidation",
           "native_platform_breadth",
-          "data_unification"
-        ],
-        "stance_mix": {
-          "implicit_contrast": 12,
-          "named_comparison": 1,
-          "ignores": 1,
-          "category_attack": 1
-        },
-        "personas": [
-          "hr_leader",
-          "finance_leader",
-          "operations_leader"
-        ],
-        "example_urls": [
-          "https://www.deel.com/pricing",
-          "https://www.deel.com/solutions/compensation/",
-          "https://www.deel.com/deel-vs-competitors/oyster/"
-        ],
-        "sample_message": "Deel offers transparent, flexible, scalable pricing for global hiring across contractors, full-time employees, and payroll with no hidden fees."
-      },
-      {
-        "vertical": "workforce_analytics",
-        "n_artifacts": 10,
-        "n_linkedin_posts": 3,
-        "top_themes": [
-          "consolidation",
-          "data_unification",
           "compliance"
         ],
         "stance_mix": {
-          "implicit_contrast": 7
+          "ignores": 2,
+          "implicit_contrast": 5,
+          "category_attack": 1,
+          "named_comparison": 1
         },
         "personas": [
           "hr_leader",
-          "finance_leader",
-          "operations_leader"
+          "operations_leader",
+          "founder_or_ceo"
         ],
         "example_urls": [
-          "https://www.deel.com/solutions/compensation/",
-          "https://web.archive.org/web/20251102023231id_/https://www.deel.com/",
-          "https://web.archive.org/web/20260401212929id_/https://www.deel.com/"
+          "https://web.archive.org/web/20250712163525id_/https://www.deel.com/",
+          "https://web.archive.org/web/20250901052234id_/https://www.deel.com/",
+          "https://web.archive.org/web/20251102023231id_/https://www.deel.com/"
         ],
-        "sample_message": "Replace manual compensation spreadsheets with a unified platform to run faster, fairer, and compliant compensation reviews across global teams."
+        "sample_message": "Deel is an all-in-one global people platform that consolidates payroll, HR, compliance, and worker management across 150 countries into a single system."
       },
       {
         "vertical": "immigration_mobility",
@@ -26382,44 +26384,42 @@
       },
       {
         "vertical": "benefits",
-        "n_artifacts": 8,
+        "n_artifacts": 6,
         "n_linkedin_posts": 0,
         "top_themes": [
           "consolidation",
-          "data_unification",
-          "compliance"
+          "data_unification"
         ],
         "stance_mix": {
-          "implicit_contrast": 7,
+          "implicit_contrast": 5,
           "named_comparison": 1
         },
         "personas": [
           "hr_leader",
-          "finance_leader",
-          "operations_leader"
+          "founder_or_ceo",
+          "finance_leader"
         ],
         "example_urls": [
           "https://www.deel.com/segments/startups/",
           "https://community.scoop.co.nz/2026/03/deel-unifies-the-global-worker-lifecycle-at-the-big-deel-2026/",
-          "https://www.deel.com/pricing/"
+          "https://www.deel.com/solutions/"
         ],
         "sample_message": "Deel provides a single integrated platform for startups to hire, manage, and pay employees globally across 150+ countries with built-in compliance and support."
       },
       {
         "vertical": "it_device_management",
-        "n_artifacts": 7,
+        "n_artifacts": 6,
         "n_linkedin_posts": 0,
         "top_themes": [
           "consolidation",
-          "data_unification",
-          "security_and_control"
+          "data_unification"
         ],
         "stance_mix": {
           "implicit_contrast": 6
         },
         "personas": [
-          "founder_or_ceo",
           "hr_leader",
+          "founder_or_ceo",
           "operations_leader"
         ],
         "example_urls": [
@@ -26430,78 +26430,92 @@
         "sample_message": "Deel provides a single integrated platform for startups to hire, manage, and pay employees globally across 150+ countries with built-in compliance and support."
       },
       {
-        "vertical": "time_attendance",
+        "vertical": "workforce_analytics",
         "n_artifacts": 5,
         "n_linkedin_posts": 1,
         "top_themes": [
-          "native_platform_breadth",
-          "automation"
+          "data_unification",
+          "consolidation",
+          "compliance"
         ],
         "stance_mix": {
-          "named_comparison": 1,
-          "category_attack": 2,
-          "implicit_contrast": 1
+          "implicit_contrast": 5
         },
         "personas": [
-          "operations_leader",
+          "hr_leader",
           "finance_leader",
-          "hr_leader"
+          "operations_leader"
         ],
         "example_urls": [
-          "https://www.deel.com/deel-vs-competitors/oyster/",
-          "https://www.businesswire.com/news/home/20250818288059/en/Deel-Launches-AI-Workforce",
-          "https://internationalbusinessnews.co.uk/deel-launches-field-services-to-scale-physical-workforces-across-global-markets/"
+          "https://www.deel.com/solutions/compensation/",
+          "https://community.scoop.co.nz/2026/03/deel-unifies-the-global-worker-lifecycle-at-the-big-deel-2026/",
+          "https://www.deel.com/solutions/"
         ],
-        "sample_message": "Deel provides superior global employment infrastructure with in-house capabilities, broader integrations, and more payment options than Oyster, supported by bes"
+        "sample_message": "Replace manual compensation spreadsheets with a unified platform to run faster, fairer, and compliant compensation reviews across global teams."
       },
       {
         "vertical": "identity_security",
-        "n_artifacts": 5,
+        "n_artifacts": 3,
         "n_linkedin_posts": 0,
         "top_themes": [
           "consolidation",
-          "security_and_control",
-          "api_extensibility"
+          "automation"
         ],
         "stance_mix": {
-          "implicit_contrast": 4
+          "implicit_contrast": 3
         },
         "personas": [
           "it_leader",
           "founder_or_ceo",
-          "operations_leader"
+          "hr_leader"
         ],
         "example_urls": [
           "https://www.deel.com/solutions/",
-          "https://www.deel.com/security/",
-          "https://www.deel.com/solutions/it/"
+          "https://www.deel.com/solutions/it/",
+          "https://www.deel.com/solutions/it/access-management/"
         ],
         "sample_message": "Deel provides an integrated platform spanning payroll, HR, IT, hiring, benefits, and mobility to simplify global workforce management in one system."
       },
       {
-        "vertical": "spend_expense",
-        "n_artifacts": 4,
-        "n_linkedin_posts": 2,
+        "vertical": "time_attendance",
+        "n_artifacts": 2,
+        "n_linkedin_posts": 0,
         "top_themes": [
-          "data_unification",
-          "consolidation",
-          "employee_experience"
+          "native_platform_breadth"
         ],
         "stance_mix": {
-          "implicit_contrast": 2,
-          "category_attack": 1
+          "named_comparison": 1
+        },
+        "personas": [
+          "hr_leader",
+          "operations_leader",
+          "finance_leader"
+        ],
+        "example_urls": [
+          "https://www.deel.com/deel-vs-competitors/oyster/",
+          "https://www.businesswire.com/news/home/20250818288059/en/Deel-Launches-AI-Workforce"
+        ],
+        "sample_message": "Deel provides superior global employment infrastructure with in-house capabilities, broader integrations, and more payment options than Oyster, supported by bes"
+      },
+      {
+        "vertical": "spend_expense",
+        "n_artifacts": 1,
+        "n_linkedin_posts": 0,
+        "top_themes": [
+          "consolidation"
+        ],
+        "stance_mix": {
+          "implicit_contrast": 1
         },
         "personas": [
           "finance_leader",
-          "founder_or_ceo",
-          "operations_leader"
+          "operations_leader",
+          "hr_leader"
         ],
         "example_urls": [
-          "https://stripe.com/newsroom/news/deel-and-stripe",
-          "https://www.deel.com/solutions/payroll/",
-          "https://www.linkedin.com/posts/shahriyarmim_yesterday-we-launched-the-new-deel-app-activity-7468585820481036288-GcYo"
+          "https://www.deel.com/solutions/payroll/"
         ],
-        "sample_message": "Deel leverages Stripe's stablecoin infrastructure to enable contractors globally to hold, earn, and spend dollar-backed payments securely and compliantly at sca"
+        "sample_message": "Deel provides a single unified platform for running compliant payroll across 130+ countries with self-serve or managed options, automatic compliance, and global"
       }
     ],
     "by_artifact": {
@@ -26509,26 +26523,19 @@
         "payroll",
         "global_eor_contractors",
         "hris_core_hr",
-        "talent_performance",
-        "compliance_legal"
+        "talent_performance"
       ],
       "ART-3f6c6de4cef1": [
-        "payroll",
-        "hris_core_hr",
-        "compliance_legal"
+        "hris_core_hr"
       ],
       "ART-2bcdefa729fe": [
         "payroll",
         "hris_core_hr",
         "talent_performance",
-        "workforce_analytics",
-        "compliance_legal"
+        "workforce_analytics"
       ],
       "ART-c639dcb3dde9": [
-        "payroll",
-        "global_eor_contractors",
-        "hris_core_hr",
-        "compliance_legal"
+        "payroll"
       ],
       "ART-12ebc782a081": [
         "payroll",
@@ -26536,7 +26543,6 @@
         "hris_core_hr",
         "talent_performance",
         "time_attendance",
-        "compliance_legal",
         "immigration_mobility"
       ],
       "ART-c6f9876b12a5": [
@@ -26545,7 +26551,6 @@
         "hris_core_hr",
         "benefits",
         "it_device_management",
-        "compliance_legal",
         "immigration_mobility"
       ],
       "ART-808bc34ae328": [
@@ -26557,7 +26562,6 @@
       "ART-bd4fe9c61ca1": [
         "payroll",
         "global_eor_contractors",
-        "hris_core_hr",
         "compliance_legal"
       ],
       "ART-8f452d2b000d": [
@@ -26565,7 +26569,6 @@
         "global_eor_contractors",
         "hris_core_hr",
         "talent_performance",
-        "workforce_analytics",
         "compliance_legal"
       ],
       "ART-c262c467757d": [
@@ -26584,15 +26587,10 @@
       ],
       "ART-62b7ab8d88b4": [
         "payroll",
-        "global_eor_contractors",
-        "hris_core_hr",
-        "workforce_analytics",
-        "compliance_legal",
         "immigration_mobility"
       ],
       "ART-04c06e2f415b": [
         "payroll",
-        "global_eor_contractors",
         "hris_core_hr",
         "benefits",
         "talent_performance",
@@ -26600,31 +26598,21 @@
         "workforce_analytics",
         "immigration_mobility"
       ],
-      "ART-c0830170ee04": [
-        "compliance_legal"
-      ],
       "ART-7207e272ebd7": [
         "payroll",
-        "time_attendance",
-        "compliance_legal"
+        "time_attendance"
       ],
       "ART-625d3a3b025f": [
         "payroll",
         "global_eor_contractors",
-        "time_attendance",
         "compliance_legal"
       ],
       "ART-ccfe2dfd9cab": [
-        "global_eor_contractors",
-        "spend_expense"
+        "global_eor_contractors"
       ],
       "ART-9709c00e83ed": [
-        "payroll",
         "global_eor_contractors",
-        "hris_core_hr",
-        "benefits",
-        "talent_performance",
-        "compliance_legal"
+        "talent_performance"
       ],
       "ART-a6157536d5d3": [
         "payroll",
@@ -26638,15 +26626,8 @@
         "compliance_legal",
         "immigration_mobility"
       ],
-      "ART-03911f519bfc": [
-        "payroll",
-        "it_device_management",
-        "identity_security",
-        "compliance_legal"
-      ],
       "ART-ea35d1c16148": [
         "payroll",
-        "hris_core_hr",
         "benefits",
         "compliance_legal",
         "immigration_mobility"
@@ -26655,55 +26636,42 @@
         "payroll",
         "global_eor_contractors",
         "benefits",
-        "spend_expense",
-        "compliance_legal"
+        "spend_expense"
       ],
       "ART-08e192d6f18f": [
-        "hris_core_hr",
         "it_device_management",
-        "identity_security",
-        "workforce_analytics",
-        "compliance_legal"
+        "identity_security"
       ],
       "ART-b0676cebb1b8": [
         "payroll",
         "global_eor_contractors",
         "talent_performance",
-        "it_device_management",
-        "compliance_legal"
+        "it_device_management"
       ],
       "ART-f629e262ac8f": [
         "payroll",
-        "hris_core_hr",
-        "compliance_legal",
         "immigration_mobility"
       ],
       "ART-98a434b30777": [
         "payroll",
         "global_eor_contractors",
-        "hris_core_hr",
-        "identity_security",
-        "compliance_legal"
+        "hris_core_hr"
       ],
       "ART-2c4a32c94446": [
         "payroll",
         "global_eor_contractors",
         "hris_core_hr",
         "benefits",
-        "talent_performance",
         "it_device_management",
         "compliance_legal",
         "immigration_mobility"
       ],
       "ART-c0e8bf8e46ce": [
-        "time_attendance",
-        "identity_security",
-        "compliance_legal"
+        "identity_security"
       ],
       "ART-638b92a2036a": [
         "payroll",
         "global_eor_contractors",
-        "benefits",
         "workforce_analytics",
         "compliance_legal"
       ],
@@ -26712,20 +26680,10 @@
         "hris_core_hr",
         "talent_performance"
       ],
-      "ART-a191821dd1db": [
-        "talent_performance",
-        "workforce_analytics"
-      ],
-      "ART-a184aaba607d": [
-        "talent_performance"
-      ],
       "ART-3c7cea414238": [
-        "payroll",
-        "global_eor_contractors",
-        "compliance_legal"
+        "payroll"
       ],
       "ART-71d5de53ee8e": [
-        "hris_core_hr",
         "talent_performance"
       ],
       "ART-406e1edaf39c": [
@@ -26734,53 +26692,32 @@
         "workforce_analytics",
         "immigration_mobility"
       ],
-      "ART-c2d90671d79a": [
-        "compliance_legal"
-      ],
-      "ART-5d392e2953ec": [
-        "spend_expense"
-      ],
       "ART-2021b1e00f1e": [
-        "hris_core_hr",
-        "talent_performance",
-        "workforce_analytics"
+        "talent_performance"
       ],
       "ART-1c2789f124c8": [
         "talent_performance"
       ],
       "ART-e5377af9207d": [
-        "payroll",
-        "global_eor_contractors",
-        "hris_core_hr",
-        "compliance_legal"
+        "payroll"
       ],
       "ART-0edf90ce9fbc": [
         "payroll",
         "compliance_legal"
       ],
       "ART-d8a01af1858a": [
-        "payroll",
-        "hris_core_hr",
-        "time_attendance",
-        "compliance_legal"
-      ],
-      "ART-5f2e0abb92be": [
-        "spend_expense"
+        "payroll"
       ],
       "ART-c77f7e59d1ab": [
-        "global_eor_contractors",
         "hris_core_hr",
-        "talent_performance",
         "compliance_legal"
       ],
       "ART-2f8f12af1295": [
         "payroll",
         "hris_core_hr",
-        "talent_performance",
         "compliance_legal"
       ],
       "ART-6d3b72784667": [
-        "global_eor_contractors",
         "hris_core_hr",
         "compliance_legal"
       ]
@@ -32887,103 +32824,153 @@
           "cep": "consolidating_hr_tools",
           "competitor_pages": 28,
           "focal_pages": 31,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "automating_onboarding_offboarding",
           "competitor_pages": 21,
           "focal_pages": 18,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "hris_core_hr"
+          ]
         },
         {
           "cep": "opening_new_country",
           "competitor_pages": 31,
           "focal_pages": 3,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "hiring_first_international_employee",
           "competitor_pages": 15,
           "focal_pages": 3,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "reducing_payroll_errors",
           "competitor_pages": 8,
           "focal_pages": 9,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "preparing_for_audit",
           "competitor_pages": 8,
           "focal_pages": 8,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "hris_core_hr"
+          ]
         },
         {
           "cep": "not_observed",
           "competitor_pages": 4,
           "focal_pages": 9,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": []
         },
         {
           "cep": "controlling_app_access",
           "competitor_pages": 3,
           "focal_pages": 9,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "it_device_management",
+            "identity_security"
+          ]
         },
         {
           "cep": "managing_contractors_and_employees",
           "competitor_pages": 7,
           "focal_pages": 3,
-          "ownership": "contested"
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "integrating_an_acquisition",
           "competitor_pages": 7,
           "focal_pages": 0,
-          "ownership": "competitor_advantage"
-        },
-        {
-          "cep": "replacing_a_peo",
-          "competitor_pages": 2,
-          "focal_pages": 2,
-          "ownership": "contested"
+          "ownership": "competitor_advantage",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "reducing_software_spend",
           "competitor_pages": 0,
           "focal_pages": 4,
-          "ownership": "focal_owns"
+          "ownership": "focal_owns",
+          "top_verticals": []
+        },
+        {
+          "cep": "replacing_a_peo",
+          "competitor_pages": 2,
+          "focal_pages": 2,
+          "ownership": "contested",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "moving_upmarket",
           "competitor_pages": 0,
           "focal_pages": 2,
-          "ownership": "focal_owns"
-        },
-        {
-          "cep": "expanding_globally",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage"
-        },
-        {
-          "cep": "reducing_operational_friction",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage"
+          "ownership": "focal_owns",
+          "top_verticals": []
         },
         {
           "cep": "automating_workflows",
           "competitor_pages": 1,
           "focal_pages": 0,
-          "ownership": "competitor_advantage"
+          "ownership": "competitor_advantage",
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_globally",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "reducing_operational_friction",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": []
         },
         {
           "cep": "paying_global_contractors",
           "competitor_pages": 1,
           "focal_pages": 0,
-          "ownership": "competitor_advantage"
+          "ownership": "competitor_advantage",
+          "top_verticals": []
         }
       ]
     }
@@ -33024,6 +33011,8 @@
       "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cemployee_experience\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
+      "vertical_strengths": {},
+      "weakest_vertical": null,
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
@@ -33078,6 +33067,8 @@
       "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cintegration_ecosystem\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
+      "vertical_strengths": {},
+      "weakest_vertical": null,
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
@@ -33142,6 +33133,45 @@
       "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
+      "vertical_strengths": {
+        "payroll": {
+          "n_pages": 13,
+          "strength": "strong"
+        },
+        "global_eor_contractors": {
+          "n_pages": 11,
+          "strength": "strong"
+        },
+        "hris_core_hr": {
+          "n_pages": 9,
+          "strength": "strong"
+        },
+        "benefits": {
+          "n_pages": 5,
+          "strength": "strong"
+        },
+        "it_device_management": {
+          "n_pages": 5,
+          "strength": "strong"
+        },
+        "immigration_mobility": {
+          "n_pages": 6,
+          "strength": "strong"
+        },
+        "compliance_legal": {
+          "n_pages": 10,
+          "strength": "strong"
+        },
+        "talent_performance": {
+          "n_pages": 7,
+          "strength": "strong"
+        },
+        "identity_security": {
+          "n_pages": 2,
+          "strength": "strong"
+        }
+      },
+      "weakest_vertical": null,
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
@@ -33205,6 +33235,13 @@
       "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cautomation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
+      "vertical_strengths": {
+        "payroll": {
+          "n_pages": 2,
+          "strength": "strong"
+        }
+      },
+      "weakest_vertical": null,
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
@@ -33262,6 +33299,33 @@
       "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cnative_platform_breadth\u201d strongly and Rippling's observed proof is none. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
+      "vertical_strengths": {
+        "payroll": {
+          "n_pages": 5,
+          "strength": "strong"
+        },
+        "global_eor_contractors": {
+          "n_pages": 2,
+          "strength": "strong"
+        },
+        "hris_core_hr": {
+          "n_pages": 2,
+          "strength": "strong"
+        },
+        "talent_performance": {
+          "n_pages": 2,
+          "strength": "strong"
+        },
+        "time_attendance": {
+          "n_pages": 2,
+          "strength": "strong"
+        },
+        "compliance_legal": {
+          "n_pages": 2,
+          "strength": "weak"
+        }
+      },
+      "weakest_vertical": "compliance_legal",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
@@ -33320,6 +33384,33 @@
       "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cdata_unification\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
+      "vertical_strengths": {
+        "payroll": {
+          "n_pages": 4,
+          "strength": "strong"
+        },
+        "hris_core_hr": {
+          "n_pages": 3,
+          "strength": "strong"
+        },
+        "talent_performance": {
+          "n_pages": 3,
+          "strength": "strong"
+        },
+        "workforce_analytics": {
+          "n_pages": 3,
+          "strength": "strong"
+        },
+        "immigration_mobility": {
+          "n_pages": 2,
+          "strength": "strong"
+        },
+        "global_eor_contractors": {
+          "n_pages": 2,
+          "strength": "strong"
+        }
+      },
+      "weakest_vertical": null,
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",

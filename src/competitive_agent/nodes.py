@@ -841,12 +841,28 @@ async def generate_opportunities(state: DirectorState, ctx: GraphContext):
     ctx.repository.delete_opportunities(state.run_id)
     state.opportunity_ids = []
 
+    # Per-vertical proof splits (audit HIGH fix): a corpus-wide verdict must not
+    # hide a vertical where the claim is weakly proven and attackable.
+    from .schemas.classification import MarketingClassification
+    from .synthesis import product_vertical_analysis
+
+    _cls = [
+        m
+        for m in ctx.repository.list_classifications(state.run_id, family="merged")
+        if isinstance(m, MarketingClassification)
+    ]
+    _arts = ctx.repository.list_artifacts(run_id=state.run_id)
+    verticals_by_artifact = product_vertical_analysis(_cls, _arts, _taxonomy(ctx)).get(
+        "by_artifact", {}
+    )
+
     gaps = build_message_proof_gaps(
         state.run_id,
         ctx.scratch.get("focal_run_id"),
         ctx.repository,
         competitor_name=state.company.canonical_name if state.company else "competitor",
         focal_name=_focal_name(ctx, state),
+        verticals_by_artifact=verticals_by_artifact,
     )
     for gap in gaps:
         ctx.repository.save_opportunity(state.run_id, gap)

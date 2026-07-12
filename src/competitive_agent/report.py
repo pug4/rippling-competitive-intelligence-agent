@@ -128,6 +128,23 @@ def _focal_evidence(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     return out
 
 
+def _honest_coverage(state: DirectorState, data: dict[str, Any]) -> dict[str, str]:
+    """Cap website/pricing coverage claims when first-party evidence is thin.
+
+    'high' on 6 first-party fetches after a runtime_exhausted stop overstated
+    coverage (audit): cap current_website + pricing_and_packaging at 'medium'
+    when first-party webpage fetches are below threshold or the run hit its
+    runtime cap mid-collection."""
+    coverage = dict(state.coverage)
+    first_party = sum(1 for a in data["artifacts"] if a.get("source_type") == "webpage")
+    thin = first_party < 10 or state.stop_reason == "runtime_exhausted"
+    if thin:
+        for dim in ("current_website", "pricing_and_packaging"):
+            if coverage.get(dim) == "high":
+                coverage[dim] = "medium"
+    return coverage
+
+
 def _author_from_linkedin_url(url: str) -> str | None:
     """Derive the poster's name from a LinkedIn post URL slug when the provider
     didn't return an author field (linkedin.com/posts/<author-slug>_rest...)."""
@@ -213,6 +230,16 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     # Tag each LinkedIn post with its product verticals (per-offering view).
     for lp in linkedin_posts:
         lp["verticals"] = vertical_analysis["by_artifact"].get(lp["artifact_id"], [])
+    # Tag each CEP row with the top verticals whose pages carry that buying
+    # trigger (audit: CEPs are vertical-shaped; a flat label hides that).
+    _by_artifact = vertical_analysis["by_artifact"]
+    for row in ceps:
+        _vc: dict[str, int] = {}
+        for c in data["classifications"]:
+            if row.get("cep") in (c.get("category_entry_points") or []):
+                for v in _by_artifact.get(c.get("artifact_id"), []):
+                    _vc[v] = _vc.get(v, 0) + 1
+        row["top_verticals"] = [v for v, _ in sorted(_vc.items(), key=lambda kv: -kv[1])[:2]]
     # Source-URL registry (traceability chain): every collected source with its
     # provenance, so a claim's evidence id -> artifact id -> URL+timestamp is
     # resolvable from the JSON alone.
@@ -293,7 +320,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "dominant_message": dom,
         "source_distribution": dist,
         "corpus_skew_warnings": skew,
-        "coverage": state.coverage,
+        "coverage": _honest_coverage(state, data),
         "coverage_detail": coverage_detail,
         "commercial_motion": motion,
         "product_positioning": positioning,
@@ -444,20 +471,30 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     add(f"\n### Strongest message–proof gaps (competitor vs {focal})")
     if gaps:
-        add("| Gap | Competitor proof | " + focal + " proof | Stance | Specificity |")
-        add("|---|---|---|---|---|")
+        add("| Gap | Competitor proof | " + focal + " proof | Weakest vertical | Stance | Specificity |")
+        add("|---|---|---|---|---|---|")
         for g in gaps[:5]:
             label = g.get("short_label") or g["claim_text"][:40]
             stance = (g.get("attackability_detail") or {}).get("overall", g["attackability"])
+            wv = g.get("weakest_vertical")
+            wv_cell = (
+                f"{str(wv).replace('_', ' ')} "
+                f"({(g.get('vertical_strengths', {}).get(wv) or {}).get('strength', '?')})"
+                if wv
+                else "—"
+            )
             add(
                 f"| {label} | {g['proof_strength']} | {g.get('focal_proof_strength', 'n/a')} | "
-                f"{stance} | {g.get('claim_specificity', 'unknown')} |"
+                f"{wv_cell} | {stance} | {g.get('claim_specificity', 'unknown')} |"
             )
         add("")
         add("_Proof distributions and the exact repeated claims are in the Evidence appendix._")
         add(
-            f"\n_Rating rubric: proof 'none' = no third-party/quantified proof observed (a feature "
-            f"assertion or demo alone doesn't count); 'weak' = assertions/demos only; 'moderate' = "
+            f"\n_Rating rubric: proof strength is the MODAL per-page strength for the theme "
+            f"(ties break toward the weaker rating), so a single strong page can't inflate a "
+            f"theme and one quantified outcome may still read 'none' overall — the full "
+            f"distribution is in the JSON. 'Weakest vertical' flags a product vertical where "
+            f"proof diverges below the corpus verdict (attack there first). 'moderate' = "
             f"some named-customer or partial quantified proof; 'strong' = repeated quantified/"
             f"third-party proof. '{focal} proof: missing/partial/available' rates {focal}'s own "
             f"publishable proof for the equivalent claim._"
@@ -503,6 +540,24 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     themes = _theme_counts(cls)
     if themes:
         add("- **Themes observed:** " + ", ".join(f"{t} ({n})" for t, n in themes[:8]))
+    # Divergent verticals (audit): call out product verticals whose narrative
+    # departs from the company-level dominant message so the exec read never
+    # masks a per-offering story. Deterministic join, no model call.
+    _dom_theme = (dom.get("theme") or "").strip()
+    _divergent = [
+        v
+        for v in (pkg.get("product_vertical_analysis") or {}).get("verticals", [])
+        if v.get("n_artifacts", 0) >= 5
+        and _dom_theme
+        and _dom_theme not in (v.get("top_themes") or [])
+    ]
+    if _divergent:
+        add("- **Verticals diverging from the dominant message:**")
+        for v in _divergent[:4]:
+            add(
+                f"  - {v['vertical'].replace('_', ' ')} ({v['n_artifacts']} pages) leads with "
+                f"{', '.join(v.get('top_themes', [])[:2]) or 'other themes'} instead"
+            )
     villains = _villain_wording(cls)
     if villains["exact"]:
         add("- **Villain / status-quo wording (exact):**")
@@ -524,8 +579,20 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         add(
             f"\n## Commercial motion ({m.get('confidence', 'low')} confidence — {m.get('basis', '')})\n"
         )
+        mix = m.get("pricing_disclosure_mix") or {}
+        mix_str = (
+            " (observed mix: " + ", ".join(f"{k}:{v}" for k, v in sorted(mix.items(), key=lambda kv: -kv[1])) + ")"
+            if mix
+            else ""
+        )
         add(
-            f"- **Inferred motion:** {m['primary_motion']} · **pricing disclosure:** {m.get('pricing_disclosure')}"
+            f"- **Inferred motion:** {m['primary_motion']} · **pricing disclosure:** "
+            f"{m.get('pricing_disclosure')}{mix_str}"
+        )
+        add(
+            "  - _Pricing disclosure is the most-open level observed on ≥2 pages "
+            "(best-evidence, noise-guarded); the mix shows every observed level. "
+            "Corpus-wide read — disclosure can differ by product line._"
         )
         ctas = m.get("dominant_ctas") or {}
         if ctas:
@@ -579,15 +646,27 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     ceps = pkg.get("category_entry_points") or []
     if ceps:
         add(f"\n## Category entry points ({company} vs {focal})\n")
-        add("| Buying trigger | Competitor | " + focal + " | Ownership |")
-        add("|---|---:|---:|---|")
+        add("| Buying trigger | Competitor | " + focal + " | Ownership | Verticals |")
+        add("|---|---:|---:|---|---|")
         for r in ceps[:10]:
-            add(f"| {r['cep']} | {r['competitor_pages']} | {r['focal_pages']} | {r['ownership']} |")
+            tv = ", ".join(str(v).replace("_", " ") for v in (r.get("top_verticals") or [])) or "—"
+            add(
+                f"| {r['cep']} | {r['competitor_pages']} | {r['focal_pages']} | "
+                f"{r['ownership']} | {tv} |"
+            )
+        add(
+            "\n_Ownership counts are corpus-wide; the Verticals column shows which product "
+            "categories carry each trigger. For a per-vertical read, scope the chat to that vertical._"
+        )
 
     # --- Persona × channel matrix (feedback #21) ---------------------------
     mtx = pkg.get("persona_channel_matrix") or {}
     if mtx.get("personas") and mtx.get("channels"):
         add("\n## Persona × channel coverage (observed)\n")
+        add(
+            "_Corpus-wide aggregation across all product verticals; use the vertical-scoped "
+            "chat for per-vertical persona reads._\n"
+        )
         add(
             "_Cells are observed-page counts; an empty cell is **not observed**, not proof of absence._\n"
         )
@@ -721,6 +800,13 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             add(f"- {item}")
     else:
         add("- No blocking limitations recorded.")
+    # Negative observations ("searched X, found nothing / provider empty") are
+    # findings — a brief-only reader must see them, not just the trace (audit).
+    negs = list(dict.fromkeys(state.negative_observations))[:10]
+    if negs:
+        add("\n**Sources attempted with no usable data (negative observations):**\n")
+        for neg in negs:
+            add(f"- {neg}")
     add(
         "- Not publicly knowable (excluded): actual ad performance/ROAS, exact spend, negotiated pricing, "
         "complete OOH/employee-post coverage, internal intent."

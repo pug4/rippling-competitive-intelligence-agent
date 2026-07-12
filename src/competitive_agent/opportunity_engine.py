@@ -246,7 +246,13 @@ async def generate_from_gaps(
             competitor=competitor,
             required_category=required_category,
             claim_text=gap.claim_text,
-            theme=gap.short_label or gap.claim_type,
+            theme=(gap.short_label or gap.claim_type)
+            + (
+                f" [per-vertical: weakest proof in {gap.weakest_vertical.replace('_', ' ')} — "
+                f"{(gap.vertical_strengths.get(gap.weakest_vertical) or {}).get('strength')}]"
+                if gap.weakest_vertical
+                else ""
+            ),
             proof_distribution=dist,
             proof_strength=gap.proof_strength,
             focal_equivalent=gap.focal_equivalent_claim or "not observed",

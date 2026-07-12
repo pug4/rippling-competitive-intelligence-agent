@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-4d2dbeb98ef4` · mode `comparative` · execution `live` · generated 2026-07-12T09:10:48.935326+00:00*
+*Run `RUN-4d2dbeb98ef4` · mode `comparative` · execution `live` · generated 2026-07-12T09:35:14.234730+00:00*
 
 ## Executive summary
 
@@ -37,17 +37,17 @@
   - Kill rule: If validation-stage testing shows the comparative claims are repeatedly challenged successfully by prospects or trigger legal/compliance concerns, retire the direct-comparison framing and shift to a non-comparative consolidation proof asset instead.
 
 ### Strongest message–proof gaps (competitor vs Rippling)
-| Gap | Competitor proof | Rippling proof | Stance | Specificity |
-|---|---|---|---|---|
-| employee experience | none | none | investigate | medium |
-| integration ecosystem | none | none | investigate | high |
-| consolidation | strong | strong | reframe | high |
-| automation | strong | strong | reframe | high |
-| native platform breadth | strong | none | reframe | high |
+| Gap | Competitor proof | Rippling proof | Weakest vertical | Stance | Specificity |
+|---|---|---|---|---|---|
+| employee experience | none | none | — | investigate | medium |
+| integration ecosystem | none | none | — | investigate | high |
+| consolidation | strong | strong | — | reframe | high |
+| automation | strong | strong | — | reframe | high |
+| native platform breadth | strong | none | compliance legal (weak) | reframe | high |
 
 _Proof distributions and the exact repeated claims are in the Evidence appendix._
 
-_Rating rubric: proof 'none' = no third-party/quantified proof observed (a feature assertion or demo alone doesn't count); 'weak' = assertions/demos only; 'moderate' = some named-customer or partial quantified proof; 'strong' = repeated quantified/third-party proof. 'Rippling proof: missing/partial/available' rates Rippling's own publishable proof for the equivalent claim._
+_Rating rubric: proof strength is the MODAL per-page strength for the theme (ties break toward the weaker rating), so a single strong page can't inflate a theme and one quantified outcome may still read 'none' overall — the full distribution is in the JSON. 'Weakest vertical' flags a product vertical where proof diverges below the corpus verdict (attack there first). 'moderate' = some named-customer or partial quantified proof; 'strong' = repeated quantified/third-party proof. 'Rippling proof: missing/partial/available' rates Rippling's own publishable proof for the equivalent claim._
 
 ### What not to attack
 - **consolidation** — Deel proves “consolidation” strongly and Rippling's observed proof is strong. Don't attack the claim head-on — reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)
@@ -56,7 +56,7 @@ _Rating rubric: proof 'none' = no third-party/quantified proof observed (a featu
 ## Current public positioning
 
 - **Dominant company message:** Deel is an all-in-one Global People Platform that enables companies to expand globally with speed, compliance, and simplified payroll and HR management across 150 countries.
-  - Basis: surfaces customers, home, pricing, product, segment; source classes events, exa_web, linkedin_post, wayback, webpage
+  - Basis: surfaces customers, home, pricing, product, segment, unknown; source classes events, exa_web, linkedin_post, wayback, webpage
 - **Themes observed:** consolidation (18), automation (7), native_platform_breadth (7), data_unification (5), cost_reduction (3), employee_experience (2), integration_ecosystem (2), security_and_control (1)
 - **Villain / status-quo wording (exact):**
   - “hiring locally”
@@ -76,7 +76,8 @@ _Rating rubric: proof 'none' = no third-party/quantified proof observed (a featu
 
 ## Commercial motion (medium confidence — 35 observed CTAs, 36 pricing signals)
 
-- **Inferred motion:** sales_led · **pricing disclosure:** sales_gated
+- **Inferred motion:** hybrid · **pricing disclosure:** mixed_by_product (observed mix: hidden:30, sales_gated:3, mixed_by_product:3)
+  - _Pricing disclosure is the most-open level observed on ≥2 pages (best-evidence, noise-guarded); the mix shows every observed level. Corpus-wide read — disclosure can differ by product line._
 - **Dominant CTAs (share of observed):** other 0.6, book_demo 0.34, learn_more 0.06
 - **Apparent segment focus (by mentions):** enterprise (38), mid_market (37), global_teams (31), startups (21)
 - _Public-signal inference only — not CAC, conversion, or spend._
@@ -102,35 +103,39 @@ How the competitor positions in each product category it touches (keyword-derive
 
 | Vertical | Pages/posts | LinkedIn posts | Top themes | Stance mix | Personas |
 |---|---:|---:|---|---|---|
-| compliance legal | 35 | 5 | consolidation, automation, native_platform_breadth | implicit_contrast:18, named_comparison:2, ignores:2, category_attack:4 | hr_leader, operations_leader, finance_leader |
-| payroll | 32 | 6 | consolidation, native_platform_breadth, data_unification | implicit_contrast:18, named_comparison:2, ignores:2, category_attack:3 | hr_leader, operations_leader, finance_leader |
-| hris core hr | 28 | 5 | consolidation, data_unification, native_platform_breadth | implicit_contrast:15, named_comparison:2, ignores:2, category_attack:2 | hr_leader, operations_leader, founder_or_ceo |
-| global eor contractors | 25 | 3 | consolidation, native_platform_breadth, data_unification | implicit_contrast:16, named_comparison:1, ignores:2, category_attack:1 | hr_leader, operations_leader, finance_leader |
-| talent performance | 19 | 6 | consolidation, native_platform_breadth, data_unification | implicit_contrast:12, named_comparison:1, ignores:1, category_attack:1 | hr_leader, finance_leader, operations_leader |
-| workforce analytics | 10 | 3 | consolidation, data_unification, compliance | implicit_contrast:7 | hr_leader, finance_leader, operations_leader |
+| payroll | 29 | 6 | consolidation, native_platform_breadth, data_unification | implicit_contrast:17, named_comparison:2, ignores:2, category_attack:3 | hr_leader, operations_leader, finance_leader |
+| global eor contractors | 18 | 1 | consolidation, native_platform_breadth, data_unification | implicit_contrast:12, named_comparison:1, ignores:2, category_attack:1 | operations_leader, hr_leader, finance_leader |
+| hris core hr | 17 | 1 | consolidation, data_unification, native_platform_breadth | implicit_contrast:9, named_comparison:1, ignores:2 | hr_leader, operations_leader, founder_or_ceo |
+| talent performance | 14 | 4 | consolidation, data_unification, native_platform_breadth | implicit_contrast:11, named_comparison:1, ignores:1 | hr_leader, operations_leader, finance_leader |
+| compliance legal | 14 | 1 | consolidation, native_platform_breadth, compliance | ignores:2, implicit_contrast:5, category_attack:1, named_comparison:1 | hr_leader, operations_leader, founder_or_ceo |
 | immigration mobility | 9 | 1 | consolidation, data_unification, native_platform_breadth | named_comparison:2, implicit_contrast:5, category_attack:1 | founder_or_ceo, hr_leader, operations_leader |
-| benefits | 8 | 0 | consolidation, data_unification, compliance | implicit_contrast:7, named_comparison:1 | hr_leader, finance_leader, operations_leader |
-| it device management | 7 | 0 | consolidation, data_unification, security_and_control | implicit_contrast:6 | founder_or_ceo, hr_leader, operations_leader |
-| time attendance | 5 | 1 | native_platform_breadth, automation | named_comparison:1, category_attack:2, implicit_contrast:1 | operations_leader, finance_leader, hr_leader |
-| identity security | 5 | 0 | consolidation, security_and_control, api_extensibility | implicit_contrast:4 | it_leader, founder_or_ceo, operations_leader |
-| spend expense | 4 | 2 | data_unification, consolidation, employee_experience | implicit_contrast:2, category_attack:1 | finance_leader, founder_or_ceo, operations_leader |
+| benefits | 6 | 0 | consolidation, data_unification | implicit_contrast:5, named_comparison:1 | hr_leader, founder_or_ceo, finance_leader |
+| it device management | 6 | 0 | consolidation, data_unification | implicit_contrast:6 | hr_leader, founder_or_ceo, operations_leader |
+| workforce analytics | 5 | 1 | data_unification, consolidation, compliance | implicit_contrast:5 | hr_leader, finance_leader, operations_leader |
+| identity security | 3 | 0 | consolidation, automation | implicit_contrast:3 | it_leader, founder_or_ceo, hr_leader |
+| time attendance | 2 | 0 | native_platform_breadth | named_comparison:1 | hr_leader, operations_leader, finance_leader |
+| spend expense | 1 | 0 | consolidation | implicit_contrast:1 | finance_leader, operations_leader, hr_leader |
 
 ## Category entry points (Deel vs Rippling)
 
-| Buying trigger | Competitor | Rippling | Ownership |
-|---|---:|---:|---|
-| consolidating_hr_tools | 28 | 31 | contested |
-| automating_onboarding_offboarding | 21 | 18 | contested |
-| opening_new_country | 31 | 3 | contested |
-| hiring_first_international_employee | 15 | 3 | contested |
-| reducing_payroll_errors | 8 | 9 | contested |
-| preparing_for_audit | 8 | 8 | contested |
-| not_observed | 4 | 9 | contested |
-| controlling_app_access | 3 | 9 | contested |
-| managing_contractors_and_employees | 7 | 3 | contested |
-| integrating_an_acquisition | 7 | 0 | competitor_advantage |
+| Buying trigger | Competitor | Rippling | Ownership | Verticals |
+|---|---:|---:|---|---|
+| consolidating_hr_tools | 28 | 31 | contested | payroll, global eor contractors |
+| automating_onboarding_offboarding | 21 | 18 | contested | payroll, hris core hr |
+| opening_new_country | 31 | 3 | contested | payroll, global eor contractors |
+| hiring_first_international_employee | 15 | 3 | contested | payroll, global eor contractors |
+| reducing_payroll_errors | 8 | 9 | contested | payroll, global eor contractors |
+| preparing_for_audit | 8 | 8 | contested | payroll, hris core hr |
+| not_observed | 4 | 9 | contested | — |
+| controlling_app_access | 3 | 9 | contested | it device management, identity security |
+| managing_contractors_and_employees | 7 | 3 | contested | payroll, global eor contractors |
+| integrating_an_acquisition | 7 | 0 | competitor_advantage | payroll, global eor contractors |
+
+_Ownership counts are corpus-wide; the Verticals column shows which product categories carry each trigger. For a per-vertical read, scope the chat to that vertical._
 
 ## Persona × channel coverage (observed)
+
+_Corpus-wide aggregation across all product verticals; use the vertical-scoped chat for per-vertical persona reads._
 
 _Cells are observed-page counts; an empty cell is **not observed**, not proof of absence._
 
@@ -229,6 +234,10 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 ## Limitations and missing data
 
 - No blocking limitations recorded.
+
+**Sources attempted with no usable data (negative observations):**
+
+- Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized.
 - Not publicly knowable (excluded): actual ad performance/ROAS, exact spend, negotiated pricing, complete OOH/employee-post coverage, internal intent.
 
 ## Evidence appendix

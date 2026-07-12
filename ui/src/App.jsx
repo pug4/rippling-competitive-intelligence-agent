@@ -83,7 +83,13 @@ function ChatPanel({ runId, pkg }) {
       const res = await fetch(`/api/runs/${runId}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, history, execution_mode: "live", vertical: vertical || null }),
+        body: JSON.stringify({
+          question,
+          history,
+          // Fixture runs chat against the fixture gateway (keyless deployments).
+          execution_mode: pkg.run?.execution_mode === "fixture" ? "fixture" : "live",
+          vertical: vertical || null,
+        }),
       });
       const data = res.ok ? await res.json() : { answer: "Chat error: " + res.statusText, suggested_followups: [] };
       setMessages((m) => [...m, { role: "assistant", ...data }]);
