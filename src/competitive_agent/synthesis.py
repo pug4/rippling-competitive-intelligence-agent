@@ -284,6 +284,69 @@ def proof_distribution(proof_type_lists: list[list[str]]) -> ProofDistribution:
     )
 
 
+def commercial_motion(classifications: list[MarketingClassification]) -> dict[str, Any]:
+    """Deterministic commercial-motion read from observed CTAs, pricing
+    disclosure, and segment signals (feedback #20). No fabricated economics —
+    this is a public-signal inference, never CAC/conversion/spend.
+    """
+    cta_counts: Counter[str] = Counter()
+    pricing_levels: Counter[str] = Counter()
+    segment_counts: Counter[str] = Counter()
+    motion_signals: Counter[str] = Counter()
+    for c in classifications:
+        if c.cta:
+            cta_counts[_normalize_cta(c.cta)] += 1
+        if c.pricing_disclosure_level and c.pricing_disclosure_level != "unknown":
+            pricing_levels[c.pricing_disclosure_level] += 1
+        for s in c.segments or []:
+            segment_counts[s] += 1
+        for sig in c.commercial_motion_signals or []:
+            motion_signals[sig.lower()] += 1
+
+    total_cta = sum(cta_counts.values())
+    dominant_ctas = {k: round(v / total_cta, 2) for k, v in cta_counts.most_common(5)} if total_cta else {}
+    pricing = pricing_levels.most_common(1)[0][0] if pricing_levels else "unknown"
+
+    # Infer primary motion from the CTA mix + pricing gating (public signals).
+    demo = cta_counts.get("book_demo", 0) + cta_counts.get("contact_sales", 0)
+    free = cta_counts.get("start_free", 0) + cta_counts.get("sign_up", 0)
+    if total_cta == 0:
+        motion = "unclear"
+    elif demo > free and pricing in ("sales_gated", "hidden", "starting_price_only"):
+        motion = "sales_led" if free == 0 else "hybrid_sales_led"
+    elif free > demo:
+        motion = "product_led" if pricing in ("fully_public", "calculator") else "hybrid_plg"
+    else:
+        motion = "hybrid"
+
+    return {
+        "primary_motion": motion,
+        "pricing_disclosure": pricing,
+        "dominant_ctas": dominant_ctas,
+        "segment_focus": {k: v for k, v in segment_counts.most_common(4)},
+        "signals": [s for s, _ in motion_signals.most_common(6)],
+        "confidence": "medium" if total_cta >= 4 else "low",
+        "basis": f"{total_cta} observed CTAs, {sum(pricing_levels.values())} pricing signals",
+    }
+
+
+_CTA_NORMAL = [
+    ("book_demo", ("book a demo", "get a demo", "request a demo", "schedule a demo", "see a demo")),
+    ("contact_sales", ("contact sales", "talk to sales", "talk to an expert", "get a quote", "request pricing")),
+    ("start_free", ("start free", "get started free", "try free", "free trial", "start for free")),
+    ("sign_up", ("sign up", "get started", "create account")),
+    ("learn_more", ("learn more", "explore", "read more")),
+]
+
+
+def _normalize_cta(cta: str) -> str:
+    low = cta.lower()
+    for norm, variants in _CTA_NORMAL:
+        if any(v in low for v in variants):
+            return norm
+    return "other"
+
+
 def coverage_details(
     state: Any,
     artifacts: list[RawArtifact],

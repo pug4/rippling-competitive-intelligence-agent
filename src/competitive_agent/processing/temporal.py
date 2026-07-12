@@ -245,6 +245,20 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
             if v == "downgraded_to_hypothesis"
             else (verdict.confidence if verdict.confidence in ("high", "medium", "low") else "low")
         )
+        # Emergence is inherently confounded by collection asymmetry (reviewer
+        # R4 watch-point): a theme "appearing now" can just mean we collected
+        # current news but no comparable prior surface. Force emergence to
+        # lifecycle=emerging, cap confidence at low, and ALWAYS carry the
+        # coverage-asymmetry alternative explanation.
+        if candidate.get("emergence"):
+            lifecycle = "emerging"
+            confidence = "low"
+            asym = (
+                "this may be a collection/archive coverage asymmetry (current-window news collected "
+                "without a comparable prior-window surface) rather than a real messaging change"
+            )
+            if asym not in verdict.alternative_explanations:
+                verdict.alternative_explanations.insert(0, asym)
 
         coverage = verdict.coverage if verdict.coverage in ("high", "medium", "low") else "low"
         events.append(

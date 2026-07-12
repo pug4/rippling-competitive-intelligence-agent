@@ -83,6 +83,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
             state, data["artifact_models"], data["classification_models"]
         )
     ]
+    motion = synthesis.commercial_motion(data["classification_models"])
     classified_ids = {c.get("artifact_id") for c in data["classifications"]}
     unclassified = [
         {
@@ -128,6 +129,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "corpus_skew_warnings": skew,
         "coverage": state.coverage,
         "coverage_detail": coverage_detail,
+        "commercial_motion": motion,
         "sources": [],
         "artifacts": data["artifacts"],
         "unclassified_artifacts": unclassified,
@@ -304,6 +306,19 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         add("  |---|---:|")
         for s, n in stance:
             add(f"  | {s} | {n} |")
+
+    # --- Commercial motion (feedback #20) ----------------------------------
+    m = pkg.get("commercial_motion", {})
+    if m and m.get("primary_motion") != "unclear":
+        add(f"\n## Commercial motion ({m.get('confidence', 'low')} confidence — {m.get('basis', '')})\n")
+        add(f"- **Inferred motion:** {m['primary_motion']} · **pricing disclosure:** {m.get('pricing_disclosure')}")
+        ctas = m.get("dominant_ctas") or {}
+        if ctas:
+            add("- **Dominant CTAs (share of observed):** " + ", ".join(f"{k} {v}" for k, v in ctas.items()))
+        seg = m.get("segment_focus") or {}
+        if seg:
+            add("- **Apparent segment focus (by mentions):** " + ", ".join(f"{k} ({v})" for k, v in seg.items()))
+        add("- _Public-signal inference only — not CAC, conversion, or spend._")
 
     # --- Strategy over time (feedback #25) ---------------------------------
     add("\n## Strategy over time\n")
