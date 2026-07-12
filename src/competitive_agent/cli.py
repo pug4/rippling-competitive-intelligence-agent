@@ -130,6 +130,88 @@ def eval(
     raise typer.Exit(code=result.returncode)
 
 
+@app.command("eval-benchmark")
+def eval_benchmark(
+    package_run_id: str = typer.Option(None, "--package-run", help="Run id whose brief grounds Layer C"),
+    execution_mode: str = typer.Option("live", "--execution-mode", help="live|cached (needs a model key)"),
+    split: str = typer.Option("heldout", "--split", help="dev|heldout — heldout is the reported split"),
+    limit: int = typer.Option(None, "--limit", help="Cap scored artifacts (cost control)"),
+    per_company: int = typer.Option(18, "--per-company"),
+) -> None:
+    """Run the classification/grounding/validity benchmark over REAL artifacts and
+    write an honest (provisional) report + frozen dataset + machine labels."""
+    import asyncio
+    import json as _json
+    from pathlib import Path
+
+    from .config import get_config, get_settings
+    from .evals.dataset import assemble_dataset, freeze
+    from .evals.report import render_report
+    from .evals.runner import cost_latency_from_trace, run_benchmark_async, write_labels
+    from .prompt_registry import PromptRegistry
+    from .runner import _build_context
+
+    settings = get_settings()
+    config = get_config()
+    db_path = settings.db_path
+    focal = config.focal_company.get("name", "Rippling") if isinstance(config.focal_company, dict) else "Rippling"
+
+    # Freeze the dataset split first (auditable, order-independent).
+    items = assemble_dataset(db_path, per_company=per_company)
+    eval_dir = Path("evals")
+    freeze(items, eval_dir / "dataset.jsonl")
+
+    package = None
+    run_id = package_run_id
+    cost_latency = None
+    if package_run_id:
+        data_path = settings.outputs_dir / "runs" / package_run_id / "data.json"
+        if data_path.exists():
+            package = _json.loads(data_path.read_text(encoding="utf-8"))
+        cost_latency = cost_latency_from_trace(
+            settings.outputs_dir / "runs" / package_run_id / "trace.jsonl"
+        )
+
+    ctx = _build_context(run_id or "eval-benchmark", execution_mode=execution_mode)
+    if ctx.gateway is None:
+        typer.echo("error: benchmark needs a model gateway (set ANTHROPIC_API_KEY)", err=True)
+        raise typer.Exit(code=1)
+    prompts = PromptRegistry()
+    taxonomy = config.taxonomy
+
+    try:
+        result = asyncio.run(
+            run_benchmark_async(
+                db_path,
+                gateway=ctx.gateway,
+                prompts=prompts,
+                taxonomy=taxonomy,
+                focal=focal,
+                package=package,
+                per_company=per_company,
+                split=split,
+                limit=limit,
+            )
+        )
+    except Exception as exc:
+        typer.echo(f"error: {type(exc).__name__}: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    write_labels(result, eval_dir / "labels.jsonl")
+    report_md = render_report(result, run_id=run_id, cost_latency=cost_latency)
+    report_path = eval_dir / "reports" / "benchmark_report.md"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(report_md, encoding="utf-8")
+    typer.echo(f"dataset: {eval_dir / 'dataset.jsonl'} ({result['composition']['total']} artifacts)")
+    typer.echo(f"labels:  {eval_dir / 'labels.jsonl'}")
+    typer.echo(f"report:  {report_path}")
+    typer.echo(
+        f"Layer A schema={result['layer_a_schema_validity']:.0%} "
+        f"B excerpt={result['layer_b_excerpt_validity']:.0%} "
+        f"D n={result['layer_d_classification']['n_artifacts']} (provisional)"
+    )
+
+
 def _run_retry(run_id: str, *, mode: str, target: str | None, reason: str | None, focus: list[str] | None) -> None:
     from .config import get_settings
     from .conversation import create_retry, write_diff_report

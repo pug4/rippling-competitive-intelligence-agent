@@ -26,6 +26,10 @@ routes:
   critique_opportunities: tier2
   challenge_conclusion: tier2
   synthesize_portfolio: tier2
+  # Independent eval answer-key labeler: deliberately a STRONGER tier than the
+  # tier1 classifiers under test, so the reference labels are not produced by
+  # the same model being scored (anti-contamination).
+  eval_labeling: tier2
 
 max_output_tokens:
   tier1: 4096
