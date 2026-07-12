@@ -27,7 +27,7 @@ _IMPORTANCE = {
     "customer_proof": 0.6,
 }
 
-MAX_FETCH_URLS_PER_ACTION = 6
+MAX_FETCH_URLS_PER_ACTION = 10
 # Only fetch pages scored as genuine priority pages (pricing/product/platform/
 # comparison/customers/home ≈ 0.4+). Blog/other pages (0.1) are never worth a
 # model-classification budget and would loop forever on a large site.
@@ -227,7 +227,11 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             if _needs(state, d)
         ]
         under_cap = len(real_fetched) < max_pages
-        if pending and (need_dims or len(real_fetched) < MIN_PAGES_BEFORE_MOVING_ON) and under_cap:
+        # Fetch toward the CONFIGURED cap while priority pages remain — the cap
+        # is the coverage control (audit: the old need_dims gate stopped at 6
+        # pages despite a 48-page budget once coverage dims were satisfied).
+        # need_dims stays as a priority signal via _IMPORTANCE, not a gate.
+        if pending and under_cap:
             batch = [p["url"] for p in pending[:MAX_FETCH_URLS_PER_ACTION]]
             proposals.append(
                 _mk(

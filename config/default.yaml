@@ -32,8 +32,8 @@ execution:
 
 budgets:
   research_budget_usd: 10.00
-  max_runtime_seconds: 3000
-  max_iterations: 60
+  max_runtime_seconds: 3600
+  max_iterations: 90
   max_tool_calls: 200
   max_retries_per_source: 2
 
@@ -60,7 +60,7 @@ collection:
   # round-robin + product-slug scoring, ~48 pages spans every product vertical
   # (payroll/EOR/HRIS/benefits/IT/spend/...) so per-vertical analysis has real
   # coverage instead of one category masking another.
-  max_fetched_pages: 48
+  max_fetched_pages: 60
   fetch_score_threshold: 0.3
   deep_crawl: true
   exa_site_discovery_results: 12
@@ -81,4 +81,4 @@ collection:
 exa_agent:
   effort: auto
   data_sources: []
-  linkedin_num_posts: 15
+  linkedin_num_posts: 30
