@@ -273,6 +273,11 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
     if action is None:
         return state, "decide_continue_or_stop"
 
+    # Synthetic reuse action (retry reanalyze/challenge): pull the parent run's
+    # artifacts as this run's evidence. No tool call, no network, no cost.
+    if action.action_type == "reuse_evidence":
+        return await _execute_reuse_evidence(state, ctx, action)
+
     from .tools.base import ToolContext
 
     tool_ctx = ToolContext(
@@ -312,6 +317,35 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
     return state, "normalize_and_deduplicate"
 
 
+async def _execute_reuse_evidence(state: DirectorState, ctx: GraphContext, action: ResearchAction):
+    """Build a ToolResult from the parent run's stored artifacts so the existing
+    normalize→classify→synthesize path re-analyzes the same evidence."""
+    from .schemas.artifact import RawArtifact
+
+    parent_id = state.parent_run_id
+    reused = [
+        a
+        for a in (ctx.repository.list_artifacts(run_id=parent_id) if parent_id else [])
+        if isinstance(a, RawArtifact)
+    ]
+    result = ToolResult(
+        action_id=action.action_id,
+        tool_name="reuse_evidence",
+        status="success",
+        artifacts=reused,
+        cost_usd=0.0,
+    )
+    state.executed_action_keys.append(planner.action_key(action.action_type, action.parameters))
+    ctx.scratch["last_result"] = result
+    ctx.scratch["last_action"] = action
+    if ctx.trace:
+        ctx.trace.append(
+            "action_selected",
+            {"action_type": "reuse_evidence", "reused_artifacts": len(reused), "parent_run_id": parent_id},
+        )
+    return state, "normalize_and_deduplicate"
+
+
 def _merge_discovered_urls(state: DirectorState, ctx: GraphContext, result: ToolResult) -> None:
     """Add Exa-discovered first-party URLs to the page map (whole-site depth)."""
     from urllib.parse import urlsplit
@@ -347,6 +381,9 @@ async def normalize_and_deduplicate(state: DirectorState, ctx: GraphContext):
     result: ToolResult | None = ctx.scratch.get("last_result")
     action: ResearchAction | None = ctx.scratch.get("last_action")
     new_artifacts = []
+    # Reused evidence (retry): link the parent's rows to this run instead of
+    # re-saving them, so the parent run's artifacts are never reassigned.
+    reused = bool(action and action.action_type == "reuse_evidence")
     if result and state.company:
         fetched_key = f"fetched_urls:{state.company.company_id}"
         fetched: list[str] = ctx.scratch.setdefault(fetched_key, [])
@@ -359,7 +396,10 @@ async def normalize_and_deduplicate(state: DirectorState, ctx: GraphContext):
                 and getattr(existing, "artifact_id", None) in state.artifact_ids
             ):
                 continue  # duplicate content: never inflates coverage or distributions
-            ctx.repository.save_artifact(state.run_id, artifact)
+            if reused:
+                ctx.repository.link_artifact(state.run_id, artifact.artifact_id)
+            else:
+                ctx.repository.save_artifact(state.run_id, artifact)
             state.artifact_ids.append(artifact.artifact_id)
             new_artifacts.append(artifact)
         # Website map: stash the page map for the planner.

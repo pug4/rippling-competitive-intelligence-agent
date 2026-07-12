@@ -49,6 +49,9 @@ class DirectorState(VersionedModel):
     lookback_days: int = 365
     user_focus: list[str] = Field(default_factory=list)
     retry_mode: str | None = None
+    # Retry mode that re-analyzes a parent's evidence without collecting anew:
+    # the planner proposes a single reuse action, then no further collection.
+    reuse_evidence_only: bool = False
 
     # Resolution
     company: Company | None = None

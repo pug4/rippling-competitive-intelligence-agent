@@ -130,30 +130,33 @@ def eval(
     raise typer.Exit(code=result.returncode)
 
 
-def _not_yet(command: str) -> None:
-    typer.echo(
-        f"'{command}' is scheduled for a later phase (see IMPLEMENTATION_STATUS.md); "
-        "it is intentionally not silently stubbed.",
-        err=True,
-    )
-    raise typer.Exit(code=2)
+def _run_retry(run_id: str, *, mode: str, target: str | None, reason: str | None, focus: list[str] | None) -> None:
+    from .config import get_settings
+    from .conversation import create_retry, write_diff_report
+
+    try:
+        diff = create_retry(run_id, retry_mode=mode, target_id=target, user_reason=reason, focus=focus)
+    except (KeyError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    path = write_diff_report(diff, get_settings().outputs_dir / "runs" / diff["child_run_id"])
+    typer.echo(f"child_run_id: {diff['child_run_id']} (parent {run_id})")
+    typer.echo(diff["final_difference_summary"])
+    if diff["new_opportunities"]:
+        typer.echo("new opportunities: " + "; ".join(diff["new_opportunities"]))
+    typer.echo(f"diff report: {path}")
 
 
 @app.command()
-def deepen(
-    run_id: str = typer.Argument(...),
-    focus: list[str] = typer.Option(..., "--focus"),
-) -> None:
-    """Focused deep dive on an existing run (Phase 4)."""
-    _not_yet("deepen")
+def deepen(run_id: str = typer.Argument(...), focus: list[str] = typer.Option(..., "--focus")) -> None:
+    """Focused deep dive on an existing run, reusing prior evidence."""
+    _run_retry(run_id, mode="collect_deeper_evidence", target=None, reason=None, focus=list(focus))
 
 
 @app.command()
-def challenge(
-    run_id: str = typer.Argument(...), claim: str = typer.Option(None, "--claim")
-) -> None:
-    """Challenge a conclusion with counterevidence (Phase 4)."""
-    _not_yet("challenge")
+def challenge(run_id: str = typer.Argument(...), claim: str = typer.Option(None, "--claim")) -> None:
+    """Challenge a conclusion with counterevidence (child run preserves the parent)."""
+    _run_retry(run_id, mode="challenge_conclusion", target=claim, reason="challenge the conclusion", focus=None)
 
 
 @app.command()
@@ -164,8 +167,22 @@ def feedback(
     thumbs_down: bool = typer.Option(False, "--thumbs-down"),
     reason: str = typer.Option(None, "--reason"),
 ) -> None:
-    """Record feedback on a run or insight (Phase 4)."""
-    _not_yet("feedback")
+    """Record feedback on a run or insight (persists; does not retrain)."""
+    from .conversation import record_feedback
+
+    ftype = "thumbs_up" if thumbs_up else "thumbs_down" if thumbs_down else "retry"
+    target_type = "opportunity" if target and target.startswith("OPP") else "report"
+    try:
+        fid = record_feedback(
+            run_id, target_type=target_type, target_id=target, feedback_type=ftype, reason=reason
+        )
+    except Exception as exc:
+        typer.echo(f"error: {type(exc).__name__}: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"feedback recorded: {fid} ({ftype})")
+    if thumbs_down:
+        typer.echo("Tip: `competitive-agent retry " + run_id + " --mode <reanalyze_same_evidence|"
+                   "collect_deeper_evidence|challenge_conclusion>` to create a child run.")
 
 
 @app.command()
@@ -173,9 +190,24 @@ def retry(
     run_id: str = typer.Argument(...),
     target: str = typer.Option(None, "--target"),
     mode: str = typer.Option("collect_deeper_evidence", "--mode"),
+    reason: str = typer.Option(None, "--reason"),
 ) -> None:
-    """Create a child retry run preserving lineage (Phase 4)."""
-    _not_yet("retry")
+    """Create a child retry run preserving lineage + a difference report."""
+    _run_retry(run_id, mode=mode, target=target, reason=reason, focus=None)
+
+
+@app.command()
+def ask(run_id: str = typer.Argument(...), question: str = typer.Argument(...)) -> None:
+    """Answer a follow-up from stored state, or route to a focused action."""
+    import json as _json
+
+    from .conversation import answer_followup
+
+    try:
+        typer.echo(_json.dumps(answer_followup(run_id, question), indent=2, default=str))
+    except KeyError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
 
 
 if __name__ == "__main__":

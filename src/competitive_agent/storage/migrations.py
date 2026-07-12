@@ -122,9 +122,27 @@ _V1_STATEMENTS: list[str] = [
     """,
 ]
 
+# Association of artifacts to runs beyond the owning run (retry child runs reuse
+# a parent's evidence). An artifact row is owned by exactly one run (its
+# ``run_id`` column); additional runs reference it here. This lets a retry share
+# the parent's evidence WITHOUT reassigning the parent's rows (which would
+# silently destroy the parent's analysis).
+_V2_STATEMENTS: list[str] = [
+    """
+    CREATE TABLE IF NOT EXISTS run_artifacts (
+        run_id TEXT NOT NULL,
+        artifact_id TEXT NOT NULL,
+        created_at TEXT,
+        PRIMARY KEY (run_id, artifact_id)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_run_artifacts_run ON run_artifacts (run_id)",
+]
+
 # version -> list of DDL statements. Append new versions; never edit old ones.
 _MIGRATIONS: dict[int, list[str]] = {
     1: _V1_STATEMENTS,
+    2: _V2_STATEMENTS,
 }
 
 LATEST_USER_VERSION: int = max(_MIGRATIONS)

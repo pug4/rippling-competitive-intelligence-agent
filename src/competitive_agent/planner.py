@@ -97,6 +97,28 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     if state.company is None:
         return []
     company = state.company
+
+    # Reuse mode (retry: reanalyze_same_evidence / challenge_conclusion): do not
+    # collect new evidence. Propose a single reuse action to pull the parent's
+    # artifacts into this run once; afterwards propose nothing so the loop moves
+    # straight to synthesis on the reused corpus.
+    if state.reuse_evidence_only:
+        reuse_key = action_key("reuse_evidence", {})
+        if reuse_key in state.executed_action_keys or not state.parent_run_id:
+            return []
+        return [
+            _mk(
+                state,
+                "reuse_evidence",
+                "reuse_evidence",
+                "current_website",
+                {"parent_run_id": state.parent_run_id},
+                "Retry reuse mode: re-analyze the parent run's evidence without new collection.",
+                reliability=1.0,
+                cost=0.0,
+                latency=0.0,
+            )
+        ]
     cfg = ctx.config
     cap = int(cfg.budgets.get("max_retries_per_source", 2)) if cfg else 2
     proposals: list[ResearchAction] = []
@@ -332,16 +354,16 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         require_dim=False,
     )
     _optional("reviews", "reviews", "search_reviews", "customer_proof",
-              {"company": name, "num_results": 6},
+              {"company": name, "num_results": 4},
               "Review-site buyer language surfaces pains and objections (non-representative).")
     _optional("jobs", "jobs", "search_jobs", "commercial_motion",
-              {"company": name, "num_results": 6},
+              {"company": name, "num_results": 4},
               "Job postings are leading indicators of GTM motion and segment focus.")
     _optional("events", "events", "search_events", "events",
-              {"company": name, "num_results": 6},
+              {"company": name, "num_results": 4},
               "Conference/event presence is a discoverable brand-investment signal.")
     _optional("ooh", "ooh", "search_ooh", "out_of_home",
-              {"company": name, "num_results": 6},
+              {"company": name, "num_results": 4},
               "OOH discovery (low coverage by nature) can reveal category-building spend.")
     _optional("google_ads", "google_ads", "search_google_ads", "paid_media",
               {"advertiser": name, "domain": company.primary_domain},
@@ -354,6 +376,10 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
 def required_dims_needing_exhaustion(state: DirectorState) -> list[str]:
     from .coverage import level_at_least, required_dimensions
 
+    # Reuse mode never collects, so there is nothing to "exhaust" — reused
+    # evidence either establishes a dimension or it doesn't; don't force fallbacks.
+    if state.reuse_evidence_only:
+        return []
     out = []
     for d in required_dimensions(state.mode, state.focal_company is not None):
         level = state.coverage.get(d, "not_attempted")

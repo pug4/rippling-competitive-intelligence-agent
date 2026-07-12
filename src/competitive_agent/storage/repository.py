@@ -331,6 +331,19 @@ class Repository:
         ).fetchone()
         return self.load_payload(row) if row is not None else None
 
+    def link_artifact(self, run_id: str, artifact_id: str) -> None:
+        """Reference an existing artifact from another run (retry evidence reuse).
+
+        The artifact row keeps its owning ``run_id``; this only records that
+        ``run_id`` also uses it. Never reassigns/overwrites the artifact row, so
+        the owning run's evidence is preserved.
+        """
+        self.conn.execute(
+            "INSERT OR IGNORE INTO run_artifacts (run_id, artifact_id, created_at) VALUES (?, ?, ?)",
+            (run_id, artifact_id, _utcnow().isoformat()),
+        )
+        self.conn.commit()
+
     def list_artifacts(
         self,
         *,
@@ -342,8 +355,13 @@ class Repository:
         clauses: list[str] = []
         params: list[Any] = []
         if run_id is not None:
-            clauses.append("run_id = ?")
-            params.append(run_id)
+            # Match artifacts owned by the run OR linked to it via run_artifacts
+            # (retry child runs reuse a parent's evidence without owning the row).
+            clauses.append(
+                "(run_id = ? OR artifact_id IN "
+                "(SELECT artifact_id FROM run_artifacts WHERE run_id = ?))"
+            )
+            params.extend([run_id, run_id])
         if company_id is not None:
             clauses.append("company_id = ?")
             params.append(company_id)

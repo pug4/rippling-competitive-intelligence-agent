@@ -75,6 +75,7 @@ def create_run(
     user_focus: list[str] | None = None,
     parent_run_id: str | None = None,
     retry_mode: str | None = None,
+    reuse_evidence_only: bool = False,
 ) -> tuple[DirectorState, GraphContext]:
     settings = get_settings()
     config = get_config()
@@ -90,6 +91,7 @@ def create_run(
         lookback_days=lookback_days or settings.default_lookback_days,
         user_focus=user_focus or [],
         retry_mode=retry_mode,
+        reuse_evidence_only=reuse_evidence_only,
         budget_usd=float(budgets.get("research_budget_usd", 5.0)),
         max_runtime_seconds=int(budgets.get("max_runtime_seconds", 600)),
         max_iterations=int(budgets.get("max_iterations", 40)),
