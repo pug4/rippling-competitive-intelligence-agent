@@ -1,6 +1,76 @@
 import React, { useEffect, useState } from "react";
+import { HBar, Heatmap, ProofBar } from "./charts";
 
 const pill = (level) => <span className={`pill ${level}`}>{level}</span>;
+
+function DataVisuals({ pkg }) {
+  const cls = pkg.classifications || [];
+  const src = pkg.source_distribution || {};
+  const srcData = Object.entries(src).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  const count = (field) => {
+    const c = {};
+    cls.forEach((x) => { if (x[field]) c[x[field]] = (c[x[field]] || 0) + 1; });
+    return Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  };
+  const themeData = count("primary_theme").slice(0, 8);
+  const stanceData = count("competitive_stance");
+  if (srcData.length === 0 && themeData.length === 0) return null;
+  const total = srcData.reduce((s, d) => s + d.value, 0);
+  return (
+    <>
+      <h2>Data at a glance</h2>
+      <div className="grid2">
+        <div className="card"><div className="title">Source mix ({total} artifacts)</div><HBar data={srcData} /></div>
+        <div className="card"><div className="title">Top message themes</div><HBar data={themeData} colorVar="--good" /></div>
+        <div className="card"><div className="title">Competitive stance (observed)</div><HBar data={stanceData} colorVar="--warn" /></div>
+      </div>
+    </>
+  );
+}
+
+function GapsVisual({ pkg }) {
+  const gaps = pkg.proof_gaps || [];
+  if (gaps.length === 0) return null;
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
+  return (
+    <>
+      <h2>Message–proof gaps (visual)</h2>
+      <p className="empty" style={{ fontSize: 12 }}>
+        For each repeated competitor claim: how strongly {competitor} proves it vs. how strongly {focal} can.
+        Pill color = attackability (green = attack, yellow = investigate, red = don't).
+      </p>
+      <div className="card">
+        {gaps.slice(0, 8).map((g) => (
+          <div className="gaprow" key={g.claim_id}>
+            <div>
+              <div className="gaplabel">{g.short_label}</div>
+              {pill(g.attackability)}
+            </div>
+            <div className="gapbars">
+              <ProofBar strength={g.proof_strength} label={competitor} />
+              <ProofBar strength={g.focal_proof_strength} label={focal} />
+              <div className="gapclaim">
+                Missing: {(g.missing_proof || []).join(", ") || "—"} · specificity {g.claim_specificity}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function PersonaChannelHeatmap({ pkg }) {
+  const m = pkg.persona_channel_matrix || {};
+  if (!m.personas?.length) return null;
+  return (
+    <>
+      <h2>Persona × channel coverage (heatmap)</h2>
+      <div className="card"><Heatmap personas={m.personas} channels={m.channels} cells={m.cells || {}} /></div>
+    </>
+  );
+}
 
 function useJson(url) {
   const [data, setData] = useState(null);
@@ -218,8 +288,11 @@ export default function App() {
               <p className="empty">Fixture mode — synthetic, deterministic data.</p>
             )}
             <ActionBoard pkg={pkg} />
+            <DataVisuals pkg={pkg} />
+            <GapsVisual pkg={pkg} />
             <Positioning pkg={pkg} />
             <StrategyOverTime pkg={pkg} />
+            <PersonaChannelHeatmap pkg={pkg} />
             <Coverage pkg={pkg} />
             <Evidence pkg={pkg} />
           </>

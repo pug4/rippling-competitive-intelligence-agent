@@ -53,6 +53,25 @@ def analyze(
 
 
 @app.command()
+def visualize(run_id: str = typer.Argument(...)) -> None:
+    """Generate a self-contained HTML dashboard (charts of the data + gaps) for a run."""
+    import json as _json
+
+    from .config import get_settings
+    from .visualize import build_dashboard
+
+    run_dir = get_settings().outputs_dir / "runs" / run_id
+    data_path = run_dir / "data.json"
+    if not data_path.exists():
+        typer.echo(f"error: no data.json for run {run_id} (run `render {run_id}` first)", err=True)
+        raise typer.Exit(code=1)
+    pkg = _json.loads(data_path.read_text(encoding="utf-8"))
+    out = run_dir / "dashboard.html"
+    out.write_text(build_dashboard(pkg), encoding="utf-8")
+    typer.echo(f"dashboard: {out}")
+
+
+@app.command()
 def resume(run_id: str = typer.Argument(...)) -> None:
     """Resume an interrupted or awaiting run from its last checkpoint."""
     from .runner import resume_run

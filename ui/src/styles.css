@@ -44,3 +44,29 @@ summary { cursor: pointer; font-size: 13px; }
 .empty { color: var(--muted); font-style: italic; font-size: 13px; }
 .tracerow { font-family: ui-monospace, monospace; font-size: 11px; padding: 3px 0; color: var(--muted); border-bottom: 1px solid var(--border); }
 .tracerow .ev { color: var(--accent); }
+
+/* ---- charts (dependency-free) ---- */
+.hbar { display: flex; flex-direction: column; gap: 5px; }
+.hbar-row { display: grid; grid-template-columns: 140px 1fr 40px; align-items: center; gap: 8px; font-size: 12px; }
+.hbar-label { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar-track { background: var(--panel2); border-radius: 4px; height: 14px; overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: 4px; min-width: 2px; transition: width .3s; }
+.hbar-val { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+
+.proofbar { display: inline-flex; align-items: center; gap: 3px; }
+.proofbar-tag { font-size: 10px; color: var(--muted); width: 74px; text-align: right; margin-right: 4px; }
+.proofseg { width: 14px; height: 8px; border-radius: 2px; display: inline-block; }
+.proofbar-label { font-size: 10px; color: var(--muted); margin-left: 4px; }
+
+.gaprow { display: grid; grid-template-columns: 130px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); align-items: start; }
+.gaprow .gaplabel { font-weight: 600; font-size: 13px; }
+.gaprow .gapbars { display: flex; flex-direction: column; gap: 4px; }
+.gaprow .gapclaim { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.heatmap-wrap { overflow-x: auto; }
+.heatmap { display: grid; gap: 2px; min-width: 480px; }
+.hm-corner { }
+.hm-col { font-size: 10px; color: var(--muted); text-align: center; padding: 2px; word-break: break-word; }
+.hm-rowlabel { font-size: 11px; color: var(--muted); padding-right: 6px; text-align: right; align-self: center; }
+.hm-cell { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; border-radius: 3px; border: 1px solid var(--border); color: var(--text); }

@@ -98,16 +98,26 @@ classifier) and is **provisional pending human adjudication** per
 `evals/adjudication_guide.md` — the report says so loudly and never presents it
 as final accuracy.
 
-### Optional React UI (bonus)
+### Visuals (graphs of the data & gaps)
 
-A Vite React app reads the same validated packages (Action Board, positioning,
-coverage, evidence drill-down) — no separate analytical logic (§40.6):
+Two ways to see the analysis as charts — both from the same validated JSON
+package, no separate analytics (§40.6):
 
 ```bash
+# 1. Self-contained HTML dashboard for any run (opens anywhere, no server):
+uv run competitive-agent visualize RUN_ID     # writes outputs/runs/RUN_ID/dashboard.html
+
+# 2. Interactive React UI:
 make api          # FastAPI on :8000 serving stored packages
 make ui-install   # one-time: npm install in ui/
 make ui-dev       # Vite dev server on :5173 (proxies /api → :8000)
 ```
+
+Both render: **source mix**, **top message themes**, **competitive-stance**
+distribution, the **message–proof gaps** (competitor vs. Rippling proof strength,
+color-coded by attackability), and the **persona × channel coverage heatmap**,
+plus the Action Board, positioning, strategy-over-time, coverage, and evidence
+drill-down.
 
 ## Execution modes
 
