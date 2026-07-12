@@ -51,3 +51,55 @@ model's JSON schema, with `tool_choice={"type":"tool","name":...}`. One repair
 retry on validation failure; optional escalation to the stronger model. Model
 ids are configuration (`config/model_routes.yaml`), logged per call, never
 hardcoded in logic. Keys read from env only; never logged.
+
+## Similarweb via Exa — `POST https://api.exa.ai/agent/runs`
+
+Reached by attaching the **Similarweb provider to an Exa Agent run** (Exa
+Connect) — NOT plain Exa search, and NOT the SharedHttp public-fetch pipeline.
+Called with a direct `httpx.AsyncClient` (`x-api-key` header), like the Exa
+search adapter. Request body:
+
+```jsonc
+{
+  "query": "Using Similarweb, report web-analytics estimates for <domain>: …",
+  "dataSources": [{ "provider": "similarweb" }],   // provider EXPLICITLY attached
+  "outputSchema": { /* bounded JSON Schema, fields below only */ }
+}
+```
+
+Bounded `outputSchema` fields requested (and nothing else):
+`estimated_monthly_visits`, `observation_period`, `traffic_trend`
+(`[{period, visits}]`), `channel_mix` (shares for
+`direct/referral/social/organic_search/paid_search/display/mail`),
+`top_countries` (`[{country, share}]`), `digital_competitors`
+(`[{domain, affinity}]`), and `estimated_paid_keywords` (best-effort, "when
+returned"). If the run is async, it is polled a bounded number of times
+(`GET /agent/runs/{id}`) inside the boundary timeout — it never blocks.
+
+Blueprint §39.7 shows the SDK kwarg `data_sources=[{"provider":"similarweb"}]`;
+the REST body field is camelCase `dataSources`, consistent with the rest of the
+Exa API (`numResults`, `includeDomains`).
+
+Capability-check + labeling (§37.12, §39.7):
+- keep ONLY fields the provider actually returned; **missing fields stay
+  missing** — never synthesized; unrecognized channel keys are dropped;
+- every metric is wrapped `{value, estimated: true, unit}` and the artifact
+  `metadata` carries `{provider: "similarweb", observation_period,
+  estimated: true, unit, retrieval_timestamp}` plus the validated `metrics`;
+- `source_type = "similarweb"`, `collection_method = "exa_similarweb"`,
+  provenance `url = https://www.similarweb.com/website/<domain>/`, and the exact
+  Exa query + `dataSources` are recorded in `metadata`.
+
+Adapter behavior (non-blocking, provider-dependent):
+- missing `exa_api_key` → `unsupported` ("provider not configured"), no request;
+- endpoint/provider absent (HTTP 404/405/501) → `unsupported` cleanly;
+- HTTP 401/403 → `failed_terminal`; 429 / 5xx → `failed_retryable`; run that
+  never completes within the poll budget → `failed_retryable`;
+- empty/absent payload → `empty` + a negative observation; some-but-not-all core
+  fields → `partial` with the missing fields disclosed. Every metric is an
+  ESTIMATE; the report must not depend on keyword/spend estimates.
+
+Docs consulted: https://exa.ai/docs/reference/agent-api/connect/similarweb and
+https://exa.ai/docs/reference/agent-api/connect/overview (2026-07-11). The Agent
+`POST /agent/runs` + `dataSources`/`outputSchema` shape is provider-dependent and
+may evolve; the adapter degrades to `unsupported` if it becomes unavailable.

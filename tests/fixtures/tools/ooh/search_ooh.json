@@ -1,0 +1,66 @@
+{
+  "action_id": "ACT-fixture-ooh",
+  "tool_name": "ooh",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxooh01",
+      "company_id": "example-hr",
+      "source_type": "ooh",
+      "source_name": "ooh",
+      "url": "https://www.adtradepress.example/example-hr-times-square-billboard-takeover",
+      "final_url": "https://www.adtradepress.example/example-hr-times-square-billboard-takeover",
+      "title": "Example HR takes over Times Square in its largest billboard buy",
+      "published_at": "2026-05-14T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Example HR takes over Times Square with a 12-panel out-of-home campaign this week, its largest billboard buy to date. The company said the outdoor push shifts its marketing from performance toward broad brand awareness ahead of a product launch.",
+      "normalized_text": "Example HR takes over Times Square with a 12-panel out-of-home campaign this week, its largest billboard buy to date. The company said the outdoor push shifts its marketing from performance toward broad brand awareness ahead of a product launch.",
+      "content_hash": "f056ff78402b15b0bbb199bd08c8f0a3ad0a6c868269d93598df7d1c8c345193",
+      "metadata": {
+        "exa_query": "\"Example HR\" Times Square",
+        "coverage": "low",
+        "spend_known": false,
+        "reach_known": false,
+        "performance_known": false,
+        "query_family": "times_square",
+        "exa_id": "https://www.adtradepress.example/example-hr-times-square-billboard-takeover"
+      },
+      "collection_method": "exa_ooh",
+      "is_partial": false,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxooh02",
+      "company_id": "example-hr",
+      "source_type": "ooh",
+      "source_name": "ooh",
+      "url": "https://www.linkedin.com/posts/example-hr-brand-team-outdoor-campaign",
+      "final_url": "https://www.linkedin.com/posts/example-hr-brand-team-outdoor-campaign",
+      "title": "Our new Example HR billboard is live on the 101",
+      "published_at": "2026-05-16T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Just spotted the new Example HR billboard on the 101 in San Francisco. Our brand team partnered with an outdoor agency for this transit and highway takeover across the Bay Area. So proud of the creative on this out-of-home campaign!",
+      "normalized_text": "Just spotted the new Example HR billboard on the 101 in San Francisco. Our brand team partnered with an outdoor agency for this transit and highway takeover across the Bay Area. So proud of the creative on this out-of-home campaign!",
+      "content_hash": "9b97f21529f1ab39a9455eeb107ac23d00559689fc041cc35229090bdab4f177",
+      "metadata": {
+        "exa_query": "site:linkedin.com/posts \"Example HR\" billboard",
+        "coverage": "low",
+        "spend_known": false,
+        "reach_known": false,
+        "performance_known": false,
+        "query_family": "linkedin_posts",
+        "exa_id": "https://www.linkedin.com/posts/example-hr-brand-team-outdoor-campaign"
+      },
+      "collection_method": "exa_ooh",
+      "is_partial": false,
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [
+    "OOH discovery is inherently LOW COVERAGE: what surfaced here is a floor, not a census. No universal OOH registry exists, so absence of further hits is never proof of no OOH activity, and no spend, reach, or flight-date data is publicly knowable."
+  ],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

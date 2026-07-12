@@ -1,0 +1,58 @@
+{
+  "action_id": "ACT-fixture-reviews",
+  "tool_name": "reviews",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxrev01",
+      "company_id": "example-hr",
+      "source_type": "reviews",
+      "source_name": "reviews",
+      "url": "https://www.g2.com/products/example-hr/reviews",
+      "final_url": "https://www.g2.com/products/example-hr/reviews",
+      "title": "Example HR Reviews & Ratings",
+      "published_at": "2026-05-14T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Overall a solid HR platform, but the onboarding is painful. Cons: setup took weeks, support was slow to respond, and reporting is limited. Pros: contractor payments are easy and the UI is clean.",
+      "normalized_text": "Overall a solid HR platform, but the onboarding is painful. Cons: setup took weeks, support was slow to respond, and reporting is limited. Pros: contractor payments are easy and the UI is clean.",
+      "content_hash": "9279b3cba303c021f7a634e03a75f875fe1ea14d4a6951d717a09de8559aef05",
+      "metadata": {
+        "exa_query": "\"Example HR\" review OR \"cons\" OR \"pros\" G2 OR Capterra OR TrustRadius",
+        "exa_filters": {"numResults": 8, "includeDomains": ["g2.com", "capterra.com", "trustradius.com"]},
+        "source_perspective": "review_site",
+        "representativeness": "non_representative_selection_biased"
+      },
+      "collection_method": "exa_reviews",
+      "is_partial": false,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxrev02",
+      "company_id": "example-hr",
+      "source_type": "reviews",
+      "source_name": "reviews",
+      "url": "https://www.capterra.com/p/example-hr/reviews/",
+      "final_url": "https://www.capterra.com/p/example-hr/reviews/",
+      "title": "Example HR Reviews 2026 - Capterra",
+      "published_at": "2026-04-02T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "We switched from a legacy suite. The biggest complaint from our team was pricing at renewal and clunky approvals. Great for global payroll though.",
+      "normalized_text": "We switched from a legacy suite. The biggest complaint from our team was pricing at renewal and clunky approvals. Great for global payroll though.",
+      "content_hash": "39332bbbfbaadd0c9f6065f0e2f04b2bd68f6be1b4f440dd91307d2637f3e390",
+      "metadata": {
+        "exa_query": "\"Example HR\" review OR \"cons\" OR \"pros\" G2 OR Capterra OR TrustRadius",
+        "exa_filters": {"numResults": 8, "includeDomains": ["g2.com", "capterra.com", "trustradius.com"]},
+        "source_perspective": "review_site",
+        "representativeness": "non_representative_selection_biased"
+      },
+      "collection_method": "exa_reviews",
+      "is_partial": false,
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

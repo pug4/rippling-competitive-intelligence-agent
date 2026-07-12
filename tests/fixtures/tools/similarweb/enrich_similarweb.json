@@ -1,0 +1,142 @@
+{
+  "action_id": "ACT-fixture-similarweb",
+  "tool_name": "similarweb",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxsimilarweb01",
+      "company_id": "example-hr",
+      "source_type": "similarweb",
+      "source_name": "similarweb",
+      "url": "https://www.similarweb.com/website/example-hr.com/",
+      "final_url": "https://www.similarweb.com/website/example-hr.com/",
+      "title": "Similarweb estimated traffic — example-hr.com",
+      "published_at": null,
+      "first_observed_at": null,
+      "last_observed_at": null,
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Similarweb estimated web analytics for example-hr.com (2026-04 to 2026-06). All values estimated.\n- estimated_monthly_visits (estimated, visits/month): 1250000\n- traffic_trend (estimated, visits/month): [{\"period\": \"2026-04\", \"visits\": 1180000}, {\"period\": \"2026-05\", \"visits\": 1215000}, {\"period\": \"2026-06\", \"visits\": 1250000}]\n- channel_mix (estimated, share_of_traffic): {\"direct\": 0.41, \"display\": 0.02, \"mail\": 0.01, \"organic_search\": 0.33, \"paid_search\": 0.09, \"referral\": 0.08, \"social\": 0.06}\n- top_countries (estimated, share_of_traffic): [{\"country\": \"United States\", \"share\": 0.38}, {\"country\": \"United Kingdom\", \"share\": 0.11}, {\"country\": \"India\", \"share\": 0.09}, {\"country\": \"Germany\", \"share\": 0.06}, {\"country\": \"Canada\", \"share\": 0.05}]\n- digital_competitors (estimated, domain): [{\"affinity\": 0.62, \"domain\": \"deel.com\"}, {\"affinity\": 0.55, \"domain\": \"remote.com\"}, {\"affinity\": 0.4, \"domain\": \"gusto.com\"}]\n- estimated_paid_keywords (estimated, keywords): 1800",
+      "normalized_text": "Similarweb estimated web analytics for example-hr.com (2026-04 to 2026-06). All values estimated. - estimated_monthly_visits (estimated, visits/month): 1250000 - traffic_trend (estimated, visits/month): [{\"period\": \"2026-04\", \"visits\": 1180000}, {\"period\": \"2026-05\", \"visits\": 1215000}, {\"period\": \"2026-06\", \"visits\": 1250000}] - channel_mix (estimated, share_of_traffic): {\"direct\": 0.41, \"display\": 0.02, \"mail\": 0.01, \"organic_search\": 0.33, \"paid_search\": 0.09, \"referral\": 0.08, \"social\": 0.06} - top_countries (estimated, share_of_traffic): [{\"country\": \"United States\", \"share\": 0.38}, {\"country\": \"United Kingdom\", \"share\": 0.11}, {\"country\": \"India\", \"share\": 0.09}, {\"country\": \"Germany\", \"share\": 0.06}, {\"country\": \"Canada\", \"share\": 0.05}] - digital_competitors (estimated, domain): [{\"affinity\": 0.62, \"domain\": \"deel.com\"}, {\"affinity\": 0.55, \"domain\": \"remote.com\"}, {\"affinity\": 0.4, \"domain\": \"gusto.com\"}] - estimated_paid_keywords (estimated, keywords): 1800",
+      "content_hash": "b6c1c680ccc5aaadf536e96d8d29fa1ca1eeed081155a2908d8824488f9c2f04",
+      "metadata": {
+        "provider": "similarweb",
+        "observation_period": "2026-04 to 2026-06",
+        "estimated": true,
+        "unit": "visits/month",
+        "retrieval_timestamp": "2026-07-11T00:00:00Z",
+        "collected_via": "exa_agent",
+        "provider_dependent": true,
+        "exa_query": "Using Similarweb, report web-analytics estimates for the domain example-hr.com: estimated monthly visits, the monthly traffic trend, the marketing channel mix shares (direct, referral, social, organic search, paid search, display, mail), the top countries by traffic share, digital competitors, and estimated paid keywords when available. Report only what Similarweb provides; omit unknown fields.",
+        "exa_data_sources": [
+          {
+            "provider": "similarweb"
+          }
+        ],
+        "domain": "example-hr.com",
+        "metrics": {
+          "estimated_monthly_visits": {
+            "value": 1250000,
+            "estimated": true,
+            "unit": "visits/month"
+          },
+          "traffic_trend": {
+            "value": [
+              {
+                "period": "2026-04",
+                "visits": 1180000
+              },
+              {
+                "period": "2026-05",
+                "visits": 1215000
+              },
+              {
+                "period": "2026-06",
+                "visits": 1250000
+              }
+            ],
+            "estimated": true,
+            "unit": "visits/month"
+          },
+          "channel_mix": {
+            "value": {
+              "direct": 0.41,
+              "referral": 0.08,
+              "social": 0.06,
+              "organic_search": 0.33,
+              "paid_search": 0.09,
+              "display": 0.02,
+              "mail": 0.01
+            },
+            "estimated": true,
+            "unit": "share_of_traffic"
+          },
+          "top_countries": {
+            "value": [
+              {
+                "country": "United States",
+                "share": 0.38
+              },
+              {
+                "country": "United Kingdom",
+                "share": 0.11
+              },
+              {
+                "country": "India",
+                "share": 0.09
+              },
+              {
+                "country": "Germany",
+                "share": 0.06
+              },
+              {
+                "country": "Canada",
+                "share": 0.05
+              }
+            ],
+            "estimated": true,
+            "unit": "share_of_traffic"
+          },
+          "digital_competitors": {
+            "value": [
+              {
+                "domain": "deel.com",
+                "affinity": 0.62
+              },
+              {
+                "domain": "remote.com",
+                "affinity": 0.55
+              },
+              {
+                "domain": "gusto.com",
+                "affinity": 0.4
+              }
+            ],
+            "estimated": true,
+            "unit": "domain"
+          },
+          "estimated_paid_keywords": {
+            "value": 1800,
+            "estimated": true,
+            "unit": "keywords"
+          }
+        },
+        "exa_run_id": "agentrun_fixture_similarweb_example_hr"
+      },
+      "screenshot_path": null,
+      "collection_method": "exa_similarweb",
+      "is_partial": false,
+      "is_fixture": true,
+      "archive_capture_at": null
+    }
+  ],
+  "error_type": null,
+  "error_message": null,
+  "retryable": false,
+  "fallback_actions": [],
+  "capability_snapshot": {},
+  "latency_ms": 0,
+  "cost_usd": 0.0,
+  "coverage_delta": {},
+  "negative_observations": []
+}

@@ -1,0 +1,64 @@
+{
+  "action_id": "ACT-fixture-jobs",
+  "tool_name": "jobs",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxjobs01",
+      "company_id": "example-hr",
+      "source_type": "jobs",
+      "source_name": "jobs",
+      "url": "https://boards.greenhouse.io/examplehr/jobs/sdr-mid-market-na",
+      "final_url": "https://boards.greenhouse.io/examplehr/jobs/sdr-mid-market-na",
+      "title": "Sales Development Representative (SDR), Mid-Market - North America",
+      "published_at": "2026-06-15T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Sales Development Representative (SDR) - Example HR. We are hiring SDRs to build our outbound sales motion targeting mid-market HR and finance leaders in North America. You will partner with Account Executives to source pipeline for our new all-in-one payroll product. This is a leading indicator of an outbound, sales-led motion into the mid-market segment.",
+      "normalized_text": "Sales Development Representative (SDR) - Example HR. We are hiring SDRs to build our outbound sales motion targeting mid-market HR and finance leaders in North America. You will partner with Account Executives to source pipeline for our new all-in-one payroll product. This is a leading indicator of an outbound, sales-led motion into the mid-market segment.",
+      "content_hash": "e53d5e6fa5df54ab3eb5a60f5998abb33c30bb4c5b296c340f3fc01b06c6611d",
+      "metadata": {
+        "exa_query": "\"Example HR\" careers OR jobs OR \"we're hiring\" site:boards.greenhouse.io OR site:jobs.lever.co OR site:linkedin.com/jobs",
+        "signal_type": "leading_indicator",
+        "exa_id": "exa-job-fixture-01",
+        "author": null
+      },
+      "collection_method": "exa_jobs",
+      "is_partial": false,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxjobs02",
+      "company_id": "example-hr",
+      "source_type": "jobs",
+      "source_name": "jobs",
+      "url": "https://jobs.lever.co/examplehr/partnerships-manager-emea",
+      "final_url": "https://jobs.lever.co/examplehr/partnerships-manager-emea",
+      "title": "Partnerships Manager, EMEA",
+      "published_at": "2026-06-20T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Partnerships Manager (EMEA) - Example HR. Example HR is expanding its channel and partner ecosystem. Own relationships with accounting firms and embedded-payroll partners to drive PLG-assisted expansion across EMEA. Prior experience building a partner-led motion in HR or fintech required.",
+      "normalized_text": "Partnerships Manager (EMEA) - Example HR. Example HR is expanding its channel and partner ecosystem. Own relationships with accounting firms and embedded-payroll partners to drive PLG-assisted expansion across EMEA. Prior experience building a partner-led motion in HR or fintech required.",
+      "content_hash": "128fa38eb48620d114ef978f9f861feb72aa3ec065d46da7d6a751071ba833a4",
+      "metadata": {
+        "exa_query": "\"Example HR\" careers OR jobs OR \"we're hiring\" site:boards.greenhouse.io OR site:jobs.lever.co OR site:linkedin.com/jobs",
+        "signal_type": "leading_indicator",
+        "exa_id": "exa-job-fixture-02",
+        "author": null
+      },
+      "collection_method": "exa_jobs",
+      "is_partial": false,
+      "is_fixture": true
+    }
+  ],
+  "error_type": null,
+  "error_message": null,
+  "retryable": false,
+  "fallback_actions": [],
+  "capability_snapshot": {},
+  "latency_ms": 0,
+  "cost_usd": 0.0,
+  "coverage_delta": {},
+  "negative_observations": []
+}

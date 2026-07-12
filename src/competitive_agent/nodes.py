@@ -772,9 +772,13 @@ async def decide_continue_or_stop(state: DirectorState, ctx: GraphContext):
         elif ok and not remaining:
             reason = "required_coverage_reached"
         elif ok and remaining:
-            reason = "required_coverage_reached; optional_actions_skipped=" + ",".join(
-                sorted({a.action_type for a in remaining})
-            )
+            # Required coverage is met, but Level-B optional sources remain
+            # unattempted. Each runs once (executed keys are filtered), so
+            # `remaining` empties within a few cycles; continue to collect
+            # breadth (iteration/runtime/tool caps are the backstops) and
+            # regenerate opportunities against the fuller corpus.
+            ctx.scratch["opportunities_done"] = False
+            return state, "assess_coverage"
         elif not remaining:
             reason = f"no_remaining_actions_with_expected_value; unmet_dimensions={missing}"
 

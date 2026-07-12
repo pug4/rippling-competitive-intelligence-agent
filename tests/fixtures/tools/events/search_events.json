@@ -1,0 +1,33 @@
+{
+  "action_id": "ACT-fixture-events",
+  "tool_name": "events",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxevt01",
+      "company_id": "example-hr",
+      "source_type": "events",
+      "source_name": "events",
+      "url": "https://hrtechconference.com/2026/sponsors/example-hr",
+      "final_url": "https://hrtechconference.com/2026/sponsors/example-hr",
+      "title": "Example HR - Platinum Sponsor | HR Tech Conference 2026",
+      "published_at": "2026-05-14T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Example HR returns as a Platinum Sponsor of HR Tech Conference 2026. Visit booth #412 for a live demo of the all-in-one workforce platform. Example HR's VP of Product will deliver a keynote, 'Unifying HR, payroll, and IT', on the main stage Wednesday.",
+      "normalized_text": "Example HR returns as a Platinum Sponsor of HR Tech Conference 2026. Visit booth #412 for a live demo of the all-in-one workforce platform. Example HR's VP of Product will deliver a keynote, 'Unifying HR, payroll, and IT', on the main stage Wednesday.",
+      "content_hash": "fxevt000000000000000000000000000000000000000000000000000000000001",
+      "metadata": {
+        "exa_query": "\"Example HR\" sponsor OR exhibitor OR speaker OR booth OR keynote OR webinar conference",
+        "presence_types_possible": ["sponsor", "exhibitor", "speaker", "host", "webinar", "customer_speaker"],
+        "exa_id": "https://hrtechconference.com/2026/sponsors/example-hr",
+        "author": null
+      },
+      "collection_method": "exa_events",
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

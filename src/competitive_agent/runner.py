@@ -15,13 +15,25 @@ from .state import DirectorState
 
 
 def _build_registry():
+    from .tools.ads import GoogleAdsTool, LinkedInAdsTool, MetaAdsTool
+    from .tools.events import EventsTool
     from .tools.exa_search import ExaSearchTool
+    from .tools.jobs import JobsTool
+    from .tools.ooh import OOHTool
     from .tools.registry import ToolRegistry
+    from .tools.reviews import ReviewsTool
+    from .tools.similarweb import SimilarwebTool
     from .tools.wayback import WaybackTool
     from .tools.webpage import WebpageFetchTool, WebsiteMapTool
 
     registry = ToolRegistry()
-    for tool in (WebsiteMapTool(), WebpageFetchTool(), WaybackTool(), ExaSearchTool()):
+    # Level-A report-critical adapters first; Level-B optional adapters after.
+    # Each Level-B tool is gated by its own source flag and is non-blocking.
+    for tool in (
+        WebsiteMapTool(), WebpageFetchTool(), WaybackTool(), ExaSearchTool(),
+        SimilarwebTool(), ReviewsTool(), JobsTool(), EventsTool(), OOHTool(),
+        GoogleAdsTool(), MetaAdsTool(), LinkedInAdsTool(),
+    ):
         registry.register(tool)
     return registry
 

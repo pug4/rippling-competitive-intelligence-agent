@@ -1,0 +1,83 @@
+{
+  "action_id": "ACT-fixture-meta-ads",
+  "tool_name": "meta_ads",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-mads0001",
+      "company_id": "example-hr",
+      "source_type": "meta_ads",
+      "source_name": "meta_ads",
+      "url": "https://www.facebook.com/ads/library/?id=900000000000001",
+      "final_url": "https://www.facebook.com/ads/library/?id=900000000000001",
+      "title": "Example HR - consolidate HR stack",
+      "published_at": "2026-06-03T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Stop juggling five HR tools. Example HR runs onboarding, payroll, and benefits from one dashboard. See why teams switch.",
+      "normalized_text": "Stop juggling five HR tools. Example HR runs onboarding, payroll, and benefits from one dashboard. See why teams switch.",
+      "content_hash": "450c9ceeac067e05aaf880318ab548def023ff5e8a0aa312c4e92007c7fd8748",
+      "metadata": {
+        "advertiser": "Example HR",
+        "platform_or_surface": "meta_ad_library",
+        "creative_body": "Stop juggling five HR tools. Example HR runs onboarding, payroll, and benefits from one dashboard. See why teams switch.",
+        "headline": "Consolidate your HR stack",
+        "cta": "Learn More",
+        "format": "image",
+        "first_observed": "2026-06-03",
+        "last_observed": "2026-07-05",
+        "region": "US",
+        "landing_url": "https://www.example-hr.com/",
+        "creative_hash": "450c9ceeac067e05aaf880318ab548def023ff5e8a0aa312c4e92007c7fd8748",
+        "ad_library_id": "900000000000001",
+        "publisher_platforms": [
+          "facebook",
+          "instagram"
+        ],
+        "platform_note": "observed publisher platforms only; NOT spend or delivery allocation (\u00a739.7)."
+      },
+      "collection_method": "ad_library_ui_capture",
+      "is_partial": false,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-mads0002",
+      "company_id": "example-hr",
+      "source_type": "meta_ads",
+      "source_name": "meta_ads",
+      "url": "https://www.facebook.com/ads/library/?id=900000000000002",
+      "final_url": "https://www.facebook.com/ads/library/?id=900000000000002",
+      "title": "Example HR - fast onboarding",
+      "published_at": "2026-06-20T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Onboard your first hire in under 10 minutes. Example HR automates offer letters, devices, and payroll setup.",
+      "normalized_text": "Onboard your first hire in under 10 minutes. Example HR automates offer letters, devices, and payroll setup.",
+      "content_hash": "2b09335085373400ea12bf24ce1ef01ef6b6346b019b8fab2f08532977f6d1bb",
+      "metadata": {
+        "advertiser": "Example HR",
+        "platform_or_surface": "meta_ad_library",
+        "creative_body": "Onboard your first hire in under 10 minutes. Example HR automates offer letters, devices, and payroll setup.",
+        "headline": "Onboard in minutes, not days",
+        "cta": "Sign Up",
+        "format": "video",
+        "first_observed": "2026-06-20",
+        "last_observed": "2026-07-08",
+        "region": "US",
+        "landing_url": "https://www.example-hr.com/onboarding",
+        "creative_hash": "2b09335085373400ea12bf24ce1ef01ef6b6346b019b8fab2f08532977f6d1bb",
+        "ad_library_id": "900000000000002",
+        "publisher_platforms": [
+          "instagram"
+        ],
+        "platform_note": "observed publisher platform only; presence is not delivery share or spend."
+      },
+      "collection_method": "ad_library_ui_capture",
+      "is_partial": false,
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

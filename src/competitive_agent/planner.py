@@ -298,6 +298,41 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             )
         )
 
+    # 7. Level-B optional sources (feature-flagged, non-blocking). Proposed once
+    # each when their coverage dimension is thin and the source is enabled; a
+    # disabled or failing source simply never contributes (the boundary returns
+    # a typed skipped/unsupported result).
+    flags = cfg.sources if cfg else {}
+    name = company.canonical_name
+
+    def _optional(flag, source, action, dim, params, rationale, rel=0.5, require_dim=True):
+        # Optional sources are attempted once each (allowed() filters executed
+        # keys). require_dim=False runs the source once regardless of coverage.
+        if flags.get(flag) and (not require_dim or _needs(state, dim)):
+            proposals.append(_mk(state, action, source, dim, params, rationale, reliability=rel))
+
+    _optional(
+        "similarweb", "similarweb", "enrich_similarweb", "commercial_motion",
+        {"domain": company.primary_domain},
+        "Similarweb (estimated) traffic and channel mix add a demand-side view.",
+        require_dim=False,
+    )
+    _optional("reviews", "reviews", "search_reviews", "customer_proof",
+              {"company": name, "num_results": 6},
+              "Review-site buyer language surfaces pains and objections (non-representative).")
+    _optional("jobs", "jobs", "search_jobs", "commercial_motion",
+              {"company": name, "num_results": 6},
+              "Job postings are leading indicators of GTM motion and segment focus.")
+    _optional("events", "events", "search_events", "events",
+              {"company": name, "num_results": 6},
+              "Conference/event presence is a discoverable brand-investment signal.")
+    _optional("ooh", "ooh", "search_ooh", "out_of_home",
+              {"company": name, "num_results": 6},
+              "OOH discovery (low coverage by nature) can reveal category-building spend.")
+    _optional("google_ads", "google_ads", "search_google_ads", "paid_media",
+              {"advertiser": name, "domain": company.primary_domain},
+              "Google Ads Transparency shows observed public creatives (no performance).")
+
     return [p for p in proposals if allowed(p)]
 
 
