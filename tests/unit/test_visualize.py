@@ -11,17 +11,29 @@ _PKG = {
     "companies": [{"canonical_name": "Deel"}, {"canonical_name": "Rippling"}],
     "source_distribution": {"webpage": 6, "comparison pages": 3, "wayback snapshots": 2},
     "classifications": [
-        {"primary_theme": "consolidation", "competitive_stance": "implicit_contrast"},
-        {"primary_theme": "consolidation", "competitive_stance": "named_comparison"},
-        {"primary_theme": "compliance", "competitive_stance": "implicit_contrast"},
+        {"primary_theme": "consolidation", "competitive_stance": "implicit_contrast",
+         "personas": ["hr_leader"], "funnel_stages": ["awareness"], "villain_normalized": ["point_solution_sprawl"]},
+        {"primary_theme": "consolidation", "competitive_stance": "named_comparison",
+         "personas": ["it_leader"], "funnel_stages": ["consideration"]},
+        {"primary_theme": "compliance", "competitive_stance": "implicit_contrast",
+         "personas": ["hr_leader"], "funnel_stages": ["evaluation"], "villain_normalized": ["compliance_risk"]},
     ],
     "proof_gaps": [
         {"claim_id": "C1", "short_label": "compliance", "attackability": "medium",
          "proof_strength": "weak", "focal_proof_strength": "strong", "claim_specificity": "high",
          "missing_proof": ["independent_validation"]},
     ],
+    "category_entry_points": [
+        {"cep": "consolidating_hr_tools", "competitor_pages": 29, "focal_pages": 48, "ownership": "contested"},
+        {"cep": "opening_new_country", "competitor_pages": 39, "focal_pages": 13, "ownership": "competitor_advantage"},
+    ],
     "opportunities": [{"title": "x"}],
-    "change_events": [],
+    "change_events": [
+        {"change_id": "CH1", "dimension": "theme_emergence", "confidence": "low", "lifecycle": "emerging",
+         "prior_state": "“cost_reduction” not observed", "current_state": "“cost_reduction” present in 9 current-window artifacts",
+         "prior_evidence_ids": ["a", "b", "c", "d"], "current_evidence_ids": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+         "alternative_explanations": ["may be coverage asymmetry"]},
+    ],
     "persona_channel_matrix": {
         "personas": ["hr_leader", "it_leader"],
         "channels": ["website", "events"],
@@ -41,12 +53,26 @@ def test_dashboard_is_self_contained_html():
 
 def test_dashboard_renders_all_chart_sections():
     out = build_dashboard(_PKG)
-    for section in ("Source mix", "message themes", "Competitive stance", "Message–proof gaps", "Persona × channel"):
+    for section in (
+        "Source mix", "message themes", "Competitive stance", "Message–proof gaps",
+        "Persona × channel", "Strategy over time", "attack / defend",
+        "content marketing", "category-entry-point ownership",
+    ):
         assert section in out
     # Data actually rendered.
     assert "Deel" in out and "Rippling" in out
     assert "consolidation" in out  # top theme
     assert "compliance" in out  # gap label
+
+
+def test_role_graphs_render_their_data():
+    out = build_dashboard(_PKG)
+    assert "ATTACK" in out and "BUILD PROOF" in out  # PM matrix quadrants
+    assert "cost_reduction" in out or "cost reduction" in out  # timeline emergence theme
+    assert "consolidating hr tools" in out  # SEO CEP label
+    assert "point_solution_sprawl" in out  # content narrative hook
+    # IC vs exec framing present
+    assert "IC:" in out and "Exec:" in out
 
 
 def test_dashboard_handles_empty_package():
