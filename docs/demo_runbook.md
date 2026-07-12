@@ -90,12 +90,26 @@ Objective layers (schema/excerpt validity, grounding) are final and pass; the
 classification layer is inter-model agreement, clearly marked **provisional**
 until human adjudication (`evals/adjudication_guide.md`).
 
-## 5. Failure recovery (deterministic)
+## 5. Failure recovery & safety (deterministic)
 
-Fixture mode includes empty-source, rate-limit, timeout, malformed-output, and
-prompt-injection fixtures. A forced provider failure produces a typed result, a
-trace event, a coverage/limitation change, and a fallback — the report still
-renders.
+Every source adapter converts exceptions into a typed `ToolResult` at the
+`tools/base.py` boundary, so a provider failure is a finding, not a crash: it
+produces a typed status (`failed_retryable`/`failed_terminal`/`unsupported`/
+`skipped_disabled`), a trace event, a coverage/limitation change, and — where a
+fallback exists — a fallback action on the next planning cycle. The report still
+renders. You can see this in any live run's trace:
+
+```bash
+RUN=$(ls -t outputs/runs | head -1)
+grep -E "tool_failed|fallback_selected|skipped_disabled" outputs/runs/$RUN/trace.jsonl
+```
+
+- **Disabled/unavailable sources** (e.g. Meta/LinkedIn ads, off by default)
+  return a traceable non-blocking status — verified in `tests/behavior/`.
+- **Prompt injection** in fetched public content is defused by application-level
+  gates (verbatim excerpt verification drops fabricated quotes, the URL policy
+  blocks SSRF/metadata/loopback URLs, secrets are redacted) — verified in
+  `tests/security/test_prompt_injection.py`.
 
 ## 6. Optional UI
 

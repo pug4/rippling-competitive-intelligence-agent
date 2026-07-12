@@ -1,4 +1,4 @@
-# Adjudication guide — 50-artifact evaluation set
+# Adjudication guide — evaluation set (36 real Deel + Rippling artifacts)
 
 This guide defines the ground-truth labeling rubric for the evaluation set. It
 is **independent of the production classifier prompts** (per the execution
@@ -6,23 +6,27 @@ contract's anti-contamination rule): labels are produced by a separate labeling
 harness with its own instructions, and the person adjudicating should read only
 this guide and the artifact text — never the system's own classifier output.
 
-## Set composition (blueprint §29, §37.34)
+## Set composition (blueprint §29, §37.34) — AS SHIPPED
 
-- **Workday**: 16 artifacts (large incumbent)
-- **Deel**: 18 artifacts (newer high-growth platform)
-- **Gusto**: 16 artifacts (SMB/mid-market)
-- **50 total.** Include homepage, product page, pricing/packaging page,
-  comparison page, customer proof, a paid ad, an organic company post, an
-  executive/employee post, a launch/press item, and ≥1 historical page per
-  company.
+The originally planned set was 50 artifacts (Workday 16 / Deel 18 / Gusto 16).
+**As shipped, the set is 36 real artifacts — Deel 18 / Rippling 18** — pivoted to
+the Deel + Rippling corpus already collected live, to avoid spending budget on
+fresh collection purely for the benchmark (decision_log #25). The Workday/Gusto
+extension remains an available, documented option, not a silent omission.
+
+- **Deel**: 18 artifacts (newer high-growth platform, the competitor)
+- **Rippling**: 18 artifacts (the focal company)
+- Spanning homepage, product page, pricing/packaging, comparison, customer proof,
+  a paid ad, news, reviews, and ≥1 historical (Wayback) page per company.
+- Only **real live/cached** artifacts are used (fixtures are synthetic).
 
 ## Dev / held-out split (anti-contamination)
 
-- **dev (20 artifacts)**: prompts may be iterated against these.
-- **held-out (30 artifacts)**: scored only at checkpoints; **the held-out
-  numbers are the reported accuracy.** Prompts are never tuned against held-out.
-- The split is recorded in `dataset.jsonl` (`split: dev|heldout`) and frozen
-  before any scoring.
+- The split is **deterministic and order-independent**: a hash of the artifact id
+  assigns held-out (≈60%) vs dev, so it is stable across rebuilds. Recorded in
+  `evals/dataset.jsonl` (`split: dev|heldout`) and frozen before any scoring.
+- Prompts may iterate against **dev** only; **held-out numbers are the reported
+  accuracy** and prompts are never tuned against held-out.
 
 ## Fields to hand-label per artifact
 

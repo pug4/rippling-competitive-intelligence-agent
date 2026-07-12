@@ -1,20 +1,48 @@
 # Evaluation Report
 
-> **Status: methodology defined; scored numbers pending the Phase 6 hard-stop
-> sign-off.** No accuracy number is reported here until the ground-truth set and
-> correctness criteria are signed off (per the execution contract). The harness,
-> scorers, and dataset structure are in place; see `evals/adjudication_guide.md`.
+> **Status: benchmark RUN; objective layers final, classification layer
+> provisional pending human adjudication.** Objective results (schema/excerpt
+> validity, grounding) are reported below. The classification-accuracy number is
+> deliberately withheld until the held-out labels are human-adjudicated per the
+> execution contract. The generated, always-current report is
+> `evals/reports/benchmark_report.md` (produced by `competitive-agent
+> eval-benchmark`); this file is the human-readable methodology + summary.
 
-## Method (locked)
+## Method (as shipped)
 
-- **Dataset**: 50 artifacts — Workday 16 / Deel 18 / Gusto 16 — across homepage,
-  product, pricing, comparison, customer proof, ad, organic post, exec/employee
-  post, launch, and ≥1 historical page per company.
-- **Split**: dev(20) / held-out(30). Prompts iterate on dev only; **reported
-  numbers come from held-out.**
-- **Independence**: ground truth is produced by a labeling harness separate from
-  the production classifier prompts; the adjudicator sees only the artifact and
-  `evals/adjudication_guide.md`, never the system's own output for that artifact.
+- **Dataset**: **36 real artifacts — Deel 18 / Rippling 18** — spanning homepage,
+  product, pricing, comparison, customer proof, paid ad, news, reviews, and
+  historical (Wayback) pages. This is a **pivot from the originally planned 50
+  (Workday 16 / Deel 18 / Gusto 16)** to the real Deel + Rippling corpus already
+  collected live, to avoid spending budget on fresh collection purely for the
+  benchmark (recorded in `docs/decision_log.md` #25). Only real live/cached
+  artifacts are used — fixtures are synthetic and would not test the classifier
+  on real language. The dataset is frozen to `evals/dataset.jsonl`.
+- **Split**: deterministic, order-independent by a hash of the artifact id
+  (held-out ≈ 60%). Prompts iterate on dev only; **reported numbers come from
+  held-out.**
+- **Independence**: ground-truth candidate labels are produced by an independent
+  labeling harness (`evals/labeling.py`) with a from-scratch prompt on a
+  *stronger* model tier (Sonnet) than the classifier under test (Haiku); it never
+  references the production classifier prompts or sees production output for the
+  artifact it labels. Final ground truth requires human adjudication per
+  `evals/adjudication_guide.md`.
+
+## Results (held-out, this run — see `evals/reports/benchmark_report.md`)
+
+- **Layer A — schema validity: 100%.** Every scored artifact produced a valid
+  structured record.
+- **Layer B — excerpt validity: 100%.** Every emitted excerpt appears verbatim in
+  source (the pipeline drops any that don't).
+- **Layer C — grounding: PASS.** 100% material-claim citation coverage, 0 broken
+  evidence references, 0 unsupported opportunities, 0 temporal changes missing a
+  period's evidence, on the live Deel-vs-Rippling reference brief.
+- **Layer D — classification: PROVISIONAL (inter-model agreement, NOT accuracy).**
+  Meaningful only on closed-vocabulary fields: `claim_type` 0.71,
+  `competitive_stance` 0.67. Free-form fields (primary_message, persona, CEP,
+  proof_type) score ~0 by construction (exact match on paraphrases) and require
+  human adjudication or semantic scoring — this is a scoring-metric limitation,
+  not a classifier defect. **No accuracy number is claimed here.**
 
 ## Layers (blueprint §39.12)
 

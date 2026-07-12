@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T03:28:52.434595+00:00",
+    "generated_at": "2026-07-12T04:53:10.612175+00:00",
     "stop_reason": "runtime_exhausted",
     "iterations": 14,
     "tool_cost_usd": 0.098,
@@ -733,25 +733,25 @@
       "ownership": "contested"
     },
     {
-      "cep": "expanding_global_team",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage"
-    },
-    {
       "cep": "expanding_to_multiple_countries",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage"
     },
     {
-      "cep": "scaling_field_operations",
+      "cep": "expanding_global_teams",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage"
     },
     {
-      "cep": "expanding_global_teams",
+      "cep": "expanding_global_team",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage"
+    },
+    {
+      "cep": "scaling_field_operations",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage"
@@ -834,7 +834,407 @@
       }
     }
   },
-  "sources": [],
+  "sources": [
+    {
+      "artifact_id": "ART-5fa6a98027d3",
+      "url": "https://www.deel.com/",
+      "source_type": "sitemap",
+      "retrieved_at": "2026-07-12T01:51:14.673995Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-873fc9e7918b",
+      "url": "https://www.deel.com/pricing/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:14.949948Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-b611a0a31446",
+      "url": "https://www.deel.com/platform",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:16.482482Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-bb27b784e6f8",
+      "url": "https://www.deel.com/legal/platform-terms-of-service/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:16.670461Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-e1e459267ffd",
+      "url": "https://www.deel.com/blog/deel-vs-multiplier-honest-employer-of-record-service-comparison/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:17.167658Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-853837346cc9",
+      "url": "https://www.deel.com/blog/h1b-faqs-change-of-status-vs-consular-processing/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:40.569632Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-2ffa5b3a5fa0",
+      "url": "https://www.deel.com/blog/lease-vs-buy-equipment-analysis/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:40.739672Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-084f656a9605",
+      "url": "https://www.deel.com/blog/deel-payroll-self-serve-vs-managed-payroll/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:40.895103Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-61e20e7c6bde",
+      "url": "https://www.deel.com/blog/eb2-vs-eb3-eb-2-and-eb-3-immigrant-categories-compared/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:41.045119Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-945350c2c9c4",
+      "url": "https://www.deel.com/blog/authentication-vs-authorization/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:51:41.354144Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-936f0001e3d7",
+      "url": "https://www.deel.com/deel-vs-competitors/ontop/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:14.307722Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-a831c39bc75e",
+      "url": "https://www.deel.com/blog/pre-tax-vs-post-tax-deductions/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:14.655870Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-06dcef6febd1",
+      "url": "https://www.deel.com/blog/deel-vs-velocity-global-honest-employer-of-record-service-comparison/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:14.866877Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-af44eed0ad23",
+      "url": "https://www.deel.com/blog/w2-vs-1099/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:15.071357Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-22fa42eb2ff5",
+      "url": "https://www.deel.com/resources/eor-vs-entity-decision-tree/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:15.685232Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-8d4671c91517",
+      "url": "https://www.deel.com/resources/a-guide-to-peo-vs-eor/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:50.848446Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-b200a5249ccc",
+      "url": "https://www.deel.com/blog/mdm-vs-mam/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:51.146515Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-e4c54bb6a9c8",
+      "url": "https://www.deel.com/blog/agents-vs-copilots-vs-chatbots/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:51.418432Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-18ba58ea86f4",
+      "url": "https://www.deel.com/blog/competency-vs-skill-matrix/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:51.686327Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-a69ae86e0d29",
+      "url": "https://www.deel.com/blog/hmo-vs-ppo-guide/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:52:52.068072Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-3f33c48182fc",
+      "url": "https://www.deel.com/blog/international-entrepreneur-rule-vs-o1-visa/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:53:23.868498Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-4af948d626c9",
+      "url": "https://www.deel.com/blog/floating-holiday-vs-pto/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:53:24.047556Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-cf67f7b6a4a7",
+      "url": "https://www.deel.com/blog/tax-id-vs-ein/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:53:24.215158Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-cc4cd67004c5",
+      "url": "https://www.deel.com/blog/getting-paid-1099-vs-w-2/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:53:24.400049Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-97882f87c2ba",
+      "url": "https://www.deel.com/blog/developmental-vs-evaluative-feedback/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:53:24.573797Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-eaecd372f25a",
+      "url": "https://www.deel.com/blog/ztna-vs-vpn/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:54:02.364692Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-220784ef20b9",
+      "url": "https://www.deel.com/blog/deel-vs-ontop-honest-employer-of-record-service-comparison/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:54:02.539331Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-425ce9c51fe9",
+      "url": "https://www.deel.com/blog/deel-it-vs-firstbase/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:54:02.707731Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-78d1dc1e7079",
+      "url": "https://www.deel.com/blog/peo-vs-hro/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:54:03.031132Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-d6fc7c1d1124",
+      "url": "https://www.deel.com/blog/iam-vs-pam/",
+      "source_type": "webpage",
+      "retrieved_at": "2026-07-12T01:54:03.204810Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-7331c67c81f6",
+      "url": "https://web.archive.org/web/20250712163525id_/https://www.deel.com/",
+      "source_type": "wayback",
+      "retrieved_at": "2026-07-12T01:55:13.131931Z",
+      "archive_capture_at": "2025-07-12T16:35:25Z"
+    },
+    {
+      "artifact_id": "ART-50b5e2931c36",
+      "url": "https://web.archive.org/web/20251001081236id_/https://www.deel.com/",
+      "source_type": "wayback",
+      "retrieved_at": "2026-07-12T01:55:13.538024Z",
+      "archive_capture_at": "2025-10-01T08:12:36Z"
+    },
+    {
+      "artifact_id": "ART-fe961cc3d6a2",
+      "url": "https://web.archive.org/web/20260101133927id_/https://www.deel.com/",
+      "source_type": "wayback",
+      "retrieved_at": "2026-07-12T01:55:15.044609Z",
+      "archive_capture_at": "2026-01-01T13:39:27Z"
+    },
+    {
+      "artifact_id": "ART-6d813e2f4490",
+      "url": "https://web.archive.org/web/20260401212929id_/https://www.deel.com/",
+      "source_type": "wayback",
+      "retrieved_at": "2026-07-12T01:55:17.529430Z",
+      "archive_capture_at": "2026-04-01T21:29:29Z"
+    },
+    {
+      "artifact_id": "ART-4b1056293f11",
+      "url": "https://business.scoop.co.nz/2026/05/12/deel-unveils-akai-by-deel-an-ai-powered-platform-to-automate-operations-workflows/",
+      "source_type": "news",
+      "retrieved_at": "2026-07-12T01:56:17.974035Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-77026d061003",
+      "url": "https://www.businesswire.com/news/home/20250818288059/en/Deel-Launches-AI-Workforce",
+      "source_type": "news",
+      "retrieved_at": "2026-07-12T01:56:17.975333Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-8da6cf4f0e5a",
+      "url": "https://community.scoop.co.nz/2026/03/deel-unifies-the-global-worker-lifecycle-at-the-big-deel-2026/",
+      "source_type": "news",
+      "retrieved_at": "2026-07-12T01:56:17.976488Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-0cae9a381253",
+      "url": "https://internationalbusinessnews.co.uk/deel-launches-field-services-to-scale-physical-workforces-across-global-markets/",
+      "source_type": "news",
+      "retrieved_at": "2026-07-12T01:56:17.977276Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-f2619a8e96df",
+      "url": "https://stripe.com/newsroom/news/deel-and-stripe",
+      "source_type": "news",
+      "retrieved_at": "2026-07-12T01:56:17.977844Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-e66aba09c74a",
+      "url": "https://www.g2.com/products/deel/reviews",
+      "source_type": "reviews",
+      "retrieved_at": "2026-07-12T01:56:43.147585Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-4afac17f507d",
+      "url": "https://www.trustradius.com/products/deel/reviews",
+      "source_type": "reviews",
+      "retrieved_at": "2026-07-12T01:56:43.157359Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-21d8eb383fe5",
+      "url": "https://www.trustradius.com/products/deel/reviews/all",
+      "source_type": "reviews",
+      "retrieved_at": "2026-07-12T01:56:43.158310Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-66560faf811d",
+      "url": "https://www.g2.com/sellers/deel",
+      "source_type": "reviews",
+      "retrieved_at": "2026-07-12T01:56:43.158413Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-ddfad1f5b208",
+      "url": "https://www.deel.com/pricing/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.807730Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-d7b82f9c5aba",
+      "url": "https://www.deel.com/solutions/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.808699Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-806f72a97369",
+      "url": "https://deel.com/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.809960Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-69aac89dcb2c",
+      "url": "https://www.deel.com/security/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.810557Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-56f2a508c785",
+      "url": "https://www.deel.com/solutions/it/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.811062Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-61cd458f2044",
+      "url": "https://www.deel.com/case-studies/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.811908Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-31f26165920e",
+      "url": "https://www.deel.com/segments/enterprise/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.812142Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-2a187b019918",
+      "url": "https://www.deel.com/solutions/payroll/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.812826Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-5076d67e16df",
+      "url": "https://www.deel.com/payroll/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.813854Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-52e5026f6bbb",
+      "url": "https://www.deel.com/solutions/compliance/",
+      "source_type": "exa_web",
+      "retrieved_at": "2026-07-12T01:57:17.814853Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-b6dac787618c",
+      "url": "https://www.deel.com/events/SHRM-2025/",
+      "source_type": "events",
+      "retrieved_at": "2026-07-12T02:17:38.802192Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-eba5704413de",
+      "url": "https://conferencegrid.com/companies/deel",
+      "source_type": "events",
+      "retrieved_at": "2026-07-12T02:17:38.802849Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-55a1dd41fbd5",
+      "url": "https://www.deel.com/events/unleash-america-2025/",
+      "source_type": "events",
+      "retrieved_at": "2026-07-12T02:17:38.803207Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-0381d79b6fc1",
+      "url": "https://www.deel.com/events/AWS-Summit-New-York-2025/",
+      "source_type": "events",
+      "retrieved_at": "2026-07-12T02:17:38.803528Z",
+      "archive_capture_at": null
+    }
+  ],
   "artifacts": [
     {
       "artifact_id": "ART-5fa6a98027d3",
@@ -42558,7 +42958,189 @@
       ]
     }
   ],
-  "matrices": [],
+  "matrices": [
+    {
+      "name": "persona_channel_funnel",
+      "matrix": {
+        "personas": [
+          "finance_leader",
+          "founder_or_ceo",
+          "hr_leader",
+          "it_leader",
+          "legal_or_compliance",
+          "operations_leader",
+          "payroll_manager",
+          "people_ops_manager",
+          "security_leader"
+        ],
+        "channels": [
+          "events",
+          "press",
+          "review sites",
+          "website",
+          "website (historical)",
+          "website/social"
+        ],
+        "cells": {
+          "hr_leader": {
+            "website": 20,
+            "website (historical)": 4,
+            "press": 3,
+            "review sites": 4,
+            "website/social": 8,
+            "events": 3
+          },
+          "finance_leader": {
+            "website": 16,
+            "website (historical)": 4,
+            "press": 4,
+            "review sites": 3,
+            "website/social": 9,
+            "events": 3
+          },
+          "founder_or_ceo": {
+            "website": 11,
+            "website (historical)": 4,
+            "press": 3,
+            "review sites": 1,
+            "website/social": 5,
+            "events": 2
+          },
+          "operations_leader": {
+            "website": 14,
+            "website (historical)": 4,
+            "press": 5,
+            "review sites": 3,
+            "website/social": 9,
+            "events": 1
+          },
+          "it_leader": {
+            "website": 7,
+            "website (historical)": 1,
+            "website/social": 4
+          },
+          "people_ops_manager": {
+            "website": 6,
+            "review sites": 1,
+            "website/social": 2
+          },
+          "payroll_manager": {
+            "website": 2,
+            "website/social": 1
+          },
+          "legal_or_compliance": {
+            "website": 2,
+            "website/social": 1
+          },
+          "security_leader": {
+            "website": 1,
+            "website/social": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "category_entry_point_ownership",
+      "matrix": [
+        {
+          "cep": "consolidating_hr_tools",
+          "competitor_pages": 29,
+          "focal_pages": 48,
+          "ownership": "contested"
+        },
+        {
+          "cep": "opening_new_country",
+          "competitor_pages": 39,
+          "focal_pages": 13,
+          "ownership": "contested"
+        },
+        {
+          "cep": "automating_onboarding_offboarding",
+          "competitor_pages": 16,
+          "focal_pages": 31,
+          "ownership": "contested"
+        },
+        {
+          "cep": "hiring_first_international_employee",
+          "competitor_pages": 22,
+          "focal_pages": 6,
+          "ownership": "contested"
+        },
+        {
+          "cep": "managing_contractors_and_employees",
+          "competitor_pages": 11,
+          "focal_pages": 13,
+          "ownership": "contested"
+        },
+        {
+          "cep": "preparing_for_audit",
+          "competitor_pages": 8,
+          "focal_pages": 15,
+          "ownership": "contested"
+        },
+        {
+          "cep": "controlling_app_access",
+          "competitor_pages": 6,
+          "focal_pages": 15,
+          "ownership": "contested"
+        },
+        {
+          "cep": "reducing_payroll_errors",
+          "competitor_pages": 9,
+          "focal_pages": 12,
+          "ownership": "contested"
+        },
+        {
+          "cep": "replacing_a_peo",
+          "competitor_pages": 7,
+          "focal_pages": 3,
+          "ownership": "contested"
+        },
+        {
+          "cep": "reducing_software_spend",
+          "competitor_pages": 0,
+          "focal_pages": 9,
+          "ownership": "focal_owns"
+        },
+        {
+          "cep": "integrating_an_acquisition",
+          "competitor_pages": 7,
+          "focal_pages": 1,
+          "ownership": "contested"
+        },
+        {
+          "cep": "moving_upmarket",
+          "competitor_pages": 1,
+          "focal_pages": 2,
+          "ownership": "contested"
+        },
+        {
+          "cep": "expanding_to_multiple_countries",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage"
+        },
+        {
+          "cep": "expanding_global_teams",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage"
+        },
+        {
+          "cep": "expanding_global_team",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage"
+        },
+        {
+          "cep": "scaling_field_operations",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage"
+        }
+      ]
+    }
+  ],
   "proof_gaps": [
     {
       "claim_id": "GAP-0ace05a38245",
@@ -45476,5 +46058,16 @@
   "trace_summary": {
     "tool_calls": 14
   },
-  "eval_summary": {}
+  "eval_summary": {
+    "n_artifacts": 57,
+    "n_classifications": 56,
+    "n_claims": 10,
+    "n_opportunities": 12,
+    "n_proof_gaps": 24,
+    "n_change_events": 6,
+    "material_claims_total": 10,
+    "material_claims_cited": 10,
+    "corpus_skew_warnings": 0,
+    "note": "In-package self-summary. Full graded benchmark: `competitive-agent eval-benchmark`."
+  }
 }

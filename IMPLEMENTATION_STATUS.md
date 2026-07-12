@@ -46,11 +46,39 @@ outstanding item; everything else is working.
 
 ## Explicitly deferred (decision, not gap)
 
-- Exa LinkedIn adapter and Exa Monitors (public indexed corpus / manual trigger
-  + fixtures on a local machine; §38.17) — interfaces defined, not wired live
-- Live scheduled Exa Monitor webhooks on local machine (manual trigger + fixtures instead; §38.17)
+Surfaced by the coverage audit against the internal blueprints (§36–40); these
+are self-imposed stretch items, none of them a take-home requirement.
+
+- **Static `focal_company/` assets** (`rippling_sources.yaml`,
+  `rippling_proof_inventory.json`, `rippling_vulnerabilities.json`, §37.4):
+  intentionally NOT shipped — focal grounding is done at runtime via the
+  focal-mirror re-analysis (fresher and generic to any focal), so pre-baked
+  Rippling files would be stale and non-generic. Directory left empty by design.
+- **Deep §38 product-entity layer** — `ProductPortfolioSnapshot`/
+  `ProductLaunchEvent` schemas exist but are not instantiated end-to-end, so
+  `product_portfolios[]`/`launches[]` are empty; product intel ships today via
+  `product_positioning` + `category_entry_points`. The launch-validation loop
+  (announced-vs-available) is a one-shot news search, not the full validator.
+- **§38 product/monitor/portfolio DB tables** — only the 7 core tables exist;
+  portfolio runs are in-memory (not persisted). Exa Monitors + webhook receiver
+  interfaces are defined, not wired.
+- Exa LinkedIn / dedicated social-presence adapter (§38.17, §39.7) — social /
+  content-theme coverage is approximated via Exa web+news; no dedicated adapter.
 - Playwright browser collection (flagged off; §27.5)
 - Newsletter/nurture capture, podcast analysis (Level C, interface later)
-- Learned opportunity scoring, calibrated probabilistic confidence (production hardening; §31)
-- Deep §38 product-entity/launch-validation loop (deterministic product positioning shipped; entity graph deferred)
-- Richer UI sections (commercial motion, CEPs, persona×channel, strategy-over-time) — markdown brief has all; UI shows the core (user directive: UI last)
+- Learned opportunity scoring, calibrated probabilistic confidence (§31)
+- Eval Layer E human strategic-usefulness rubric + human-adjudicated accuracy
+  number (withheld pending sign-off, by design)
+- Richer UI sections (commercial motion, CEPs, persona×channel) — markdown brief
+  has all; UI shows the core + Strategy-over-time (user directive: UI last)
+
+## Verified by the coverage audit (Jul 2026)
+
+Original **take-home** requirements: 0 not-covered (all covered or partial). The
+gaps above are all from the internal blueprints. Test coverage now includes
+`tests/security/` (prompt-injection defenses), `tests/golden/` (output-contract
+regression guard — `eval --suite regression` was previously empty), and
+`tests/behavior/test_failure_handling.py` (typed non-blocking failures +
+skip-with-reason). Docs reconciled: EVAL_REPORT/adjudication guide now state the
+real 36-artifact Deel+Rippling set (not the planned 50), and the demo runbook no
+longer claims fixtures that don't exist.

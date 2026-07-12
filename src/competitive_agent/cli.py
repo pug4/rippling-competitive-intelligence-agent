@@ -108,7 +108,9 @@ def demo_check(mode: str = typer.Option("fixture", "--mode", help="fixture|cache
 
 @app.command()
 def eval(
-    suite: str = typer.Option("contracts", "--suite", help="contracts|behavior|regression|all"),
+    suite: str = typer.Option(
+        "contracts", "--suite", help="contracts|behavior|regression|security|all"
+    ),
 ) -> None:
     """Run evaluation suites."""
     import subprocess
@@ -117,6 +119,7 @@ def eval(
         "contracts": ["tests/contract", "tests/unit"],
         "behavior": ["tests/behavior"],
         "regression": ["tests/golden"],
+        "security": ["tests/security"],
     }
     targets = suites.get(suite) if suite != "all" else [p for ps in suites.values() for p in ps]
     if targets is None:

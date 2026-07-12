@@ -148,6 +148,39 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     focal_cls_models = _focal_classifications(ctx, state)
     ceps = synthesis.category_entry_points(data["classification_models"], focal_cls_models)
     focal_evidence = _focal_evidence(ctx, state)
+    # Source-URL registry (traceability chain): every collected source with its
+    # provenance, so a claim's evidence id -> artifact id -> URL+timestamp is
+    # resolvable from the JSON alone.
+    source_registry = [
+        {
+            "artifact_id": a["artifact_id"],
+            "url": a.get("url"),
+            "source_type": a["source_type"],
+            "retrieved_at": a.get("retrieved_at"),
+            "archive_capture_at": a.get("archive_capture_at"),
+        }
+        for a in data["artifacts"]
+        if a.get("url")
+    ]
+    # Named matrices (also exposed as their own top-level keys for convenience).
+    matrices = [
+        {"name": "persona_channel_funnel", "matrix": matrix},
+        {"name": "category_entry_point_ownership", "matrix": ceps},
+    ]
+    claims_list = data["claims"]
+    material_total = sum(1 for c in claims_list if c.get("status") not in ("rejected", "contradicted"))
+    eval_summary = {
+        "n_artifacts": len(data["artifacts"]),
+        "n_classifications": len(data["classifications"]),
+        "n_claims": len(claims_list),
+        "n_opportunities": len(data["opportunities"]),
+        "n_proof_gaps": len(data["proof_gaps"]),
+        "n_change_events": len(data["change_events"]),
+        "material_claims_total": material_total,
+        "material_claims_cited": sum(1 for c in claims_list if c.get("evidence_ids")),
+        "corpus_skew_warnings": len(skew),
+        "note": "In-package self-summary. Full graded benchmark: `competitive-agent eval-benchmark`.",
+    }
     classified_ids = {c.get("artifact_id") for c in data["classifications"]}
     unclassified = [
         {
@@ -199,7 +232,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "product_positioning": positioning,
         "category_entry_points": ceps,
         "persona_channel_matrix": matrix,
-        "sources": [],
+        "sources": source_registry,
         "artifacts": data["artifacts"],
         "unclassified_artifacts": unclassified,
         "evidence": data["evidence"],
@@ -208,10 +241,13 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "focal_evidence": focal_evidence,
         "classifications": data["classifications"],
         "claims": data["claims"],
+        # product_portfolios/launches require the deep §38 product-entity loop
+        # (documented as deferred in IMPLEMENTATION_STATUS.md); product intel is
+        # exposed via product_positioning + category_entry_points today.
         "product_portfolios": [],
         "launches": [],
         "change_events": data["change_events"],
-        "matrices": [],
+        "matrices": matrices,
         "proof_gaps": data["proof_gaps"],
         "opportunities": data["opportunities"],
         "opportunities_rejected": (
@@ -221,7 +257,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "negative_observations": state.negative_observations,
         "tool_failures": [json.loads(f.model_dump_json()) for f in state.failed_actions.values()],
         "trace_summary": {"tool_calls": state.tool_calls_made},
-        "eval_summary": {},
+        "eval_summary": eval_summary,
     }
 
 

@@ -309,6 +309,21 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
     ctx.scratch["last_result"] = result
     ctx.scratch["last_action"] = action
 
+    # Deciding what to SKIP is part of the agentic loop (§39.6): a disabled or
+    # unavailable source is recorded as a deliberate skip-with-reason, not a
+    # silent gap.
+    if result.status in ("skipped_disabled", "empty") and ctx.trace:
+        ctx.trace.append(
+            "source_skipped",
+            {
+                "action_type": action.action_type,
+                "source": action.source_name or result.tool_name,
+                "status": result.status,
+                "reason": result.error_message
+                or (result.negative_observations[0] if result.negative_observations else "no data"),
+            },
+        )
+
     if result.status in ("failed_retryable", "failed_terminal", "unsupported"):
         state.record_failure(
             action.source_name or result.tool_name, action.action_type, result.error_type
