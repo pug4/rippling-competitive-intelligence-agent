@@ -102,6 +102,38 @@ function Positioning({ pkg }) {
   );
 }
 
+function StrategyOverTime({ pkg }) {
+  const changes = pkg.change_events || [];
+  return (
+    <>
+      <h2>Strategy over time ({changes.length})</h2>
+      <p className="empty" style={{ fontSize: 12 }}>
+        A change is only asserted with evidence in <b>both</b> periods (real archive
+        capture dates). Emerging themes are low-confidence; a coverage-asymmetry
+        caveat is always attached — archive absence is not real-world absence.
+      </p>
+      {changes.length === 0 && (
+        <p className="empty">No temporal change met the both-periods evidence bar on this run.</p>
+      )}
+      {changes.map((c) => (
+        <div className="card" key={c.change_id}>
+          <div className="title">
+            {c.dimension} {pill(c.confidence)} <span className="pill">{c.lifecycle}</span>
+          </div>
+          <div className="row"><b>Prior:</b> {c.prior_state}</div>
+          <div className="row"><b>Current:</b> {c.current_state}</div>
+          <div className="row" style={{ color: "var(--muted)", fontSize: 12 }}>
+            <b>Evidence:</b> {(c.prior_evidence_ids || []).length} prior · {(c.current_evidence_ids || []).length} current
+          </div>
+          {c.alternative_explanations?.length > 0 && (
+            <div className="row"><b>Alt. explanations:</b> {c.alternative_explanations.join("; ")}</div>
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
 function Evidence({ pkg }) {
   const arts = pkg.artifacts || [];
   return (
@@ -187,6 +219,7 @@ export default function App() {
             )}
             <ActionBoard pkg={pkg} />
             <Positioning pkg={pkg} />
+            <StrategyOverTime pkg={pkg} />
             <Coverage pkg={pkg} />
             <Evidence pkg={pkg} />
           </>
