@@ -153,3 +153,18 @@ summary { cursor: pointer; font-size: 13px; }
 .chatscope { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .chatscope-label { font-size: 11px; color: var(--muted); cursor: help; }
 .chatscope .nr-sel { width: auto; font-size: 12px; padding: 4px 8px; }
+
+/* ---- key-topics comparison + timeline graphs ---- */
+.ktrow { display: grid; grid-template-columns: 150px 1fr 1fr; gap: 8px; align-items: center; padding: 3px 0; }
+.ktlabel { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ktbars { display: flex; align-items: center; gap: 5px; }
+.ktbar { height: 12px; border-radius: 3px; min-width: 2px; }
+.ktbar.comp { background: var(--bad); }
+.ktbar.focal { background: var(--accent); }
+.ktnum { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ktlegend { font-size: 11px; color: var(--muted); margin-top: 8px; display: flex; gap: 16px; }
+.tlrow2 { display: grid; grid-template-columns: 190px 130px 1fr; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--panel2); }
+.tllabel { font-size: 12px; font-weight: 600; }
+.tlprior2 { font-size: 11px; color: var(--muted); }
+.tltrack2 { display: flex; align-items: center; gap: 6px; }
+.tlbar2 { height: 12px; background: var(--good); opacity: .75; border-radius: 3px; min-width: 4px; }

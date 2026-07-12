@@ -263,6 +263,132 @@ function Opportunities({ pkg, srcIdx }) {
   );
 }
 
+// PRODUCT MARKETING — key related topics per company (side-by-side theme bars).
+function KeyTopicsComparison({ pkg }) {
+  const tc = pkg.theme_comparison || {};
+  const comp = tc.competitor_themes || {};
+  const focal = tc.focal_themes || {};
+  const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const focalName = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const themes = [...new Set([...Object.keys(comp), ...Object.keys(focal)])]
+    .sort((a, b) => ((comp[b] || 0) + (focal[b] || 0)) - ((comp[a] || 0) + (focal[a] || 0)))
+    .slice(0, 9);
+  if (themes.length === 0) return null;
+  const max = Math.max(1, ...themes.map((t) => Math.max(comp[t] || 0, focal[t] || 0)));
+  return (
+    <>
+      <h2>Key topics — {competitor} vs {focalName}
+        <Info tip={`Message themes each company leads with, counted from classified pages/posts. Where ${competitor} out-talks ${focalName} (or vice versa) is a share-of-voice gap per topic.`} />
+      </h2>
+      <div className="card">
+        {themes.map((t) => (
+          <div className="ktrow" key={t}>
+            <div className="ktlabel" title={t}>{t.replace(/_/g, " ")}</div>
+            <div className="ktbars">
+              <div className="ktbar comp" style={{ width: `${((comp[t] || 0) / max) * 100}%` }}
+                   title={`${competitor}: ${comp[t] || 0}`} />
+              <span className="ktnum">{comp[t] || 0}</span>
+            </div>
+            <div className="ktbars">
+              <div className="ktbar focal" style={{ width: `${((focal[t] || 0) / max) * 100}%` }}
+                   title={`${focalName}: ${focal[t] || 0}`} />
+              <span className="ktnum">{focal[t] || 0}</span>
+            </div>
+          </div>
+        ))}
+        <div className="ktlegend">
+          <span><span className="ktbar comp" style={{ width: 14, display: "inline-block", height: 8 }} /> {competitor}</span>{" "}
+          <span><span className="ktbar focal" style={{ width: 14, display: "inline-block", height: 8 }} /> {focalName}</span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// PRODUCT MARKETING — vertical × theme heatmap (a graph per topic per vertical).
+function VerticalThemeHeatmap({ pkg }) {
+  const verts = (pkg.product_vertical_analysis?.verticals || []).filter((v) => v.theme_counts);
+  if (verts.length === 0) return null;
+  const themes = [...new Set(verts.flatMap((v) => Object.keys(v.theme_counts || {})))].slice(0, 8);
+  if (themes.length === 0) return null;
+  const cells = {};
+  verts.forEach((v) => { cells[v.vertical] = v.theme_counts || {}; });
+  return (
+    <>
+      <h2>Themes by product vertical
+        <Info tip="Which message themes dominate INSIDE each product vertical — intensity = classified pages/posts. A theme strong in one vertical and absent in another is a per-offering positioning choice you can counter vertical-by-vertical." />
+      </h2>
+      <div className="card">
+        <Heatmap personas={verts.map((v) => v.vertical)} channels={themes} cells={cells} />
+      </div>
+    </>
+  );
+}
+
+// LINKEDIN — what employees post about (theme bar).
+function LinkedInThemeBar({ pkg }) {
+  const posts = pkg.linkedin_posts || [];
+  if (posts.length === 0) return null;
+  const c = {};
+  posts.forEach((p) => { if (p.theme) c[p.theme] = (c[p.theme] || 0) + 1; });
+  const data = Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  if (data.length === 0) return null;
+  return (
+    <>
+      <h2>Post themes <Info tip="Message themes across the collected employee/company LinkedIn posts — what the org actually amplifies." /></h2>
+      <div className="card"><HBar data={data} colorVar="--accent" /></div>
+    </>
+  );
+}
+
+// STRATEGY CHANGES — visual timeline (prior → current evidence bars).
+function ChangesTimeline({ pkg }) {
+  const changes = pkg.change_events || [];
+  if (changes.length === 0) return null;
+  const max = Math.max(1, ...changes.map((c) => (c.current_evidence_ids || []).length));
+  const themeOf = (c) => ((String(c.current_state || "").match(/[“"']([a-z_]+)[”"']/) || [])[1] || c.dimension || "change").replace(/_/g, " ");
+  return (
+    <>
+      <h2>Change timeline <Info tip="Each emerging theme: prior-window presence (left) vs current-window artifact count (bar). Low confidence = signal, not fact — caveats on each card below." /></h2>
+      <div className="card">
+        {changes.map((c) => (
+          <div className="tlrow2" key={c.change_id}>
+            <div className="tllabel" title={c.current_state}>{themeOf(c)} {pill(c.confidence)}</div>
+            <div className="tlprior2" title={`prior window: ${(c.prior_evidence_ids || []).length} artifacts sampled`}>
+              prior: not observed
+            </div>
+            <div className="tltrack2">
+              <div className="tlbar2" style={{ width: `${((c.current_evidence_ids || []).length / max) * 100}%` }} />
+              <span className="ktnum">{(c.current_evidence_ids || []).length} now</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// PERFORMANCE — audience-affinity competitors (Similarweb graph).
+function AffinityBar({ pkg }) {
+  const comps = ((pkg.similarweb || {}).metrics || {}).digital_competitors;
+  const val = comps && (comps.value != null ? comps.value : comps);
+  if (!Array.isArray(val) || val.length === 0) return null;
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const data = val.slice(0, 10).map((c) => ({
+    label: c.domain,
+    value: Math.round((c.affinity || 0) * 100),
+    colorVar: String(c.domain || "").includes(focal.toLowerCase()) ? "--good" : "--accent",
+  }));
+  return (
+    <>
+      <h2>Audience-affinity competitors (Similarweb, estimated)
+        <Info tip="Who this competitor's web audience overlaps with, by Similarweb affinity (100 = highest overlap). Where the focal company ranks here is a demand-side competitive signal." />
+      </h2>
+      <div className="card"><HBar data={data} unit="%" /></div>
+    </>
+  );
+}
+
 function VerticalAnalysis({ pkg }) {
   const pva = pkg.product_vertical_analysis || {};
   const verts = pva.verticals || [];
@@ -698,6 +824,8 @@ export default function App() {
             )}
             {tab === "product" && (
               <>
+                <KeyTopicsComparison pkg={pkg} />
+                <VerticalThemeHeatmap pkg={pkg} />
                 <GapsSection pkg={pkg} srcIdx={srcIdx} />
                 <Opportunities pkg={pkg} srcIdx={srcIdx} />
                 <VerticalAnalysis pkg={pkg} />
@@ -705,13 +833,20 @@ export default function App() {
             )}
             {tab === "linkedin" && (
               <>
+                <LinkedInThemeBar pkg={pkg} />
                 <LinkedInPosts pkg={pkg} />
                 <PersonaChannelHeatmap pkg={pkg} />
               </>
             )}
-            {tab === "changes" && <StrategyOverTime pkg={pkg} srcIdx={srcIdx} />}
+            {tab === "changes" && (
+              <>
+                <ChangesTimeline pkg={pkg} />
+                <StrategyOverTime pkg={pkg} srcIdx={srcIdx} />
+              </>
+            )}
             {tab === "performance" && (
               <>
+                <AffinityBar pkg={pkg} />
                 <CepOwnership pkg={pkg} />
                 <Similarweb pkg={pkg} />
                 <CommercialMotion pkg={pkg} />

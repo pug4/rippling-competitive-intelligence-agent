@@ -690,6 +690,9 @@ def product_vertical_analysis(
                 "n_artifacts": s["n_artifacts"],
                 "n_linkedin_posts": s["n_linkedin_posts"],
                 "top_themes": [t for t, _ in s["themes"].most_common(3)],
+                # Full per-vertical theme counts — powers the vertical x theme
+                # heatmap (per-topic graphs for product marketing).
+                "theme_counts": dict(s["themes"].most_common(8)),
                 "stance_mix": dict(s["stances"]),
                 "personas": [p for p, _ in s["personas"].most_common(3)],
                 "example_urls": s["example_urls"],

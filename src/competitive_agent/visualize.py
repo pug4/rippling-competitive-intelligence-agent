@@ -277,6 +277,30 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     )
 
 
+def _key_topics(pkg: dict[str, Any], competitor: str, focal: str) -> str:
+    tc = pkg.get("theme_comparison") or {}
+    comp, foc = tc.get("competitor_themes") or {}, tc.get("focal_themes") or {}
+    themes = sorted(set(comp) | set(foc), key=lambda t: -(comp.get(t, 0) + foc.get(t, 0)))[:9]
+    if not themes:
+        return "<p class='empty'>No theme comparison available (focal mirror required).</p>"
+    mx = max([1] + [max(comp.get(t, 0), foc.get(t, 0)) for t in themes])
+    rows = []
+    for t in themes:
+        cw, fw = comp.get(t, 0) / mx * 100, foc.get(t, 0) / mx * 100
+        rows.append(
+            f"<div class='ktrow'><div class='ktlabel'>{_esc(t.replace('_', ' '))}</div>"
+            f"<div class='ktb'><div class='ktbar' style='width:{cw:.0f}%;background:#f87171' "
+            f"title='{competitor}: {comp.get(t, 0)}'></div><span>{comp.get(t, 0)}</span></div>"
+            f"<div class='ktb'><div class='ktbar' style='width:{fw:.0f}%;background:#6ea8fe' "
+            f"title='{focal}: {foc.get(t, 0)}'></div><span>{foc.get(t, 0)}</span></div></div>"
+        )
+    legend = (
+        f"<div class='sub'>red = {_esc(competitor)} · blue = {_esc(focal)} — classified "
+        "pages/posts per theme (share-of-voice per topic)</div>"
+    )
+    return legend + "".join(rows)
+
+
 def _verticals(pkg: dict[str, Any]) -> str:
     verts = (pkg.get("product_vertical_analysis") or {}).get("verticals") or []
     if not verts:
@@ -392,6 +416,10 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .vtable {{ width:100%; border-collapse:collapse; font-size:12px; }}
 .vtable th {{ text-align:left; color:var(--muted); font-size:11px; padding:4px 8px; border-bottom:1px solid var(--border); }}
 .vtable td {{ padding:5px 8px; border-bottom:1px solid var(--panel2); }}
+.ktrow {{ display:grid; grid-template-columns:150px 1fr 1fr; gap:8px; align-items:center; padding:3px 0; }}
+.ktlabel {{ font-size:12px; color:var(--muted); }}
+.ktb {{ display:flex; align-items:center; gap:5px; }} .ktb span {{ font-size:11px; color:var(--muted); }}
+.ktbar {{ height:12px; border-radius:3px; min-width:2px; }}
 .forwho {{ font-size:11px; color:var(--muted); background:var(--panel2); border-radius:6px; padding:8px 10px; margin:6px 0 10px; }}
 .forwho b {{ color:var(--accent); }}
 /* timeline */
@@ -455,6 +483,9 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 <h2>Strategy over time</h2>
 <p class='sub'>Emerging themes between the two windows. Bars = current-window presence; the prior sample is small, so these are low-confidence signals with the coverage-asymmetry caveat, never asserted as fact.</p>
 <div class='card'>{_timeline(pkg)}</div>
+
+<h2 title="Message themes each company leads with — share of voice per topic">Key topics — {_esc(competitor)} vs {_esc(focal)}</h2>
+<div class='card'>{_key_topics(pkg, competitor, focal)}</div>
 
 <h2 title="How the competitor positions in each product category it touches — keyword-derived, method disclosed in the JSON">Positioning by product vertical</h2>
 <div class='forwho'><b>IC:</b> pick the vertical you market and read its themes/personas. <b>Exec:</b> compare investment across verticals — where they are thin is where {_esc(focal)} can own the narrative.</div>

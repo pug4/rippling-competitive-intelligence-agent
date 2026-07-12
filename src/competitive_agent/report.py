@@ -222,6 +222,20 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     matrix = synthesis.persona_channel_funnel(data["classification_models"], artifact_source)
     focal_cls_models = _focal_classifications(ctx, state)
     ceps = synthesis.category_entry_points(data["classification_models"], focal_cls_models)
+    # Key-topic comparison data: theme counts for BOTH companies so the UI can
+    # graph 'key related topics per company' side by side.
+    from collections import Counter as _Counter
+
+    _comp_themes: _Counter[str] = _Counter(
+        c.primary_theme for c in data["classification_models"] if c.primary_theme
+    )
+    _focal_themes: _Counter[str] = _Counter(
+        c.primary_theme for c in focal_cls_models if c.primary_theme
+    )
+    theme_comparison = {
+        "competitor_themes": dict(_comp_themes.most_common(10)),
+        "focal_themes": dict(_focal_themes.most_common(10)),
+    }
     focal_evidence = _focal_evidence(ctx, state)
     linkedin_posts = _linkedin_posts(data)
     similarweb = _similarweb_summary(data)
@@ -347,6 +361,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "product_vertical_analysis": vertical_analysis,
         # Paid-vs-organic + employee-advocacy theme alignment (deterministic).
         "channel_alignment": channel_alignment,
+        "theme_comparison": theme_comparison,
         "classifications": data["classifications"],
         "claims": data["claims"],
         # product_portfolios/launches require the deep §38 product-entity loop
