@@ -72,19 +72,89 @@ function PersonaChannelHeatmap({ pkg }) {
   );
 }
 
-function useJson(url) {
+function useJson(url, refresh) {
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
   useEffect(() => {
     if (!url) return;
-    setData(null);
-    setErr(null);
+    let cancelled = false;
     fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
-      .then(setData)
-      .catch(setErr);
-  }, [url]);
+      .then((d) => { if (!cancelled) setData(d); })
+      .catch((e) => { if (!cancelled) setErr(e); });
+    return () => { cancelled = true; };
+  }, [url, refresh]);
   return [data, err];
+}
+
+const MODES = ["comparative", "snapshot", "longitudinal"];
+function NewRunForm({ onSubmit, focalDefault }) {
+  const [company, setCompany] = useState("");
+  const [compareTo, setCompareTo] = useState("");
+  const [mode, setMode] = useState("comparative");
+  const [exec, setExec] = useState("live"); // live by default — real data
+  const [busy, setBusy] = useState(false);
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!company.trim()) return;
+    setBusy(true);
+    await onSubmit({
+      company: company.trim(),
+      compare_to: compareTo.trim() || null,
+      mode,
+      execution_mode: exec,
+    });
+    setBusy(false);
+    setCompany("");
+    setCompareTo("");
+  };
+  return (
+    <form className="newrun" onSubmit={submit}>
+      <div className="nr-title">+ New analysis</div>
+      <input className="nr-in" placeholder="competitor name or domain" value={company}
+             onChange={(e) => setCompany(e.target.value)} />
+      <input className="nr-in" placeholder={`compare to (default ${focalDefault || "rippling.com"})`}
+             value={compareTo} onChange={(e) => setCompareTo(e.target.value)} />
+      <div className="nr-opts">
+        <select className="nr-sel" value={mode} onChange={(e) => setMode(e.target.value)}>
+          {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <select className="nr-sel" value={exec} onChange={(e) => setExec(e.target.value)}>
+          <option value="live">live (real data)</option>
+          <option value="cached">cached</option>
+          <option value="fixture">fixture (synthetic test)</option>
+        </select>
+      </div>
+      {exec !== "live" && (
+        <div className="nr-warn">
+          {exec === "fixture" ? "⚠ synthetic test data — not real public info" : "replays previously fetched data"}
+        </div>
+      )}
+      <button className="nr-btn" disabled={busy || !company.trim()}>
+        {busy ? "Starting…" : exec === "live" ? "Run live analysis (a few min)" : "Run analysis"}
+      </button>
+    </form>
+  );
+}
+
+function JobsList({ jobs }) {
+  if (!jobs || jobs.length === 0) return null;
+  const active = jobs.filter((j) => j.status === "pending" || j.status === "running");
+  const recent = jobs.filter((j) => j.status === "error").slice(0, 3);
+  if (active.length === 0 && recent.length === 0) return null;
+  return (
+    <div className="jobs">
+      {active.map((j) => (
+        <div className="jobrow" key={j.job_id}>
+          <span className="spinner" /> {j.company}{j.compare_to ? ` vs ${j.compare_to}` : ""}
+          <span className="jobmeta">{j.execution_mode} · {j.status}</span>
+        </div>
+      ))}
+      {recent.map((j) => (
+        <div className="jobrow err" key={j.job_id}>✕ {j.company} — {String(j.error).slice(0, 60)}</div>
+      ))}
+    </div>
+  );
 }
 
 function ActionBoard({ pkg }) {
@@ -245,26 +315,69 @@ function Coverage({ pkg }) {
 }
 
 export default function App() {
-  const [runs] = useJson("/api/runs");
+  const [refresh, setRefresh] = useState(0);
+  const [runs] = useJson("/api/runs", refresh);
   const [selected, setSelected] = useState(null);
   const [pkg] = useJson(selected ? `/api/runs/${selected}` : null);
+  const [jobs, setJobs] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (runs && runs.length && !selected) setSelected(runs[0].run_id);
   }, [runs, selected]);
 
+  // Poll jobs while any is active; refresh the run list so completed runs appear.
+  useEffect(() => {
+    const active = jobs.some((j) => j.status === "pending" || j.status === "running");
+    if (!active) return;
+    const t = setInterval(() => {
+      fetch("/api/jobs")
+        .then((r) => r.json())
+        .then((js) => { setJobs(js); setRefresh((n) => n + 1); })
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(t);
+  }, [jobs]);
+
+  const submitRun = async (form) => {
+    try {
+      const res = await fetch("/api/runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        const job = await res.json();
+        setJobs((prev) => [job, ...prev]);
+      } else {
+        const e = await res.json().catch(() => ({ detail: res.statusText }));
+        alert("Error: " + (e.detail || res.statusText));
+      }
+    } catch (e) {
+      alert("Could not reach the API — is `make api` running?");
+    }
+  };
+
+  const focalDefault = (runs && runs.find((r) => r.compare_to)?.compare_to) || "rippling.com";
+
   return (
-    <div className="app">
+    <div className={`app ${menuOpen ? "menu-open" : ""}`}>
+      <div className="topbar">
+        <button className="hamburger" onClick={() => setMenuOpen((o) => !o)} aria-label="menu">☰</button>
+        <span className="topbar-title">Competitive Intel</span>
+      </div>
       <div className="sidebar">
         <h1>Competitive Intel</h1>
-        <p className="meta" style={{ color: "var(--muted)", fontSize: 12 }}>Runs</p>
+        <NewRunForm onSubmit={submitRun} focalDefault={focalDefault} />
+        <JobsList jobs={jobs} />
+        <p className="meta" style={{ color: "var(--muted)", fontSize: 12, marginTop: 12 }}>Runs</p>
         {!runs && <p className="empty">Loading…</p>}
-        {runs && runs.length === 0 && <p className="empty">No runs yet. Run the CLI.</p>}
+        {runs && runs.length === 0 && <p className="empty">No runs yet — add one above.</p>}
         {(runs || []).map((r) => (
           <div
             key={r.run_id}
             className={`runitem ${selected === r.run_id ? "active" : ""}`}
-            onClick={() => setSelected(r.run_id)}
+            onClick={() => { setSelected(r.run_id); setMenuOpen(false); }}
           >
             <div className="co">{r.company_input} {r.compare_to ? `vs ${r.compare_to}` : ""}</div>
             <div className="meta">
@@ -276,7 +389,7 @@ export default function App() {
         ))}
       </div>
       <div className="main">
-        {!pkg && <p className="empty">Select a run.</p>}
+        {!pkg && <p className="empty">Select a run, or add a new analysis from the panel.</p>}
         {pkg && (
           <>
             <h1>

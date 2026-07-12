@@ -70,3 +70,37 @@ summary { cursor: pointer; font-size: 13px; }
 .hm-col { font-size: 10px; color: var(--muted); text-align: center; padding: 2px; word-break: break-word; }
 .hm-rowlabel { font-size: 11px; color: var(--muted); padding-right: 6px; text-align: right; align-self: center; }
 .hm-cell { height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; border-radius: 3px; border: 1px solid var(--border); color: var(--text); }
+
+/* ---- new-run form + jobs ---- */
+.newrun { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 10px 0; display: flex; flex-direction: column; gap: 7px; }
+.nr-title { font-size: 12px; font-weight: 600; color: var(--accent); }
+.nr-in, .nr-sel { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 9px; font-size: 13px; width: 100%; }
+.nr-opts { display: flex; gap: 6px; }
+.nr-opts .nr-sel { flex: 1; }
+.nr-warn { font-size: 11px; color: var(--warn); }
+.nr-btn { background: var(--accent); color: #0b1020; border: 0; border-radius: 6px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.nr-btn:disabled { opacity: .5; cursor: not-allowed; }
+.jobs { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+.jobrow { font-size: 12px; color: var(--text); background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jobrow.err { color: var(--bad); border-color: var(--bad); }
+.jobmeta { color: var(--muted); font-size: 10px; margin-left: auto; }
+.spinner { width: 11px; height: 11px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; display: inline-block; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- responsive / mobile ---- */
+.topbar { display: none; }
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; }
+  .topbar { display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 30;
+            background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 14px; grid-column: 1; }
+  .topbar-title { font-weight: 600; font-size: 15px; }
+  .hamburger { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 6px;
+               font-size: 18px; width: 38px; height: 34px; cursor: pointer; }
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 84vw; max-width: 320px; z-index: 40;
+             transform: translateX(-100%); transition: transform .22s ease; box-shadow: 2px 0 16px rgba(0,0,0,.4); }
+  .app.menu-open .sidebar { transform: translateX(0); }
+  .sidebar h1 { margin-top: 4px; }
+  .main { padding: 16px; max-height: none; }
+  .grid2 { grid-template-columns: 1fr; }
+  .hbar-row { grid-template-columns: 96px 1fr 30px; }
+}

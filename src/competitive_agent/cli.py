@@ -139,6 +139,7 @@ def eval(
         "behavior": ["tests/behavior"],
         "regression": ["tests/golden"],
         "security": ["tests/security"],
+        "integration": ["tests/integration"],
     }
     targets = suites.get(suite) if suite != "all" else [p for ps in suites.values() for p in ps]
     if targets is None:
