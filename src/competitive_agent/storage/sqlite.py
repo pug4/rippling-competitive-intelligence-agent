@@ -24,4 +24,8 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA synchronous=NORMAL")
+    # Portfolio runs drive multiple company pipelines concurrently, each on its
+    # own connection; wait rather than immediately erroring when another
+    # connection holds the write lock.
+    conn.execute("PRAGMA busy_timeout=5000")
     return conn

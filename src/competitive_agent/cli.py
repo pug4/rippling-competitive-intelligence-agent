@@ -197,6 +197,44 @@ def retry(
 
 
 @app.command()
+def portfolio(
+    companies: list[str] = typer.Argument(..., help="Competitor names/domains (2-3)"),
+    mode: str = MODE_OPT,
+    execution_mode: str = EXEC_OPT,
+    compare: str = typer.Option(None, "--compare", help="Focal company domain"),
+    lookback_days: int = typer.Option(None, "--lookback-days"),
+) -> None:
+    """Analyze several competitors in isolated pipelines, then synthesize across them."""
+    import json as _json
+
+    from .portfolio import run_portfolio
+
+    try:
+        result = run_portfolio(
+            list(companies),
+            mode=mode,
+            execution_mode=execution_mode,
+            compare_to=compare,
+            lookback_days=lookback_days,
+        )
+    except Exception as exc:
+        typer.echo(f"error: {type(exc).__name__}: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(f"portfolio_run_id: {result['portfolio_run_id']} status: {result['status']}")
+    typer.echo(f"completed: {', '.join(result['completed_company_ids']) or '(none)'}")
+    typer.echo(f"isolation_verified: {result['isolation_verified']}")
+    if not result["isolation_verified"]:
+        typer.echo("LEAKAGE: " + "; ".join(result["isolation_report"]["violations"]), err=True)
+    for lim in result["limitations"]:
+        typer.echo(f"limitation: {lim}")
+    typer.echo(_json.dumps(result["synthesis"], indent=2, default=str))
+    # A detected leakage is a correctness failure — exit non-zero (§37.32).
+    if not result["isolation_verified"]:
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def ask(run_id: str = typer.Argument(...), question: str = typer.Argument(...)) -> None:
     """Answer a follow-up from stored state, or route to a focused action."""
     import json as _json
