@@ -10,6 +10,12 @@ from __future__ import annotations
 
 from typing import Any
 
+# Fields with a small controlled vocabulary, where exact-match agreement between
+# two models is a meaningful signal. Free-form fields (message text, persona,
+# CEP, proof description) are excluded — exact match on paraphrases is ~0 by
+# construction and must be human-adjudicated, so they never drive a verdict.
+_CLOSED_VOCAB = {"claim_type", "competitive_stance", "segment"}
+
 
 def render_report(
     result: dict[str, Any], *, run_id: str | None = None, cost_latency: dict | None = None
@@ -72,18 +78,40 @@ def render_report(
         "",
         f"Scored on n={d['n_artifacts']} held-out artifacts.",
         "",
-        "| Field | Agreement | ",
-        "|---|---:|",
+        "**Read this table correctly.** Agreement is computed by exact category "
+        "match. That is meaningful only for **closed-vocabulary** fields "
+        "(`claim_type`, `competitive_stance`, ordinal bands). For **free-form** "
+        "fields (`primary_message`, `persona`, `category_entry_point`, "
+        "`proof_type`, `secondary_messages`) exact-match agreement is near-zero "
+        "*by construction* — two correct paraphrases of the same message score as "
+        "a disagreement. A 0.00 there is a scoring-metric limitation, **not** "
+        "evidence the classifier is wrong; those fields require human "
+        "adjudication (or semantic scoring), which is exactly why the number is "
+        "provisional.",
+        "",
+        "| Field | Kind | Agreement | ",
+        "|---|---|---:|",
     ]
     for name, acc in sorted(d["single_field_agreement"].items()):
-        lines.append(f"| {name} | {acc:.2f} |")
+        kind = "closed-vocab" if name in _CLOSED_VOCAB else "free-form"
+        lines.append(f"| {name} | {kind} | {acc:.2f} |")
     for name, v in sorted(d["ordinal_field_agreement"].items()):
-        lines.append(f"| {name} (exact / ±1 band) | {v['exact']:.2f} / {v['within_one']:.2f} |")
-    lines += ["", "| Multi-label field | P | R | F1 |", "|---|---:|---:|---:|"]
+        lines.append(
+            f"| {name} (exact / ±1 band) | ordinal | {v['exact']:.2f} / {v['within_one']:.2f} |"
+        )
+    lines += ["", "| Multi-label field | Kind | P | R | F1 |", "|---|---|---:|---:|---:|"]
     for name, v in sorted(d["multi_field_prf"].items()):
-        lines.append(f"| {name} | {v['p']:.2f} | {v['r']:.2f} | {v['f1']:.2f} |")
+        lines.append(f"| {name} | free-form | {v['p']:.2f} | {v['r']:.2f} | {v['f1']:.2f} |")
+    closed = {k: v for k, v in d["single_field_agreement"].items() if k in _CLOSED_VOCAB}
     lines += [
         "",
+        "**Interpretable signal (closed-vocabulary only):** "
+        + (
+            ", ".join(f"{k} {v:.2f}" for k, v in sorted(closed.items()))
+            if closed
+            else "none scored"
+        )
+        + ".",
         f"- Independent-label excerpt validity: **{d['excerpt_validity']:.2f}**",
         f"- Unsupported-inference rate (predicted where no label evidence): "
         f"**{d['unsupported_inference_rate']:.2f}**",
@@ -124,12 +152,25 @@ def render_report(
 
 def _weak_spots(d: dict[str, Any], result: dict[str, Any]) -> str:
     weak: list[str] = []
+    # Only closed-vocabulary fields can be "weak" on agreement — a low number on
+    # a free-form field is a scoring-metric artifact, not a classifier defect.
     for name, acc in d["single_field_agreement"].items():
-        if acc < 0.6:
+        if name in _CLOSED_VOCAB and acc < 0.6:
             weak.append(
-                f"- **{name}**: low agreement ({acc:.2f}) — likely genuine "
-                "ambiguity or divergent taxonomies; prioritize for adjudication."
+                f"- **{name}** (closed-vocab): low agreement ({acc:.2f}) — a real "
+                "signal here; prioritize for adjudication and error analysis."
             )
+    freeform_zero = [
+        n
+        for n, a in d["single_field_agreement"].items()
+        if n not in _CLOSED_VOCAB and a < 0.2
+    ]
+    if freeform_zero:
+        weak.append(
+            "- Free-form fields (" + ", ".join(sorted(freeform_zero)) + ") show near-zero "
+            "exact-match agreement — expected for paraphrasable text; needs semantic "
+            "scoring or human adjudication, not a classifier fix."
+        )
     if d["unsupported_inference_rate"] > 0.1:
         weak.append(
             f"- Unsupported-inference rate {d['unsupported_inference_rate']:.2f} "
@@ -141,6 +182,4 @@ def _weak_spots(d: dict[str, Any], result: dict[str, Any]) -> str:
             f"- {result['n_failed']} artifact(s) failed classification/labeling "
             "(see per-artifact records)."
         )
-    return (
-        "\n".join(weak) if weak else "- No field fell below the 0.60 agreement floor on this split."
-    )
+    return "\n".join(weak) if weak else "- No closed-vocabulary field fell below the 0.60 floor."
