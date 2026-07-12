@@ -225,6 +225,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     focal_evidence = _focal_evidence(ctx, state)
     linkedin_posts = _linkedin_posts(data)
     similarweb = _similarweb_summary(data)
+    channel_alignment = synthesis.message_channel_alignment(
+        data["classification_models"], data["artifact_models"]
+    )
     _cfg = getattr(ctx, "config", None)
     taxonomy = _cfg.taxonomy if _cfg else {}
     vertical_analysis = synthesis.product_vertical_analysis(
@@ -342,6 +345,8 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Per-offering view: how the competitor positions in each product
         # vertical (deterministic keyword mapping; method disclosed inside).
         "product_vertical_analysis": vertical_analysis,
+        # Paid-vs-organic + employee-advocacy theme alignment (deterministic).
+        "channel_alignment": channel_alignment,
         "classifications": data["classifications"],
         "claims": data["claims"],
         # product_portfolios/launches require the deep §38 product-entity loop
@@ -720,6 +725,44 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             if key in m:
                 val = m[key].get("value") if isinstance(m[key], dict) else m[key]
                 add(f"- **{key.replace('_', ' ')}:** {val} _(estimated)_")
+
+    # --- Channel alignment: paid vs organic vs employee advocacy -----------
+    ca = pkg.get("channel_alignment") or {}
+    if ca.get("paid_themes") or ca.get("employee_themes"):
+        add(f"\n## Message investment & advocacy alignment ({company})\n")
+        if ca.get("paid_themes"):
+            add(
+                "- **What they PAY to say (ads):** "
+                + ", ".join(f"{t} ({n})" for t, n in ca["paid_themes"].items())
+                + f" · alignment with website: {ca.get('paid_organic_alignment', 0):.0%}"
+            )
+            if ca.get("paid_only_themes"):
+                add(
+                    "  - **Paid-only themes (investment the site doesn't reflect):** "
+                    + ", ".join(ca["paid_only_themes"])
+                )
+        if not ca.get("paid_themes"):
+            add(
+                "- **Paid messaging:** ad-library artifacts are discovery pointers only — US "
+                "commercial ad creative text is not publicly extractable, so no paid-vs-organic "
+                "theme comparison is possible (disclosed, not estimated)."
+            )
+        if ca.get("employee_themes"):
+            add(
+                "- **What employees amplify (LinkedIn):** "
+                + ", ".join(f"{t} ({n})" for t, n in ca["employee_themes"].items())
+                + f" · alignment with website: {ca.get('employee_advocacy_alignment', 0):.0%}"
+            )
+            if ca.get("employee_only_themes"):
+                add(
+                    "  - **Employee-only themes (the unofficial story):** "
+                    + ", ".join(ca["employee_only_themes"])
+                )
+        add(
+            "  - _Theme distributions per channel from classified artifacts — deterministic "
+            "counting, not a model judgment. High alignment = disciplined narrative; "
+            "divergence = where investment or advocacy runs ahead of the site._"
+        )
 
     # --- Strategy over time (feedback #25) ---------------------------------
     add("\n## Strategy over time\n")

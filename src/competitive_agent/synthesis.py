@@ -702,3 +702,51 @@ def product_vertical_analysis(
         "method": "deterministic keyword mapping over products/themes/messages/url "
         "(config taxonomy.product_verticals); not a model judgment",
     }
+
+
+def message_channel_alignment(
+    classifications: list[MarketingClassification], artifacts: list[RawArtifact]
+) -> dict[str, Any]:
+    """Two deterministic DEEP insights from channel-vs-channel theme comparison:
+
+    1. PAID vs ORGANIC: themes in ad creatives vs website pages — what the
+       competitor PAYS to amplify reveals investment priorities; paid-only
+       themes are pushes the site doesn't yet reflect (or landing mismatch).
+    2. EMPLOYEE ADVOCACY: themes in employee LinkedIn posts vs the website —
+       high alignment = disciplined narrative; employee-only themes are the
+       unofficial story (often the roadmap/culture tell).
+
+    Pure counting over already-classified artifacts; no model calls.
+    """
+    by_id = _artifacts_by_id(artifacts)
+    website: Counter[str] = Counter()
+    paid: Counter[str] = Counter()
+    employee: Counter[str] = Counter()
+    for c in classifications:
+        theme = c.primary_theme
+        if not theme:
+            continue
+        art = by_id.get(c.artifact_id)
+        st = art.source_type if art else ""
+        if st in ("webpage", "wayback"):
+            website[theme] += 1
+        elif st in ("google_ads", "meta_ads", "linkedin_ads"):
+            paid[theme] += 1
+        elif st == "linkedin_post":
+            employee[theme] += 1
+
+    def _overlap(a: Counter[str], b: Counter[str]) -> float:
+        if not a:
+            return 0.0
+        return round(sum(n for t, n in a.items() if t in b) / max(1, sum(a.values())), 2)
+
+    return {
+        "website_themes": dict(website.most_common(8)),
+        "paid_themes": dict(paid.most_common(8)),
+        "employee_themes": dict(employee.most_common(8)),
+        "paid_only_themes": sorted(set(paid) - set(website)),
+        "employee_only_themes": sorted(set(employee) - set(website)),
+        "paid_organic_alignment": _overlap(paid, website),
+        "employee_advocacy_alignment": _overlap(employee, website),
+        "method": "theme distributions per channel from classified artifacts (deterministic)",
+    }

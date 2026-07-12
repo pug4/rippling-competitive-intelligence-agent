@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T16:43:20.302175+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T18:42:07.438198+00:00*
 
 ## Executive summary
 
@@ -171,6 +171,13 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | Jacintobarreiros | automation | implicit_contrast | [link](https://www.linkedin.com/posts/jacintobarreiros_im-incredibly-proud-to-have-led-the-product-activity-7478440070786650112-UaWL) | # Jacinto Barreiros · LinkedIn · 2026-07-02 ## Author **Jacinto Barreiros** *Senior Produc |
 | Laurenzamora Kelso | integration_ecosystem | implicit_contrast | [link](https://www.linkedin.com/posts/laurenzamora-kelso_deel-is-now-inside-chatgpt-150-countries-activity-7462515453907591168-XMwr) | Deel Expands to ChatGPT with Global Employment Platform | Lauren Zamora-Kelso posted on th |
 | Deel | automation | implicit_contrast | [link](https://www.linkedin.com/posts/deel_deel-ai-workforce-launches-today-you-activity-7363179295680159744-xCbz) | Deel AI Workforce launches with AI agents for HR, payroll, operations | Deel posted on the |
+
+## Message investment & advocacy alignment (Deel)
+
+- **Paid messaging:** ad-library artifacts are discovery pointers only — US commercial ad creative text is not publicly extractable, so no paid-vs-organic theme comparison is possible (disclosed, not estimated).
+- **What employees amplify (LinkedIn):** automation (7), native_platform_breadth (5), integration_ecosystem (4), speed_to_value (3), data_unification (2), cross_system_workflow (2), cost_reduction (2), all_in_one (1) · alignment with website: 80%
+  - **Employee-only themes (the unofficial story):** all_in_one, native_platform_breadth
+  - _Theme distributions per channel from classified artifacts — deterministic counting, not a model judgment. High alignment = disciplined narrative; divergence = where investment or advocacy runs ahead of the site._
 
 ## Strategy over time
 
