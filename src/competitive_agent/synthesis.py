@@ -99,14 +99,21 @@ def is_junk_ads_artifact(url: str, metadata: dict[str, Any] | None, advertiser_d
     CREATIVES are never touched."""
     if not (metadata or {}).get("is_discovery_pointer"):
         return False
+    from html import unescape
     from urllib.parse import parse_qs, urlsplit
 
-    parts = urlsplit(url or "")
+    # Discovery URLs arrive HTML-entity-encoded (&amp;) from page scrapes —
+    # parse_qs would see the key 'amp;domain' and the rule would fail open.
+    parts = urlsplit(unescape(url or ""))
     if not re.search(r"/advertiser/AR\d+", parts.path):
         return True  # FAQ, blank landing/query pages — not an advertiser surface
-    domain_param = (parse_qs(parts.query).get("domain") or [""])[0].lower()
-    if domain_param and advertiser_domain and advertiser_domain.lower() not in domain_param:
-        return True  # explicitly about a different advertiser's domain
+    domain_param = (parse_qs(parts.query).get("domain") or [""])[0].lower().strip()
+    if domain_param and advertiser_domain:
+        own = advertiser_domain.lower().strip()
+        # Label-boundary match: 'deel.com' matches 'deel.com' and 'app.deel.com'
+        # but NOT 'wheeldeel.com' (substring containment failed open).
+        if domain_param != own and not domain_param.endswith("." + own):
+            return True  # explicitly about a different advertiser's domain
     return False
 
 
@@ -412,7 +419,8 @@ _OWNERSHIP_ORDER = {
     "contested": 1,
     "focal_owns": 2,
     "insufficient_sample": 3,
-    "neither": 4,
+    "not_compared": 4,
+    "neither": 5,
 }
 
 
@@ -431,6 +439,11 @@ def category_entry_points(
     ownership verdict needs >=2x share ratio (or a true zero on one side) AND
     >=3 pages on the dominant side (matches the corpus-wide thin<3 convention);
     anything thinner is disclosed as insufficient_sample, never asserted."""
+    # No focal corpus (snapshot mode / focal mirror run itself): ownership
+    # CANNOT be judged — a missing corpus is not a measured zero (verifier:
+    # snapshot runs published "competitor_advantage" verdicts against a focal
+    # side that was never collected).
+    has_focal = bool(focal_cls)
     nc, nf = max(1, len(competitor_cls)), max(1, len(focal_cls))
     comp: Counter[str] = Counter()
     focal: Counter[str] = Counter()
@@ -455,15 +468,21 @@ def category_entry_points(
         cn, fn = comp.get(cep, 0), focal.get(cep, 0)
         share_c, share_f = cn / nc, fn / nf
         hi, lo = max(share_c, share_f), min(share_c, share_f)
-        ratio = round(hi / lo, 2) if lo > 0 else None
+        # Thresholds compare the UNROUNDED ratio (verifier: a true 1.998 ratio
+        # rounded to 2.0 would skip contested); rounding is display-only.
+        raw_ratio = (hi / lo) if lo > 0 else None
+        ratio = round(raw_ratio, 2) if raw_ratio is not None else None
         dominant_count = cn if share_c >= share_f else fn
-        if cn == 0 and fn == 0:
+        if not has_focal:
+            ownership = "not_compared"
+            basis = "no focal corpus collected this run — ownership not comparable"
+        elif cn == 0 and fn == 0:
             ownership = "neither"
             basis = "no pages on either side"
-        elif cn >= 2 and fn >= 2 and ratio is not None and ratio < 2.0:
+        elif cn >= 2 and fn >= 2 and raw_ratio is not None and raw_ratio < 2.0:
             ownership = "contested"
             basis = f"{ratio}x share ratio — within crawl-composition noise"
-        elif (ratio is None or ratio >= 2.0) and dominant_count >= 3:
+        elif (raw_ratio is None or raw_ratio >= 2.0) and dominant_count >= 3:
             ownership = "competitor_advantage" if share_c > share_f else "focal_owns"
             basis = (
                 f"{ratio}x share ratio, dominant side {dominant_count} pages"
@@ -477,10 +496,11 @@ def category_entry_points(
             {
                 "cep": cep,
                 "competitor_pages": cn,
-                "focal_pages": fn,
+                # A missing focal corpus is None, never a measured 0.
+                "focal_pages": fn if has_focal else None,
                 "competitor_share": round(share_c, 4),
-                "focal_share": round(share_f, 4),
-                "share_ratio": ratio,
+                "focal_share": round(share_f, 4) if has_focal else None,
+                "share_ratio": ratio if has_focal else None,
                 "share_delta": round(share_c - share_f, 4),
                 "ownership": ownership,
                 "ownership_basis": basis,
@@ -681,17 +701,34 @@ def coverage_details(
             continue
         feeders = cov.DIMENSION_SOURCES.get(dim, [])
         contributing = [a for a in artifacts if a.source_type in feeders] if feeders else []
-        src_classes = sorted({a.source_type for a in contributing}) or all_source_classes
+        # Consistent basis: with feeders, count+reason both describe the
+        # contributing artifacts; without feeders the dimension is DERIVED from
+        # classifications, and count+reason must say the same thing (verifier:
+        # 10 rows shipped artifact_count=0 next to a "126 artifacts" reason).
+        if feeders and contributing:
+            src_classes = sorted({a.source_type for a in contributing})
+            n_basis = len(contributing)
+            reason = f"{n_basis} artifacts across {', '.join(src_classes)} sources"
+        elif dim in cov.CLASSIFICATION_DERIVED_DIMENSIONS:
+            src_classes = all_source_classes
+            n_basis = len(classifications)
+            reason = (
+                f"derived from {n_basis} classified artifacts "
+                f"(corpus-wide across {len(all_source_classes)} source classes)"
+            )
+        else:
+            src_classes = all_source_classes
+            n_basis = len(artifacts)
+            reason = f"{n_basis} artifacts across {', '.join(src_classes) or 'mixed'} sources"
         missing = []
         for optional in ("paid_media", "public_social", "reviews"):
             if optional not in src_classes:
                 missing.append(optional)
-        reason = f"{len(contributing) or len(artifacts)} artifacts across {', '.join(src_classes) or 'mixed'} sources"
         details.append(
             CoverageDetail(
                 dimension=dim,
                 level=level,
-                artifact_count=len(contributing) or 0,
+                artifact_count=n_basis,
                 source_classes=src_classes,
                 requested_periods=windows_requested,
                 represented_periods=windows_present,
@@ -701,7 +738,7 @@ def coverage_details(
                 reason=reason,
             )
         )
-    del by_id, classifications
+    del by_id
     return details
 
 
@@ -915,10 +952,17 @@ def temporal_baseline(
         return {}
     ps, pe = prior_w.start_at, prior_w.end_at
     by_id = _artifacts_by_id(artifacts)
+    # ONE counting rule shared with change-event reconciliation: a theme is
+    # present on an artifact when it is the primary OR a supporting theme,
+    # counted once per artifact (verifier: the baseline counted primary-only
+    # while events counted incl. supporting, so the same brief called a theme
+    # "emerged (current only)" that its own event line counted in the prior
+    # window).
     prior_themes: Counter[str] = Counter()
     current_themes: Counter[str] = Counter()
     n_prior = n_current = n_outside = 0
     counted_ids: set[str] = set()
+    seen_theme_artifact: set[tuple[str, str]] = set()
     for c in classifications:
         art = by_id.get(c.artifact_id)
         if art is None:
@@ -932,21 +976,29 @@ def temporal_baseline(
                 n_current += 1
             else:
                 n_outside += 1
-        if not c.primary_theme or window == "outside":
+        if window == "outside":
             continue
-        (prior_themes if window == "prior" else current_themes)[c.primary_theme] += 1
+        for theme in [c.primary_theme, *(c.supporting_themes or [])]:
+            if not theme or (theme, c.artifact_id) in seen_theme_artifact:
+                continue
+            seen_theme_artifact.add((theme, c.artifact_id))
+            (prior_themes if window == "prior" else current_themes)[theme] += 1
     stable = sorted(set(prior_themes) & set(current_themes))
     emerged = sorted(set(current_themes) - set(prior_themes))
     receded = sorted(set(prior_themes) - set(current_themes))
 
+    # Export FULL counters — a top-10 cap here dropped a theme (count 1) that a
+    # change event counted in the prior window, recreating the contradiction at
+    # the display layer. Renderers cap for layout; the data stays complete.
     def _shares(themes: Counter[str], n: int) -> dict[str, float]:
-        return {t: round(v / max(1, n), 4) for t, v in themes.most_common(10)}
+        return {t: round(v / max(1, n), 4) for t, v in themes.most_common()}
 
     note = (
         "Prior membership = real archive-capture/published date inside the comparison "
-        "window; undated live content is current. Windows have different sample sizes "
-        f"({n_prior} vs {n_current}) — compare shares, not counts; treat "
-        "emergence/recession as signals."
+        "window; undated live content is current. Theme counts = artifacts carrying the "
+        "theme as primary OR supporting (the same rule the change events use). Windows "
+        f"have different sample sizes ({n_prior} vs {n_current}) — compare shares, not "
+        "counts; treat emergence/recession as signals."
     )
     if n_outside:
         note += f" {n_outside} dated artifact(s) fall outside both windows and are excluded."
@@ -955,12 +1007,12 @@ def temporal_baseline(
             "start": ps.date().isoformat(),
             "end": pe.date().isoformat(),
             "n_artifacts": n_prior,
-            "themes": dict(prior_themes.most_common(10)),
+            "themes": dict(prior_themes.most_common()),
             "themes_share": _shares(prior_themes, n_prior),
         },
         "current_window": {
             "n_artifacts": n_current,
-            "themes": dict(current_themes.most_common(10)),
+            "themes": dict(current_themes.most_common()),
             "themes_share": _shares(current_themes, n_current),
         },
         "outside_windows": n_outside,

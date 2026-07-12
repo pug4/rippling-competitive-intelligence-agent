@@ -57,7 +57,27 @@ DIMENSION_SOURCES: dict[str, list[str]] = {
     "historical_messages": ["wayback", "exa_web"],
     "events": ["events", "exa_web"],
     "out_of_home": ["ooh", "exa_web"],
+    "launches_current": ["news"],
 }
+
+# Dimensions whose evidence is CLASSIFICATIONS of already-collected content,
+# not a dedicated source type — their coverage derives from classification
+# fields at render time (verifier: these were permanently stuck at
+# not_attempted while the same brief displayed their analysis).
+CLASSIFICATION_DERIVED_DIMENSIONS = (
+    "funnel",
+    "proof_strategy",
+    "category_entry_points",
+    "commercial_motion",
+    "personas_and_jobs",
+    "product_positioning",
+    "portfolio_discovery",
+    "competitive_stance",
+    "identity",
+    "focal_current",
+    "focal_proof",
+    "focal_vulnerabilities",
+)
 
 
 def initial_coverage() -> dict[str, str]:

@@ -268,12 +268,15 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
         "contested": "#fbbf24",
         "competitor_advantage": "#f87171",
         "insufficient_sample": "#9aa3b2",
+        "not_compared": "#9aa3b2",
         "neither": "#9aa3b2",
     }
 
     def _share(c: dict[str, Any], key: str, fallback: str) -> float:
         v = c.get(key)
-        return float(v) if v is not None else float(c.get(fallback, 0))
+        if v is not None:
+            return float(v)
+        return float(c.get(fallback) or 0)  # focal_pages can be None (no mirror)
 
     # Package order is already ownership-grouped then |share-delta|-sorted; a
     # local volume re-sort put every 'contested' row first and hid the
@@ -297,9 +300,12 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
             _share(c, "focal_share", "focal_pages"),
         )
         cw, fw = cs / mx * 100, fs / mx * 100
-        cn, fn = c.get("competitor_pages", 0), c.get("focal_pages", 0)
+        cn, fn = c.get("competitor_pages", 0), c.get("focal_pages")
         clabel = f"{cn} ({cs:.0%})" if c.get("competitor_share") is not None else str(cn)
-        flabel = f"{fn} ({fs:.0%})" if c.get("focal_share") is not None else str(fn)
+        if fn is None:
+            flabel = "—"  # no focal mirror — never a fabricated 0
+        else:
+            flabel = f"{fn} ({fs:.0%})" if c.get("focal_share") is not None else str(fn)
         basis = _esc(c.get("ownership_basis") or "")
         rows.append(
             f"<div class='ceprow'>"
@@ -323,6 +329,11 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
 
 def _key_topics(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     tc = pkg.get("theme_comparison") or {}
+    if tc.get("competitor_themes") and tc.get("focal_n_classified") == 0:
+        return (
+            "<p class='empty'>No focal mirror collected this run — cross-company topic "
+            "comparison unavailable (competitor themes are in 'Data at a glance').</p>"
+        )
     comp, foc = tc.get("competitor_themes") or {}, tc.get("focal_themes") or {}
     comp_sh, foc_sh = tc.get("competitor_shares") or {}, tc.get("focal_shares") or {}
     use_shares = bool(comp_sh or foc_sh)
@@ -443,7 +454,12 @@ def _similarweb_value(key: str, v: Any) -> str:
     if isinstance(v, dict):
         return " · ".join(f"{k}: {x}" for k, x in list(v.items())[:8])
     if isinstance(v, list):
-        return ", ".join(str(x) for x in v[:8])
+        # top_countries/traffic_trend can be lists of dicts — join their values,
+        # never print a Python dict repr.
+        return ", ".join(
+            " ".join(str(x) for x in item.values()) if isinstance(item, dict) else str(item)
+            for item in v[:8]
+        )
     return str(v)
 
 
@@ -454,7 +470,13 @@ def _similarweb(pkg: dict[str, Any]) -> str:
         return "<p class='empty'>No Similarweb traffic data this run (needs Exa credits).</p>"
     label = "Similarweb" if sw.get("data_source") == "similarweb" else "public-web estimate"
     stats = []
-    for key in ("estimated_monthly_visits", "channel_mix", "top_countries", "digital_competitors"):
+    for key in (
+        "estimated_monthly_visits",
+        "channel_mix",
+        "top_countries",
+        "digital_competitors",
+        "traffic_trend",
+    ):
         if key in m:
             v = m[key].get("value") if isinstance(m[key], dict) else m[key]
             stats.append(
@@ -503,6 +525,8 @@ def _action_board(pkg: dict[str, Any], focal: str) -> str:
             f"<div class='abrow'><b>Primary metric:</b> {_esc(o.get('primary_metric') or '—')} · "
             f"<b>guardrails:</b> {_esc(guardrails)} · "
             f"<b>min sample:</b> {_esc(o.get('minimum_sample_rule') or '—')}</div>"
+            f"<div class='abrow'><b>Iterate rule:</b> {_esc(o.get('iterate_rule') or '—')}</div>"
+            f"<div class='abrow'><b>Scale rule:</b> {_esc(o.get('scale_rule') or '—')}</div>"
             f"<div class='abrow'><b>Backfire risk:</b> {_esc(o.get('why_this_could_backfire') or '—')}</div>"
             f"<div class='abrow'><b>Kill rule:</b> {_esc(o.get('kill_rule') or '—')}</div>"
             f"{stage_html}</div>"

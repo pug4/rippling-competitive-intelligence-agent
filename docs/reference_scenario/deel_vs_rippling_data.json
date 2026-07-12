@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T22:46:35.925219+00:00",
+    "generated_at": "2026-07-12T23:15:20.507235+00:00",
     "stop_reason": "runtime_exhausted",
     "stop_reason_label": "budget-bounded (hit the research-time cap)",
     "iterations": 19,
@@ -143,8 +143,8 @@
     "commercial_motion": "medium",
     "category_entry_points": "medium",
     "personas_and_jobs": "medium",
-    "funnel": "not_attempted",
-    "proof_strategy": "not_attempted",
+    "funnel": "medium",
+    "proof_strategy": "medium",
     "competitive_stance": "medium",
     "events": "medium",
     "out_of_home": "not_attempted",
@@ -153,13 +153,13 @@
     "launches_current": "medium",
     "focal_current": "medium",
     "focal_proof": "medium",
-    "focal_vulnerabilities": "not_attempted"
+    "focal_vulnerabilities": "medium"
   },
   "coverage_detail": [
     {
       "dimension": "identity",
       "level": "high",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -174,7 +174,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "current_website",
@@ -326,7 +326,7 @@
     {
       "dimension": "commercial_motion",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -341,12 +341,12 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "category_entry_points",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -361,12 +361,12 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "personas_and_jobs",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -381,34 +381,52 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "funnel",
-      "level": "not_attempted",
-      "artifact_count": 0,
-      "source_classes": [],
+      "level": "medium",
+      "artifact_count": 123,
+      "source_classes": [
+        "events",
+        "exa_web",
+        "google_ads",
+        "linkedin_post",
+        "news",
+        "similarweb",
+        "wayback",
+        "webpage"
+      ],
       "requested_periods": 2,
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "proof_strategy",
-      "level": "not_attempted",
-      "artifact_count": 0,
-      "source_classes": [],
+      "level": "medium",
+      "artifact_count": 123,
+      "source_classes": [
+        "events",
+        "exa_web",
+        "google_ads",
+        "linkedin_post",
+        "news",
+        "similarweb",
+        "wayback",
+        "webpage"
+      ],
       "requested_periods": 2,
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "competitive_stance",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -427,7 +445,7 @@
         "public_social",
         "reviews"
       ],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "events",
@@ -457,7 +475,7 @@
     {
       "dimension": "portfolio_discovery",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -472,12 +490,12 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "product_positioning",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -496,32 +514,25 @@
         "public_social",
         "reviews"
       ],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "launches_current",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 5,
       "source_classes": [
-        "events",
-        "exa_web",
-        "google_ads",
-        "linkedin_post",
-        "news",
-        "similarweb",
-        "wayback",
-        "webpage"
+        "news"
       ],
       "requested_periods": 2,
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "5 artifacts across news sources"
     },
     {
       "dimension": "focal_current",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -536,12 +547,12 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "focal_proof",
       "level": "medium",
-      "artifact_count": 0,
+      "artifact_count": 123,
       "source_classes": [
         "events",
         "exa_web",
@@ -556,18 +567,27 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     },
     {
       "dimension": "focal_vulnerabilities",
-      "level": "not_attempted",
-      "artifact_count": 0,
-      "source_classes": [],
+      "level": "medium",
+      "artifact_count": 123,
+      "source_classes": [
+        "events",
+        "exa_web",
+        "google_ads",
+        "linkedin_post",
+        "news",
+        "similarweb",
+        "wayback",
+        "webpage"
+      ],
       "requested_periods": 2,
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
+      "reason": "derived from 123 classified artifacts (corpus-wide across 8 source classes)"
     }
   ],
   "commercial_motion": {
@@ -1222,22 +1242,6 @@
       "top_verticals": []
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "competitor_share": 0.0,
-      "focal_share": 0.0088,
-      "share_ratio": null,
-      "share_delta": -0.0088,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [],
-      "focal_example_artifact_ids": [
-        "ART-9e8697e401cd"
-      ],
-      "top_verticals": []
-    },
-    {
       "cep": "rapid_growth_scaling_employees",
       "competitor_pages": 0,
       "focal_pages": 1,
@@ -1254,6 +1258,75 @@
       "top_verticals": []
     },
     {
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-9e8697e401cd"
+      ],
+      "top_verticals": []
+    },
+    {
+      "cep": "growing_remote_and_international_teams",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-0e665529aaf9"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "benefits"
+      ]
+    },
+    {
+      "cep": "expanding_into_complex_field_markets",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "paying_contractors_and_employees_globally",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
+    },
+    {
       "cep": "consolidating_fragmented_regional_workforce_providers",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -1265,6 +1338,44 @@
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
         "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "expanding_service_offerings",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-22cb144808e1"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "expanding_to_new_countries",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-ceb5d6ab049f"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
@@ -1289,44 +1400,6 @@
       "top_verticals": []
     },
     {
-      "cep": "expanding_to_new_countries",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-ceb5d6ab049f"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "expanding_into_complex_field_markets",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-39db3bdefb26"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
       "cep": "managing_global_device_fleet",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -1343,59 +1416,6 @@
       "top_verticals": [
         "it_device_management"
       ]
-    },
-    {
-      "cep": "growing_remote_and_international_teams",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-0e665529aaf9"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "benefits"
-      ]
-    },
-    {
-      "cep": "expanding_service_offerings",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-22cb144808e1"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "paying_contractors_and_employees_globally",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": []
     }
   ],
   "persona_channel_matrix": {
@@ -67887,59 +67907,59 @@
   },
   "theme_comparison": {
     "competitor_themes": {
-      "native_platform_breadth": 5,
-      "compliance": 10,
-      "status": 0,
-      "data_unification": 6,
-      "integration_ecosystem": 8,
-      "cost_reduction": 5,
-      "consolidation": 39,
-      "global_hiring": 7,
-      "employee_experience": 4,
       "speed_to_value": 7,
+      "data_unification": 6,
+      "cost_reduction": 5,
+      "native_platform_breadth": 5,
+      "status": 0,
+      "compliance": 10,
+      "employee_experience": 4,
+      "global_hiring": 7,
+      "integration_ecosystem": 8,
       "automation": 14,
+      "consolidation": 39,
       "all_in_one": 1
     },
     "focal_themes": {
-      "native_platform_breadth": 3,
-      "compliance": 3,
-      "status": 4,
-      "data_unification": 35,
-      "integration_ecosystem": 4,
-      "cost_reduction": 1,
-      "consolidation": 28,
-      "global_hiring": 2,
-      "employee_experience": 2,
       "speed_to_value": 2,
+      "data_unification": 35,
+      "cost_reduction": 1,
+      "native_platform_breadth": 3,
+      "status": 4,
+      "compliance": 3,
+      "employee_experience": 2,
+      "global_hiring": 2,
+      "integration_ecosystem": 4,
       "automation": 15,
+      "consolidation": 28,
       "all_in_one": 2
     },
     "competitor_shares": {
-      "native_platform_breadth": 0.0407,
-      "compliance": 0.0813,
-      "status": 0.0,
-      "data_unification": 0.0488,
-      "integration_ecosystem": 0.065,
-      "cost_reduction": 0.0407,
-      "consolidation": 0.3171,
-      "global_hiring": 0.0569,
-      "employee_experience": 0.0325,
       "speed_to_value": 0.0569,
+      "data_unification": 0.0488,
+      "cost_reduction": 0.0407,
+      "native_platform_breadth": 0.0407,
+      "status": 0.0,
+      "compliance": 0.0813,
+      "employee_experience": 0.0325,
+      "global_hiring": 0.0569,
+      "integration_ecosystem": 0.065,
       "automation": 0.1138,
+      "consolidation": 0.3171,
       "all_in_one": 0.0081
     },
     "focal_shares": {
-      "native_platform_breadth": 0.0263,
-      "compliance": 0.0263,
-      "status": 0.0351,
-      "data_unification": 0.307,
-      "integration_ecosystem": 0.0351,
-      "cost_reduction": 0.0088,
-      "consolidation": 0.2456,
-      "global_hiring": 0.0175,
-      "employee_experience": 0.0175,
       "speed_to_value": 0.0175,
+      "data_unification": 0.307,
+      "cost_reduction": 0.0088,
+      "native_platform_breadth": 0.0263,
+      "status": 0.0351,
+      "compliance": 0.0263,
+      "employee_experience": 0.0175,
+      "global_hiring": 0.0175,
+      "integration_ecosystem": 0.0351,
       "automation": 0.1316,
+      "consolidation": 0.2456,
       "all_in_one": 0.0175
     },
     "competitor_n_classified": 123,
@@ -67952,71 +67972,113 @@
       "end": "2026-04-13",
       "n_artifacts": 14,
       "themes": {
+        "automation": 11,
+        "compliance": 9,
+        "speed_to_value": 8,
         "consolidation": 7,
-        "automation": 4,
-        "data_unification": 1,
-        "native_platform_breadth": 1,
-        "cross_system_workflow": 1
+        "scalability": 6,
+        "native_platform_breadth": 6,
+        "data_unification": 5,
+        "cross_system_workflow": 4,
+        "employee_experience": 3,
+        "workforce_visibility": 2,
+        "integration_ecosystem": 1,
+        "security_and_control": 1,
+        "global_hiring": 1
       },
       "themes_share": {
+        "automation": 0.7857,
+        "compliance": 0.6429,
+        "speed_to_value": 0.5714,
         "consolidation": 0.5,
-        "automation": 0.2857,
-        "data_unification": 0.0714,
-        "native_platform_breadth": 0.0714,
-        "cross_system_workflow": 0.0714
+        "scalability": 0.4286,
+        "native_platform_breadth": 0.4286,
+        "data_unification": 0.3571,
+        "cross_system_workflow": 0.2857,
+        "employee_experience": 0.2143,
+        "workforce_visibility": 0.1429,
+        "integration_ecosystem": 0.0714,
+        "security_and_control": 0.0714,
+        "global_hiring": 0.0714
       }
     },
     "current_window": {
       "n_artifacts": 108,
       "themes": {
-        "consolidation": 32,
-        "automation": 10,
-        "compliance": 10,
-        "integration_ecosystem": 8,
-        "global_hiring": 7,
-        "speed_to_value": 7,
-        "cost_reduction": 5,
-        "data_unification": 5,
-        "employee_experience": 4,
-        "security_and_control": 4
+        "compliance": 72,
+        "automation": 53,
+        "speed_to_value": 43,
+        "scalability": 42,
+        "consolidation": 36,
+        "global_hiring": 33,
+        "cost_reduction": 30,
+        "employee_experience": 22,
+        "security_and_control": 22,
+        "integration_ecosystem": 18,
+        "data_unification": 16,
+        "data_accuracy": 13,
+        "native_platform_breadth": 13,
+        "workforce_visibility": 12,
+        "cross_system_workflow": 10,
+        "api_extensibility": 2,
+        "all_in_one": 1,
+        "category_redefinition": 1,
+        "risk": 1,
+        "remote_work_culture": 1,
+        "category_creation": 1
       },
       "themes_share": {
-        "consolidation": 0.2963,
-        "automation": 0.0926,
-        "compliance": 0.0926,
-        "integration_ecosystem": 0.0741,
-        "global_hiring": 0.0648,
-        "speed_to_value": 0.0648,
-        "cost_reduction": 0.0463,
-        "data_unification": 0.0463,
-        "employee_experience": 0.037,
-        "security_and_control": 0.037
+        "compliance": 0.6667,
+        "automation": 0.4907,
+        "speed_to_value": 0.3981,
+        "scalability": 0.3889,
+        "consolidation": 0.3333,
+        "global_hiring": 0.3056,
+        "cost_reduction": 0.2778,
+        "employee_experience": 0.2037,
+        "security_and_control": 0.2037,
+        "integration_ecosystem": 0.1667,
+        "data_unification": 0.1481,
+        "data_accuracy": 0.1204,
+        "native_platform_breadth": 0.1204,
+        "workforce_visibility": 0.1111,
+        "cross_system_workflow": 0.0926,
+        "api_extensibility": 0.0185,
+        "all_in_one": 0.0093,
+        "category_redefinition": 0.0093,
+        "risk": 0.0093,
+        "remote_work_culture": 0.0093,
+        "category_creation": 0.0093
       }
     },
     "outside_windows": 1,
     "stable_themes": [
       "automation",
+      "compliance",
       "consolidation",
       "cross_system_workflow",
       "data_unification",
-      "native_platform_breadth"
-    ],
-    "emerged_themes": [
-      "all_in_one",
-      "api_extensibility",
-      "category_creation",
-      "compliance",
-      "cost_reduction",
       "employee_experience",
       "global_hiring",
       "integration_ecosystem",
+      "native_platform_breadth",
       "scalability",
       "security_and_control",
       "speed_to_value",
       "workforce_visibility"
     ],
+    "emerged_themes": [
+      "all_in_one",
+      "api_extensibility",
+      "category_creation",
+      "category_redefinition",
+      "cost_reduction",
+      "data_accuracy",
+      "remote_work_culture",
+      "risk"
+    ],
     "receded_themes": [],
-    "note": "Prior membership = real archive-capture/published date inside the comparison window; undated live content is current. Windows have different sample sizes (14 vs 108) \u2014 compare shares, not counts; treat emergence/recession as signals. 1 dated artifact(s) fall outside both windows and are excluded."
+    "note": "Prior membership = real archive-capture/published date inside the comparison window; undated live content is current. Theme counts = artifacts carrying the theme as primary OR supporting (the same rule the change events use). Windows have different sample sizes (14 vs 108) \u2014 compare shares, not counts; treat emergence/recession as signals. 1 dated artifact(s) fall outside both windows and are excluded."
   },
   "classifications": [
     {
@@ -81288,10 +81350,8 @@
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change",
-        "The small prior-window sample (only 6 artifacts) may simply have lacked cost_reduction messaging by chance rather than it being truly absent from company communications at that time.",
-        "The theme could reflect a segment-specific or seasonal campaign (e.g., economic downturn messaging) rather than a durable company-wide repositioning.",
-        "Some of the 24 current artifacts may share a common source or template, inflating the apparent breadth of adoption."
+        "this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change",
+        "The theme could reflect a segment-specific or seasonal campaign (e.g., economic downturn messaging) rather than a durable company-wide repositioning."
       ],
       "theme": "cost_reduction",
       "prior_theme_count": 0,
@@ -81349,9 +81409,8 @@
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift",
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
         "The theme may have existed under a different label or phrasing in the prior window that was not captured by the sample.",
-        "The small prior-window sample size (5 artifacts vs 63 total current-window artifacts) could simply reflect limited historical coverage rather than true absence.",
         "This could be a segment-specific or campaign-specific push (e.g., a recruiting or expansion initiative) rather than a company-wide repositioning."
       ],
       "theme": "global_hiring",
@@ -81394,10 +81453,8 @@
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change",
-        "The theme may have existed in prior-period messaging but was missed due to the small comparison sample (only 6 artifacts vs 63 in current window), understating true prior presence",
+        "this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change",
         "The 'data_accuracy' theme could be a rebranding or rephrasing of a related prior concept (e.g., 'data quality' or 'precision') rather than a genuinely new theme",
-        "This could reflect a segment-specific or campaign-specific push rather than company-wide repositioning, if the 9 current artifacts cluster around a single product line or channel",
         "Seasonal or event-driven messaging (e.g., a product launch, compliance push, or industry report) could explain a temporary spike rather than a sustained strategic shift"
       ],
       "theme": "data_accuracy",
@@ -81447,9 +81504,7 @@
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift",
-        "The prior-window sample was small (only 6 artifacts) relative to the current window (63 artifacts), so the theme's absence earlier could partly reflect limited prior sampling rather than a true absence.",
-        "The appearance of 'employee_experience' across 14 artifacts could reflect a segment-specific HR/recruiting campaign rather than a company-wide strategic repositioning.",
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
         "A rebranding of an existing HR-related theme (e.g., 'workplace culture' or 'talent experience') under a new label could create a false signal of an emerging theme."
       ],
       "theme": "employee_experience",
@@ -81488,8 +81543,7 @@
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift",
-        "The theme may have existed in prior period but was missed due to the small comparison sample (only 6 artifacts vs 63 current), a coverage gap rather than true absence.",
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
         "The apparent emergence could reflect a renamed or rebranded product/feature now labeled 'cross_system_workflow' rather than a genuinely new theme.",
         "This could be a segment-specific campaign or single product launch rather than company-wide repositioning.",
         "Seasonality or a recent product launch event could explain a temporary spike in this theme rather than a sustained strategic shift."
@@ -81938,22 +81992,6 @@
           "top_verticals": []
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "competitor_share": 0.0,
-          "focal_share": 0.0088,
-          "share_ratio": null,
-          "share_delta": -0.0088,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [],
-          "focal_example_artifact_ids": [
-            "ART-9e8697e401cd"
-          ],
-          "top_verticals": []
-        },
-        {
           "cep": "rapid_growth_scaling_employees",
           "competitor_pages": 0,
           "focal_pages": 1,
@@ -81970,6 +82008,75 @@
           "top_verticals": []
         },
         {
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-9e8697e401cd"
+          ],
+          "top_verticals": []
+        },
+        {
+          "cep": "growing_remote_and_international_teams",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-0e665529aaf9"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "benefits"
+          ]
+        },
+        {
+          "cep": "expanding_into_complex_field_markets",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "paying_contractors_and_employees_globally",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
+        },
+        {
           "cep": "consolidating_fragmented_regional_workforce_providers",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -81981,6 +82088,44 @@
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
             "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "expanding_service_offerings",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-22cb144808e1"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "expanding_to_new_countries",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-ceb5d6ab049f"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
@@ -82005,44 +82150,6 @@
           "top_verticals": []
         },
         {
-          "cep": "expanding_to_new_countries",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-ceb5d6ab049f"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "expanding_into_complex_field_markets",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-39db3bdefb26"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
           "cep": "managing_global_device_fleet",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -82059,59 +82166,6 @@
           "top_verticals": [
             "it_device_management"
           ]
-        },
-        {
-          "cep": "growing_remote_and_international_teams",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-0e665529aaf9"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "benefits"
-          ]
-        },
-        {
-          "cep": "expanding_service_offerings",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-22cb144808e1"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "paying_contractors_and_employees_globally",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": []
         }
       ]
     }
@@ -82160,8 +82214,8 @@
         "cls-c8628905def3"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": null,
-      "focal_theme_share": null,
+      "competitor_theme_share": 0.0407,
+      "focal_theme_share": 0.0263,
       "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "\u201cnative_platform_breadth\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
@@ -82229,8 +82283,8 @@
         "cls-27e6f08f5472"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": null,
-      "focal_theme_share": null,
+      "competitor_theme_share": 0.0325,
+      "focal_theme_share": 0.0088,
       "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "\u201csecurity_and_control\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
@@ -82289,8 +82343,8 @@
         "cls-144df9c975b6"
       ],
       "focal_proof_strength": "none",
-      "competitor_theme_share": null,
-      "focal_theme_share": null,
+      "competitor_theme_share": 0.0163,
+      "focal_theme_share": 0.0088,
       "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cworkforce_visibility\u201d with weak observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
@@ -82360,8 +82414,8 @@
         "cls-ce2d9825b693"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": null,
-      "focal_theme_share": null,
+      "competitor_theme_share": 0.3171,
+      "focal_theme_share": 0.2456,
       "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
@@ -82476,8 +82530,8 @@
         "cls-921a5abe4240"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": null,
-      "focal_theme_share": null,
+      "competitor_theme_share": 0.1138,
+      "focal_theme_share": 0.1316,
       "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cautomation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
@@ -82568,8 +82622,8 @@
         "cls-6d26903eebd8"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": null,
-      "focal_theme_share": null,
+      "competitor_theme_share": 0.0813,
+      "focal_theme_share": 0.0263,
       "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201ccompliance\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
@@ -82993,7 +83047,7 @@
   ],
   "opportunities_rejected": [],
   "limitations": [
-    "Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 6 dimensions remain unattempted: focal_vulnerabilities, funnel, historical_pricing, historical_product, out_of_home, proof_strategy"
+    "Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 3 dimensions remain unattempted: historical_pricing, historical_product, out_of_home"
   ],
   "negative_observations": [
     "https://www.deel.com/customers: HTTP 404",

@@ -223,6 +223,28 @@ def _honest_coverage(
         cov.raise_coverage(
             coverage, "category_entry_points", "medium" if len(observed_ceps) >= 5 else "low"
         )
+    # Classification-derived dims (verifier: funnel/proof_strategy/focal_
+    # vulnerabilities were PERMANENTLY not_attempted while the same brief
+    # displayed funnel stages, a proof-gap table, and focal-proof ratings).
+    from .synthesis import is_placeholder_label
+
+    n_funnel = sum(
+        1
+        for c in data.get("classifications", [])
+        if any(not is_placeholder_label(s) for s in (c.get("funnel_stages") or []))
+    )
+    if n_funnel:
+        cov.raise_coverage(coverage, "funnel", "medium" if n_funnel >= 20 else "low")
+    n_proof = sum(1 for c in data.get("classifications", []) if c.get("proof_types"))
+    if n_proof:
+        cov.raise_coverage(coverage, "proof_strategy", "medium" if n_proof >= 20 else "low")
+    focal_rated_gaps = [
+        g for g in data.get("proof_gaps", []) if g.get("focal_proof_strength") is not None
+    ]
+    if focal_rated_gaps:
+        cov.raise_coverage(
+            coverage, "focal_vulnerabilities", "medium" if len(focal_rated_gaps) >= 3 else "low"
+        )
     current_w = next(
         (w for w in state.time_windows if getattr(w, "purpose", None) == "current"), None
     )
@@ -358,21 +380,50 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     )
     _nc = max(1, len(data["classification_models"]))
     _nf = max(1, len(focal_cls_models))
+    _has_focal = bool(focal_cls_models)
     _selected = {t for t, _ in _comp_themes.most_common(10)} | {
         t for t, _ in _focal_themes.most_common(10)
     }
+    # With no focal mirror the focal side is EMPTY, not zero — emitting 0s
+    # fabricates a measured absence (verifier: snapshot runs rendered
+    # "X vs Rippling" topic bars with fabricated 0 (0%) right sides).
     theme_comparison = {
         "competitor_themes": {t: _comp_themes.get(t, 0) for t in _selected},
-        "focal_themes": {t: _focal_themes.get(t, 0) for t in _selected},
+        "focal_themes": {t: _focal_themes.get(t, 0) for t in _selected} if _has_focal else {},
         "competitor_shares": {t: round(_comp_themes.get(t, 0) / _nc, 4) for t in _selected},
-        "focal_shares": {t: round(_focal_themes.get(t, 0) / _nf, 4) for t in _selected},
+        "focal_shares": (
+            {t: round(_focal_themes.get(t, 0) / _nf, 4) for t in _selected}
+            if _has_focal
+            else {}
+        ),
         "competitor_n_classified": len(data["classification_models"]),
         "focal_n_classified": len(focal_cls_models),
         "note": (
             "shares = count / n classified artifacts of that company; cross-company "
             "bars compare shares, raw counts shown alongside"
+            if _has_focal
+            else "no focal mirror collected this run — cross-company comparison unavailable"
         ),
     }
+    # Persisted proof gaps predate the normalization fields (render never
+    # re-runs comparison.py), so legacy runs would carry schema defaults
+    # forever (verifier). Fill shares + sample sufficiency at render from the
+    # same theme counters; never overwrite a stricter persisted value.
+    _suff = "ok"
+    if focal_cls_models and len(focal_cls_models) < 15 and _nc < 15:
+        _suff = "insufficient_both"
+    elif focal_cls_models and len(focal_cls_models) < 15:
+        _suff = "insufficient_focal_sample"
+    elif _nc < 15:
+        _suff = "insufficient_competitor_sample"
+    for g in data["proof_gaps"]:
+        theme_key = str(g.get("short_label", "")).replace(" ", "_")
+        if g.get("competitor_theme_share") is None and theme_key in _comp_themes:
+            g["competitor_theme_share"] = round(_comp_themes[theme_key] / _nc, 4)
+        if g.get("focal_theme_share") is None and _has_focal and theme_key in _focal_themes:
+            g["focal_theme_share"] = round(_focal_themes[theme_key] / _nf, 4)
+        if g.get("sample_sufficiency", "ok") == "ok" and _suff != "ok":
+            g["sample_sufficiency"] = _suff
     # Corpus-size normalization context: with a niche competitor (12-page site)
     # vs a large focal corpus, raw counts fabricate verdicts — every consumer
     # (UI banner, dashboard, brief callout) shares this ONE rule.
@@ -402,12 +453,19 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         },
         "asymmetry_ratio": _asym,
         "small_corpus": _n_min < 15,
-        "show_banner": bool((_asym or 0) > 3 or _n_min < 20),
+        # The asymmetry banner is about CROSS-COMPANY comparability — with no
+        # focal mirror there is nothing to compare, so it must not fire
+        # (verifier: snapshot briefs rendered "X vs focal 0 (ratio None)").
+        "show_banner": bool(_has_focal and ((_asym or 0) > 3 or _n_min < 20)),
         "normalization_note": (
             "All cross-company comparisons (CEP ownership, key topics, per-vertical) are "
             "computed on share-of-corpus (count / classified artifacts per company); raw "
             "counts are retained but are not directly comparable across corpora of "
             "different sizes."
+            if _has_focal
+            else "No focal mirror collected this run — cross-company comparisons and "
+            "ownership verdicts are not available (CEP rows are competitor-observed "
+            "triggers only)."
         ),
     }
     focal_evidence = _focal_evidence(ctx, state)
@@ -896,10 +954,14 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         for r in shown[:14]:
             tv = ", ".join(str(v).replace("_", " ") for v in (r.get("top_verticals") or [])) or "—"
             cn = f"{r['competitor_pages']}"
-            fn = f"{r['focal_pages']}"
             if r.get("competitor_share") is not None:
                 cn += f" ({r['competitor_share']:.0%})"
-                fn += f" ({r['focal_share']:.0%})"
+            if r.get("focal_pages") is None:
+                fn = "— (no focal mirror)"
+            else:
+                fn = f"{r['focal_pages']}"
+                if r.get("focal_share") is not None:
+                    fn += f" ({r['focal_share']:.0%})"
             add(
                 f"| {str(r['cep']).replace('_', ' ')} | {cn} | {fn} | "
                 f"{r['ownership']} | {r.get('ownership_basis', '—')} | {tv} |"
@@ -989,7 +1051,20 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             elif key == "estimated_monthly_visits" and isinstance(val, (int, float)):
                 add(f"- **estimated monthly visits:** {int(val):,} _(estimated)_")
             else:
-                add(f"- **{key.replace('_', ' ')}:** {val} _(estimated)_")
+                # Shape-aware fallback: channel_mix is a dict, top_countries can
+                # be a list of dicts — a raw f-string would print Python reprs.
+                if isinstance(val, dict):
+                    text = " · ".join(f"{k}: {v}" for k, v in list(val.items())[:8])
+                elif isinstance(val, list):
+                    text = ", ".join(
+                        " ".join(str(x) for x in item.values())
+                        if isinstance(item, dict)
+                        else str(item)
+                        for item in val[:8]
+                    )
+                else:
+                    text = str(val)
+                add(f"- **{key.replace('_', ' ')}:** {text} _(estimated)_")
 
     # --- Channel alignment: paid vs organic vs employee advocacy -----------
     ca = pkg.get("channel_alignment") or {}
@@ -1034,13 +1109,13 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     tb = pkg.get("temporal_baseline") or {}
     if tb.get("prior_window"):
         pw = tb["prior_window"]
+        _pw_items = list(pw.get("themes", {}).items())
+        _pw_line = ", ".join(f"{t} ({n})" for t, n in _pw_items[:12]) or "none classified"
+        if len(_pw_items) > 12:
+            _pw_line += f" (+{len(_pw_items) - 12} more in the JSON)"
         add(
             f"**Prior window baseline ({pw['start']} → {pw['end']}, {pw['n_artifacts']} dated "
-            f"artifacts):** themes observed then — "
-            + (
-                ", ".join(f"{t} ({n})" for t, n in pw.get("themes", {}).items())
-                or "none classified"
-            )
+            f"artifacts):** themes observed then — " + _pw_line
         )
         if tb.get("stable_themes"):
             add("- **Stable (both windows):** " + ", ".join(tb["stable_themes"]))
@@ -1053,7 +1128,9 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             )
         add(f"- _{tb.get('note')}_\n")
     if changes:
-        for ch in changes[:4]:
+        # Render ALL events — a silent [:4] cap hid the strongest prior-presence
+        # case (cross_system_workflow) from the brief while the dashboard showed it.
+        for ch in changes:
             add(
                 f"- **{ch['dimension']}** ({ch['lifecycle']}, confidence {ch['confidence']}): "
                 f"“{ch['prior_state']}” → “{ch['current_state']}”"

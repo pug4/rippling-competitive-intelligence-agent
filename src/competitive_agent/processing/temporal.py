@@ -395,6 +395,25 @@ def reconcile_change_events(
                 counts[value] = counts.get(value, 0) + 1
         return max(counts, key=lambda k: counts[k]) if counts else None
 
+    n_current = len({c.artifact_id for c in current_cls})
+    prior_id_set = set(prior_sample)
+
+    def _salvage_alts(ev: dict[str, Any]) -> list[str]:
+        """Persisted alternative_explanations were written mid-run against a
+        PARTIAL corpus — any that state sample sizes/counts or assert absence
+        are stale by construction (verifier: 'only 6 artifacts' shipped next to
+        a reconciled 'n of 14' prior_state). Keep only number-free, non-absence
+        qualitative alts; the correct quantitative caveat is prepended fresh."""
+        kept = []
+        for a in ev.get("alternative_explanations", []):
+            text = str(a)
+            if re.search(r"\d", text):
+                continue
+            if re.search(r"absen|not observed|missed|coverage asymmetry", text, re.IGNORECASE):
+                continue
+            kept.append(text)
+        return kept
+
     reconciled: list[dict[str, Any]] = []
     notes: list[str] = []
     for ev in events:
@@ -433,13 +452,10 @@ def reconcile_change_events(
                 out["prior_evidence_ids"] = prior_ids[:5]
                 out["prior_evidence_role"] = "theme_occurrences"
                 out["alternative_explanations"] = [
-                    f"prior-window sample is small (n={n_prior}); the growth ratio may "
-                    "reflect collection depth rather than a real shift"
-                ] + [
-                    a
-                    for a in ev.get("alternative_explanations", [])
-                    if "coverage asymmetry" not in a
-                ]
+                    f"prior-window sample is small ({n_prior} dated artifacts vs "
+                    f"{n_current} current); the growth ratio may reflect collection "
+                    "depth rather than a real shift"
+                ] + _salvage_alts(ev)
                 if str(ev.get("prior_state", "")).find("not observed") >= 0:
                     notes.append(
                         f"{ev.get('change_id')} ({theme}): relabeled emerging→expanding — "
@@ -451,11 +467,19 @@ def reconcile_change_events(
                     f"“{theme}” not observed in any of the {n_prior} dated prior-window artifacts"
                 )
                 # Grounding gate: prior ids stay non-empty — the window sample,
-                # explicitly marked as such.
-                out["prior_evidence_ids"] = (
-                    ev.get("prior_evidence_ids") or prior_sample[:5]
-                ) or prior_sample[:5]
+                # explicitly marked as such. Persisted mid-run ids are only
+                # trusted if the FINAL predicate still puts them in the prior
+                # window (they were exactly the stale-id failure mode).
+                stale_ids = [
+                    a for a in (ev.get("prior_evidence_ids") or []) if a in prior_id_set
+                ]
+                out["prior_evidence_ids"] = stale_ids or prior_sample[:5]
                 out["prior_evidence_role"] = "window_sample"
+                out["alternative_explanations"] = [
+                    "this may be a collection/archive coverage asymmetry "
+                    f"({n_prior} dated prior-window artifacts vs {n_current} current) "
+                    "rather than a real messaging change"
+                ] + _salvage_alts(ev)
             reconciled.append(out)
         elif dim in _SCALAR_DIMENSIONS:
             prior_val = dominant(prior_cls, dim)

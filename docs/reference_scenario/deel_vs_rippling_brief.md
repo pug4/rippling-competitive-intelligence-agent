@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T22:46:35.925219+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T23:15:20.507235+00:00*
 
 ## Executive summary
 
@@ -189,19 +189,21 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 
 ## Strategy over time
 
-**Prior window baseline (2025-07-12 → 2026-04-13, 14 dated artifacts):** themes observed then — consolidation (7), automation (4), data_unification (1), native_platform_breadth (1), cross_system_workflow (1)
-- **Stable (both windows):** automation, consolidation, cross_system_workflow, data_unification, native_platform_breadth
-- **Emerged (current only):** all_in_one, api_extensibility, category_creation, compliance, cost_reduction, employee_experience, global_hiring, integration_ecosystem, scalability, security_and_control, speed_to_value, workforce_visibility
-- _Prior membership = real archive-capture/published date inside the comparison window; undated live content is current. Windows have different sample sizes (14 vs 108) — compare shares, not counts; treat emergence/recession as signals. 1 dated artifact(s) fall outside both windows and are excluded._
+**Prior window baseline (2025-07-12 → 2026-04-13, 14 dated artifacts):** themes observed then — automation (11), compliance (9), speed_to_value (8), consolidation (7), scalability (6), native_platform_breadth (6), data_unification (5), cross_system_workflow (4), employee_experience (3), workforce_visibility (2), integration_ecosystem (1), security_and_control (1) (+1 more in the JSON)
+- **Stable (both windows):** automation, compliance, consolidation, cross_system_workflow, data_unification, employee_experience, global_hiring, integration_ecosystem, native_platform_breadth, scalability, security_and_control, speed_to_value, workforce_visibility
+- **Emerged (current only):** all_in_one, api_extensibility, category_creation, category_redefinition, cost_reduction, data_accuracy, remote_work_culture, risk
+- _Prior membership = real archive-capture/published date inside the comparison window; undated live content is current. Theme counts = artifacts carrying the theme as primary OR supporting (the same rule the change events use). Windows have different sample sizes (14 vs 108) — compare shares, not counts; treat emergence/recession as signals. 1 dated artifact(s) fall outside both windows and are excluded._
 
 - **theme_emergence** (emerging, confidence low): ““cost_reduction” not observed in any of the 14 dated prior-window artifacts” → ““cost_reduction” present in 30 current-window artifacts”
-  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The small prior-window sample (only 6 artifacts) may simply have lacked cost_reduction messaging by chance rather than it being truly absent from company communications at that time.
+  - alternatives: this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change; The theme could reflect a segment-specific or seasonal campaign (e.g., economic downturn messaging) rather than a durable company-wide repositioning.
 - **theme_emergence** (expanding, confidence low): ““global_hiring” present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)” → ““global_hiring” present in 33 current-window artifacts”
-  - alternatives: prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift; The theme may have existed under a different label or phrasing in the prior window that was not captured by the sample.
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The theme may have existed under a different label or phrasing in the prior window that was not captured by the sample.
 - **theme_emergence** (emerging, confidence low): ““data_accuracy” not observed in any of the 14 dated prior-window artifacts” → ““data_accuracy” present in 13 current-window artifacts”
-  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The theme may have existed in prior-period messaging but was missed due to the small comparison sample (only 6 artifacts vs 63 in current window), understating true prior presence
+  - alternatives: this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change; The 'data_accuracy' theme could be a rebranding or rephrasing of a related prior concept (e.g., 'data quality' or 'precision') rather than a genuinely new theme
 - **theme_emergence** (expanding, confidence low): ““employee_experience” present but rare in the prior window (3 of 14 dated artifacts, incl. supporting-theme mentions)” → ““employee_experience” present in 22 current-window artifacts”
-  - alternatives: prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift; The prior-window sample was small (only 6 artifacts) relative to the current window (63 artifacts), so the theme's absence earlier could partly reflect limited prior sampling rather than a true absence.
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; A rebranding of an existing HR-related theme (e.g., 'workplace culture' or 'talent experience') under a new label could create a false signal of an emerging theme.
+- **theme_emergence** (expanding, confidence low): ““cross_system_workflow” present but rare in the prior window (4 of 14 dated artifacts, incl. supporting-theme mentions)” → ““cross_system_workflow” present in 10 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The apparent emergence could reflect a renamed or rebranded product/feature now labeled 'cross_system_workflow' rather than a genuinely new theme.
 
 ## Research scope and coverage
 
@@ -237,7 +239,7 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 
 | Dimension | Level | Basis |
 |---|---|---|
-| identity | high | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| identity | high | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
 | current_website | high | 64 artifacts across sitemap, webpage sources |
 | current_product | medium | 63 artifacts across webpage sources |
 | pricing_and_packaging | high | 63 artifacts across webpage sources |
@@ -249,24 +251,24 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | historical_product | not_attempted | not attempted this run — absence of collection, not absence of activity |
 | historical_pricing | not_attempted | not attempted this run — absence of collection, not absence of activity |
 | historical_messages | medium | 18 artifacts across exa_web, wayback sources |
-| commercial_motion | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| category_entry_points | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| personas_and_jobs | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| funnel | not_attempted | not attempted this run — absence of collection, not absence of activity |
-| proof_strategy | not_attempted | not attempted this run — absence of collection, not absence of activity |
-| competitive_stance | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| commercial_motion | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| category_entry_points | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| personas_and_jobs | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| funnel | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| proof_strategy | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| competitive_stance | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
 | events | medium | 16 artifacts across events, exa_web sources |
 | out_of_home | not_attempted | not attempted this run — absence of collection, not absence of activity |
-| portfolio_discovery | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| product_positioning | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| launches_current | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| focal_current | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| focal_proof | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| focal_vulnerabilities | not_attempted | not attempted this run — absence of collection, not absence of activity |
+| portfolio_discovery | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| product_positioning | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| launches_current | medium | 5 artifacts across news sources |
+| focal_current | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| focal_proof | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
+| focal_vulnerabilities | medium | derived from 123 classified artifacts (corpus-wide across 8 source classes) |
 
 ## Limitations and missing data
 
-- Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 6 dimensions remain unattempted: focal_vulnerabilities, funnel, historical_pricing, historical_product, out_of_home, proof_strategy
+- Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 3 dimensions remain unattempted: historical_pricing, historical_product, out_of_home
 
 **Sources attempted with no usable data (negative observations):**
 

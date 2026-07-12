@@ -367,6 +367,9 @@ function Opportunities({ pkg, srcIdx }) {
 // PRODUCT MARKETING — key related topics per company (side-by-side theme bars).
 function KeyTopicsComparison({ pkg }) {
   const tc = pkg.theme_comparison || {};
+  // No focal mirror = no cross-company comparison — rendering 0-bars would
+  // fabricate a measured absence (competitor themes live in Data at a glance).
+  if (tc.focal_n_classified === 0) return null;
   const comp = tc.competitor_themes || {};
   const focal = tc.focal_themes || {};
   const compSh = tc.competitor_shares || {};
@@ -671,7 +674,14 @@ function StrategyOverTime({ pkg, srcIdx }) {
         const evidenceLine = c.prior_evidence_role === "window_sample"
           ? `prior sample ${c.prior_window_n ?? nPrior} artifacts (theme absent) · ${nCur} current`
           : `${Number.isFinite(c.prior_theme_count) ? c.prior_theme_count : nPrior} prior · ${nCur} current`;
-        const exact = resolveIds([...(c.prior_evidence_ids || []), ...(c.current_evidence_ids || [])], artIdx, evIdx);
+        // For window_sample events the prior ids are the sample the theme was
+        // ABSENT from — mixing them into one drawer made absence-sample pages
+        // indistinguishable from current evidence (verifier). Current-only
+        // drawer; the evidence line above discloses the absence sample.
+        const drawerIds = c.prior_evidence_role === "window_sample"
+          ? (c.current_evidence_ids || [])
+          : [...(c.prior_evidence_ids || []), ...(c.current_evidence_ids || [])];
+        const exact = resolveIds(drawerIds, artIdx, evIdx);
         return (
           <div className="card" key={c.change_id}>
             <div className="title">
@@ -687,7 +697,7 @@ function StrategyOverTime({ pkg, srcIdx }) {
               <div className="row" title="honest alternative readings of this signal"><b>Alt. explanations:</b> {c.alternative_explanations.join("; ")}</div>
             )}
             {exact.length > 0
-              ? <SourceDrawer sources={exact} label={`exact evidence pages (${exact.length})`} />
+              ? <SourceDrawer sources={exact} label={c.prior_evidence_role === "window_sample" ? `current evidence pages (${exact.length})` : `exact evidence pages (${exact.length})`} />
               : theme && <SourceDrawer sources={srcIdx[theme]} label={`sources for “${theme}”`} />}
           </div>
         );
@@ -699,15 +709,16 @@ function StrategyOverTime({ pkg, srcIdx }) {
 /* ----------------------- performance marketing tab --------------------- */
 
 const CEP_PLACEHOLDER = /^(not[_ ]observed|\(?unspecified\)?|unknown|none|n\/?a|unclassified)/i;
-const CEP_GROUPS = ["competitor_advantage", "contested", "focal_owns", "insufficient_sample", "neither"];
+const CEP_GROUPS = ["competitor_advantage", "contested", "focal_owns", "insufficient_sample", "not_compared", "neither"];
 
 function CepRow({ c, competitor, focal, artIdx }) {
   const [open, setOpen] = useState(false);
-  const own = { focal_owns: "--good", contested: "--warn", competitor_advantage: "--bad", insufficient_sample: "--border", neither: "--border" };
+  const own = { focal_owns: "--good", contested: "--warn", competitor_advantage: "--bad", insufficient_sample: "--border", not_compared: "--border", neither: "--border" };
   const cs = c.competitor_share != null ? c.competitor_share : null;
   const fs = c.focal_share != null ? c.focal_share : null;
   const clabel = cs != null ? `${c.competitor_pages} (${Math.round(cs * 100)}%)` : String(c.competitor_pages);
-  const flabel = fs != null ? `${c.focal_pages} (${Math.round(fs * 100)}%)` : String(c.focal_pages);
+  // focal_pages null = no focal mirror collected — never a fabricated 0.
+  const flabel = c.focal_pages == null ? "—" : fs != null ? `${c.focal_pages} (${Math.round(fs * 100)}%)` : String(c.focal_pages);
   const pages = resolveIds(
     [...(c.competitor_example_artifact_ids || []), ...(c.focal_example_artifact_ids || [])],
     artIdx, {}

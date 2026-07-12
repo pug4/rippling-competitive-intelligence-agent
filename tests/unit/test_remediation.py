@@ -221,6 +221,88 @@ def test_detect_candidate_changes_uses_real_prior_counts():
     assert e["prior_count"] == 1
 
 
+def test_reconcile_drops_stale_numeric_alternative_explanations():
+    # Mid-run alts carry sample sizes from the PARTIAL corpus ("only 6
+    # artifacts" next to a reconciled "n of 14" prior_state) — any alt with
+    # numbers or absence claims is stale by construction and must be replaced
+    # with a fresh, correct quantitative caveat.
+    from competitive_agent.processing.temporal import reconcile_change_events
+
+    arts = [_art(f"p{i}", "2025-09-01") for i in range(3)] + [
+        _art(f"c{i}", "2026-05-01") for i in range(5)
+    ]
+    cls = [
+        _cls("p0", "cross_system_workflow"),
+        _cls("p1", "consolidation"),
+        _cls("p2", "consolidation"),
+    ] + [_cls(f"c{i}", "cross_system_workflow") for i in range(5)]
+    ev = _event("cross_system_workflow")
+    ev["alternative_explanations"] = [
+        "The small prior-window sample (only 6 artifacts) may have missed the theme",
+        "the theme's absence earlier could reflect limited sampling",
+        "editorial focus may have shifted rather than strategy",
+    ]
+    events, _ = reconcile_change_events([ev], cls, arts, WINDOWS)
+    alts = events[0]["alternative_explanations"]
+    assert not any("only 6" in a for a in alts)
+    assert not any("absence" in a for a in alts)
+    assert any("editorial focus" in a for a in alts)  # number-free qualitative alt kept
+    assert any("3 dated artifacts vs 5 current" in a for a in alts)  # correct sizes
+
+
+def test_temporal_baseline_counts_supporting_themes_like_events():
+    # ONE counting rule: baseline membership must match the events' rule
+    # (primary OR supporting, once per artifact) or the same brief calls a
+    # theme "emerged (current only)" that its own event counts prior.
+    from competitive_agent.synthesis import temporal_baseline
+
+    arts = [_art("p1", "2025-09-01"), _art("c1", None)]
+    cls = [
+        _cls("p1", "consolidation", supporting=["global_hiring"]),
+        _cls("c1", "global_hiring"),
+    ]
+    tb = temporal_baseline(cls, arts, WINDOWS)
+    assert tb["prior_window"]["themes"]["global_hiring"] == 1
+    assert "global_hiring" in tb["stable_themes"]
+    assert "global_hiring" not in tb["emerged_themes"]
+
+
+def test_cep_ownership_no_focal_corpus_is_not_compared():
+    # A missing focal corpus is NOT a measured zero — snapshot runs must never
+    # publish competitor_advantage against a side that was never collected.
+    from competitive_agent.synthesis import category_entry_points
+
+    comp = [_cls_full(f"a{i}", [], ceps=["opening_new_country"]) for i in range(5)]
+    rows = category_entry_points(comp, [])
+    assert rows and all(r["ownership"] == "not_compared" for r in rows)
+    assert all(r["focal_pages"] is None and r["focal_share"] is None for r in rows)
+    assert "no focal corpus" in rows[0]["ownership_basis"]
+
+
+def test_cep_ratio_threshold_compares_unrounded():
+    # True ratio 1.9978 rounds to 2.0 for display but must stay CONTESTED
+    # (threshold compares the unrounded value).
+    from competitive_agent.synthesis import category_entry_points
+
+    comp = [_cls_full(f"a{i}", [], ceps=(["trigger"] if i < 97 else [])) for i in range(123)]
+    focal = [_cls_full(f"b{i}", [], ceps=(["trigger"] if i < 45 else [])) for i in range(114)]
+    row = category_entry_points(comp, focal)[0]
+    assert row["share_ratio"] == 2.0  # display rounding
+    assert row["ownership"] == "contested"  # decision on unrounded 1.9978
+
+
+def _cls_full(aid, products, ceps=None):
+    from competitive_agent.schemas.classification import MarketingClassification as MC
+
+    return MC(
+        classification_id="c-" + aid,
+        artifact_id=aid,
+        company_id="c1",
+        products=products or [],
+        category_entry_points=ceps or [],
+    )
+
+
 # ---------------------------------------------------------------------------
 # Coverage floors + honest limitations / uncertainty / negatives
 # ---------------------------------------------------------------------------
@@ -246,7 +328,9 @@ def test_honest_coverage_floors_raise_but_never_lower():
             *[{"source_type": "events"} for _ in range(3)],
             {"source_type": "news", "published_at": "2026-05-01T00:00:00Z"},
             *[{"source_type": "webpage"} for _ in range(25)],
-        ]
+        ],
+        "classifications": [],
+        "proof_gaps": [],
     }
     state = _state(coverage={"public_linkedin": "not_attempted", "events": "high"})
     cov = _honest_coverage(state, data, ceps=[{"competitor_pages": 2}] * 6)
@@ -255,6 +339,34 @@ def test_honest_coverage_floors_raise_but_never_lower():
     assert cov["events"] == "high"  # floor never lowers an earned level
     assert cov["category_entry_points"] == "medium"  # 6 observed CEPs
     assert cov["launches_current"] == "low"  # 1 current-window news
+
+
+def test_honest_coverage_classification_derived_dims_not_false_absences():
+    # funnel/proof_strategy/focal_vulnerabilities were PERMANENTLY
+    # not_attempted while the same brief displayed funnel stages, a proof-gap
+    # table, and focal-proof ratings (verifier round 2).
+    from competitive_agent.report import _honest_coverage
+
+    data = {
+        "artifacts": [],
+        "classifications": [
+            {"funnel_stages": ["awareness"], "proof_types": ["customer_logo"]}
+            for _ in range(25)
+        ],
+        "proof_gaps": [{"focal_proof_strength": "none"}] * 3,
+    }
+    cov = _honest_coverage(_state(), data, ceps=[])
+    assert cov["funnel"] == "medium"
+    assert cov["proof_strategy"] == "medium"
+    assert cov["focal_vulnerabilities"] == "medium"
+    # Placeholder-only funnel stages don't count.
+    data2 = {
+        "artifacts": [],
+        "classifications": [{"funnel_stages": ["not_observed"]}],
+        "proof_gaps": [],
+    }
+    cov2 = _honest_coverage(_state(), data2, ceps=[])
+    assert cov2.get("funnel", "not_attempted") == "not_attempted"
 
 
 def test_coverage_details_include_not_attempted_rows():
@@ -339,6 +451,19 @@ def test_is_junk_ads_artifact_predicate():
     assert not is_junk_ads_artifact(ar_own, meta, "deel.com")
     # NOT a discovery pointer (e.g. a fixture ad creative) -> never junk.
     assert not is_junk_ads_artifact(faq, {}, "deel.com")
+    # HTML-entity-encoded query strings must not bypass the domain rule
+    # (verifier: &amp; made parse_qs see 'amp;domain' and the rule failed open).
+    entity = "https://adstransparency.google.com/advertiser/AR123?region=US&amp;domain=costco.com"
+    assert is_junk_ads_artifact(entity, meta, "deel.com")
+    # Label-boundary domain match: wheeldeel.com is NOT deel.com; subdomain is.
+    assert is_junk_ads_artifact(
+        "https://adstransparency.google.com/advertiser/AR123?domain=wheeldeel.com",
+        meta, "deel.com",
+    )
+    assert not is_junk_ads_artifact(
+        "https://adstransparency.google.com/advertiser/AR123?domain=app.deel.com",
+        meta, "deel.com",
+    )
 
 
 def test_clean_linkedin_excerpt_strips_wall_and_falls_back():
