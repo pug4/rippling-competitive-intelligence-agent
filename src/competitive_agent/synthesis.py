@@ -69,7 +69,11 @@ def _path_surface(path: str) -> str | None:
     if path in ("", "/"):
         return "home"
     first = path.strip("/").split("/")[0].lower()
-    if first in ("platform",):
+    # Platform pages appear under many slugs: /platform, /hr-platform,
+    # /workforce-platform, /product-platform, etc. Match the suffix so a
+    # captured platform page is never mislabeled "not captured" (and gets the
+    # high platform authority, not a 0.15 default).
+    if first == "platform" or first.endswith("-platform") or first.endswith("platform"):
         return "platform"
     if first in ("pricing", "plans"):
         return "pricing"
@@ -145,11 +149,19 @@ def dominant_message(
         theme_surfaces.setdefault(theme, set()).add(surface or "unknown")
         theme_source_classes.setdefault(theme, set()).add(art.source_type if art else "unknown")
         # The human-readable LABEL comes from the page that best REPRESENTS the
-        # theme: authority AND salience together, with a salience floor so a
-        # very-low-salience niche page (e.g. a mobility page at 0.24) cannot
-        # supply the label even if its surface authority is high (R1).
-        if sal >= 0.35:
-            label_score = authority * (0.4 + sal)
+        # theme: authority AND salience together. A salience floor stops a
+        # very-low-salience *niche* page (e.g. a mobility page at 0.24) from
+        # supplying the label (R1) — but a company surface (home/platform) is
+        # representative by definition, so the floor is waived there and it gets
+        # a bonus. Without this, the label fell through to an arbitrary off-theme
+        # message (QA finding #5: theme=consolidation, label was a pricing line,
+        # because the real consolidation messages on the home/platform pages had
+        # low classifier salience and were excluded).
+        is_company_surface = surface in ("home", "platform")
+        floor = 0.0 if is_company_surface else 0.35
+        if sal >= floor:
+            surface_bonus = 0.35 if is_company_surface else 0.0
+            label_score = authority * (0.4 + sal) + surface_bonus
             if label_score > theme_best.get(theme, -1):
                 theme_best[theme] = label_score
                 theme_label[theme] = c.primary_message or theme

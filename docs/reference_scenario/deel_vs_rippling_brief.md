@@ -1,14 +1,14 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-60b37e044954` · mode `comparative` · execution `live` · generated 2026-07-12T02:25:12.084284+00:00*
+*Run `RUN-60b37e044954` · mode `comparative` · execution `live` · generated 2026-07-12T02:51:29.917149+00:00*
 
 ## Executive summary
 
-- **Dominant company message:** Deel offers transparent, flexible, scalable pricing for hiring and managing global talent without hidden fees or long-term contracts. (repeated across ≥2 source classes and present on a top-level surface).
+- **Dominant company message:** Deel Platform brings together global compliance, workflows, reporting, AI, integrations, and more to help you focus on your people and work efficiently. (repeated across ≥2 source classes and present on a top-level surface).
 - **Product-positioning read:** Deel's public pages cluster around consolidation, compliance, security_and_control
-- **Confirmed change:** theme_emergence — “cost_reduction” not observed in the prior-window sample → “cost_reduction” present in 9 current-window artifacts.
-- **Most defensible Rippling opening:** Contractor Misclassification Workflow Demo: Show the Compliance Checks, Not Just Claim Them.
-- **Largest uncertainty:** no platform page was captured — the platform/consolidation narrative is inferred from product and secondary pages.
+- **Emerging signal (low confidence, needs a prior-window baseline):** theme_emergence — “cost_reduction” not observed in the prior-window sample → “cost_reduction” present in 9 current-window artifacts.
+- **Top-ranked Rippling opening:** Contractor Misclassification Workflow Demo: Show the Compliance Checks, Not Just Claim Them.
+- **Largest uncertainty:** optional channels (paid media, social) were not collected.
 
 ## Action Board
 
@@ -53,8 +53,8 @@ _Proof distributions and the exact repeated claims are in the Evidence appendix.
 
 ## Current public positioning
 
-- **Dominant company message:** Deel offers transparent, flexible, scalable pricing for hiring and managing global talent without hidden fees or long-term contracts.
-  - Basis: surfaces None, comparison, customers, home, other, pricing, product; source classes events, exa_web, reviews, wayback, webpage
+- **Dominant company message:** Deel Platform brings together global compliance, workflows, reporting, AI, integrations, and more to help you focus on your people and work efficiently.
+  - Basis: surfaces None, comparison, customers, home, platform, pricing, product; source classes events, exa_web, reviews, wayback, webpage
 - **Themes observed:** consolidation (24), compliance (9), security_and_control (5), native_platform_breadth (3), automation (3), global_hiring (2), cost_reduction (2), workforce_visibility (2)
 - **Villain / status-quo wording (exact):**
   - “fragmented local providers”
@@ -98,16 +98,16 @@ _Proof distributions and the exact repeated claims are in the Evidence appendix.
 
 | Buying trigger | Competitor | Rippling | Ownership |
 |---|---:|---:|---|
-| opening_new_country | 39 | 0 | competitor_advantage |
-| consolidating_hr_tools | 29 | 8 | contested |
-| hiring_first_international_employee | 22 | 0 | competitor_advantage |
-| automating_onboarding_offboarding | 16 | 0 | competitor_advantage |
-| managing_contractors_and_employees | 11 | 0 | competitor_advantage |
-| reducing_payroll_errors | 9 | 0 | competitor_advantage |
-| preparing_for_audit | 8 | 0 | competitor_advantage |
-| replacing_a_peo | 7 | 0 | competitor_advantage |
-| integrating_an_acquisition | 7 | 0 | competitor_advantage |
-| controlling_app_access | 6 | 0 | competitor_advantage |
+| consolidating_hr_tools | 29 | 48 | contested |
+| opening_new_country | 39 | 13 | contested |
+| automating_onboarding_offboarding | 16 | 31 | contested |
+| hiring_first_international_employee | 22 | 6 | contested |
+| managing_contractors_and_employees | 11 | 13 | contested |
+| preparing_for_audit | 8 | 15 | contested |
+| controlling_app_access | 6 | 15 | contested |
+| reducing_payroll_errors | 9 | 12 | contested |
+| replacing_a_peo | 7 | 3 | contested |
+| reducing_software_spend | 0 | 9 | focal_owns |
 
 ## Persona × channel coverage (observed)
 
@@ -139,8 +139,6 @@ _Cells are observed-page counts; an empty cell is **not observed**, not proof of
 
 - Competitor **Deel** · focal **Rippling** · lookback 365d across 2 windows
 - Artifacts collected: 57 · classified: 56 · claims: 10
-- **Corpus-skew warnings:**
-  - no platform page was captured — the platform/consolidation narrative is inferred from product and secondary pages
 
 **Source distribution**
 
@@ -187,7 +185,9 @@ _Cells are observed-page counts; an empty cell is **not observed**, not proof of
 
 ## Evidence appendix
 
-Every source with its provenance. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`).
+Competitor (Deel) sources below; the focal (Rippling) mirror's 55 sources follow so every 'Rippling proof: …' rating is traceable within this deliverable. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`, `focal_evidence`).
+
+**Deel sources**
 
 | Artifact | Source | Date | URL |
 |---|---|---|---|
@@ -231,6 +231,41 @@ Every source with its provenance. Claims resolve to evidence IDs (see JSON `clai
 | ART-0cae9a3812 | news | 2026-06-17 | https://internationalbusinessnews.co.uk/deel-launches-field- |
 | ART-f2619a8e96 | news | 2026-06-03 | https://stripe.com/newsroom/news/deel-and-stripe |
 | ART-e66aba09c7 | reviews | 2025-04-30 | https://www.g2.com/products/deel/reviews |
+
+**Rippling (focal mirror) sources** — run `RUN-c233c66bc6cc`
+
+| Artifact | Source | Date | URL |
+|---|---|---|---|
+| ART-8d2c820009 | sitemap | 2026-07-12 | https://www.rippling.com/ |
+| ART-a585beb288 | webpage | 2026-07-12 | https://www.rippling.com/pricing |
+| ART-cc439d8ce9 | webpage | 2026-07-12 | https://www.rippling.com/# |
+| ART-b29989a4ca | webpage | 2026-07-12 | https://www.rippling.com/platform/policies |
+| ART-3e4f95626b | webpage | 2026-07-12 | https://www.rippling.com/platform/ai/request-access |
+| ART-13ce72ca0a | webpage | 2026-07-12 | https://www.rippling.com/platform |
+| ART-6b193cff97 | webpage | 2026-07-12 | https://www.rippling.com/platform/permissions |
+| ART-6447be5574 | webpage | 2026-07-12 | https://www.rippling.com/platform/analytics |
+| ART-276ed7329a | webpage | 2026-07-12 | https://www.rippling.com/platform/integrations |
+| ART-b8c29751ef | webpage | 2026-07-12 | https://www.rippling.com/platform/ai |
+| ART-b48b0afa18 | webpage | 2026-07-12 | https://www.rippling.com/platform/workflows |
+| ART-1cad179269 | webpage | 2026-07-12 | https://www.rippling.com/platform/app-studio |
+| ART-8ded77c526 | webpage | 2026-07-12 | https://www.rippling.com/platform/data-cloud |
+| ART-cd56b416c8 | webpage | 2026-07-12 | https://www.rippling.com/products/hr/recruiting |
+| ART-3958025ea1 | webpage | 2026-07-12 | https://www.rippling.com/products |
+| ART-035948acde | webpage | 2026-07-12 | https://www.rippling.com/products/payroll/contractor-of-reco |
+| ART-d1fd5b1a8a | webpage | 2026-07-12 | https://www.rippling.com/products/global/global-hris |
+| ART-592c5d017a | webpage | 2026-07-12 | https://www.rippling.com/products#payroll |
+| ART-b8323fe75d | webpage | 2026-07-12 | https://www.rippling.com/products/global/request-demo |
+| ART-26d3357835 | webpage | 2026-07-12 | https://www.rippling.com/products/hr/chat |
+| ART-ec5e0fe176 | webpage | 2026-07-12 | https://www.rippling.com/products/hr/peo |
+| ART-ec5496e95a | webpage | 2026-07-12 | https://www.rippling.com/products/hr/time-and-attendance |
+| ART-7f6a85091d | webpage | 2026-07-12 | https://www.rippling.com/products#hcm |
+| ART-5eec3e5e43 | webpage | 2026-07-12 | https://www.rippling.com/products/global/global-contractors |
+| ART-a55a39e466 | webpage | 2026-07-12 | https://www.rippling.com/products/hr/scheduling |
+| ART-b30fcd9349 | webpage | 2026-07-12 | https://www.rippling.com/products/it/identity-access-managem |
+| ART-adf655f66e | webpage | 2026-07-12 | https://www.rippling.com/products#it |
+| ART-98bdfd951a | webpage | 2026-07-12 | https://www.rippling.com/products/payroll |
+| ART-60b09956ef | webpage | 2026-07-12 | https://www.rippling.com/products/global/global-hr-advisory- |
+| ART-82c61a0df5 | webpage | 2026-07-12 | https://www.rippling.com/products/finance/global-finance |
 
 ---
 *Stop reason: `runtime_exhausted` · iterations 14 · tool calls 14*

@@ -759,6 +759,7 @@ async def run_focal_mirror_check(state: DirectorState, ctx: GraphContext):
     focal_run_id = await run_focal_mirror(state, ctx)
     if focal_run_id:
         ctx.scratch["focal_run_id"] = focal_run_id
+        state.focal_run_id = focal_run_id  # persisted, so re-render can find it
         cov.raise_coverage(state.coverage, "focal_current", "medium")
         cov.raise_coverage(state.coverage, "focal_proof", "medium")
     return state, "generate_opportunities"

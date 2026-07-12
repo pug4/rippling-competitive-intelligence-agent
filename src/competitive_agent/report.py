@@ -70,12 +70,15 @@ def _load(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     return out
 
 
-def _focal_classifications(ctx: GraphContext, state: DirectorState):
-    """Load the focal company's merged classifications for CEP-ownership.
-    Finds the most recent completed run for the focal domain."""
+def _focal_run_id(ctx: GraphContext, state: DirectorState) -> str | None:
+    """Resolve THIS run's focal (Rippling) mirror id. Prefer the persisted
+    ``state.focal_run_id`` (set when the mirror ran), then live scratch. Only as
+    a last resort fall back to the most recent focal-domain run — that heuristic
+    can pick up an unrelated (e.g. fixture) run, so it is genuinely last."""
+    if state.focal_run_id:
+        return state.focal_run_id
     if ctx.repository is None or state.focal_company is None:
-        return []
-    focal_run = None
+        return None
     try:
         scratch = getattr(ctx, "scratch", None) or {}
         focal_run = scratch.get("focal_run_id")
@@ -83,9 +86,15 @@ def _focal_classifications(ctx: GraphContext, state: DirectorState):
             for row in ctx.repository.list_runs(company=state.focal_company.primary_domain):
                 focal_run = row["run_id"]
                 break
+        return focal_run
     except Exception:
-        return []
-    if not focal_run:
+        return None
+
+
+def _focal_classifications(ctx: GraphContext, state: DirectorState):
+    """Load the focal company's merged classifications for CEP-ownership."""
+    focal_run = _focal_run_id(ctx, state)
+    if not focal_run or ctx.repository is None:
         return []
     from .schemas.classification import MarketingClassification
 
@@ -94,6 +103,29 @@ def _focal_classifications(ctx: GraphContext, state: DirectorState):
         for m in ctx.repository.list_classifications(focal_run, family="merged")
         if isinstance(m, MarketingClassification)
     ]
+
+
+def _focal_evidence(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
+    """Load the focal (Rippling) run's artifacts + evidence so every
+    'Rippling proof: …' claim is traceable WITHIN this deliverable (QA
+    finding: focal proof was asserted without in-package provenance)."""
+    focal_run = _focal_run_id(ctx, state)
+    out: dict[str, Any] = {"run_id": focal_run, "artifacts": [], "evidence": []}
+    if not focal_run or ctx.repository is None:
+        return out
+    try:
+        for m in ctx.repository.list_artifacts(run_id=focal_run):
+            a = json.loads(m.model_dump_json())
+            a.pop("raw_text", None)
+            if a.get("normalized_text"):
+                a["normalized_text"] = a["normalized_text"][:1500]
+            out["artifacts"].append(a)
+        for m in ctx.repository.list_classifications(focal_run, family="evidence"):
+            if m.__class__.__name__ == "EvidenceItem":
+                out["evidence"].append(json.loads(m.model_dump_json()))
+    except Exception:
+        pass
+    return out
 
 
 def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any]:
@@ -115,6 +147,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     matrix = synthesis.persona_channel_funnel(data["classification_models"], artifact_source)
     focal_cls_models = _focal_classifications(ctx, state)
     ceps = synthesis.category_entry_points(data["classification_models"], focal_cls_models)
+    focal_evidence = _focal_evidence(ctx, state)
     classified_ids = {c.get("artifact_id") for c in data["classifications"]}
     unclassified = [
         {
@@ -170,6 +203,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "artifacts": data["artifacts"],
         "unclassified_artifacts": unclassified,
         "evidence": data["evidence"],
+        # Focal (Rippling) mirror evidence — so every "Rippling proof: …" claim is
+        # traceable within this deliverable, not just in the sibling mirror run.
+        "focal_evidence": focal_evidence,
         "classifications": data["classifications"],
         "claims": data["claims"],
         "product_portfolios": [],
@@ -236,15 +272,27 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         add(f"- **{label}:** {dom.get('label')} ({dom['reason']}).")
     add(f"- **Product-positioning read:** {_positioning_oneliner(cls, company)}")
     if changes:
-        add(
-            f"- **Confirmed change:** {changes[0]['dimension']} — {changes[0]['prior_state']} → {changes[0]['current_state']}."
-        )
+        # Prefer the highest-confidence change and label it by its ACTUAL
+        # confidence/lifecycle — an emerging, low-confidence, absence-based signal
+        # is not a "confirmed change" (a both-periods high/medium change is).
+        rank = {"high": 3, "medium": 2, "low": 1}
+        top = max(changes, key=lambda c: rank.get(str(c.get("confidence", "low")), 0))
+        conf = str(top.get("confidence", "low"))
+        emerging = str(top.get("lifecycle", "")) == "emerging"
+        if conf in ("high", "medium") and not emerging:
+            label = "Confirmed change"
+        else:
+            label = f"Emerging signal ({conf} confidence, needs a prior-window baseline)"
+        add(f"- **{label}:** {top['dimension']} — {top['prior_state']} → {top['current_state']}.")
     else:
         add(
-            "- **Confirmed change:** none met the both-period evidence bar this run (see Strategy-over-time)."
+            "- **Change over time:** none met the both-period evidence bar this run (see Strategy-over-time)."
         )
     if opps:
-        add(f"- **Most defensible {focal} opening:** {opps[0]['title']}.")
+        # "Top-ranked" reflects the engine's overall ordering (defensibility is
+        # one input, not the only one); don't imply it has the strongest proof
+        # when it may not (QA finding #6).
+        add(f"- **Top-ranked {focal} opening:** {opps[0]['title']}.")
     add(f"- **Largest uncertainty:** {_largest_uncertainty(pkg)}.")
 
     # --- Action Board — Rippling-first (feedback #28) -----------------------
@@ -500,15 +548,39 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     # --- Evidence appendix (feedback #10, #31) -----------------------------
     add("\n## Evidence appendix\n")
+    focal_ev = pkg.get("focal_evidence") or {}
+    focal_arts = focal_ev.get("artifacts") or []
     add(
-        "Every source with its provenance. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`).\n"
+        f"Competitor ({company}) sources below; the focal ({focal}) mirror's "
+        f"{len(focal_arts)} sources follow so every '{focal} proof: …' rating is "
+        "traceable within this deliverable. Claims resolve to evidence IDs "
+        "(see JSON `claims[].evidence_ids`, `focal_evidence`).\n"
     )
+    add(f"**{company} sources**\n")
     add("| Artifact | Source | Date | URL |")
     add("|---|---|---|---|")
     for a in pkg["artifacts"][:40]:
         date = a.get("archive_capture_at") or a.get("published_at") or a.get("retrieved_at") or ""
         add(
             f"| {a['artifact_id'][:14]} | {a['source_type']} | {str(date)[:10]} | {a['url'][:60]} |"
+        )
+
+    if focal_arts:
+        add(f"\n**{focal} (focal mirror) sources** — run `{focal_ev.get('run_id', '?')}`\n")
+        add("| Artifact | Source | Date | URL |")
+        add("|---|---|---|---|")
+        for a in focal_arts[:30]:
+            date = (
+                a.get("archive_capture_at") or a.get("published_at") or a.get("retrieved_at") or ""
+            )
+            add(
+                f"| {a['artifact_id'][:14]} | {a['source_type']} | {str(date)[:10]} | {a['url'][:60]} |"
+            )
+    else:
+        add(
+            f"\n_No {focal} mirror evidence available in this run — {focal}-proof ratings "
+            "are drawn from the focal run's classifications and should be treated as "
+            "provisional until the mirror is attached._"
         )
 
     add(

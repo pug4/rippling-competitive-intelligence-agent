@@ -56,6 +56,9 @@ class DirectorState(VersionedModel):
     # Resolution
     company: Company | None = None
     focal_company: Company | None = None
+    # The focal (Rippling) mirror runs as an isolated sub-run; its id is
+    # persisted here so re-render can attach the focal evidence reliably.
+    focal_run_id: str | None = None
     time_windows: list[TimeWindow] = Field(default_factory=list)
 
     # Loop state

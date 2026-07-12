@@ -88,6 +88,60 @@ def test_dominant_message_requires_home_or_platform_and_multi_source():
     assert dom2["is_company_level"] is True
 
 
+def test_hr_platform_slug_recognized_as_platform_surface():
+    # QA finding #2: /hr-platform (and similar) must be recognized as a platform
+    # page, else corpus_skew falsely reports "no platform page captured" and the
+    # page is under-weighted (0.15 instead of ~0.95).
+    from competitive_agent.synthesis import _path_surface, corpus_skew
+
+    assert _path_surface("/hr-platform/") == "platform"
+    assert _path_surface("/workforce-platform") == "platform"
+    assert _path_surface("/legal/platform-terms-of-service") != "platform"  # not first segment
+    home = _art("h", "webpage", url="https://deel.com/")
+    plat = _art("p", "webpage", url="https://deel.com/hr-platform/")
+    warnings = corpus_skew([home, plat])
+    assert not any("no platform page" in w for w in warnings)
+
+
+def test_dominant_label_comes_from_company_surface_even_at_low_salience():
+    # QA finding #5: the on-theme message lives on the home/platform page but at
+    # low classifier salience; a higher-salience off-theme message must NOT steal
+    # the label. The company-surface message wins.
+    home = _art("h", "webpage", url="https://deel.com/")
+    plat = _art("p", "webpage", url="https://deel.com/hr-platform/")
+    pricing = _art("pr", "webpage", url="https://deel.com/pricing/")
+    cls = [
+        MarketingClassification(
+            classification_id="cls-p",
+            artifact_id="p",
+            company_id="c1",
+            primary_theme="consolidation",
+            message_salience=0.18,
+            primary_message="Deel Platform brings everything together",
+        ),
+        MarketingClassification(
+            classification_id="cls-h",
+            artifact_id="h",
+            company_id="c1",
+            primary_theme="consolidation",
+            message_salience=0.24,
+            primary_message="Deel is an all-in-one people platform",
+        ),
+        MarketingClassification(
+            classification_id="cls-pr",
+            artifact_id="pr",
+            company_id="c1",
+            primary_theme="consolidation",
+            message_salience=0.9,
+            primary_message="Transparent flexible pricing, no hidden fees",
+        ),
+    ]
+    dom = dominant_message(cls, [home, plat, pricing])
+    assert dom["theme"] == "consolidation"
+    assert "pricing" not in dom["label"].lower()
+    assert "platform" in dom["label"].lower() or "all-in-one" in dom["label"].lower()
+
+
 def test_corpus_skew_flags_single_source_dominance():
     arts = [_art(f"a{i}", "exa_web") for i in range(8)] + [_art("h", "webpage", "home")]
     warnings = corpus_skew(arts)
