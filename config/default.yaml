@@ -43,3 +43,13 @@ portfolio:
 windows:
   lookback_days: 365
   current_days: 90
+
+# Site-coverage depth. Whole-site characterization needs more than a handful of
+# pages (user directive): raise the cap and lower the score threshold so
+# product / solution / use-case pages are collected, and use Exa domain-scoped
+# discovery to catch pages the sitemap misses. Tune down for a fast demo.
+collection:
+  max_fetched_pages: 30
+  fetch_score_threshold: 0.3
+  deep_crawl: true
+  exa_site_discovery_results: 10

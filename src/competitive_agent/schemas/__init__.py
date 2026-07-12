@@ -47,7 +47,18 @@ from .monitor import (
     ProductIntelligenceFeedItem,
 )
 from .motion import CommercialMotionProfile, PricingDisclosure, PrimaryMotion
-from .opportunity import DeliverableType, MarketingOpportunity, MessageProofGap, ProofStrength
+from .opportunity import (
+    AttackabilityAssessment,
+    CampaignPlan,
+    CoverageDetail,
+    DeliverableType,
+    MarketingOpportunity,
+    MessageProofGap,
+    ProductComparability,
+    ProofDistribution,
+    ProofStrength,
+    StagedPlan,
+)
 from .portfolio import CompanyIntelligencePackage, PortfolioRun
 from .product import (
     ArtifactType,
@@ -97,6 +108,12 @@ __all__ = [
     "MarketingOpportunity",
     "MessageFamily",
     "MessageProofGap",
+    "AttackabilityAssessment",
+    "CampaignPlan",
+    "CoverageDetail",
+    "ProductComparability",
+    "ProofDistribution",
+    "StagedPlan",
     "MessageSalienceEvidence",
     "MonitorDefinition",
     "MonitorRunRecord",

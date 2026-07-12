@@ -24,6 +24,12 @@ Identify:
 5. Proof types with the exact proof excerpt for each:
    {{ proof_types }}
    Classify what kind of proof is OFFERED; do not judge whether it is true.
+   PROOF HONESTY (critical): a customer story published by the company itself is
+   `named_customer_story` (first-party marketing proof) even when it names a real
+   customer and cites numbers — it is NOT `independent_validation`. Use
+   `independent_validation` ONLY when the source is a genuinely independent third
+   party (analyst, benchmark, review body). Do not upgrade a self-published,
+   self-reported outcome to independent validation.
 6. The smallest exact excerpt supporting each conclusion, copied verbatim.
 
 RULES

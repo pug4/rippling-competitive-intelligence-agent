@@ -76,11 +76,14 @@ def test_markdown_leads_with_action_board_and_labels_fixture():
     s = _state()
     pkg = build_json_package(s, _Ctx())
     md = render_markdown(s, pkg)
-    # Action Board must come before the classification/scope detail (§33, §24.1).
+    # Executive summary leads; Action Board (Rippling-first) precedes scope detail.
+    assert md.index("## Executive summary") < md.index("## Action Board")
     assert md.index("## Action Board") < md.index("## Research scope")
+    assert "What Rippling should do" in md  # Rippling-first ordering (feedback #28)
     assert "Fixture mode" in md  # synthetic runs are labeled, never passed as live
-    assert "Largest strategy changes" in md
     assert "message–proof gaps" in md
+    assert "Source distribution" in md  # feedback #8
+    assert "Evidence appendix" in md  # feedback #10/#31
     assert "Limitations and missing data" in md
     assert "Similarweb unavailable" in md
     assert "not publicly knowable" in md.lower()

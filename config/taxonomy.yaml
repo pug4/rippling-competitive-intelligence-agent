@@ -16,8 +16,15 @@ themes:
   - speed_to_value
   - security_and_control
   - scalability
-  - integration_breadth
   - workforce_visibility
+  # integration_breadth was too coarse (feedback #2): split into distinct
+  # strategic postures so "an API exists" is not conflated with "one unified
+  # data layer".
+  - api_extensibility          # developer/API surface for building on the product
+  - integration_ecosystem      # marketplace / breadth of third-party connectors
+  - cross_system_workflow       # automations that span multiple systems
+  - native_platform_breadth     # many first-party modules under one platform
+  - data_unification            # one shared employee/business data model
 
 personas:
   - hr_leader

@@ -22,6 +22,14 @@ Identify:
    across pages and companies, so ALWAYS pick from the list (choose the closest
    fit); only if truly none applies, return a lowercase snake_case theme of your
    own and also add it to unclassified_signals.
+   IMPORTANT: an API/developer surface is `api_extensibility`, a connector
+   marketplace is `integration_ecosystem`, cross-system automations are
+   `cross_system_workflow`, many first-party modules are `native_platform_breadth`,
+   and one shared data model is `data_unification` — do NOT collapse these.
+1c. supporting_themes: other normalized themes present but subordinate.
+1d. claim_specificity: high | medium | low — how specific/concrete the primary
+   message is. This is SEPARATE from how well it is proven; a very specific
+   claim can still have weak proof.
 2. Supporting/secondary messages — do not automatically give them equal weight.
 3. Salience evidence for each message: headline prominence, repetition count,
    CTA proximity, structural prominence. Report what you can observe from the

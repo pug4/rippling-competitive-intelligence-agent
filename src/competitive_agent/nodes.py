@@ -305,6 +305,37 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
     return state, "normalize_and_deduplicate"
 
 
+def _merge_discovered_urls(state: DirectorState, ctx: GraphContext, result: ToolResult) -> None:
+    """Add Exa-discovered first-party URLs to the page map (whole-site depth)."""
+    from urllib.parse import urlsplit
+
+    from .tools.webpage import _score_path
+
+    if state.company is None:
+        return
+    domain = state.company.primary_domain
+    key = f"page_map:{state.company.company_id}"
+    page_map = list(ctx.scratch.get(key) or [])
+    known = {p["url"] for p in page_map}
+    added = 0
+    for artifact in result.artifacts:
+        url = artifact.final_url or artifact.url
+        host = (urlsplit(url).hostname or "").lower()
+        if domain not in host or url in known:
+            continue
+        category, score = _score_path(url)
+        page_map.append(
+            {"url": url, "path": urlsplit(url).path or "/", "category": category, "score": score}
+        )
+        known.add(url)
+        added += 1
+    if added:
+        page_map.sort(key=lambda r: float(r["score"]), reverse=True)
+        ctx.scratch[key] = page_map
+        if ctx.trace:
+            ctx.trace.append("actions_proposed", {"site_discovery_added_urls": added})
+
+
 async def normalize_and_deduplicate(state: DirectorState, ctx: GraphContext):
     result: ToolResult | None = ctx.scratch.get("last_result")
     action: ResearchAction | None = ctx.scratch.get("last_action")
@@ -330,6 +361,12 @@ async def normalize_and_deduplicate(state: DirectorState, ctx: GraphContext):
                 page_map = artifact.metadata.get("page_map")
                 if page_map:
                     ctx.scratch[f"page_map:{state.company.company_id}"] = page_map
+        # Deep site discovery (Exa domain-scoped): merge the discovered
+        # first-party URLs into the page map so they get fetched at high
+        # authority, and mark discovery done so it runs once.
+        if action and (action.parameters or {}).get("_purpose") == "site_discovery":
+            _merge_discovered_urls(state, ctx, result)
+            ctx.scratch[f"site_discovery_done:{state.company.company_id}"] = True
     ctx.scratch["new_artifacts"] = new_artifacts
     if ctx.trace and new_artifacts:
         ctx.trace.append(
@@ -515,7 +552,19 @@ async def refresh_claims(state: DirectorState, ctx: GraphContext):
             time_windows=state.time_windows,
         )
     except Exception as exc:
-        state.limitations.append(f"claim building unavailable: {type(exc).__name__}")
+        # User-facing limitation, not a raw error (feedback #5/#32). The stack
+        # detail goes to the trace; the report keeps any prior validated claims.
+        note = (
+            "Final claim-deepening was partially unavailable; the report used the "
+            "previously validated claim set and added no unsupported claim."
+        )
+        if note not in state.limitations:
+            state.limitations.append(note)
+        if ctx.trace:
+            ctx.trace.append(
+                "claim_rejected",
+                {"stage": "build_claims", "error": f"{type(exc).__name__}: {exc}"[:300]},
+            )
         return state, "check_contradictions"
 
     # Judge the strongest candidates concurrently (independent calls); cap the
@@ -705,10 +754,24 @@ async def decide_continue_or_stop(state: DirectorState, ctx: GraphContext):
     else:
         ok, missing = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
         remaining = planner.propose_actions(state, ctx)
-        if ok and not remaining:
+        needing = planner.required_dims_needing_exhaustion(state)
+        if needing and remaining:
+            # A required dimension still has an untried public fallback: keep
+            # going — never stop for "low expected value" with a required
+            # dimension unattempted (feedback #6).
+            return state, "assess_coverage"
+        if needing and not remaining:
+            # Fallbacks exhausted: mark the dimensions unavailable-after-
+            # exhaustion (a finding), don't pretend they were never required.
+            for dim in needing:
+                cov.mark_unavailable(state.coverage, dim)
+                note = f"{dim}: unavailable_after_exhaustion (public fallbacks tried, none established it)"
+                if note not in state.limitations:
+                    state.limitations.append(note)
+            reason = "required_dimensions_unavailable_after_exhaustion=" + ",".join(sorted(needing))
+        elif ok and not remaining:
             reason = "required_coverage_reached"
         elif ok and remaining:
-            # Coverage is sufficient; remaining actions are optional depth.
             reason = "required_coverage_reached; optional_actions_skipped=" + ",".join(
                 sorted({a.action_type for a in remaining})
             )

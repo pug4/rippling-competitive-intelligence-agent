@@ -48,8 +48,13 @@ class MessageFamily(VersionedModel):
     # Normalized theme from the taxonomy (e.g. "consolidation") — the value the
     # comparison/temporal engines group on, so themes recur across pages.
     primary_theme: str | None = None
+    # Additional normalized themes present but subordinate (feedback #2).
+    supporting_themes: list[str] = Field(default_factory=list)
     primary_message: str | None = None
     secondary_messages: list[str] = Field(default_factory=list)
+    # Specificity of the message is SEPARATE from how well it is proven
+    # (feedback #15): a very specific claim can still have weak proof.
+    claim_specificity: str = "unknown"  # high | medium | low | unknown
     salience_evidence: MessageSalienceEvidence = Field(default_factory=MessageSalienceEvidence)
     # Computed by the application from salience_evidence (§37.19); never
     # invented by the model.
@@ -129,8 +134,10 @@ class MarketingClassification(VersionedModel):
     company_id: str
 
     primary_theme: str | None = None
+    supporting_themes: list[str] = Field(default_factory=list)
     primary_message: str | None = None
     secondary_messages: list[str] = Field(default_factory=list)
+    claim_specificity: str = "unknown"
     message_salience: float | None = None
 
     products: list[str] = Field(default_factory=list)
@@ -199,6 +206,8 @@ class MarketingClassification(VersionedModel):
             artifact_id=message.artifact_id,
             company_id=message.company_id,
             primary_theme=message.primary_theme,
+            supporting_themes=list(message.supporting_themes),
+            claim_specificity=message.claim_specificity,
             primary_message=message.primary_message,
             secondary_messages=list(message.secondary_messages),
             message_salience=message.message_salience,

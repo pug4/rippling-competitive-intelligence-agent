@@ -45,6 +45,10 @@ def action_key(action_type: str, parameters: dict[str, Any]) -> str:
     return f"{action_type}:{hashlib.sha256(canon.encode()).hexdigest()[:12]}"
 
 
+def _site_discovery_query(company: Any) -> str:
+    return f"{company.canonical_name} product OR platform OR solutions OR pricing OR customers OR security"
+
+
 def _mk(
     state: DirectorState,
     action_type: str,
@@ -117,26 +121,65 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             )
         )
 
+    collection = cfg.collection if cfg else {}
+    max_pages = int(collection.get("max_fetched_pages", MAX_TOTAL_FETCHED_PAGES))
+    threshold = float(collection.get("fetch_score_threshold", FETCH_SCORE_THRESHOLD))
+
+    # 1b. Deep site discovery via Exa (user directive: characterize the WHOLE
+    # site, not a sliver). A domain-scoped Exa search surfaces product /
+    # solution / customer / security / integration pages the sitemap or homepage
+    # anchors miss; discovered URLs are merged into the fetch queue downstream.
+    if collection.get("deep_crawl", True):
+        discovered_key = f"site_discovery_done:{company.company_id}"
+        already_ran = action_key(
+            "search_exa_web",
+            {
+                "query": _site_discovery_query(company),
+                "num_results": 0,
+                "_purpose": "site_discovery",
+            },
+        )
+        if not ctx.scratch.get(discovered_key) and already_ran not in state.executed_action_keys:
+            proposals.append(
+                _mk(
+                    state,
+                    "search_exa_web",
+                    "exa_search",
+                    "product_positioning",
+                    {
+                        "query": _site_discovery_query(company),
+                        "num_results": int(collection.get("exa_site_discovery_results", 10)),
+                        "include_domains": [company.primary_domain],
+                        "_purpose": "site_discovery",
+                    },
+                    "Deep site discovery: domain-scoped Exa search to characterize the whole site, not just top nav.",
+                    reliability=0.6,
+                )
+            )
+
     page_map = ctx.scratch.get(f"page_map:{company.company_id}") or []
 
-    # 2. Fetch the highest-priority unfetched pages once a map exists. Only
-    # PRIORITY pages (score above threshold) are eligible, and only up to a
-    # total page cap: a large site has dozens of product/solution pages with
-    # diminishing marginal signal, so we stop after enough are classified and
-    # move on to historical / news / comparison sources ("stop when incremental
-    # information gain is low", §5.1).
+    # 2. Fetch the highest-priority unfetched pages once a map exists. Priority
+    # pages (score >= threshold) up to a total cap; a lower threshold + higher
+    # cap (config `collection`) collect product/solution/use-case pages for
+    # whole-site coverage rather than a handful.
     if page_map:
         fetched: set[str] = set(ctx.scratch.get(f"fetched_urls:{company.company_id}", []))
         real_fetched = {u for u in fetched if "sitemap" not in u}
         pending = [
-            p
-            for p in page_map
-            if p["url"] not in fetched and float(p.get("score", 0)) >= FETCH_SCORE_THRESHOLD
+            p for p in page_map if p["url"] not in fetched and float(p.get("score", 0)) >= threshold
         ]
-        # Page fetches serve current-site dimensions; competitive stance and
-        # customer proof are better served by targeted Exa search below.
-        need_dims = [d for d in ("current_product", "pricing_and_packaging") if _needs(state, d)]
-        under_cap = len(real_fetched) < MAX_TOTAL_FETCHED_PAGES
+        need_dims = [
+            d
+            for d in (
+                "current_product",
+                "pricing_and_packaging",
+                "customer_proof",
+                "product_positioning",
+            )
+            if _needs(state, d)
+        ]
+        under_cap = len(real_fetched) < max_pages
         if pending and (need_dims or len(real_fetched) < MIN_PAGES_BEFORE_MOVING_ON) and under_cap:
             batch = [p["url"] for p in pending[:MAX_FETCH_URLS_PER_ACTION]]
             proposals.append(
@@ -146,8 +189,8 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                     "webpage_fetch",
                     "current_product",
                     {"urls": batch, "source_type": "webpage"},
-                    f"Priority pages unfetched ({len(real_fetched)} fetched so far, "
-                    f"cap {MAX_TOTAL_FETCHED_PAGES}); current-site coverage below target.",
+                    f"Priority pages unfetched ({len(real_fetched)} fetched so far, cap {max_pages}); "
+                    "current-site coverage below target.",
                     latency=10.0,
                 )
             )
@@ -215,7 +258,61 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             )
         )
 
+    # 6. Pricing fallback chain (feedback #6/#34): a required dimension must
+    # exhaust its public fallbacks before the loop may stop. Direct pages are
+    # already seeded in the map; here we add Exa and Wayback pricing fallbacks.
+    if _needs(state, "pricing_and_packaging"):
+        proposals.append(
+            _mk(
+                state,
+                "search_exa_web",
+                "exa_search",
+                "pricing_and_packaging",
+                {
+                    "query": f'"{company.canonical_name}" pricing OR plans OR "per employee" cost',
+                    "num_results": 5,
+                    "include_domains": [company.primary_domain],
+                },
+                "Pricing is a required dimension and not yet covered; searching for a public pricing/plans page.",
+                reliability=0.55,
+            )
+        )
+        comparison = next((w for w in state.time_windows if w.purpose == "comparison"), None)
+        proposals.append(
+            _mk(
+                state,
+                "search_wayback",
+                "wayback",
+                "pricing_and_packaging",
+                {
+                    "url": f"https://www.{company.primary_domain}/pricing",
+                    "window_start": (
+                        comparison.start_at.date().isoformat() if comparison else None
+                    ),
+                    "window_end": (comparison.end_at.date().isoformat() if comparison else None),
+                    "max_snapshots": 1,
+                },
+                "Pricing fallback: an archived pricing/plans page can establish pricing disclosure even if the live page is gated.",
+                reliability=0.5,
+                latency=15.0,
+            )
+        )
+
     return [p for p in proposals if allowed(p)]
+
+
+# Required dimensions whose fallbacks must be exhausted before a low-value stop.
+def required_dims_needing_exhaustion(state: DirectorState) -> list[str]:
+    from .coverage import level_at_least, required_dimensions
+
+    out = []
+    for d in required_dimensions(state.mode, state.focal_company is not None):
+        level = state.coverage.get(d, "not_attempted")
+        if level == "unavailable":
+            continue
+        if not level_at_least(state.coverage, d, "medium"):
+            out.append(d)
+    return out
 
 
 def score_and_select(
