@@ -292,15 +292,29 @@ class GoogleAdsTool(BaseTool):
         provenance: dict[str, Any],
         data: dict[str, Any],
     ) -> ToolResult:
+        from ..synthesis import is_junk_ads_artifact
+
+        advertiser_domain = str(action.parameters.get("advertiser_domain") or "").strip()
         results = data.get("results") or []
         artifacts: list[RawArtifact] = []
         skipped = 0
+        junk = 0
         for item in results:
             if not isinstance(item, dict) or not str(item.get("url") or "").strip():
                 skipped += 1
                 continue
             url = str(item.get("url"))
             page_text = str(item.get("text") or "")
+            # Discovery-junk filter (red-team #5: FAQ pages, blank-query pages
+            # and OTHER advertisers' pages were all stamped advertiser=<name>).
+            if is_junk_ads_artifact(url, {"is_discovery_pointer": True}, advertiser_domain):
+                junk += 1
+                continue
+            haystack = f"{item.get('title') or ''} {page_text[:2000]} {url}".lower()
+            advertiser_verified = bool(
+                advertiser.lower() in haystack
+                or (advertiser_domain and advertiser_domain.lower() in haystack)
+            )
             artifacts.append(
                 _public_ad_artifact(
                     action,
@@ -321,6 +335,7 @@ class GoogleAdsTool(BaseTool):
                         **provenance,
                         "exa_id": item.get("id"),
                         "is_discovery_pointer": True,
+                        "advertiser_verified": advertiser_verified,
                     },
                     # Discovery pointer: page text is a proxy, not the creative.
                     is_partial=True,
@@ -328,15 +343,17 @@ class GoogleAdsTool(BaseTool):
             )
 
         if not artifacts:
-            return self._result(
-                action,
-                status="empty",
-                negative_observations=[
-                    f"Exa discovery returned no adstransparency.google.com references "
-                    f"for advertiser '{advertiser}' (query='{provenance['exa_query']}') — "
-                    "a coverage gap, not evidence of no advertising."
-                ],
-            )
+            negs = [
+                f"Exa discovery returned no adstransparency.google.com references "
+                f"for advertiser '{advertiser}' (query='{provenance['exa_query']}') — "
+                "a coverage gap, not evidence of no advertising."
+            ]
+            if junk:
+                negs.append(
+                    f"{junk} transparency-center result(s) dropped as non-advertiser pages "
+                    f"(FAQ/blank/other-advertiser) for '{advertiser}'."
+                )
+            return self._result(action, status="empty", negative_observations=negs)
 
         negative_observations: list[str] = []
         if skipped:
@@ -344,9 +361,14 @@ class GoogleAdsTool(BaseTool):
                 f"{skipped} Exa discovery result(s) without a URL were dropped for "
                 f"advertiser '{advertiser}'."
             )
+        if junk:
+            negative_observations.append(
+                f"{junk} transparency-center result(s) dropped as non-advertiser pages "
+                f"(FAQ/blank/other-advertiser) for '{advertiser}'."
+            )
         return self._result(
             action,
-            status="partial" if skipped else "success",
+            status="partial" if (skipped or junk) else "success",
             artifacts=artifacts,
             negative_observations=negative_observations,
         )

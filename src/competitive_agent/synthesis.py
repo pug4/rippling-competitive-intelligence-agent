@@ -53,6 +53,62 @@ _STRONG_PROOF = {
 }
 _MODERATE_PROOF = {"customer_quotation", "customer_logo"}
 
+# Classifier fallback labels that must never surface as real personas/CEPs
+# (red-team: "not_observed" rendered as a buying trigger, "unclassified_signals:
+# ..." rendered as a persona).
+_PLACEHOLDER_RX = re.compile(
+    r"^(not[_ ]observed|\(?unspecified\)?|unknown|none|n/?a|unclassified.*)$", re.IGNORECASE
+)
+
+
+def is_placeholder_label(label: str | None) -> bool:
+    """True for classifier fallback values that aren't real observations."""
+    return bool(_PLACEHOLDER_RX.match((label or "").strip()))
+
+
+def _norm_label(label: str) -> str:
+    """Normalize a free-form label to snake_case so 'growing remote and
+    international teams' and 'growing_remote_and_international_teams' merge."""
+    return re.sub(r"\s+", "_", label.strip().lower())
+
+
+def assign_window(artifact: RawArtifact, time_windows: list[Any]) -> str:
+    """THE single window-membership rule (red-team: two divergent predicates
+    let the same artifact be 'prior' in change detection and 'current' in the
+    baseline). Undated live content is current (retrieved now); dated content
+    belongs to the window its date falls in; dates outside both windows are
+    'outside' — excluded from both, never silently dumped into current."""
+    comparison = next(
+        (w for w in time_windows if getattr(w, "purpose", None) == "comparison"), None
+    )
+    current = next((w for w in time_windows if getattr(w, "purpose", None) == "current"), None)
+    dated = artifact.archive_capture_at or artifact.published_at
+    if dated is None:
+        return "current"
+    if comparison and comparison.start_at <= dated <= comparison.end_at:
+        return "prior"
+    if current and dated >= current.start_at:
+        return "current"
+    return "outside"
+
+
+def is_junk_ads_artifact(url: str, metadata: dict[str, Any] | None, advertiser_domain: str) -> bool:
+    """True for ads-transparency DISCOVERY results that are not advertiser pages
+    (red-team: FAQ page, blank-query pages, other advertisers' pages all stamped
+    advertiser='Deel'). Gated on the discovery-pointer flag so fixture/live ad
+    CREATIVES are never touched."""
+    if not (metadata or {}).get("is_discovery_pointer"):
+        return False
+    from urllib.parse import parse_qs, urlsplit
+
+    parts = urlsplit(url or "")
+    if not re.search(r"/advertiser/AR\d+", parts.path):
+        return True  # FAQ, blank landing/query pages — not an advertiser surface
+    domain_param = (parse_qs(parts.query).get("domain") or [""])[0].lower()
+    if domain_param and advertiser_domain and advertiser_domain.lower() not in domain_param:
+        return True  # explicitly about a different advertiser's domain
+    return False
+
 
 def _url_path(url: str) -> str:
     from urllib.parse import urlsplit
@@ -327,11 +383,13 @@ def product_positioning(classifications: list[MarketingClassification]) -> list[
             if c.primary_theme:
                 slot["themes"][c.primary_theme] += 1
             for x in c.personas or []:
-                slot["personas"][x] += 1
+                if not is_placeholder_label(x):
+                    slot["personas"][x] += 1
             for x in c.proof_types or []:
                 slot["proof_types"][x] += 1
             for x in c.category_entry_points or []:
-                slot["ceps"][x] += 1
+                if not is_placeholder_label(x):
+                    slot["ceps"][_norm_label(x)] += 1
     out = []
     for slot in sorted(products.values(), key=lambda s: -s["pages"]):
         if slot["pages"] < 1:
@@ -349,34 +407,93 @@ def product_positioning(classifications: list[MarketingClassification]) -> list[
     return out[:12]
 
 
+_OWNERSHIP_ORDER = {
+    "competitor_advantage": 0,
+    "contested": 1,
+    "focal_owns": 2,
+    "insufficient_sample": 3,
+    "neither": 4,
+}
+
+
 def category_entry_points(
     competitor_cls: list[MarketingClassification],
     focal_cls: list[MarketingClassification],
 ) -> list[dict[str, Any]]:
     """CEP ownership map: which buying triggers the competitor owns, the focal
-    company owns, both contest, or neither addresses (feedback #22)."""
+    company owns, both contest, or neither addresses (feedback #22).
+
+    Ownership is SHARE-NORMALIZED (red-team + niche-competitor requirement): a
+    raw 79-vs-16 page count is meaningless when corpora differ in size, so each
+    side's count is divided by its number of classified artifacts and the
+    verdict comes from the share ratio. Thresholds: contested needs both sides
+    >=2 pages and <2x share ratio (below 2x is crawl-composition noise); an
+    ownership verdict needs >=2x share ratio (or a true zero on one side) AND
+    >=3 pages on the dominant side (matches the corpus-wide thin<3 convention);
+    anything thinner is disclosed as insufficient_sample, never asserted."""
+    nc, nf = max(1, len(competitor_cls)), max(1, len(focal_cls))
     comp: Counter[str] = Counter()
     focal: Counter[str] = Counter()
+    comp_examples: dict[str, list[str]] = {}
+    focal_examples: dict[str, list[str]] = {}
     for c in competitor_cls:
         for cep in c.category_entry_points or []:
-            comp[cep] += 1
+            if is_placeholder_label(cep):
+                continue
+            key = _norm_label(cep)
+            comp[key] += 1
+            comp_examples.setdefault(key, []).append(c.artifact_id)
     for c in focal_cls:
         for cep in c.category_entry_points or []:
-            focal[cep] += 1
-    all_ceps = set(comp) | set(focal)
+            if is_placeholder_label(cep):
+                continue
+            key = _norm_label(cep)
+            focal[key] += 1
+            focal_examples.setdefault(key, []).append(c.artifact_id)
     rows: list[dict[str, Any]] = []
-    for cep in all_ceps:
+    for cep in set(comp) | set(focal):
         cn, fn = comp.get(cep, 0), focal.get(cep, 0)
-        if cn and fn:
-            ownership = "contested"
-        elif cn and not fn:
-            ownership = "competitor_advantage"
-        elif fn and not cn:
-            ownership = "focal_owns"
-        else:
+        share_c, share_f = cn / nc, fn / nf
+        hi, lo = max(share_c, share_f), min(share_c, share_f)
+        ratio = round(hi / lo, 2) if lo > 0 else None
+        dominant_count = cn if share_c >= share_f else fn
+        if cn == 0 and fn == 0:
             ownership = "neither"
-        rows.append({"cep": cep, "competitor_pages": cn, "focal_pages": fn, "ownership": ownership})
-    rows.sort(key=lambda r: -(comp.get(str(r["cep"]), 0) + focal.get(str(r["cep"]), 0)))
+            basis = "no pages on either side"
+        elif cn >= 2 and fn >= 2 and ratio is not None and ratio < 2.0:
+            ownership = "contested"
+            basis = f"{ratio}x share ratio — within crawl-composition noise"
+        elif (ratio is None or ratio >= 2.0) and dominant_count >= 3:
+            ownership = "competitor_advantage" if share_c > share_f else "focal_owns"
+            basis = (
+                f"{ratio}x share ratio, dominant side {dominant_count} pages"
+                if ratio is not None
+                else f"one-sided: dominant side {dominant_count} pages, other side 0"
+            )
+        else:
+            ownership = "insufficient_sample"
+            basis = f"too few pages to call ({cn} vs {fn}) — disclosed, not asserted"
+        rows.append(
+            {
+                "cep": cep,
+                "competitor_pages": cn,
+                "focal_pages": fn,
+                "competitor_share": round(share_c, 4),
+                "focal_share": round(share_f, 4),
+                "share_ratio": ratio,
+                "share_delta": round(share_c - share_f, 4),
+                "ownership": ownership,
+                "ownership_basis": basis,
+                "competitor_example_artifact_ids": comp_examples.get(cep, [])[:5],
+                "focal_example_artifact_ids": focal_examples.get(cep, [])[:3],
+            }
+        )
+    rows.sort(
+        key=lambda r: (
+            _OWNERSHIP_ORDER.get(str(r["ownership"]), 9),
+            -abs(float(r["share_delta"])),
+        )
+    )
     return rows
 
 
@@ -414,7 +531,12 @@ def persona_channel_funnel(
     for c in classifications:
         channel = _CHANNEL_OF_SOURCE.get(artifact_meta.get(c.artifact_id, ""), "other")
         channels_seen.add(channel)
-        for persona in c.personas or ["(unspecified)"]:
+        # Placeholder personas ("not_observed", "(unspecified)", raw
+        # "unclassified_signals: ..." leaks) are classifier fallbacks, not
+        # buyers — pages without a real persona contribute channels only.
+        for persona in c.personas or []:
+            if is_placeholder_label(persona):
+                continue
             personas_seen.add(persona)
             matrix.setdefault(persona, Counter())[channel] += 1
     return {
@@ -518,10 +640,16 @@ def coverage_details(
     state: Any,
     artifacts: list[RawArtifact],
     classifications: list[MarketingClassification],
+    coverage: dict[str, str] | None = None,
 ) -> list[CoverageDetail]:
-    """Per-dimension coverage with the evidence behind each rating (feedback #7)."""
+    """Per-dimension coverage with the evidence behind each rating (feedback #7).
+    Includes not_attempted dimensions — absences are findings, never hidden
+    (red-team: 11 untouched dims were invisible to the brief AND to the
+    largest-uncertainty line). ``coverage`` overrides state.coverage so the
+    report can pass its recomputed honest levels."""
     from . import coverage as cov
 
+    cov_map: dict[str, Any] = coverage if coverage is not None else state.coverage
     by_id = _artifacts_by_id(artifacts)
     # Map dimension -> source types that feed it.
     details: list[CoverageDetail] = []
@@ -536,8 +664,20 @@ def coverage_details(
         }
     )
     for dim in cov.COVERAGE_DIMENSIONS:
-        level = state.coverage.get(dim, "not_attempted")
+        level = cov_map.get(dim, "not_attempted")
         if level == "not_attempted":
+            details.append(
+                CoverageDetail(
+                    dimension=dim,
+                    level="not_attempted",
+                    artifact_count=0,
+                    source_classes=[],
+                    requested_periods=windows_requested,
+                    represented_periods=windows_present,
+                    missing_sources=[],
+                    reason="not attempted this run — absence of collection, not absence of activity",
+                )
+            )
             continue
         feeders = cov.DIMENSION_SOURCES.get(dim, [])
         contributing = [a for a in artifacts if a.source_type in feeders] if feeders else []
@@ -570,6 +710,7 @@ def coverage_details(
 # categories, so analysis must not flatten them)
 # ---------------------------------------------------------------------------
 
+
 def _vertical_matchers(taxonomy: dict[str, Any]) -> dict[str, list[re.Pattern[str]]]:
     """Compile the config keyword map. Single tokens get word boundaries so
     short keywords ("eor", "pto") can't false-match inside other words;
@@ -591,7 +732,9 @@ def _vertical_matchers(taxonomy: dict[str, Any]) -> dict[str, list[re.Pattern[st
 
 
 def verticals_for_classification(
-    c: MarketingClassification, artifact: RawArtifact | None, matchers: dict[str, list[re.Pattern[str]]]
+    c: MarketingClassification,
+    artifact: RawArtifact | None,
+    matchers: dict[str, list[re.Pattern[str]]],
 ) -> list[str]:
     """Deterministic vertical tags for one classified artifact. Precision rules
     (audit: ~6% single-keyword false positives, compliance as a catch-all):
@@ -674,7 +817,8 @@ def product_vertical_analysis(
             if c.competitive_stance:
                 slot["stances"][c.competitive_stance] += 1
             for p in c.personas or []:
-                slot["personas"][p] += 1
+                if not is_placeholder_label(p):
+                    slot["personas"][p] += 1
             if art is not None and len(slot["example_urls"]) < 3:
                 u = art.final_url or art.url
                 if u and u not in slot["example_urls"]:
@@ -773,36 +917,55 @@ def temporal_baseline(
     by_id = _artifacts_by_id(artifacts)
     prior_themes: Counter[str] = Counter()
     current_themes: Counter[str] = Counter()
-    n_prior = n_current = 0
-    seen_prior_ids: set[str] = set()
+    n_prior = n_current = n_outside = 0
+    counted_ids: set[str] = set()
     for c in classifications:
         art = by_id.get(c.artifact_id)
         if art is None:
             continue
-        dated = art.archive_capture_at or art.published_at
-        in_prior = bool(dated and ps <= dated <= pe)
-        if in_prior and art.artifact_id not in seen_prior_ids:
-            seen_prior_ids.add(art.artifact_id)
-            n_prior += 1
-        elif not in_prior:
-            n_current += 1
-        if not c.primary_theme:
+        window = assign_window(art, time_windows)
+        if art.artifact_id not in counted_ids:
+            counted_ids.add(art.artifact_id)
+            if window == "prior":
+                n_prior += 1
+            elif window == "current":
+                n_current += 1
+            else:
+                n_outside += 1
+        if not c.primary_theme or window == "outside":
             continue
-        (prior_themes if in_prior else current_themes)[c.primary_theme] += 1
+        (prior_themes if window == "prior" else current_themes)[c.primary_theme] += 1
     stable = sorted(set(prior_themes) & set(current_themes))
     emerged = sorted(set(current_themes) - set(prior_themes))
     receded = sorted(set(prior_themes) - set(current_themes))
+
+    def _shares(themes: Counter[str], n: int) -> dict[str, float]:
+        return {t: round(v / max(1, n), 4) for t, v in themes.most_common(10)}
+
+    note = (
+        "Prior membership = real archive-capture/published date inside the comparison "
+        "window; undated live content is current. Windows have different sample sizes "
+        f"({n_prior} vs {n_current}) — compare shares, not counts; treat "
+        "emergence/recession as signals."
+    )
+    if n_outside:
+        note += f" {n_outside} dated artifact(s) fall outside both windows and are excluded."
     return {
         "prior_window": {
             "start": ps.date().isoformat(),
             "end": pe.date().isoformat(),
             "n_artifacts": n_prior,
             "themes": dict(prior_themes.most_common(10)),
+            "themes_share": _shares(prior_themes, n_prior),
         },
-        "current_window": {"n_artifacts": n_current, "themes": dict(current_themes.most_common(10))},
+        "current_window": {
+            "n_artifacts": n_current,
+            "themes": dict(current_themes.most_common(10)),
+            "themes_share": _shares(current_themes, n_current),
+        },
+        "outside_windows": n_outside,
         "stable_themes": stable,
         "emerged_themes": emerged,
         "receded_themes": receded,
-        "note": "Prior membership = real archive-capture/published date inside the comparison "
-        "window. The prior sample is small — treat emergence/recession as signals.",
+        "note": note,
     }

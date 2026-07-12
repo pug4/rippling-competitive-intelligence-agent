@@ -53,10 +53,15 @@ def _proof_bar(strength: str | None, tag: str) -> str:
 
 
 def _gaps(pkg: dict[str, Any], competitor: str, focal: str) -> str:
-    gaps = pkg.get("proof_gaps", [])[:8]
+    all_gaps = pkg.get("proof_gaps", [])
+    gaps = all_gaps[:8]
     if not gaps:
         return "<p class='empty'>No repeated competitor claim with a proof gap was observed.</p>"
     rows = []
+    if len(all_gaps) > 8:
+        rows.append(
+            f"<div class='sub'>showing 8 of {len(all_gaps)} gaps — full list in the JSON/UI</div>"
+        )
     for g in gaps:
         att = str(g.get("attackability", "low"))
         pill = f"<span class='pill' style='color:{_ATTACK_COLOR.get(att, '#9aa3b2')};border-color:{_ATTACK_COLOR.get(att, '#9aa3b2')}'>{_esc(att)}</span>"
@@ -127,12 +132,25 @@ def _timeline(pkg: dict[str, Any]) -> str:
         cc = _CONF_COLOR.get(conf, "#9aa3b2")
         cur_w = ce / mx * 100
         caveat = (c.get("alternative_explanations") or [""])[0]
+        # Real reconciled prior counts (never a hardcoded "not observed" — the
+        # baseline can hold the theme). Fallback keeps old packages rendering.
+        ptc, pwn = c.get("prior_theme_count"), c.get("prior_window_n")
+        if isinstance(ptc, int) and isinstance(pwn, int):
+            if ptc > 0:
+                prior_label = f"prior: {ptc} of {pwn}"
+                prior_title = f"prior window: theme present in {ptc} of {pwn} dated artifacts"
+            else:
+                prior_label = f"prior: not observed ({pwn} dated)"
+                prior_title = f"prior window: theme absent from all {pwn} dated artifacts"
+        else:
+            prior_label = "prior: not observed"
+            prior_title = f"prior window: not observed in a {pe}-artifact sample"
         rows.append(
             f"<div class='tlrow'>"
             f"<div class='tltheme'>{_esc(_theme_of(c))}"
             f"<span class='pill' style='color:{cc};border-color:{cc}'>{_esc(conf)} · {_esc(life)}</span></div>"
             f"<div class='tltrack'>"
-            f"<div class='tlprior' title='prior window: not observed in a {pe}-artifact sample'>prior: not observed</div>"
+            f"<div class='tlprior' title='{_esc(prior_title)}'>{_esc(prior_label)}</div>"
             f"<div class='tlarrow'>→</div>"
             f"<div class='tlbar' style='width:{cur_w:.0f}%' title='present in {ce} current artifacts'></div>"
             f"<div class='tlcount'>{ce} artifacts</div></div>"
@@ -249,54 +267,105 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
         "focal_owns": "#4ade80",
         "contested": "#fbbf24",
         "competitor_advantage": "#f87171",
+        "insufficient_sample": "#9aa3b2",
         "neither": "#9aa3b2",
     }
-    mx = max([1] + [max(c.get("competitor_pages", 0), c.get("focal_pages", 0)) for c in ceps])
+
+    def _share(c: dict[str, Any], key: str, fallback: str) -> float:
+        v = c.get(key)
+        return float(v) if v is not None else float(c.get(fallback, 0))
+
+    # Package order is already ownership-grouped then |share-delta|-sorted; a
+    # local volume re-sort put every 'contested' row first and hid the
+    # advantage/owns rows entirely (red-team #5). Render ALL rows.
+    mx = max(
+        [0.0001]
+        + [
+            max(
+                _share(c, "competitor_share", "competitor_pages"),
+                _share(c, "focal_share", "focal_pages"),
+            )
+            for c in ceps
+        ]
+    )
     rows = []
-    for c in sorted(ceps, key=lambda x: -(x.get("competitor_pages", 0) + x.get("focal_pages", 0)))[
-        :10
-    ]:
+    for c in ceps:
         own = str(c.get("ownership", "neither"))
         col = own_color.get(own, "#9aa3b2")
-        cw = c.get("competitor_pages", 0) / mx * 100
-        fw = c.get("focal_pages", 0) / mx * 100
+        cs, fs = (
+            _share(c, "competitor_share", "competitor_pages"),
+            _share(c, "focal_share", "focal_pages"),
+        )
+        cw, fw = cs / mx * 100, fs / mx * 100
+        cn, fn = c.get("competitor_pages", 0), c.get("focal_pages", 0)
+        clabel = f"{cn} ({cs:.0%})" if c.get("competitor_share") is not None else str(cn)
+        flabel = f"{fn} ({fs:.0%})" if c.get("focal_share") is not None else str(fn)
+        basis = _esc(c.get("ownership_basis") or "")
         rows.append(
             f"<div class='ceprow'>"
-            f"<div class='ceplabel' title='{_esc(c.get('cep'))}'>{_esc(str(c.get('cep')).replace('_', ' '))}"
+            f"<div class='ceplabel' title='{basis}'>{_esc(str(c.get('cep')).replace('_', ' '))}"
             f"<span class='pill' style='color:{col};border-color:{col}'>{_esc(own.replace('_', ' '))}</span></div>"
             f"<div class='cepbars'>"
             f"<div class='cepside left'><div class='cepfill' style='width:{cw:.0f}%;background:#f87171' "
-            f"title='{competitor}: {c.get('competitor_pages', 0)} pages'></div><span>{c.get('competitor_pages', 0)}</span></div>"
-            f"<div class='cepside right'><span>{c.get('focal_pages', 0)}</span><div class='cepfill' "
-            f"style='width:{fw:.0f}%;background:#6ea8fe' title='{focal}: {c.get('focal_pages', 0)} pages'></div></div>"
+            f"title='{competitor}: {clabel} of corpus'></div><span>{clabel}</span></div>"
+            f"<div class='cepside right'><span>{flabel}</span><div class='cepfill' "
+            f"style='width:{fw:.0f}%;background:#6ea8fe' title='{focal}: {flabel} of corpus'></div></div>"
             f"</div></div>"
         )
     return (
-        f"<div class='cephead'><span>◀ {_esc(competitor)} pages</span>"
-        f"<span>{_esc(focal)} pages ▶</span></div>{''.join(rows)}"
+        f"<div class='sub'>bars = share of each company's classified corpus (counts alongside) — "
+        f"share-normalized so corpus size can't fabricate ownership; all {len(ceps)} triggers shown, "
+        "grouped by ownership.</div>"
+        f"<div class='cephead'><span>◀ {_esc(competitor)}</span>"
+        f"<span>{_esc(focal)} ▶</span></div>{''.join(rows)}"
     )
 
 
 def _key_topics(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     tc = pkg.get("theme_comparison") or {}
     comp, foc = tc.get("competitor_themes") or {}, tc.get("focal_themes") or {}
-    themes = sorted(set(comp) | set(foc), key=lambda t: -(comp.get(t, 0) + foc.get(t, 0)))[:9]
+    comp_sh, foc_sh = tc.get("competitor_shares") or {}, tc.get("focal_shares") or {}
+    use_shares = bool(comp_sh or foc_sh)
+    all_themes = sorted(
+        set(comp) | set(foc),
+        key=lambda t: (
+            -(
+                (comp_sh.get(t, 0) + foc_sh.get(t, 0))
+                if use_shares
+                else (comp.get(t, 0) + foc.get(t, 0))
+            )
+        ),
+    )
+    themes = all_themes[:9]
     if not themes:
         return "<p class='empty'>No theme comparison available (focal mirror required).</p>"
-    mx = max([1] + [max(comp.get(t, 0), foc.get(t, 0)) for t in themes])
+
+    def _w(t: str, side_sh: dict, side_n: dict) -> float:
+        return float(side_sh.get(t, 0)) if use_shares else float(side_n.get(t, 0))
+
+    mx = max([0.0001] + [max(_w(t, comp_sh, comp), _w(t, foc_sh, foc)) for t in themes])
     rows = []
     for t in themes:
-        cw, fw = comp.get(t, 0) / mx * 100, foc.get(t, 0) / mx * 100
+        cw, fw = _w(t, comp_sh, comp) / mx * 100, _w(t, foc_sh, foc) / mx * 100
+        cl = f"{comp.get(t, 0)} ({comp_sh.get(t, 0):.0%})" if use_shares else str(comp.get(t, 0))
+        fl = f"{foc.get(t, 0)} ({foc_sh.get(t, 0):.0%})" if use_shares else str(foc.get(t, 0))
         rows.append(
             f"<div class='ktrow'><div class='ktlabel'>{_esc(t.replace('_', ' '))}</div>"
             f"<div class='ktb'><div class='ktbar' style='width:{cw:.0f}%;background:#f87171' "
-            f"title='{competitor}: {comp.get(t, 0)}'></div><span>{comp.get(t, 0)}</span></div>"
+            f"title='{competitor}: {cl}'></div><span>{cl}</span></div>"
             f"<div class='ktb'><div class='ktbar' style='width:{fw:.0f}%;background:#6ea8fe' "
-            f"title='{focal}: {foc.get(t, 0)}'></div><span>{foc.get(t, 0)}</span></div></div>"
+            f"title='{focal}: {fl}'></div><span>{fl}</span></div></div>"
         )
+    truncated = f" · showing top 9 of {len(all_themes)} themes" if len(all_themes) > 9 else ""
     legend = (
-        f"<div class='sub'>red = {_esc(competitor)} · blue = {_esc(focal)} — classified "
-        "pages/posts per theme (share-of-voice per topic)</div>"
+        f"<div class='sub'>red = {_esc(competitor)} · blue = {_esc(focal)} — "
+        + (
+            "bars compare SHARE of each company's classified corpus (raw counts alongside)"
+            if use_shares
+            else "classified pages/posts per theme (raw counts)"
+        )
+        + truncated
+        + "</div>"
     )
     return legend + "".join(rows)
 
@@ -305,13 +374,25 @@ def _verticals(pkg: dict[str, Any]) -> str:
     verts = (pkg.get("product_vertical_analysis") or {}).get("verticals") or []
     if not verts:
         return "<p class='empty'>No product-vertical signals matched this corpus.</p>"
-    rows = ["<table class='vtable'><tr><th>Vertical</th><th>Pages</th><th>LinkedIn</th>"
-            "<th>Top themes</th><th>Personas</th></tr>"]
+    has_focal = any(v.get("focal_n_artifacts") for v in verts)
+    focal_cols = "<th>Focal pages</th><th>Comp share</th><th>Focal share</th>" if has_focal else ""
+    rows = [
+        "<table class='vtable'><tr><th>Vertical</th><th>Pages</th><th>LinkedIn</th>"
+        f"{focal_cols}<th>Top themes</th><th>Personas</th></tr>"
+    ]
     for v in verts:
+        focal_cells = (
+            f"<td>{v.get('focal_n_artifacts', 0)}</td>"
+            f"<td>{float(v.get('competitor_share') or 0):.0%}</td>"
+            f"<td>{float(v.get('focal_share') or 0):.0%}</td>"
+            if has_focal
+            else ""
+        )
         rows.append(
             f"<tr title='{_esc(v.get('sample_message') or '')}'>"
             f"<td><b>{_esc(str(v['vertical']).replace('_', ' '))}</b></td>"
             f"<td>{v['n_artifacts']}</td><td>{v['n_linkedin_posts']}</td>"
+            f"{focal_cells}"
             f"<td>{_esc(', '.join(v.get('top_themes') or []) or '—')}</td>"
             f"<td>{_esc(', '.join(v.get('personas') or []) or '—')}</td></tr>"
         )
@@ -340,10 +421,30 @@ def _linkedin_posts(pkg: dict[str, Any], competitor: str) -> str:
             f"<a href='{url}' target='_blank' rel='noopener'>view post ↗</a></div>"
             f"<div class='liexcerpt'>{excerpt}</div></div>"
         )
+    shown = min(15, len(posts))
     return (
-        f"<div class='sub'>{len(posts)} public posts by {_esc(competitor)} employees, each classified.</div>"
-        + "".join(rows)
+        f"<div class='sub'>showing {shown} of {len(posts)} public posts by {_esc(competitor)} "
+        "employees, each classified — full list in the JSON/UI.</div>" + "".join(rows)
     )
+
+
+def _similarweb_value(key: str, v: Any) -> str:
+    """Human rendering per metric shape — never str() an array of dicts
+    (red-team #6: digital_competitors rendered '[object Object]'-style)."""
+    if key == "digital_competitors" and isinstance(v, list):
+        bits = [
+            f"{c.get('domain')} (affinity {float(c.get('affinity', 0)):.2f})"
+            for c in v[:8]
+            if isinstance(c, dict)
+        ]
+        return ", ".join(bits) + " — affinity index (0–1, top-normalized), not % overlap"
+    if isinstance(v, (int, float)) and key == "estimated_monthly_visits":
+        return f"{int(v):,}"
+    if isinstance(v, dict):
+        return " · ".join(f"{k}: {x}" for k, x in list(v.items())[:8])
+    if isinstance(v, list):
+        return ", ".join(str(x) for x in v[:8])
+    return str(v)
 
 
 def _similarweb(pkg: dict[str, Any]) -> str:
@@ -357,9 +458,56 @@ def _similarweb(pkg: dict[str, Any]) -> str:
         if key in m:
             v = m[key].get("value") if isinstance(m[key], dict) else m[key]
             stats.append(
-                f"<div class='row'><b>{_esc(key.replace('_', ' '))}:</b> {_esc(v)} <i>(estimated)</i></div>"
+                f"<div class='row'><b>{_esc(key.replace('_', ' '))}:</b> "
+                f"{_esc(_similarweb_value(key, v))} <i>(estimated)</i></div>"
             )
     return f"<div class='sub'>Source: {_esc(label)} · all values estimated.</div>" + "".join(stats)
+
+
+def _action_board(pkg: dict[str, Any], focal: str) -> str:
+    """The exec's 'what should we do' — was computed but shown only as a count
+    tile (red-team exec finding). Full experiment apparatus per opportunity."""
+    opps = pkg.get("opportunities") or []
+    if not opps:
+        rejected = pkg.get("opportunities_rejected") or []
+        note = (
+            f" ({len(rejected)} candidate(s) rejected by the genericness/superiority critics)"
+            if rejected
+            else ""
+        )
+        return f"<p class='empty'>No opportunity survived the critics this run{note}.</p>"
+    cards = []
+    for o in opps:
+        stages = o.get("staged_plan") or []
+        stage_html = ""
+        if stages:
+            bits = []
+            for s in stages:
+                proceed = "; ".join(s.get("proceed_if") or []) or "—"
+                stop = "; ".join(s.get("stop_or_reframe_if") or []) or "—"
+                bits.append(
+                    f"<div class='stg'><b>{_esc(str(s.get('stage', '')).replace('_', ' '))}</b> — "
+                    f"{_esc(s.get('objective') or '')}<br>"
+                    f"<span class='ok'>✓ proceed if:</span> {_esc(proceed)}<br>"
+                    f"<span class='no'>✕ stop/reframe if:</span> {_esc(stop)}</div>"
+                )
+            stage_html = "<div class='stages'>" + "".join(bits) + "</div>"
+        guardrails = ", ".join(o.get("guardrail_metrics") or []) or "—"
+        cards.append(
+            f"<div class='ab'>"
+            f"<div class='abtitle'>{_esc(o.get('title'))} "
+            f"<span class='pill'>{_esc(o.get('deliverable_type'))}</span> "
+            f"<span class='pill'>defensibility: {_esc(o.get('structural_defensibility'))}</span></div>"
+            f"<div class='abrow'><b>Angle:</b> {_esc(o.get('message_angle'))}</div>"
+            f"<div class='abrow'><b>Hypothesis:</b> {_esc(o.get('experiment_hypothesis') or '—')}</div>"
+            f"<div class='abrow'><b>Primary metric:</b> {_esc(o.get('primary_metric') or '—')} · "
+            f"<b>guardrails:</b> {_esc(guardrails)} · "
+            f"<b>min sample:</b> {_esc(o.get('minimum_sample_rule') or '—')}</div>"
+            f"<div class='abrow'><b>Backfire risk:</b> {_esc(o.get('why_this_could_backfire') or '—')}</div>"
+            f"<div class='abrow'><b>Kill rule:</b> {_esc(o.get('kill_rule') or '—')}</div>"
+            f"{stage_html}</div>"
+        )
+    return "".join(cards)
 
 
 def build_dashboard(pkg: dict[str, Any]) -> str:
@@ -380,6 +528,20 @@ def build_dashboard(pkg: dict[str, Any]) -> str:
     total = sum(v for _, v in src)
     es = pkg.get("eval_summary", {})
     run = pkg.get("run", {})
+    cn = pkg.get("corpus_normalization") or {}
+    banner = (
+        (
+            "<div class='banner'>⚠ <b>Corpus-size asymmetry:</b> "
+            f"{_esc(cn.get('competitor', {}).get('name'))} "
+            f"{cn.get('competitor', {}).get('n_classified', 0)} classified artifacts vs "
+            f"{_esc(cn.get('focal', {}).get('name') or 'focal')} "
+            f"{cn.get('focal', {}).get('n_classified', 0)} "
+            f"(ratio {cn.get('asymmetry_ratio')}). "
+            f"{_esc(cn.get('normalization_note') or '')}</div>"
+        )
+        if cn.get("show_banner")
+        else ""
+    )
 
     return f"""<title>Competitive Intel — {_esc(competitor)} vs {_esc(focal)}</title>
 <style>
@@ -458,9 +620,18 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .cepside.left {{ flex-direction:row-reverse; }}
 .cepfill {{ height:12px; border-radius:3px; min-width:3px; }}
 .cepside span {{ font-size:10px; color:var(--muted); font-variant-numeric:tabular-nums; }}
+/* action board */
+.ab {{ border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin:8px 0; background:var(--panel2); }}
+.abtitle {{ font-weight:600; font-size:13px; margin-bottom:6px; }}
+.abrow {{ font-size:12px; color:var(--muted); margin:3px 0; }} .abrow b {{ color:var(--text); }}
+.stages {{ margin-top:6px; display:grid; gap:6px; }}
+.stg {{ font-size:11px; color:var(--muted); border-left:2px solid var(--accent); padding-left:8px; }}
+.stg b {{ color:var(--text); }} .stg .ok {{ color:#4ade80; }} .stg .no {{ color:#f87171; }}
+.banner {{ border:1px solid #fbbf24; color:#fbbf24; border-radius:8px; padding:10px 12px; font-size:12px; margin:10px 0; }}
 </style>
 <h1>Competitive Marketing Intelligence — {_esc(competitor)} <span class='sub'>vs {_esc(focal)}</span></h1>
-<p class='sub'>Run <code>{_esc(run.get("run_id"))}</code> · mode {_esc(run.get("mode"))} · {_esc(run.get("execution_mode"))} · generated {_esc(str(run.get("generated_at"))[:19])}</p>
+<p class='sub'>Run <code>{_esc(run.get("run_id"))}</code> · mode {_esc(run.get("mode"))} · {_esc(run.get("execution_mode"))} · {_esc(run.get("stop_reason_label") or run.get("stop_reason") or "")} · generated {_esc(str(run.get("generated_at"))[:19])}</p>
+{banner}
 <div class='card'>
   <div class='stat'><b>{es.get("n_artifacts", total)}</b><span>artifacts</span></div>
   <div class='stat'><b>{es.get("n_classifications", len(cls))}</b><span>classifications</span></div>
@@ -468,6 +639,10 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
   <div class='stat'><b>{es.get("n_opportunities", len(pkg.get("opportunities", [])))}</b><span>opportunities</span></div>
   <div class='stat'><b>{es.get("n_change_events", len(pkg.get("change_events", [])))}</b><span>changes over time</span></div>
 </div>
+
+<h2>Action Board — what {_esc(focal)} should do</h2>
+<div class='forwho'><b>Exec:</b> the ranked openings with their kill rules — fund, watch, or kill. <b>IC:</b> each card carries the full experiment plan (metric, guardrails, staged gates).</div>
+<div class='card'>{_action_board(pkg, focal)}</div>
 
 <h2>Data at a glance</h2>
 <div class='grid2'>

@@ -90,7 +90,7 @@ button {{ background:#6ea8fe; color:#0b1020; border:0; border-radius:8px; paddin
 <div class='sticky'><span class='hint'>For each field: is the <b>P</b>roduction prediction or the <b>I</b>ndependent label correct
 (read only the source text + <code>evals/adjudication_guide.md</code>)? Unanswered fields are skipped.
 When done: </span><button onclick='exportJson()'>Export adjudicated.json</button> <span id='status'></span></div>
-{''.join(cards)}
+{"".join(cards)}
 <button onclick='exportJson()'>Export adjudicated.json</button>
 <script>
 function exportJson() {{
@@ -108,9 +108,7 @@ function exportJson() {{
 </script></body></html>"""
 
 
-def score_adjudication(
-    adjudicated_path: Path, labels_path: Path
-) -> dict[str, Any]:
+def score_adjudication(adjudicated_path: Path, labels_path: Path) -> dict[str, Any]:
     """FINAL per-field production accuracy from human adjudication.
 
     Production is correct when the human chose 'production' or 'both';

@@ -73,6 +73,25 @@ _ACTION_COVERAGE = {
     "search_exa_web": [("news_and_launches", "low")],
 }
 
+# Coverage raised ONLY when the action actually returned artifacts (red-team:
+# these 8 action types collected real data — 30 LinkedIn posts, ads, events —
+# while their dimensions stayed "not_attempted"). Attempted-but-empty must NOT
+# raise; render-time floors + negative observations handle honest absences.
+# paid_media stays "low": ad-transparency artifacts are discovery pointers
+# without extractable creative text.
+_ACTION_COVERAGE_EVIDENCED = {
+    "search_linkedin_posts": [("public_linkedin", "medium")],
+    "research_linkedin": [("public_linkedin", "medium")],
+    "search_google_ads": [("paid_media", "low")],
+    "search_meta_ads": [("paid_media", "low")],
+    "search_linkedin_ads": [("paid_media", "low")],
+    "search_events": [("events", "medium")],
+    "search_ooh": [("out_of_home", "low")],
+    "search_reviews": [("customer_proof", "medium")],
+    "search_jobs": [("personas_and_jobs", "medium")],
+    "enrich_similarweb": [("commercial_motion", "low")],
+}
+
 _PAGE_CATEGORY_COVERAGE = {
     "pricing": ("pricing_and_packaging", "high"),
     "product": ("current_product", "medium"),
@@ -578,8 +597,32 @@ async def extract_and_classify(state: DirectorState, ctx: GraphContext):
 
 
 async def validate_evidence(state: DirectorState, ctx: GraphContext):
-    # Excerpt containment is enforced at extraction time through the shared
-    # normalizer; this node re-asserts referential integrity for storage.
+    """Referential-integrity check: every evidence record must point at an
+    artifact that exists in this run (excerpt containment is enforced at
+    extraction time through the shared normalizer). Never raises — an orphan is
+    recorded as a limitation + trace event, not a crash."""
+    if not ctx.scratch.get("evidence_dirty") or ctx.repository is None:
+        return state, "update_coverage"
+    try:
+        artifact_ids = {a.artifact_id for a in ctx.repository.list_artifacts(run_id=state.run_id)}
+        orphans = [
+            m.evidence_id
+            for m in ctx.repository.list_classifications(state.run_id, family="evidence")
+            if m.__class__.__name__ == "EvidenceItem" and m.artifact_id not in artifact_ids
+        ]
+        if orphans:
+            note = (
+                f"evidence integrity: {len(orphans)} evidence record(s) reference missing "
+                f"artifacts ({', '.join(orphans[:3])}…)"
+            )
+            if note not in state.limitations:
+                state.limitations.append(note)
+            if ctx.trace:
+                ctx.trace.append(
+                    "evidence_integrity_failed", {"orphans": orphans[:10], "n": len(orphans)}
+                )
+    except Exception:  # noqa: BLE001 — a validation pass must never kill the run
+        pass
     return state, "update_coverage"
 
 
@@ -592,6 +635,9 @@ async def update_coverage(state: DirectorState, ctx: GraphContext):
     if result.status in ("success", "partial"):
         for dimension, level in _ACTION_COVERAGE.get(action.action_type, []):
             cov.raise_coverage(state.coverage, dimension, level)
+        if result.artifacts:
+            for dimension, level in _ACTION_COVERAGE_EVIDENCED.get(action.action_type, []):
+                cov.raise_coverage(state.coverage, dimension, level)
         for artifact in result.artifacts:
             category = str(artifact.metadata.get("page_category", "")).lower()
             for key, (dimension, level) in _PAGE_CATEGORY_COVERAGE.items():

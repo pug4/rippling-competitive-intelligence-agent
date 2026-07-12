@@ -206,14 +206,89 @@ def test_product_positioning_groups_by_product():
     assert "consolidation" in payroll["themes"]
 
 
-def test_cep_ownership_classifies_contested_and_advantage():
+def test_cep_ownership_single_page_rows_are_insufficient_sample():
+    # One page on either side is an anecdote — the old truthiness rule called
+    # 1v1 "contested" and 1v0 an "advantage" (red-team: magnitude-blind).
     from competitive_agent.synthesis import category_entry_points
 
     comp = [_cls_full("a", [], ceps=["replacing_a_peo", "reducing_payroll_errors"])]
     focal = [_cls_full("b", [], ceps=["replacing_a_peo"])]
     rows = {r["cep"]: r["ownership"] for r in category_entry_points(comp, focal)}
-    assert rows["replacing_a_peo"] == "contested"
-    assert rows["reducing_payroll_errors"] == "competitor_advantage"
+    assert rows["replacing_a_peo"] == "insufficient_sample"
+    assert rows["reducing_payroll_errors"] == "insufficient_sample"
+
+
+def test_cep_ownership_is_share_normalized():
+    from competitive_agent.synthesis import category_entry_points
+
+    # Big competitor corpus (20 classified): 8 pages on opening_new_country,
+    # 3 on audit. Small focal corpus (10 classified): 1 page opening_new_country
+    # (8/20=40% vs 1/10=10% -> 4x ratio, dominant 8 pages -> competitor_advantage);
+    # audit: 3/20=15% vs 2/10=20% -> ratio 1.33 <2x, both >=2 -> contested.
+    comp = [
+        _cls_full(f"a{i}", [], ceps=(["opening_new_country"] if i < 8 else [])) for i in range(20)
+    ]
+    for i in range(3):
+        comp[i].category_entry_points.append("preparing_for_audit")
+    focal = [
+        _cls_full(f"b{i}", [], ceps=(["opening_new_country"] if i < 1 else [])) for i in range(10)
+    ]
+    for i in range(1, 3):
+        focal[i].category_entry_points.append("preparing_for_audit")
+    rows = {r["cep"]: r for r in category_entry_points(comp, focal)}
+    onc = rows["opening_new_country"]
+    assert onc["ownership"] == "competitor_advantage"
+    assert onc["competitor_share"] == 0.4 and onc["focal_share"] == 0.1
+    assert onc["share_ratio"] == 4.0
+    audit = rows["preparing_for_audit"]
+    assert audit["ownership"] == "contested"
+    assert audit["share_ratio"] is not None and audit["share_ratio"] < 2.0
+
+
+def test_cep_ownership_niche_corpus_not_steamrolled():
+    # THE niche scenario: 2 CEP pages on a 12-page niche site (16.7% share) vs
+    # 15 of 110 focal (13.6%) — raw counts read a 15-vs-2 blowout; shares say
+    # contested. Normalization must protect the small corpus from false verdicts.
+    from competitive_agent.synthesis import category_entry_points
+
+    comp = [_cls_full(f"a{i}", [], ceps=(["global_payroll"] if i < 2 else [])) for i in range(12)]
+    focal = [
+        _cls_full(f"b{i}", [], ceps=(["global_payroll"] if i < 15 else [])) for i in range(110)
+    ]
+    rows = {r["cep"]: r for r in category_entry_points(comp, focal)}
+    assert rows["global_payroll"]["ownership"] == "contested"
+
+
+def test_cep_placeholder_rows_filtered_and_labels_normalized():
+    from competitive_agent.synthesis import category_entry_points
+
+    comp = [
+        _cls_full("a1", [], ceps=["not_observed", "Growing remote and international teams"]),
+        _cls_full("a2", [], ceps=["growing_remote_and_international_teams"]),
+    ]
+    focal = [_cls_full("b1", [], ceps=["(unspecified)"])]
+    rows = category_entry_points(comp, focal)
+    ceps = {r["cep"] for r in rows}
+    assert "not_observed" not in ceps and "(unspecified)" not in ceps
+    # Both spellings merged into one normalized key with count 2.
+    assert rows and rows[0]["cep"] == "growing_remote_and_international_teams"
+    assert rows[0]["competitor_pages"] == 2
+
+
+def test_cep_rows_carry_example_artifact_ids_and_sort_by_ownership_group():
+    from competitive_agent.synthesis import category_entry_points
+
+    comp = [_cls_full(f"a{i}", [], ceps=["opening_new_country"]) for i in range(4)] + [
+        _cls_full(f"c{i}", [], ceps=["shared_trigger"]) for i in range(2)
+    ]
+    focal = [_cls_full(f"b{i}", [], ceps=["shared_trigger"]) for i in range(2)] + [
+        _cls_full(f"d{i}", [], ceps=[]) for i in range(4)
+    ]
+    rows = category_entry_points(comp, focal)
+    # competitor_advantage group sorts before contested.
+    assert rows[0]["cep"] == "opening_new_country"
+    assert rows[0]["competitor_example_artifact_ids"] == ["a0", "a1", "a2", "a3"]
+    assert rows[1]["cep"] == "shared_trigger" and rows[1]["ownership"] == "contested"
 
 
 def test_commercial_motion_infers_sales_led_from_demos_and_gating():

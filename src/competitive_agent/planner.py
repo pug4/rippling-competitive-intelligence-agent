@@ -216,16 +216,6 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                 if p["url"] not in fetched and float(p.get("score", 0)) >= threshold
             ]
         )
-        need_dims = [
-            d
-            for d in (
-                "current_product",
-                "pricing_and_packaging",
-                "customer_proof",
-                "product_positioning",
-            )
-            if _needs(state, d)
-        ]
         under_cap = len(real_fetched) < max_pages
         # Fetch toward the CONFIGURED cap while priority pages remain — the cap
         # is the coverage control (audit: the old need_dims gate stopped at 6

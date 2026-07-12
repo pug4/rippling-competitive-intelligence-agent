@@ -125,7 +125,85 @@ def test_dashboard_showcases_linkedin_posts_and_similarweb():
     assert (
         'href="https://www.linkedin.com/posts/dana_x"' in out or "linkedin.com/posts/dana_x" in out
     )
-    assert "Traffic" in out and "5000000" in out
+    # estimated_monthly_visits is human-formatted now (5,000,000 not 5000000).
+    assert "Traffic" in out and "5,000,000" in out
+
+
+def test_dashboard_action_board_and_no_dict_repr():
+    pkg = dict(_PKG)
+    pkg["opportunities"] = [
+        {
+            "opportunity_id": "OPP-1",
+            "title": "Own the audit-trail story",
+            "deliverable_type": "comparison_page",
+            "structural_defensibility": "medium",
+            "message_angle": "show the receipts",
+            "experiment_hypothesis": "audit-ready messaging lifts demo requests",
+            "primary_metric": "demo_requests",
+            "guardrail_metrics": ["brand_search"],
+            "minimum_sample_rule": "n>=200 sessions",
+            "kill_rule": "kill if CTR < 0.5% after 2 weeks",
+            "why_this_could_backfire": "counter-proof risk",
+            "staged_plan": [
+                {
+                    "stage": "build_proof",
+                    "objective": "collect quantified outcomes",
+                    "proceed_if": ["2 customers agree"],
+                    "stop_or_reframe_if": ["no customer consents"],
+                }
+            ],
+        }
+    ]
+    pkg["similarweb"] = {
+        "domain": "deel.com",
+        "data_source": "similarweb",
+        "estimated": True,
+        "metrics": {
+            "digital_competitors": {
+                "value": [{"domain": "rippling.com", "affinity": 0.88}],
+                "estimated": True,
+            }
+        },
+    }
+    out = build_dashboard(pkg)
+    # Exec surface: the Action Board with the full experiment apparatus.
+    assert "Action Board" in out and "Own the audit-trail story" in out
+    assert "Kill rule" in out and "demo_requests" in out
+    assert "proceed if" in out and "stop/reframe if" in out
+    # Arrays of dicts render as domain (affinity ...), never a dict repr.
+    assert "{'domain'" not in out and "[object Object]" not in out
+    assert "rippling.com (affinity 0.88)" in out
+    assert "affinity index" in out
+
+
+def test_dashboard_banner_only_when_package_says_so():
+    pkg = dict(_PKG)
+    pkg["corpus_normalization"] = {
+        "competitor": {"name": "NicheCo", "n_classified": 12},
+        "focal": {"name": "Rippling", "n_classified": 110},
+        "asymmetry_ratio": 9.17,
+        "show_banner": True,
+        "normalization_note": "counts shown as share-of-corpus",
+    }
+    out = build_dashboard(pkg)
+    assert "Corpus-size asymmetry" in out and "9.17" in out
+    pkg["corpus_normalization"] = {"show_banner": False}
+    assert "Corpus-size asymmetry" not in build_dashboard(pkg)
+
+
+def test_dashboard_timeline_uses_reconciled_prior_counts():
+    pkg = dict(_PKG)
+    pkg["change_events"] = [
+        {
+            **_PKG["change_events"][0],
+            "lifecycle": "expanding",
+            "prior_theme_count": 4,
+            "prior_window_n": 14,
+        }
+    ]
+    out = build_dashboard(pkg)
+    assert "prior: 4 of 14" in out
+    assert "prior: not observed</div>" not in out
 
 
 def test_dashboard_renders_all_chart_sections():

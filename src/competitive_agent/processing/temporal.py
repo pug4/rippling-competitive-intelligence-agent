@@ -13,6 +13,7 @@ prior presence.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, cast
 
 from pydantic import BaseModel, Field
@@ -57,17 +58,16 @@ class TemporalJudgeVerdict(BaseModel):
 
 
 def _window_of(artifact: Any, windows: list) -> str | None:
-    """Assign an artifact to a window by its real dates."""
-    date = artifact.archive_capture_at or artifact.published_at or artifact.retrieved_at
-    if date is None:
-        return None
-    current = next((w for w in windows if w.purpose == "current"), None)
-    comparison = next((w for w in windows if w.purpose == "comparison"), None)
-    if current and date >= current.start_at:
-        return "current"
-    if comparison and date >= comparison.start_at:
+    """Assign an artifact to a window — delegates to the ONE shared predicate
+    (synthesis.assign_window) so change detection and the temporal baseline can
+    never disagree on the same artifact (red-team #1 root cause: two divergent
+    membership rules)."""
+    from ..synthesis import assign_window
+
+    window = assign_window(artifact, windows)
+    if window == "prior":
         return "comparison"
-    return "comparison" if comparison and date < comparison.end_at else None
+    return None if window == "outside" else window
 
 
 def detect_candidate_changes(
@@ -130,17 +130,54 @@ def detect_candidate_changes(
 
     prior_themes = theme_set(prior)
     current_themes = theme_set(current)
+    n_prior_arts = len({c.artifact_id for c in prior})
     for theme, arts in current_themes.items():
-        if theme not in prior_themes and len(arts) >= 2:
+        if len(arts) < 2:
+            continue
+        prior_ids = list(dict.fromkeys(prior_themes.get(theme, [])))
+        if not prior_ids:
+            # True emergence: the theme has ZERO prior occurrences. The prior
+            # evidence is the window SAMPLE (grounding gate requires non-empty
+            # ids for both periods) — marked as such, never presented as pages
+            # that contain the theme.
             candidates.append(
                 {
                     "dimension": "theme_emergence",
-                    "prior_state": f"“{theme}” not observed in the prior-window sample",
+                    "prior_state": (
+                        f"“{theme}” not observed in any of the {n_prior_arts} "
+                        "dated prior-window artifacts"
+                    ),
                     "current_state": f"“{theme}” present in {len(arts)} current-window artifacts",
                     "prior_artifact_ids": [c.artifact_id for c in prior][:5],
                     "current_artifact_ids": arts,
-                    "prior_count": len(prior),
+                    "prior_count": 0,
+                    "prior_window_n": n_prior_arts,
+                    "prior_evidence_role": "window_sample",
+                    "theme": theme,
                     "emergence": True,
+                }
+            )
+        elif len(arts) >= max(3, 2 * len(prior_ids)):
+            # Rare-prior expansion: present then, materially more present now.
+            # Never phrased as "not observed" (red-team: that wording
+            # contradicted the full-corpus baseline).
+            candidates.append(
+                {
+                    "dimension": "theme_emergence",
+                    "prior_state": (
+                        f"“{theme}” present but rare in the prior window "
+                        f"({len(prior_ids)} of {n_prior_arts} dated artifacts, "
+                        "incl. supporting-theme mentions)"
+                    ),
+                    "current_state": f"“{theme}” present in {len(arts)} current-window artifacts",
+                    "prior_artifact_ids": prior_ids[:5],
+                    "current_artifact_ids": arts,
+                    "prior_count": len(prior_ids),
+                    "prior_window_n": n_prior_arts,
+                    "prior_evidence_role": "theme_occurrences",
+                    "theme": theme,
+                    "emergence": True,
+                    "expansion": True,
                 }
             )
     return candidates
@@ -254,12 +291,19 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
         # lifecycle=emerging, cap confidence at low, and ALWAYS carry the
         # coverage-asymmetry alternative explanation.
         if candidate.get("emergence"):
-            lifecycle = "emerging"
+            lifecycle = "expanding" if candidate.get("expansion") else "emerging"
             confidence = "low"
-            asym = (
-                "this may be a collection/archive coverage asymmetry (current-window news collected "
-                "without a comparable prior-window surface) rather than a real messaging change"
-            )
+            if candidate.get("expansion"):
+                asym = (
+                    f"prior-window sample is small (n={candidate.get('prior_window_n', 0)}); "
+                    "the growth ratio may reflect collection depth rather than a real shift"
+                )
+            else:
+                asym = (
+                    "this may be a collection/archive coverage asymmetry (current-window news "
+                    "collected without a comparable prior-window surface) rather than a real "
+                    "messaging change"
+                )
             if asym not in verdict.alternative_explanations:
                 verdict.alternative_explanations.insert(0, asym)
 
@@ -280,6 +324,158 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
                 coverage=cast(ConfidenceLevel, coverage),
                 alternative_explanations=verdict.alternative_explanations
                 or ["archive coverage gaps could partially explain the observed difference"],
+                theme=candidate.get("theme"),
+                prior_theme_count=candidate.get("prior_count")
+                if candidate.get("emergence")
+                else None,
+                current_theme_count=len(candidate["current_artifact_ids"]),
+                prior_window_n=candidate.get("prior_window_n"),
+                prior_evidence_role=candidate.get("prior_evidence_role"),
             )
         )
     return events
+
+
+_THEME_IN_STATE_RX = re.compile(r"[“\"']([a-z_]+)[”\"']")
+
+
+def reconcile_change_events(
+    events: list[dict[str, Any]],
+    classifications: list[Any],
+    artifacts: list[Any],
+    time_windows: list[Any],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Reconcile persisted change events against the FINAL full corpus.
+
+    Change events are detected mid-run on whatever partial corpus existed at
+    that iteration (red-team #1: an event said a theme was "not observed in the
+    prior-window sample" while the final baseline counted it in BOTH windows).
+    This recomputes each theme's real prior/current occurrences under the same
+    window predicate the baseline uses (synthesis.assign_window) and rewrites
+    the event deterministically — no render-time LLM:
+
+    - prior count 0  -> keep as emerging; prior ids = window sample (marked).
+    - prior count >0 -> relabel lifecycle=expanding, prose "present but rare";
+      prior ids = the artifacts that actually contain the theme.
+    - current occurrences < 2 -> drop (the mid-run signal didn't survive).
+    - scalar dimensions -> keep only if the final-corpus dominant values still
+      match the persisted prior/current states; else drop.
+
+    Returns (reconciled_events, notes). Never empties evidence-id lists (the
+    grounding gate requires both periods non-empty).
+    """
+    from ..synthesis import assign_window
+
+    art_by_id = {a.artifact_id: a for a in artifacts}
+    window_of: dict[str, str] = {a.artifact_id: assign_window(a, time_windows) for a in artifacts}
+    prior_cls = [c for c in classifications if window_of.get(c.artifact_id) == "prior"]
+    current_cls = [c for c in classifications if window_of.get(c.artifact_id) == "current"]
+
+    def theme_ids(items: list[Any]) -> dict[str, list[str]]:
+        out: dict[str, list[str]] = {}
+        for c in items:
+            for t in [
+                getattr(c, "primary_theme", None),
+                *(getattr(c, "supporting_themes", []) or []),
+            ]:
+                if t and c.artifact_id not in out.setdefault(t, []):
+                    out[t].append(c.artifact_id)
+        return out
+
+    prior_by_theme = theme_ids(prior_cls)
+    current_by_theme = theme_ids(current_cls)
+    prior_sample = list(dict.fromkeys(c.artifact_id for c in prior_cls))
+    n_prior = len(prior_sample)
+
+    def dominant(items: list[Any], attr: str) -> str | None:
+        counts: dict[str, int] = {}
+        for c in items:
+            value = getattr(c, attr, None)
+            if value:
+                counts[value] = counts.get(value, 0) + 1
+        return max(counts, key=lambda k: counts[k]) if counts else None
+
+    reconciled: list[dict[str, Any]] = []
+    notes: list[str] = []
+    for ev in events:
+        dim = str(ev.get("dimension") or "")
+        if dim == "theme_emergence":
+            theme = ev.get("theme")
+            if not theme:
+                m = _THEME_IN_STATE_RX.search(str(ev.get("current_state", "")))
+                theme = m.group(1) if m else None
+            if not theme:
+                notes.append(f"{ev.get('change_id')}: theme unparseable — kept unreconciled")
+                reconciled.append(ev)
+                continue
+            cur_ids = current_by_theme.get(theme, [])
+            prior_ids = prior_by_theme.get(theme, [])
+            if len(cur_ids) < 2:
+                notes.append(
+                    f"{ev.get('change_id')} ({theme}): dropped — only "
+                    f"{len(cur_ids)} current-window occurrence(s) in the final corpus"
+                )
+                continue
+            out = dict(ev)
+            out["theme"] = theme
+            out["prior_theme_count"] = len(prior_ids)
+            out["current_theme_count"] = len(cur_ids)
+            out["prior_window_n"] = n_prior
+            out["current_evidence_ids"] = cur_ids
+            out["current_state"] = f"“{theme}” present in {len(cur_ids)} current-window artifacts"
+            if prior_ids:
+                out["lifecycle"] = "expanding"
+                out["prior_state"] = (
+                    f"“{theme}” present but rare in the prior window "
+                    f"({len(prior_ids)} of {n_prior} dated artifacts, "
+                    "incl. supporting-theme mentions)"
+                )
+                out["prior_evidence_ids"] = prior_ids[:5]
+                out["prior_evidence_role"] = "theme_occurrences"
+                out["alternative_explanations"] = [
+                    f"prior-window sample is small (n={n_prior}); the growth ratio may "
+                    "reflect collection depth rather than a real shift"
+                ] + [
+                    a
+                    for a in ev.get("alternative_explanations", [])
+                    if "coverage asymmetry" not in a
+                ]
+                if str(ev.get("prior_state", "")).find("not observed") >= 0:
+                    notes.append(
+                        f"{ev.get('change_id')} ({theme}): relabeled emerging→expanding — "
+                        f"final corpus has {len(prior_ids)} prior-window occurrence(s)"
+                    )
+            else:
+                out["lifecycle"] = "emerging"
+                out["prior_state"] = (
+                    f"“{theme}” not observed in any of the {n_prior} dated prior-window artifacts"
+                )
+                # Grounding gate: prior ids stay non-empty — the window sample,
+                # explicitly marked as such.
+                out["prior_evidence_ids"] = (
+                    ev.get("prior_evidence_ids") or prior_sample[:5]
+                ) or prior_sample[:5]
+                out["prior_evidence_role"] = "window_sample"
+            reconciled.append(out)
+        elif dim in _SCALAR_DIMENSIONS:
+            prior_val = dominant(prior_cls, dim)
+            cur_val = dominant(current_cls, dim)
+            same = (
+                prior_val is not None
+                and cur_val is not None
+                and str(prior_val).strip().lower() == str(ev.get("prior_state", "")).strip().lower()
+                and str(cur_val).strip().lower() == str(ev.get("current_state", "")).strip().lower()
+            )
+            if same:
+                out = dict(ev)
+                out["prior_window_n"] = n_prior
+                reconciled.append(out)
+            else:
+                notes.append(
+                    f"{ev.get('change_id')} ({dim}): dropped — mid-run verdict not "
+                    f"reproducible on the final corpus (now {prior_val!r} -> {cur_val!r})"
+                )
+        else:
+            reconciled.append(ev)
+    del art_by_id
+    return reconciled, notes

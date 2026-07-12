@@ -16,7 +16,7 @@ export function HBar({ data, unit = "", colorVar = "--accent" }) {
               style={{ width: `${(d.value / max) * 100}%`, background: `var(${d.colorVar || colorVar})` }}
             />
           </div>
-          <div className="hbar-val">{d.value}{unit}</div>
+          <div className="hbar-val">{d.display != null ? d.display : `${d.value}${unit}`}</div>
         </div>
       ))}
     </div>

@@ -18,7 +18,7 @@ from .graph import GraphContext
 from .schemas.common import utcnow
 from .state import DirectorState
 
-JSON_SCHEMA_VERSION = "1.2.0"
+JSON_SCHEMA_VERSION = "1.3.0"
 
 
 def run_output_dir(state: DirectorState, ctx: GraphContext) -> Path:
@@ -67,6 +67,35 @@ def _load(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
         (
             out["proof_gaps"] if m.__class__.__name__ == "MessageProofGap" else out["opportunities"]
         ).append(payload)
+
+    # Ads-transparency DISCOVERY junk (red-team #5: FAQ pages, blank-query
+    # pages, OTHER advertisers' pages all stamped advertiser=<competitor>)
+    # pollutes the corpus counts and the paid-media signal. Exclude them here —
+    # the single choke point every downstream count flows through — but never
+    # drop an artifact any evidence record cites (grounding safety).
+    from .synthesis import is_junk_ads_artifact
+
+    advertiser_domain = state.company.primary_domain if state.company else ""
+    cited_ids = {e.get("artifact_id") for e in out["evidence"]}
+    junk_ids = {
+        a["artifact_id"]
+        for a in out["artifacts"]
+        if a.get("source_type") == "google_ads"
+        and a["artifact_id"] not in cited_ids
+        and is_junk_ads_artifact(a.get("url", ""), a.get("metadata"), advertiser_domain)
+    }
+    if junk_ids:
+        out["ads_junk_excluded"] = len(junk_ids)
+        out["artifacts"] = [a for a in out["artifacts"] if a["artifact_id"] not in junk_ids]
+        out["artifact_models"] = [
+            m for m in out["artifact_models"] if m.artifact_id not in junk_ids
+        ]
+        out["classifications"] = [
+            c for c in out["classifications"] if c.get("artifact_id") not in junk_ids
+        ]
+        out["classification_models"] = [
+            m for m in out["classification_models"] if m.artifact_id not in junk_ids
+        ]
     return out
 
 
@@ -105,6 +134,19 @@ def _focal_classifications(ctx: GraphContext, state: DirectorState):
     ]
 
 
+def _focal_artifact_models(ctx: GraphContext, state: DirectorState) -> list[Any]:
+    """Load the focal run's artifact MODELS so the package can carry focal-side
+    denominators (source distribution, per-vertical counts) — without them a
+    niche-vs-big comparison has nothing to normalize against (red-team B16)."""
+    focal_run = _focal_run_id(ctx, state)
+    if not focal_run or ctx.repository is None:
+        return []
+    try:
+        return list(ctx.repository.list_artifacts(run_id=focal_run))
+    except Exception:
+        return []
+
+
 def _focal_evidence(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     """Load the focal (Rippling) run's artifacts + evidence so every
     'Rippling proof: …' claim is traceable WITHIN this deliverable (QA
@@ -128,14 +170,74 @@ def _focal_evidence(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     return out
 
 
-def _honest_coverage(state: DirectorState, data: dict[str, Any]) -> dict[str, str]:
-    """Cap website/pricing coverage claims when first-party evidence is thin.
+# Corpus-evidence floors: source_type -> [(threshold, dimension, level)].
+# Recomputed at render so a run whose in-loop bookkeeping missed a dimension
+# (red-team #2: 30 LinkedIn posts + 8 ads + 4 events all reported
+# "not_attempted") still reports what the corpus actually contains. Floors only
+# RAISE — they can never lower an honestly earned level. Ad artifacts are
+# discovery pointers (no creative text), so paid_media never rises above low.
+_CORPUS_COVERAGE_FLOORS: list[tuple[str, int, str, str]] = [
+    ("linkedin_post", 1, "public_linkedin", "low"),
+    ("linkedin_post", 5, "public_linkedin", "medium"),
+    ("linkedin", 1, "public_linkedin", "low"),
+    ("google_ads", 1, "paid_media", "low"),
+    ("meta_ads", 1, "paid_media", "low"),
+    ("linkedin_ads", 1, "paid_media", "low"),
+    ("events", 1, "events", "low"),
+    ("events", 3, "events", "medium"),
+    ("reviews", 1, "customer_proof", "low"),
+    ("jobs", 1, "personas_and_jobs", "low"),
+    ("ooh", 1, "out_of_home", "low"),
+    ("news", 1, "news_and_launches", "low"),
+    ("wayback", 1, "historical_website", "low"),
+    ("wayback", 1, "historical_messages", "low"),
+    ("similarweb", 1, "commercial_motion", "low"),
+]
 
-    'high' on 6 first-party fetches after a runtime_exhausted stop overstated
-    coverage (audit): cap current_website + pricing_and_packaging at 'medium'
-    when first-party webpage fetches are below threshold or the run hit its
-    runtime cap mid-collection."""
+
+def _honest_coverage(
+    state: DirectorState,
+    data: dict[str, Any],
+    ceps: list[dict[str, Any]] | None = None,
+) -> dict[str, str]:
+    """Recompute-then-cap coverage from the (junk-filtered) corpus.
+
+    1. RAISE: apply corpus-evidence floors — a dimension with real collected
+       artifacts can't read "not_attempted" (red-team false absences).
+    2. Derived dims: category_entry_points from the CEP rows, launches_current
+       from current-window news.
+    3. CAP: keep the thin-first-party downgrade — 'high' on 6 first-party
+       fetches after a runtime_exhausted stop overstated coverage (audit)."""
+    from . import coverage as cov
+
     coverage = dict(state.coverage)
+    by_type: dict[str, int] = {}
+    for a in data["artifacts"]:
+        st = a.get("source_type") or ""
+        by_type[st] = by_type.get(st, 0) + 1
+    for source_type, threshold, dim, level in _CORPUS_COVERAGE_FLOORS:
+        if by_type.get(source_type, 0) >= threshold:
+            cov.raise_coverage(coverage, dim, level)
+    observed_ceps = [r for r in (ceps or []) if r.get("competitor_pages", 0) > 0]
+    if observed_ceps:
+        cov.raise_coverage(
+            coverage, "category_entry_points", "medium" if len(observed_ceps) >= 5 else "low"
+        )
+    current_w = next(
+        (w for w in state.time_windows if getattr(w, "purpose", None) == "current"), None
+    )
+    if current_w is not None:
+        current_news = [
+            a
+            for a in data["artifacts"]
+            if a.get("source_type") == "news"
+            and str(a.get("published_at") or "") >= current_w.start_at.isoformat()[:10]
+        ]
+        if current_news:
+            cov.raise_coverage(
+                coverage, "launches_current", "medium" if len(current_news) >= 3 else "low"
+            )
+
     first_party = sum(1 for a in data["artifacts"] if a.get("source_type") == "webpage")
     # Thin = few first-party pages. A runtime-capped stop only downgrades when
     # the page evidence is ALSO modest — 60+ fetched pages is genuinely high
@@ -181,7 +283,9 @@ def _linkedin_posts(data: dict[str, Any]) -> list[dict[str, Any]]:
                 "primary_message": c.get("primary_message"),
                 "competitive_stance": c.get("competitive_stance"),
                 "personas": c.get("personas", []),
-                "excerpt": (a.get("normalized_text") or "")[:280],
+                "excerpt": _clean_linkedin_excerpt(
+                    a.get("normalized_text") or "", c.get("primary_message")
+                ),
             }
         )
     return out
@@ -210,20 +314,40 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     dom = synthesis.dominant_message(data["classification_models"], data["artifact_models"])
     skew = synthesis.corpus_skew(data["artifact_models"])
     dist = synthesis.source_distribution(data["artifact_models"])
-    coverage_detail = [
-        json.loads(cd.model_dump_json())
-        for cd in synthesis.coverage_details(
-            state, data["artifact_models"], data["classification_models"]
-        )
-    ]
     motion = synthesis.commercial_motion(data["classification_models"])
     positioning = synthesis.product_positioning(data["classification_models"])
     artifact_source = {a["artifact_id"]: a["source_type"] for a in data["artifacts"]}
     matrix = synthesis.persona_channel_funnel(data["classification_models"], artifact_source)
     focal_cls_models = _focal_classifications(ctx, state)
+    focal_artifact_models = _focal_artifact_models(ctx, state)
     ceps = synthesis.category_entry_points(data["classification_models"], focal_cls_models)
+    # Coverage is recomputed from the corpus AFTER the CEP rows exist (the
+    # category_entry_points dimension derives from them).
+    honest_coverage = _honest_coverage(state, data, ceps)
+    coverage_detail = [
+        json.loads(cd.model_dump_json())
+        for cd in synthesis.coverage_details(
+            state,
+            data["artifact_models"],
+            data["classification_models"],
+            coverage=honest_coverage,
+        )
+    ]
+    # Reconcile persisted (mid-run) change events against the FINAL corpus so
+    # the package can never assert an emergence its own baseline refutes.
+    from .processing.temporal import reconcile_change_events
+
+    change_events, reconciliation_notes = reconcile_change_events(
+        data["change_events"],
+        data["classification_models"],
+        data["artifact_models"],
+        state.time_windows,
+    )
     # Key-topic comparison data: theme counts for BOTH companies so the UI can
-    # graph 'key related topics per company' side by side.
+    # graph 'key related topics per company' side by side. Selection = union of
+    # each side's top-10 BY SHARE; every selected theme carries its TRUE count
+    # on both sides (red-team: independent top-10 truncation made the UI render
+    # fabricated zeros for themes outside one side's top-10).
     from collections import Counter as _Counter
 
     _comp_themes: _Counter[str] = _Counter(
@@ -232,9 +356,59 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     _focal_themes: _Counter[str] = _Counter(
         c.primary_theme for c in focal_cls_models if c.primary_theme
     )
+    _nc = max(1, len(data["classification_models"]))
+    _nf = max(1, len(focal_cls_models))
+    _selected = {t for t, _ in _comp_themes.most_common(10)} | {
+        t for t, _ in _focal_themes.most_common(10)
+    }
     theme_comparison = {
-        "competitor_themes": dict(_comp_themes.most_common(10)),
-        "focal_themes": dict(_focal_themes.most_common(10)),
+        "competitor_themes": {t: _comp_themes.get(t, 0) for t in _selected},
+        "focal_themes": {t: _focal_themes.get(t, 0) for t in _selected},
+        "competitor_shares": {t: round(_comp_themes.get(t, 0) / _nc, 4) for t in _selected},
+        "focal_shares": {t: round(_focal_themes.get(t, 0) / _nf, 4) for t in _selected},
+        "competitor_n_classified": len(data["classification_models"]),
+        "focal_n_classified": len(focal_cls_models),
+        "note": (
+            "shares = count / n classified artifacts of that company; cross-company "
+            "bars compare shares, raw counts shown alongside"
+        ),
+    }
+    # Corpus-size normalization context: with a niche competitor (12-page site)
+    # vs a large focal corpus, raw counts fabricate verdicts — every consumer
+    # (UI banner, dashboard, brief callout) shares this ONE rule.
+    _n_min = (
+        min(len(data["classification_models"]), len(focal_cls_models))
+        if focal_cls_models
+        else len(data["classification_models"])
+    )
+    _asym = (
+        round(
+            max(len(data["classification_models"]), len(focal_cls_models)) / max(1, _n_min),
+            2,
+        )
+        if focal_cls_models
+        else None
+    )
+    corpus_normalization = {
+        "competitor": {
+            "name": state.company.canonical_name if state.company else state.company_input,
+            "n_artifacts": len(data["artifacts"]),
+            "n_classified": len(data["classification_models"]),
+        },
+        "focal": {
+            "name": state.focal_company.canonical_name if state.focal_company else None,
+            "n_artifacts": len(focal_artifact_models),
+            "n_classified": len(focal_cls_models),
+        },
+        "asymmetry_ratio": _asym,
+        "small_corpus": _n_min < 15,
+        "show_banner": bool((_asym or 0) > 3 or _n_min < 20),
+        "normalization_note": (
+            "All cross-company comparisons (CEP ownership, key topics, per-vertical) are "
+            "computed on share-of-corpus (count / classified artifacts per company); raw "
+            "counts are retained but are not directly comparable across corpora of "
+            "different sizes."
+        ),
     }
     focal_evidence = _focal_evidence(ctx, state)
     linkedin_posts = _linkedin_posts(data)
@@ -250,6 +424,21 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     vertical_analysis = synthesis.product_vertical_analysis(
         data["classification_models"], data["artifact_models"], taxonomy
     )
+    # Focal-side denominators for per-product (vertical-scoped) comparison —
+    # same function, same taxonomy, zero new analytics in the UI (§40.6).
+    focal_vertical_analysis = (
+        synthesis.product_vertical_analysis(focal_cls_models, focal_artifact_models, taxonomy)
+        if focal_cls_models
+        else {"verticals": [], "by_artifact": {}}
+    )
+    _focal_verts_by_name = {v["vertical"]: v for v in focal_vertical_analysis.get("verticals", [])}
+    for v in vertical_analysis.get("verticals", []):
+        fv = _focal_verts_by_name.get(v["vertical"], {})
+        v["focal_n_artifacts"] = fv.get("n_artifacts", 0)
+        v["focal_top_themes"] = fv.get("top_themes", [])
+        v["focal_theme_counts"] = fv.get("theme_counts", {})
+        v["competitor_share"] = round(v.get("n_artifacts", 0) / _nc, 4)
+        v["focal_share"] = round(fv.get("n_artifacts", 0) / _nf, 4)
     # Tag each LinkedIn post with its product verticals (per-offering view).
     for lp in linkedin_posts:
         lp["verticals"] = vertical_analysis["by_artifact"].get(lp["artifact_id"], [])
@@ -259,7 +448,11 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     for row in ceps:
         _vc: dict[str, int] = {}
         for c in data["classifications"]:
-            if row.get("cep") in (c.get("category_entry_points") or []):
+            # CEP keys are label-normalized at synthesis; normalize here too.
+            raw_ceps = {
+                synthesis._norm_label(x) for x in (c.get("category_entry_points") or []) if x
+            }
+            if row.get("cep") in raw_ceps:
                 for v in _by_artifact.get(c.get("artifact_id"), []):
                     _vc[v] = _vc.get(v, 0) + 1
         row["top_verticals"] = [v for v, _ in sorted(_vc.items(), key=lambda kv: -kv[1])[:2]]
@@ -283,18 +476,20 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         {"name": "category_entry_point_ownership", "matrix": ceps},
     ]
     claims_list = data["claims"]
-    material_total = sum(
-        1 for c in claims_list if c.get("status") not in ("rejected", "contradicted")
-    )
+    # Cited/total are computed over the SAME claim set (red-team #6: cited had
+    # no status filter, so a rejected-but-cited claim could push cited > total).
+    material_claims = [
+        c for c in claims_list if c.get("status") not in ("rejected", "contradicted")
+    ]
     eval_summary = {
         "n_artifacts": len(data["artifacts"]),
         "n_classifications": len(data["classifications"]),
         "n_claims": len(claims_list),
         "n_opportunities": len(data["opportunities"]),
         "n_proof_gaps": len(data["proof_gaps"]),
-        "n_change_events": len(data["change_events"]),
-        "material_claims_total": material_total,
-        "material_claims_cited": sum(1 for c in claims_list if c.get("evidence_ids")),
+        "n_change_events": len(change_events),
+        "material_claims_total": len(material_claims),
+        "material_claims_cited": sum(1 for c in material_claims if c.get("evidence_ids")),
         "corpus_skew_warnings": len(skew),
         "note": "In-package self-summary. Full graded benchmark: `competitive-agent eval-benchmark`.",
     }
@@ -323,6 +518,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
             "execution_mode": state.execution_mode,
             "generated_at": utcnow().isoformat(),
             "stop_reason": state.stop_reason,
+            "stop_reason_label": _stop_reason_label(state.stop_reason),
             "iterations": state.iteration,
             "tool_cost_usd": round(state.spent_usd, 4),
             "model_cost_usd": round(state.model_cost_usd, 4),
@@ -342,8 +538,12 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         ],
         "dominant_message": dom,
         "source_distribution": dist,
+        "focal_source_distribution": synthesis.source_distribution(focal_artifact_models)
+        if focal_artifact_models
+        else {},
         "corpus_skew_warnings": skew,
-        "coverage": _honest_coverage(state, data),
+        "corpus_normalization": corpus_normalization,
+        "coverage": honest_coverage,
         "coverage_detail": coverage_detail,
         "commercial_motion": motion,
         "product_positioning": positioning,
@@ -362,6 +562,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Per-offering view: how the competitor positions in each product
         # vertical (deterministic keyword mapping; method disclosed inside).
         "product_vertical_analysis": vertical_analysis,
+        "focal_vertical_analysis": focal_vertical_analysis,
         # Paid-vs-organic + employee-advocacy theme alignment (deterministic).
         "channel_alignment": channel_alignment,
         "theme_comparison": theme_comparison,
@@ -373,15 +574,22 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # exposed via product_positioning + category_entry_points today.
         "product_portfolios": [],
         "launches": [],
-        "change_events": data["change_events"],
+        "change_events": change_events,
+        "change_event_reconciliation": reconciliation_notes,
         "matrices": matrices,
         "proof_gaps": data["proof_gaps"],
         "opportunities": data["opportunities"],
         "opportunities_rejected": (
             (getattr(ctx, "scratch", None) or {}).get("opportunities_rejected", [])
         ),
-        "limitations": state.limitations,
-        "negative_observations": state.negative_observations,
+        "limitations": _derived_limitations(
+            state, honest_coverage, {"artifacts": data["artifacts"]}
+        ),
+        "negative_observations": _reconcile_negatives(
+            state.negative_observations,
+            {"similarweb": similarweb},
+            data.get("ads_junk_excluded", 0),
+        ),
         "tool_failures": [json.loads(f.model_dump_json()) for f in state.failed_actions.values()],
         "trace_summary": {"tool_calls": state.tool_calls_made},
         "eval_summary": eval_summary,
@@ -441,9 +649,11 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         rank = {"high": 3, "medium": 2, "low": 1}
         top = max(changes, key=lambda c: rank.get(str(c.get("confidence", "low")), 0))
         conf = str(top.get("confidence", "low"))
-        emerging = str(top.get("lifecycle", "")) == "emerging"
-        if conf in ("high", "medium") and not emerging:
+        lifecycle = str(top.get("lifecycle", ""))
+        if conf in ("high", "medium") and lifecycle not in ("emerging", "expanding"):
             label = "Confirmed change"
+        elif lifecycle == "expanding":
+            label = f"Expanding theme ({conf} confidence — present prior, more present now)"
         else:
             label = f"Emerging signal ({conf} confidence, needs a prior-window baseline)"
         add(f"- **{label}:** {top['dimension']} — {top['prior_state']} → {top['current_state']}.")
@@ -498,7 +708,11 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     add(f"\n### Strongest message–proof gaps (competitor vs {focal})")
     if gaps:
-        add("| Gap | Competitor proof | " + focal + " proof | Weakest vertical | Stance | Specificity |")
+        add(
+            "| Gap | Competitor proof | "
+            + focal
+            + " proof | Weakest vertical | Stance | Specificity |"
+        )
         add("|---|---|---|---|---|---|")
         for g in gaps[:5]:
             label = g.get("short_label") or g["claim_text"][:40]
@@ -608,7 +822,9 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         )
         mix = m.get("pricing_disclosure_mix") or {}
         mix_str = (
-            " (observed mix: " + ", ".join(f"{k}:{v}" for k, v in sorted(mix.items(), key=lambda kv: -kv[1])) + ")"
+            " (observed mix: "
+            + ", ".join(f"{k}:{v}" for k, v in sorted(mix.items(), key=lambda kv: -kv[1]))
+            + ")"
             if mix
             else ""
         )
@@ -673,17 +889,31 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     ceps = pkg.get("category_entry_points") or []
     if ceps:
         add(f"\n## Category entry points ({company} vs {focal})\n")
-        add("| Buying trigger | Competitor | " + focal + " | Ownership | Verticals |")
-        add("|---|---:|---:|---|---|")
-        for r in ceps[:10]:
+        shown = [r for r in ceps if r.get("ownership") != "insufficient_sample"]
+        omitted = len(ceps) - len(shown)
+        add("| Buying trigger | Competitor | " + focal + " | Ownership | Basis | Verticals |")
+        add("|---|---:|---:|---|---|---|")
+        for r in shown[:14]:
             tv = ", ".join(str(v).replace("_", " ") for v in (r.get("top_verticals") or [])) or "—"
+            cn = f"{r['competitor_pages']}"
+            fn = f"{r['focal_pages']}"
+            if r.get("competitor_share") is not None:
+                cn += f" ({r['competitor_share']:.0%})"
+                fn += f" ({r['focal_share']:.0%})"
             add(
-                f"| {r['cep']} | {r['competitor_pages']} | {r['focal_pages']} | "
-                f"{r['ownership']} | {tv} |"
+                f"| {str(r['cep']).replace('_', ' ')} | {cn} | {fn} | "
+                f"{r['ownership']} | {r.get('ownership_basis', '—')} | {tv} |"
+            )
+        if omitted:
+            add(
+                f"\n_{omitted} low-sample trigger(s) (too few pages on either side to call) "
+                "omitted here — full list incl. `insufficient_sample` rows in the JSON/UI._"
             )
         add(
-            "\n_Ownership counts are corpus-wide; the Verticals column shows which product "
-            "categories carry each trigger. For a per-vertical read, scope the chat to that vertical._"
+            "\n_Ownership is SHARE-normalized (count ÷ that company's classified corpus) so "
+            "different corpus sizes can't fabricate a verdict; the Verticals column shows which "
+            "product categories carry each trigger. For a per-vertical read, scope the chat to "
+            "that vertical._"
         )
 
     # --- Persona × channel matrix (feedback #21) ---------------------------
@@ -706,11 +936,12 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     # --- Competitor LinkedIn employee posts --------------------------------
     posts = pkg.get("linkedin_posts") or []
-    add(f"\n## {company} LinkedIn employee posts ({len(posts)})\n")
+    _n_posts_shown = min(15, len(posts))
+    add(f"\n## {company} LinkedIn employee posts (showing {_n_posts_shown} of {len(posts)})\n")
     if posts:
         add(
             "Individual public posts (Exa-extracted text + real post link), classified. "
-            "Click a link to review the post on LinkedIn.\n"
+            "Click a link to review the post on LinkedIn. Full list in the JSON/UI.\n"
         )
         add("| Author | Theme | Stance | Post | Excerpt |")
         add("|---|---|---|---|---|")
@@ -802,18 +1033,24 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     add("\n## Strategy over time\n")
     tb = pkg.get("temporal_baseline") or {}
     if tb.get("prior_window"):
-        pw, cw = tb["prior_window"], tb.get("current_window", {})
+        pw = tb["prior_window"]
         add(
             f"**Prior window baseline ({pw['start']} → {pw['end']}, {pw['n_artifacts']} dated "
             f"artifacts):** themes observed then — "
-            + (", ".join(f"{t} ({n})" for t, n in pw.get("themes", {}).items()) or "none classified")
+            + (
+                ", ".join(f"{t} ({n})" for t, n in pw.get("themes", {}).items())
+                or "none classified"
+            )
         )
         if tb.get("stable_themes"):
             add("- **Stable (both windows):** " + ", ".join(tb["stable_themes"]))
         if tb.get("emerged_themes"):
             add("- **Emerged (current only):** " + ", ".join(tb["emerged_themes"]))
         if tb.get("receded_themes"):
-            add("- **Receded (prior only — possibly de-emphasized):** " + ", ".join(tb["receded_themes"]))
+            add(
+                "- **Receded (prior only — possibly de-emphasized):** "
+                + ", ".join(tb["receded_themes"])
+            )
         add(f"- _{tb.get('note')}_\n")
     if changes:
         for ch in changes[:4]:
@@ -869,6 +1106,14 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     add(
         f"- Artifacts collected: {len(pkg['artifacts'])} · classified: {len(cls)} · claims: {len(pkg['claims'])}"
     )
+    _cn = pkg.get("corpus_normalization") or {}
+    if _cn.get("show_banner"):
+        add(
+            f"\n> **Corpus-size asymmetry:** {_cn['competitor']['name']} "
+            f"{_cn['competitor']['n_classified']} classified artifacts vs "
+            f"{_cn['focal'].get('name') or 'focal'} {_cn['focal']['n_classified']} "
+            f"(ratio {_cn.get('asymmetry_ratio')}). {_cn['normalization_note']}\n"
+        )
     if pkg["corpus_skew_warnings"]:
         add("- **Corpus-skew warnings:**")
         for w in pkg["corpus_skew_warnings"]:
@@ -890,14 +1135,15 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     # --- Limitations (feedback #32) ----------------------------------------
     add("\n## Limitations and missing data\n")
-    if state.limitations:
-        for item in state.limitations:
+    limitations = pkg.get("limitations") or []
+    if limitations:
+        for item in limitations:
             add(f"- {item}")
     else:
         add("- No blocking limitations recorded.")
     # Negative observations ("searched X, found nothing / provider empty") are
     # findings — a brief-only reader must see them, not just the trace (audit).
-    negs = list(dict.fromkeys(state.negative_observations))[:10]
+    negs = list(dict.fromkeys(pkg.get("negative_observations") or []))[:10]
     if negs:
         add("\n**Sources attempted with no usable data (negative observations):**\n")
         for neg in negs:
@@ -929,7 +1175,9 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         )
 
     if focal_arts:
-        add(f"\n**{focal} (focal mirror) sources ({n_focal})** — run `{focal_ev.get('run_id', '?')}`\n")
+        add(
+            f"\n**{focal} (focal mirror) sources ({n_focal})** — run `{focal_ev.get('run_id', '?')}`\n"
+        )
         add("| Artifact | Source | Date | URL |")
         add("|---|---|---|---|")
         for a in focal_arts:
@@ -947,7 +1195,9 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         )
 
     add(
-        f"\n---\n*Stop reason: `{state.stop_reason}` · iterations {state.iteration} · tool calls {state.tool_calls_made}*"
+        f"\n---\n*Stop reason: {_stop_reason_label(state.stop_reason)} "
+        f"(raw: `{state.stop_reason}`) · iterations {state.iteration} · "
+        f"tool calls {state.tool_calls_made}*"
     )
     return "\n".join(x for x in L if x is not None)
 
@@ -997,14 +1247,139 @@ def _stance_distribution(cls: list[dict]) -> list[tuple[str, int]]:
 
 
 def _largest_uncertainty(pkg: dict) -> str:
+    """Derived ONLY from data already in the package so it can never contradict
+    the source table (red-team #3: the old hardcoded fallback said paid
+    media/social 'were not collected' while the same brief listed 30 LinkedIn
+    posts and 8 ads)."""
     if pkg["corpus_skew_warnings"]:
         return pkg["corpus_skew_warnings"][0]
-    if not pkg["change_events"]:
-        return "historical sampling is too shallow to confirm messaging shifts"
     lows = [cd for cd in pkg["coverage_detail"] if cd["level"] in ("low", "unavailable")]
     if lows:
-        return f"low coverage on {', '.join(cd['dimension'] for cd in lows[:3])}"
-    return "optional channels (paid media, social) were not collected"
+        return f"coverage is thin on {', '.join(cd['dimension'] for cd in lows[:3])}"
+    nas = [cd for cd in pkg["coverage_detail"] if cd["level"] == "not_attempted"]
+    if nas:
+        return (
+            f"{len(nas)} dimensions were not attempted this run "
+            f"({', '.join(cd['dimension'] for cd in nas[:3])}…)"
+        )
+    tb = pkg.get("temporal_baseline") or {}
+    n_prior = (tb.get("prior_window") or {}).get("n_artifacts", 0)
+    n_current = (tb.get("current_window") or {}).get("n_artifacts", 0)
+    if n_prior and n_current and n_prior * 4 <= n_current:
+        return (
+            f"the prior window holds only {n_prior} dated artifacts vs {n_current} current — "
+            "temporal reads are asymmetric"
+        )
+    return "no single dominant uncertainty; see the coverage table"
+
+
+_STOP_REASON_LABELS = {
+    "runtime_exhausted": "budget-bounded (hit the research-time cap)",
+    "budget_exhausted": "budget-bounded (hit the spend cap)",
+    "max_iterations_reached": "budget-bounded (iteration cap)",
+    "tool_call_cap_reached": "budget-bounded (tool-call cap)",
+    "required_coverage_reached": "completed (required coverage reached)",
+}
+
+
+def _stop_reason_label(reason: str | None) -> str:
+    """Human phrasing for the stop enum — 'runtime_exhausted' reads as failure
+    to an exec when it actually means 'ran to its research budget'."""
+    r = str(reason or "")
+    if r in _STOP_REASON_LABELS:
+        return _STOP_REASON_LABELS[r]
+    if r.startswith("required_dimensions_unavailable_after_exhaustion"):
+        return "completed (remaining required dimensions publicly unavailable)"
+    if r.startswith("no_remaining_actions_with_expected_value"):
+        return "completed (no further actions with expected value)"
+    if r.startswith("node_error") or r.startswith("unknown_node"):
+        return "stopped on an internal error"
+    return r or "unknown"
+
+
+def _derived_limitations(state: DirectorState, coverage: dict[str, str], pkg: dict) -> list[str]:
+    """Merge recorded limitations with render-derived ones. A budget-bounded
+    stop with unattempted dimensions IS a limitation even when no collection
+    step actively failed (red-team #3: 'No blocking limitations recorded' next
+    to runtime_exhausted + 11 untouched dims)."""
+    out = list(state.limitations)
+    unattempted = sorted(d for d, level in coverage.items() if level == "not_attempted")
+    if str(state.stop_reason or "").startswith(
+        ("runtime_exhausted", "budget_exhausted", "max_iterations", "tool_call_cap")
+    ):
+        n_sources = len({a.get("source_type") for a in pkg.get("artifacts", [])})
+        item = (
+            f"Run ended {_stop_reason_label(state.stop_reason)} after {state.iteration} "
+            f"iterations covering {n_sources} source classes"
+        )
+        if unattempted:
+            item += (
+                f"; {len(unattempted)} dimensions remain unattempted: "
+                f"{', '.join(unattempted[:8])}" + ("…" if len(unattempted) > 8 else "")
+            )
+        out.append(item)
+    elif unattempted:
+        out.append(
+            f"{len(unattempted)} dimensions not attempted this run: {', '.join(unattempted[:8])}"
+            + ("…" if len(unattempted) > 8 else "")
+        )
+    return list(dict.fromkeys(out))
+
+
+def _reconcile_negatives(negatives: list[str], pkg: dict, ads_junk_excluded: int) -> list[str]:
+    """Annotate (never drop) negative observations contradicted by later
+    successes (red-team #4: 'Similarweb … nothing synthesized' shipped next to
+    a fully populated Similarweb block)."""
+    out: list[str] = []
+    similarweb_ok = bool((pkg.get("similarweb") or {}).get("metrics"))
+    for neg in dict.fromkeys(negatives):
+        if similarweb_ok and "similarweb" in neg.lower() and "superseded" not in neg:
+            neg += " (superseded: a later Similarweb call succeeded — see Traffic & channel mix)"
+        out.append(neg)
+    if ads_junk_excluded:
+        out.append(
+            f"{ads_junk_excluded} google_ads discovery artifacts excluded at render "
+            "(FAQ/blank/other-advertiser transparency pages); retained /advertiser pages "
+            "are unverified discovery pointers"
+        )
+    return out
+
+
+_LINKEDIN_WALL_MARKERS = (
+    "Agree & Join LinkedIn",
+    "Agree & Join",
+    "Sign in to view",
+    "By clicking Continue",
+    "Join now Sign in",
+    "Skip to main content",
+    "Join LinkedIn",
+)
+_LINKEDIN_HEADER_RX = None  # compiled lazily
+
+
+def _clean_linkedin_excerpt(raw: str, fallback: str | None) -> str:
+    """Strip LinkedIn login-wall boilerplate and share-card headers from a post
+    excerpt (red-team: 16/30 excerpts were 'Agree & Join…' walls, not posts).
+    Falls back to the classifier's primary_message when nothing survives."""
+    global _LINKEDIN_HEADER_RX
+    import re as _re
+
+    if _LINKEDIN_HEADER_RX is None:
+        _LINKEDIN_HEADER_RX = _re.compile(
+            r"(^#{1,2}\s*(Post by\s+)?[^\n]*·\s*LinkedIn[^\n]*$)|"
+            r"(\|\s*[^|\n]*posted on the topic\s*\|\s*LinkedIn.*)",
+            _re.MULTILINE,
+        )
+    text = raw or ""
+    for marker in _LINKEDIN_WALL_MARKERS:
+        idx = text.find(marker)
+        if idx >= 0:
+            text = text[:idx]
+    text = _LINKEDIN_HEADER_RX.sub(" ", text)
+    text = _re.sub(r"\s+", " ", text).strip()
+    if len(text) < 40:
+        return (fallback or "")[:280]
+    return text[:280]
 
 
 def render_run_outputs(state: DirectorState, ctx: GraphContext) -> dict[str, Path]:

@@ -29,7 +29,9 @@ def test_build_context_digests_the_findings():
         "companies": [{"canonical_name": "Deel"}, {"canonical_name": "Rippling"}],
         "dominant_message": {"label": "All-in-one platform", "theme": "consolidation"},
         "eval_summary": {"n_artifacts": 50, "n_proof_gaps": 5, "n_opportunities": 3},
-        "proof_gaps": [{"short_label": "compliance", "attackability": "medium", "proof_strength": "weak"}],
+        "proof_gaps": [
+            {"short_label": "compliance", "attackability": "medium", "proof_strength": "weak"}
+        ],
         "opportunities": [{"title": "Workflow demo", "message_angle": "show the flow"}],
         "linkedin_posts": [{"author": "Dana", "theme": "consolidation", "excerpt": "one platform"}],
     }
@@ -43,7 +45,9 @@ def test_chat_answers_from_run_and_suggests_followups(isolated_env: Path):
     from competitive_agent.chat import chat_about_run
     from competitive_agent.runner import run_analysis
 
-    state = run_analysis("deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com")
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
     res = asyncio.run(
         chat_about_run(state.run_id, "What's their most attackable gap?", execution_mode="fixture")
     )
@@ -65,7 +69,9 @@ def test_chat_api_endpoint(isolated_env: Path):
     from competitive_agent.api import app
     from competitive_agent.runner import run_analysis
 
-    state = run_analysis("deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com")
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
     client = TestClient(app)
     # missing question -> 400
     assert client.post(f"/api/runs/{state.run_id}/chat", json={"question": ""}).status_code == 400

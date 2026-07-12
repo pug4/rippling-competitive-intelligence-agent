@@ -95,8 +95,17 @@ def _classifications_block(pkg: dict[str, Any], urls: dict[str, str]) -> str:
             f"theme={c.get('primary_theme')}",
             f'msg="{(c.get("primary_message") or "")[:120]}"',
         ]
-        for f in ("segments", "personas", "category_entry_points", "claim_types", "proof_types",
-                  "villain_exact_wording", "competitive_stance", "cta", "pricing_disclosure_level"):
+        for f in (
+            "segments",
+            "personas",
+            "category_entry_points",
+            "claim_types",
+            "proof_types",
+            "villain_exact_wording",
+            "competitive_stance",
+            "cta",
+            "pricing_disclosure_level",
+        ):
             if c.get(f):
                 bits.append(f"{f}={c.get(f)}")
         lines.append(f"  - [{u}] " + " · ".join(str(b) for b in bits))
@@ -110,7 +119,9 @@ def _claims_block(pkg: dict[str, Any], ev_by_id: dict[str, dict], urls: dict[str
         for eid in (cl.get("evidence_ids") or [])[:4]:
             ev = ev_by_id.get(eid)
             if ev:
-                just.append(f'"{(ev.get("exact_excerpt") or "")[:140]}" [{urls.get(str(ev.get("artifact_id")), "")}]')
+                just.append(
+                    f'"{(ev.get("exact_excerpt") or "")[:140]}" [{urls.get(str(ev.get("artifact_id")), "")}]'
+                )
         lines.append(
             f"  - CLAIM [{cl.get('status')}, conf {cl.get('claim_confidence')}]: {cl.get('statement')}\n"
             f"      justification: {cl.get('confidence_reason') or 'n/a'}\n"
@@ -133,7 +144,11 @@ def _evidence_block(pkg: dict[str, Any], urls: dict[str, str], budget: int) -> t
         lines.append(line)
         used += len(line)
         shown += 1
-    note = "" if shown >= total else f"\n  … ({total - shown} more excerpts omitted for length; ask about a specific source)"
+    note = (
+        ""
+        if shown >= total
+        else f"\n  … ({total - shown} more excerpts omitted for length; ask about a specific source)"
+    )
     return "\n".join(lines) + note, used
 
 
@@ -170,7 +185,11 @@ def build_context(
     if vertical:
         pkg = scope_to_vertical(pkg, vertical)
     companies = pkg.get("companies", [])
-    competitor = (companies[0].get("canonical_name") if companies else pkg.get("scope", {}).get("company_input")) or "the competitor"
+    competitor = (
+        companies[0].get("canonical_name")
+        if companies
+        else pkg.get("scope", {}).get("company_input")
+    ) or "the competitor"
     focal = companies[1].get("canonical_name") if len(companies) > 1 else "Rippling"
     dom = pkg.get("dominant_message", {}) or {}
     es = pkg.get("eval_summary", {}) or {}
@@ -182,53 +201,110 @@ def build_context(
     sections = [
         f"COMPETITOR: {competitor}   FOCAL COMPANY: {focal}",
         f"Dominant message: {dom.get('label') or 'n/a'} (theme: {dom.get('theme')}; basis: {dom.get('reason')})",
-        f"Corpus: {es.get('n_artifacts', '?')} artifacts · {es.get('n_classifications','?')} classifications · "
+        f"Corpus: {es.get('n_artifacts', '?')} artifacts · {es.get('n_classifications', '?')} classifications · "
         f"{es.get('n_claims', '?')} claims · {es.get('n_proof_gaps', '?')} proof gaps · "
-        f"{es.get('n_opportunities', '?')} opportunities · {es.get('n_change_events','?')} changes.",
+        f"{es.get('n_opportunities', '?')} opportunities · {es.get('n_change_events', '?')} changes.",
     ]
     # Full structured findings (always included).
     if pkg.get("proof_gaps"):
-        sections.append("ALL MESSAGE–PROOF GAPS:\n" + _fmt_list(
-            pkg["proof_gaps"],
-            ["short_label", "claim_text", "attackability", "proof_strength", "focal_proof_strength",
-             "claim_specificity", "missing_proof", "actionable_interpretation", "why_attack_might_backfire"]))
+        sections.append(
+            "ALL MESSAGE–PROOF GAPS:\n"
+            + _fmt_list(
+                pkg["proof_gaps"],
+                [
+                    "short_label",
+                    "claim_text",
+                    "attackability",
+                    "proof_strength",
+                    "focal_proof_strength",
+                    "claim_specificity",
+                    "missing_proof",
+                    "actionable_interpretation",
+                    "why_attack_might_backfire",
+                ],
+            )
+        )
     if pkg.get("opportunities"):
-        sections.append(f"ALL {focal} OPPORTUNITIES:\n" + _fmt_list(
-            pkg["opportunities"],
-            ["title", "message_angle", "focal_proof_status", "focal_current_usage",
-             "structural_defensibility", "why_this_could_backfire", "experiment_hypothesis", "kill_rule"]))
+        sections.append(
+            f"ALL {focal} OPPORTUNITIES:\n"
+            + _fmt_list(
+                pkg["opportunities"],
+                [
+                    "title",
+                    "message_angle",
+                    "focal_proof_status",
+                    "focal_current_usage",
+                    "structural_defensibility",
+                    "why_this_could_backfire",
+                    "experiment_hypothesis",
+                    "kill_rule",
+                ],
+            )
+        )
     if pkg.get("claims"):
-        sections.append("ALL GROUNDED CLAIMS (with justifications + cited evidence):\n"
-                        + _claims_block(pkg, ev_by_id, urls))
+        sections.append(
+            "ALL GROUNDED CLAIMS (with justifications + cited evidence):\n"
+            + _claims_block(pkg, ev_by_id, urls)
+        )
     if pkg.get("classifications"):
         sections.append("ALL CLASSIFICATIONS (per source):\n" + _classifications_block(pkg, urls))
     if pkg.get("change_events"):
-        sections.append("STRATEGY OVER TIME:\n" + _fmt_list(
-            pkg["change_events"], ["dimension", "prior_state", "current_state", "confidence",
-                                   "lifecycle", "alternative_explanations"]))
+        sections.append(
+            "STRATEGY OVER TIME:\n"
+            + _fmt_list(
+                pkg["change_events"],
+                [
+                    "dimension",
+                    "prior_state",
+                    "current_state",
+                    "confidence",
+                    "lifecycle",
+                    "alternative_explanations",
+                ],
+            )
+        )
     if pkg.get("linkedin_posts"):
-        sections.append(f"{competitor} LINKEDIN EMPLOYEE POSTS:\n" + _fmt_list(
-            pkg["linkedin_posts"], ["author", "author_role", "theme", "competitive_stance",
-                                    "post_url", "excerpt"]))
+        sections.append(
+            f"{competitor} LINKEDIN EMPLOYEE POSTS:\n"
+            + _fmt_list(
+                pkg["linkedin_posts"],
+                ["author", "author_role", "theme", "competitive_stance", "post_url", "excerpt"],
+            )
+        )
     cm = pkg.get("commercial_motion", {}) or {}
     if cm:
         sections.append("COMMERCIAL MOTION: " + json.dumps(cm)[:600])
     if pkg.get("category_entry_points"):
-        sections.append("CATEGORY ENTRY POINTS (ownership):\n" + _fmt_list(
-            pkg["category_entry_points"], ["cep", "ownership", "competitor_pages", "focal_pages"]))
+        sections.append(
+            "CATEGORY ENTRY POINTS (ownership):\n"
+            + _fmt_list(
+                pkg["category_entry_points"],
+                ["cep", "ownership", "competitor_pages", "focal_pages"],
+            )
+        )
     if pkg.get("product_positioning"):
         sections.append("PRODUCT POSITIONING: " + json.dumps(pkg["product_positioning"])[:800])
     if sw.get("metrics"):
-        sections.append(f"TRAFFIC (est., {sw.get('data_source')}): {json.dumps(sw['metrics'])[:600]}")
+        sections.append(
+            f"TRAFFIC (est., {sw.get('data_source')}): {json.dumps(sw['metrics'])[:600]}"
+        )
     # All sources (URL + type + timestamp).
     if pkg.get("sources"):
-        sections.append("ALL SOURCES (url · type · retrieved):\n" + "\n".join(
-            f"  - {s.get('url')} · {s.get('source_type')} · {str(s.get('retrieved_at'))[:10]}"
-            for s in pkg["sources"]))
+        sections.append(
+            "ALL SOURCES (url · type · retrieved):\n"
+            + "\n".join(
+                f"  - {s.get('url')} · {s.get('source_type')} · {str(s.get('retrieved_at'))[:10]}"
+                for s in pkg["sources"]
+            )
+        )
     # Focal (Rippling) mirror.
     if fe.get("artifacts"):
-        sections.append(f"{focal} MIRROR SOURCES ({len(fe['artifacts'])}):\n" + "\n".join(
-            f"  - {a.get('url')} · {a.get('source_type')}" for a in fe["artifacts"][:40]))
+        sections.append(
+            f"{focal} MIRROR SOURCES ({len(fe['artifacts'])}):\n"
+            + "\n".join(
+                f"  - {a.get('url')} · {a.get('source_type')}" for a in fe["artifacts"][:40]
+            )
+        )
     if pkg.get("limitations"):
         sections.append("LIMITATIONS: " + "; ".join(str(x) for x in pkg["limitations"]))
     if pkg.get("corpus_skew_warnings"):
@@ -265,7 +341,9 @@ def cross_competitor_summaries(current_run_id: str, competitor_id: str | None) -
             continue
         comps = other.get("companies", [])
         cid = comps[0].get("company_id") if comps else None
-        name = comps[0].get("canonical_name") if comps else other.get("scope", {}).get("company_input")
+        name = (
+            comps[0].get("canonical_name") if comps else other.get("scope", {}).get("company_input")
+        )
         if not name or name in seen or cid == competitor_id:
             continue
         seen.add(name)
@@ -301,7 +379,9 @@ async def chat_about_run(
     context = build_context(pkg, cross=cross, vertical=vertical)
     if vertical:
         by_artifact = (pkg.get("product_vertical_analysis") or {}).get("by_artifact") or {}
-        unmapped = sum(1 for a in pkg.get("artifacts", []) if a.get("artifact_id") not in by_artifact)
+        unmapped = sum(
+            1 for a in pkg.get("artifacts", []) if a.get("artifact_id") not in by_artifact
+        )
         context = (
             f"FOCUS: the user has scoped this conversation to the '{vertical}' product "
             "vertical — the sources/classifications/evidence/posts below are filtered to it. "
@@ -319,7 +399,9 @@ async def chat_about_run(
     from .model_gateway import build_gateway
 
     gateway = build_gateway(execution_mode, get_settings(), get_config())  # type: ignore[arg-type]
-    convo = "\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in (history or [])[-8:])
+    convo = "\n".join(
+        f"{m.get('role', 'user')}: {m.get('content', '')}" for m in (history or [])[-8:]
+    )
     user_content = (
         f"RUN FINDINGS:\n{context}\n\n"
         + (f"CONVERSATION SO FAR:\n{convo}\n\n" if convo else "")
@@ -327,8 +409,12 @@ async def chat_about_run(
     )
     try:
         result = await gateway.generate_structured(
-            CHAT_TASK, CHAT_SYSTEM, user_content, ChatResponse,
-            prompt_name="analysis_chat", prompt_version="v1",
+            CHAT_TASK,
+            CHAT_SYSTEM,
+            user_content,
+            ChatResponse,
+            prompt_name="analysis_chat",
+            prompt_version="v1",
         )
         out = result.output
         return {

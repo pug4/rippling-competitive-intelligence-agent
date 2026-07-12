@@ -56,13 +56,17 @@ class ExaContentsTool(BaseTool):
         api_key = (context.settings.exa_api_key or "").strip()
         if not api_key:
             return self._result(
-                action, status="unsupported", error_type="provider_not_configured",
+                action,
+                status="unsupported",
+                error_type="provider_not_configured",
                 error_message="provider not configured: exa_api_key is not set",
             )
         urls = [str(u) for u in (action.parameters.get("urls") or []) if u][:_MAX_URLS]
         if not urls:
             return self._result(
-                action, status="failed_terminal", error_type="invalid_parameters",
+                action,
+                status="failed_terminal",
+                error_type="invalid_parameters",
                 error_message="parameter 'urls' is required for fetch_via_exa",
             )
         body: dict[str, Any] = {"urls": urls, "text": True}
@@ -76,29 +80,48 @@ class ExaContentsTool(BaseTool):
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(_TIMEOUT)) as client:
                 resp = await client.post(
-                    EXA_CONTENTS_URL, json=body,
+                    EXA_CONTENTS_URL,
+                    json=body,
                     headers={"x-api-key": api_key, "Content-Type": "application/json"},
                 )
         except (httpx.HTTPError, TimeoutError) as exc:
-            return self._result(action, status="failed_retryable", error_type=type(exc).__name__,
-                                error_message=f"Exa contents request failed: {type(exc).__name__}",
-                                retryable=True)
+            return self._result(
+                action,
+                status="failed_retryable",
+                error_type=type(exc).__name__,
+                error_message=f"Exa contents request failed: {type(exc).__name__}",
+                retryable=True,
+            )
         if resp.status_code == 402:
-            return self._result(action, status="failed_terminal",
-                                error_type="provider_out_of_credits",
-                                error_message="Exa is out of credits (HTTP 402).")
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="provider_out_of_credits",
+                error_message="Exa is out of credits (HTTP 402).",
+            )
         if resp.status_code in (401, 403):
-            return self._result(action, status="failed_terminal", error_type="provider_auth",
-                                error_message=f"Exa rejected the key (HTTP {resp.status_code}).")
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="provider_auth",
+                error_message=f"Exa rejected the key (HTTP {resp.status_code}).",
+            )
         if resp.status_code >= 400:
-            return self._result(action, status="failed_terminal",
-                                error_type=f"provider_http_{resp.status_code}",
-                                error_message=f"Exa contents HTTP {resp.status_code}.")
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type=f"provider_http_{resp.status_code}",
+                error_message=f"Exa contents HTTP {resp.status_code}.",
+            )
         try:
             data = resp.json()
         except Exception as exc:  # noqa: BLE001
-            return self._result(action, status="failed_terminal", error_type="invalid_response",
-                                error_message=f"Exa contents response not JSON: {type(exc).__name__}")
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="invalid_response",
+                error_message=f"Exa contents response not JSON: {type(exc).__name__}",
+            )
 
         artifacts: list[RawArtifact] = []
         negatives: list[str] = []
@@ -131,8 +154,12 @@ class ExaContentsTool(BaseTool):
         missing = len(urls) - len(artifacts)
         cost = float((data.get("costDollars") or {}).get("total", 0.0))
         if not artifacts:
-            return self._result(action, status="empty", cost_usd=cost,
-                                negative_observations=negatives or ["Exa contents returned nothing."])
+            return self._result(
+                action,
+                status="empty",
+                cost_usd=cost,
+                negative_observations=negatives or ["Exa contents returned nothing."],
+            )
         return self._result(
             action,
             status="partial" if missing else "success",

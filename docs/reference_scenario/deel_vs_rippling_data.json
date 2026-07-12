@@ -1,12 +1,13 @@
 {
-  "schema_version": "1.2.0",
+  "schema_version": "1.3.0",
   "run": {
     "run_id": "RUN-b256fab1c1dd",
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T20:11:08.895761+00:00",
+    "generated_at": "2026-07-12T22:46:35.925219+00:00",
     "stop_reason": "runtime_exhausted",
+    "stop_reason_label": "budget-bounded (hit the research-time cap)",
     "iterations": 19,
     "tool_cost_usd": 0.12,
     "model_cost_usd": 6.5722,
@@ -92,34 +93,64 @@
     "exa_web": 12,
     "linkedin_post": 30,
     "events": 4,
-    "google_ads": 8,
+    "google_ads": 4,
     "similarweb": 1
   },
+  "focal_source_distribution": {
+    "site map": 1,
+    "pricing pages": 1,
+    "homepage/platform": 11,
+    "product pages": 40,
+    "customers pages": 8,
+    "comparison pages": 2,
+    "press pages": 1,
+    "about pages": 1,
+    "news/launches": 5,
+    "exa_web": 12,
+    "linkedin_post": 29,
+    "events": 4
+  },
   "corpus_skew_warnings": [],
+  "corpus_normalization": {
+    "competitor": {
+      "name": "Deel",
+      "n_artifacts": 126,
+      "n_classified": 123
+    },
+    "focal": {
+      "name": "Rippling",
+      "n_artifacts": 115,
+      "n_classified": 114
+    },
+    "asymmetry_ratio": 1.08,
+    "small_corpus": false,
+    "show_banner": false,
+    "normalization_note": "All cross-company comparisons (CEP ownership, key topics, per-vertical) are computed on share-of-corpus (count / classified artifacts per company); raw counts are retained but are not directly comparable across corpora of different sizes."
+  },
   "coverage": {
     "identity": "high",
     "current_website": "high",
     "current_product": "medium",
     "pricing_and_packaging": "high",
     "customer_proof": "medium",
-    "paid_media": "not_attempted",
-    "public_linkedin": "not_attempted",
+    "paid_media": "low",
+    "public_linkedin": "medium",
     "news_and_launches": "medium",
     "historical_website": "medium",
     "historical_product": "not_attempted",
     "historical_pricing": "not_attempted",
     "historical_messages": "medium",
     "commercial_motion": "medium",
-    "category_entry_points": "not_attempted",
+    "category_entry_points": "medium",
     "personas_and_jobs": "medium",
     "funnel": "not_attempted",
     "proof_strategy": "not_attempted",
     "competitive_stance": "medium",
-    "events": "not_attempted",
+    "events": "medium",
     "out_of_home": "not_attempted",
     "portfolio_discovery": "medium",
     "product_positioning": "medium",
-    "launches_current": "not_attempted",
+    "launches_current": "medium",
     "focal_current": "medium",
     "focal_proof": "medium",
     "focal_vulnerabilities": "not_attempted"
@@ -143,7 +174,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "current_website",
@@ -200,6 +231,36 @@
       "reason": "75 artifacts across exa_web, webpage sources"
     },
     {
+      "dimension": "paid_media",
+      "level": "low",
+      "artifact_count": 4,
+      "source_classes": [
+        "google_ads"
+      ],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [
+        "paid_media",
+        "public_social",
+        "reviews"
+      ],
+      "reason": "4 artifacts across google_ads sources"
+    },
+    {
+      "dimension": "public_linkedin",
+      "level": "medium",
+      "artifact_count": 30,
+      "source_classes": [
+        "linkedin_post"
+      ],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "30 artifacts across linkedin_post sources"
+    },
+    {
       "dimension": "news_and_launches",
       "level": "medium",
       "artifact_count": 17,
@@ -225,6 +286,28 @@
       "failed_sources": [],
       "missing_sources": [],
       "reason": "6 artifacts across wayback sources"
+    },
+    {
+      "dimension": "historical_product",
+      "level": "not_attempted",
+      "artifact_count": 0,
+      "source_classes": [],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
+    },
+    {
+      "dimension": "historical_pricing",
+      "level": "not_attempted",
+      "artifact_count": 0,
+      "source_classes": [],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
     },
     {
       "dimension": "historical_messages",
@@ -258,7 +341,27 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+    },
+    {
+      "dimension": "category_entry_points",
+      "level": "medium",
+      "artifact_count": 0,
+      "source_classes": [
+        "events",
+        "exa_web",
+        "google_ads",
+        "linkedin_post",
+        "news",
+        "similarweb",
+        "wayback",
+        "webpage"
+      ],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "personas_and_jobs",
@@ -278,7 +381,29 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+    },
+    {
+      "dimension": "funnel",
+      "level": "not_attempted",
+      "artifact_count": 0,
+      "source_classes": [],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
+    },
+    {
+      "dimension": "proof_strategy",
+      "level": "not_attempted",
+      "artifact_count": 0,
+      "source_classes": [],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
     },
     {
       "dimension": "competitive_stance",
@@ -302,7 +427,32 @@
         "public_social",
         "reviews"
       ],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+    },
+    {
+      "dimension": "events",
+      "level": "medium",
+      "artifact_count": 16,
+      "source_classes": [
+        "events",
+        "exa_web"
+      ],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "16 artifacts across events, exa_web sources"
+    },
+    {
+      "dimension": "out_of_home",
+      "level": "not_attempted",
+      "artifact_count": 0,
+      "source_classes": [],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
     },
     {
       "dimension": "portfolio_discovery",
@@ -322,7 +472,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "product_positioning",
@@ -346,7 +496,27 @@
         "public_social",
         "reviews"
       ],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+    },
+    {
+      "dimension": "launches_current",
+      "level": "medium",
+      "artifact_count": 0,
+      "source_classes": [
+        "events",
+        "exa_web",
+        "google_ads",
+        "linkedin_post",
+        "news",
+        "similarweb",
+        "wayback",
+        "webpage"
+      ],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "focal_current",
@@ -366,7 +536,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "focal_proof",
@@ -386,7 +556,18 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+      "reason": "126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
+    },
+    {
+      "dimension": "focal_vulnerabilities",
+      "level": "not_attempted",
+      "artifact_count": 0,
+      "source_classes": [],
+      "requested_periods": 2,
+      "represented_periods": 2,
+      "failed_sources": [],
+      "missing_sources": [],
+      "reason": "not attempted this run \u2014 absence of collection, not absence of activity"
     }
   ],
   "commercial_motion": {
@@ -399,9 +580,9 @@
       "mixed_by_product": 1
     },
     "dominant_ctas": {
-      "other": 0.67,
-      "book_demo": 0.22,
-      "learn_more": 0.09,
+      "other": 0.65,
+      "book_demo": 0.24,
+      "learn_more": 0.1,
       "contact_sales": 0.02
     },
     "segment_focus": {
@@ -419,7 +600,7 @@
       "support for admins and users"
     ],
     "confidence": "medium",
-    "basis": "54 observed CTAs, 101 pricing signals"
+    "basis": "51 observed CTAs, 101 pricing signals"
   },
   "product_positioning": [
     {
@@ -711,20 +892,108 @@
   ],
   "category_entry_points": [
     {
-      "cep": "consolidating_hr_tools",
-      "competitor_pages": 60,
-      "focal_pages": 81,
-      "ownership": "contested",
+      "cep": "opening_new_country",
+      "competitor_pages": 79,
+      "focal_pages": 16,
+      "competitor_share": 0.6423,
+      "focal_share": 0.1404,
+      "share_ratio": 4.58,
+      "share_delta": 0.5019,
+      "ownership": "competitor_advantage",
+      "ownership_basis": "4.58x share ratio, dominant side 79 pages",
+      "competitor_example_artifact_ids": [
+        "ART-4504605bc1ea",
+        "ART-2125e9fe86f8",
+        "ART-3b7689ec0af8",
+        "ART-90e7f10fb8e0",
+        "ART-79313fc4282b"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-c1c42d7105ae",
+        "ART-db8d2de11bb6",
+        "ART-c6ed2708ea18"
+      ],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
       ]
     },
     {
-      "cep": "opening_new_country",
-      "competitor_pages": 79,
-      "focal_pages": 16,
+      "cep": "hiring_first_international_employee",
+      "competitor_pages": 42,
+      "focal_pages": 9,
+      "competitor_share": 0.3415,
+      "focal_share": 0.0789,
+      "share_ratio": 4.33,
+      "share_delta": 0.2625,
+      "ownership": "competitor_advantage",
+      "ownership_basis": "4.33x share ratio, dominant side 42 pages",
+      "competitor_example_artifact_ids": [
+        "ART-4504605bc1ea",
+        "ART-90e7f10fb8e0",
+        "ART-79313fc4282b",
+        "ART-8b2f98998852",
+        "ART-45147107c4b1"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-db8d2de11bb6",
+        "ART-bf34d2800142",
+        "ART-6037eefe5c32"
+      ],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "integrating_an_acquisition",
+      "competitor_pages": 12,
+      "focal_pages": 4,
+      "competitor_share": 0.0976,
+      "focal_share": 0.0351,
+      "share_ratio": 2.78,
+      "share_delta": 0.0625,
+      "ownership": "competitor_advantage",
+      "ownership_basis": "2.78x share ratio, dominant side 12 pages",
+      "competitor_example_artifact_ids": [
+        "ART-3b7689ec0af8",
+        "ART-7585503a7a25",
+        "ART-84fffc657b92",
+        "ART-02773cc9b819",
+        "ART-7c878936dd5e"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-597718ed3ef1",
+        "ART-26a94f70c569",
+        "ART-318b9e5c841c"
+      ],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "consolidating_hr_tools",
+      "competitor_pages": 60,
+      "focal_pages": 81,
+      "competitor_share": 0.4878,
+      "focal_share": 0.7105,
+      "share_ratio": 1.46,
+      "share_delta": -0.2227,
       "ownership": "contested",
+      "ownership_basis": "1.46x share ratio \u2014 within crawl-composition noise",
+      "competitor_example_artifact_ids": [
+        "ART-4504605bc1ea",
+        "ART-f07ca7d52b9b",
+        "ART-2125e9fe86f8",
+        "ART-3b7689ec0af8",
+        "ART-90e7f10fb8e0"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-b2d4ed380867",
+        "ART-c1c42d7105ae",
+        "ART-65290e73c3c3"
+      ],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
@@ -734,37 +1003,51 @@
       "cep": "automating_onboarding_offboarding",
       "competitor_pages": 38,
       "focal_pages": 55,
+      "competitor_share": 0.3089,
+      "focal_share": 0.4825,
+      "share_ratio": 1.56,
+      "share_delta": -0.1735,
       "ownership": "contested",
+      "ownership_basis": "1.56x share ratio \u2014 within crawl-composition noise",
+      "competitor_example_artifact_ids": [
+        "ART-f07ca7d52b9b",
+        "ART-2125e9fe86f8",
+        "ART-79313fc4282b",
+        "ART-a4f8fcbafed2",
+        "ART-7585503a7a25"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-b2d4ed380867",
+        "ART-c1c42d7105ae",
+        "ART-65290e73c3c3"
+      ],
       "top_verticals": [
         "payroll",
         "hris_core_hr"
-      ]
-    },
-    {
-      "cep": "hiring_first_international_employee",
-      "competitor_pages": 42,
-      "focal_pages": 9,
-      "ownership": "contested",
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
       ]
     },
     {
       "cep": "preparing_for_audit",
       "competitor_pages": 18,
       "focal_pages": 24,
+      "competitor_share": 0.1463,
+      "focal_share": 0.2105,
+      "share_ratio": 1.44,
+      "share_delta": -0.0642,
       "ownership": "contested",
-      "top_verticals": [
-        "payroll",
-        "hris_core_hr"
-      ]
-    },
-    {
-      "cep": "reducing_payroll_errors",
-      "competitor_pages": 12,
-      "focal_pages": 27,
-      "ownership": "contested",
+      "ownership_basis": "1.44x share ratio \u2014 within crawl-composition noise",
+      "competitor_example_artifact_ids": [
+        "ART-f07ca7d52b9b",
+        "ART-a4f8fcbafed2",
+        "ART-7585503a7a25",
+        "ART-84fffc657b92",
+        "ART-02773cc9b819"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-b2d4ed380867",
+        "ART-573effbd48d4",
+        "ART-bf34d2800142"
+      ],
       "top_verticals": [
         "payroll",
         "hris_core_hr"
@@ -774,7 +1057,50 @@
       "cep": "managing_contractors_and_employees",
       "competitor_pages": 20,
       "focal_pages": 14,
+      "competitor_share": 0.1626,
+      "focal_share": 0.1228,
+      "share_ratio": 1.32,
+      "share_delta": 0.0398,
       "ownership": "contested",
+      "ownership_basis": "1.32x share ratio \u2014 within crawl-composition noise",
+      "competitor_example_artifact_ids": [
+        "ART-d378770b11eb",
+        "ART-84fffc657b92",
+        "ART-debb4bbaadc2",
+        "ART-4a4f82d82d6a",
+        "ART-f1ed3021d6c3"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-53fde70ae71a",
+        "ART-1833c56d07a8",
+        "ART-e24a141ca141"
+      ],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "replacing_a_peo",
+      "competitor_pages": 4,
+      "focal_pages": 5,
+      "competitor_share": 0.0325,
+      "focal_share": 0.0439,
+      "share_ratio": 1.35,
+      "share_delta": -0.0113,
+      "ownership": "contested",
+      "ownership_basis": "1.35x share ratio \u2014 within crawl-composition noise",
+      "competitor_example_artifact_ids": [
+        "ART-90e7f10fb8e0",
+        "ART-debb4bbaadc2",
+        "ART-838f572d1257",
+        "ART-1617e62bf15e"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-b2d4ed380867",
+        "ART-93c0d0ff60c7",
+        "ART-2a34b577cea5"
+      ],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
@@ -784,54 +1110,163 @@
       "cep": "controlling_app_access",
       "competitor_pages": 7,
       "focal_pages": 24,
-      "ownership": "contested",
+      "competitor_share": 0.0569,
+      "focal_share": 0.2105,
+      "share_ratio": 3.7,
+      "share_delta": -0.1536,
+      "ownership": "focal_owns",
+      "ownership_basis": "3.7x share ratio, dominant side 24 pages",
+      "competitor_example_artifact_ids": [
+        "ART-79313fc4282b",
+        "ART-7585503a7a25",
+        "ART-4d052e00f8e5",
+        "ART-1d3e3bc13183",
+        "ART-560a667497d0"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-1388bb6c3d3e",
+        "ART-dce7ab6e4707",
+        "ART-c802b6b3fe6f"
+      ],
       "top_verticals": [
         "it_device_management",
         "identity_security"
       ]
     },
     {
-      "cep": "integrating_an_acquisition",
+      "cep": "reducing_payroll_errors",
       "competitor_pages": 12,
-      "focal_pages": 4,
-      "ownership": "contested",
+      "focal_pages": 27,
+      "competitor_share": 0.0976,
+      "focal_share": 0.2368,
+      "share_ratio": 2.43,
+      "share_delta": -0.1393,
+      "ownership": "focal_owns",
+      "ownership_basis": "2.43x share ratio, dominant side 27 pages",
+      "competitor_example_artifact_ids": [
+        "ART-4504605bc1ea",
+        "ART-defc1c9283f6",
+        "ART-be2efed5377d",
+        "ART-2cb3203cc7f8",
+        "ART-ef2e15843dd7"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-b7a88682004b",
+        "ART-d485833dcfd1",
+        "ART-4a6761c603b5"
+      ],
       "top_verticals": [
         "payroll",
-        "global_eor_contractors"
+        "hris_core_hr"
       ]
-    },
-    {
-      "cep": "not_observed",
-      "competitor_pages": 3,
-      "focal_pages": 11,
-      "ownership": "contested",
-      "top_verticals": []
     },
     {
       "cep": "reducing_software_spend",
       "competitor_pages": 1,
       "focal_pages": 9,
-      "ownership": "contested",
+      "competitor_share": 0.0081,
+      "focal_share": 0.0789,
+      "share_ratio": 9.71,
+      "share_delta": -0.0708,
+      "ownership": "focal_owns",
+      "ownership_basis": "9.71x share ratio, dominant side 9 pages",
+      "competitor_example_artifact_ids": [
+        "ART-02773cc9b819"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-c1c42d7105ae",
+        "ART-db8d2de11bb6",
+        "ART-1388bb6c3d3e"
+      ],
       "top_verticals": [
         "payroll",
         "immigration_mobility"
       ]
     },
     {
-      "cep": "replacing_a_peo",
-      "competitor_pages": 4,
-      "focal_pages": 5,
-      "ownership": "contested",
+      "cep": "moving_upmarket",
+      "competitor_pages": 1,
+      "focal_pages": 2,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0175,
+      "share_ratio": 2.16,
+      "share_delta": -0.0094,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 2) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-111af4ae1e89"
+      ],
+      "focal_example_artifact_ids": [
+        "ART-41694369ff2b",
+        "ART-07aea9fb54cd"
+      ],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
       ]
     },
     {
-      "cep": "moving_upmarket",
+      "cep": "expanding_into_new_markets_with_remote_teams",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-7f6216118cf8"
+      ],
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-9e8697e401cd"
+      ],
+      "top_verticals": []
+    },
+    {
+      "cep": "rapid_growth_scaling_employees",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-361550a9bb81"
+      ],
+      "top_verticals": []
+    },
+    {
+      "cep": "consolidating_fragmented_regional_workforce_providers",
       "competitor_pages": 1,
-      "focal_pages": 2,
-      "ownership": "contested",
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
@@ -841,113 +1276,142 @@
       "cep": "replacing_traditional_cross_border_payment_rails",
       "competitor_pages": 1,
       "focal_pages": 0,
-      "ownership": "competitor_advantage",
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
       "top_verticals": []
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
-    },
-    {
-      "cep": "expanding_into_new_markets_with_remote_teams",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
+      "cep": "expanding_to_new_countries",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-ceb5d6ab049f"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "expanding_into_complex_field_markets",
       "competitor_pages": 1,
       "focal_pages": 0,
-      "ownership": "competitor_advantage",
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "managing_global_device_fleet",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4d052e00f8e5"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "it_device_management"
+      ]
+    },
+    {
+      "cep": "growing_remote_and_international_teams",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-0e665529aaf9"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "benefits"
       ]
     },
     {
       "cep": "expanding_service_offerings",
       "competitor_pages": 1,
       "focal_pages": 0,
-      "ownership": "competitor_advantage",
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-22cb144808e1"
+      ],
+      "focal_example_artifact_ids": [],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
       ]
-    },
-    {
-      "cep": "consolidating_fragmented_regional_workforce_providers",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "rapid_growth_scaling_employees",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
     },
     {
       "cep": "paying_contractors_and_employees_globally",
       "competitor_pages": 1,
       "focal_pages": 0,
-      "ownership": "competitor_advantage",
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
       "top_verticals": []
-    },
-    {
-      "cep": "managing_global_device_fleet",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "it_device_management"
-      ]
-    },
-    {
-      "cep": "expanding_to_new_countries",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "growing remote and international teams",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "benefits"
-      ]
     }
   ],
   "persona_channel_matrix": {
     "personas": [
-      "(unspecified)",
       "finance_leader",
       "founder_or_ceo",
       "hr_leader",
       "it_leader",
       "legal_or_compliance",
-      "not_observed",
       "operations_leader",
       "payroll_manager",
       "people_ops_manager",
       "product_manager",
       "recruiter",
       "security_leader",
-      "security_or_compliance",
-      "unclassified_signals: Product Partnership Manager / Account Executive"
+      "security_or_compliance"
     ],
     "channels": [
       "events",
@@ -1023,19 +1487,8 @@
       "security_or_compliance": {
         "other": 1
       },
-      "(unspecified)": {
-        "other": 2,
-        "paid search": 6
-      },
       "product_manager": {
         "other": 1
-      },
-      "unclassified_signals: Product Partnership Manager / Account Executive": {
-        "other": 1
-      },
-      "not_observed": {
-        "other": 1,
-        "paid search": 1
       }
     }
   },
@@ -1909,38 +2362,10 @@
       "archive_capture_at": null
     },
     {
-      "artifact_id": "ART-336cbbedeb77",
-      "url": "https://adstransparency.google.com/faq?region=US",
-      "source_type": "google_ads",
-      "retrieved_at": "2026-07-12T16:36:56.494350Z",
-      "archive_capture_at": null
-    },
-    {
       "artifact_id": "ART-2333673d04d8",
       "url": "https://adstransparency.google.com/advertiser/AR07644289033731833857?region=FR",
       "source_type": "google_ads",
       "retrieved_at": "2026-07-12T16:36:56.494396Z",
-      "archive_capture_at": null
-    },
-    {
-      "artifact_id": "ART-7ccc0b65eee1",
-      "url": "https://adstransparency.google.com/?authuser=0&region=DE",
-      "source_type": "google_ads",
-      "retrieved_at": "2026-07-12T16:36:56.494453Z",
-      "archive_capture_at": null
-    },
-    {
-      "artifact_id": "ART-4443b7940e64",
-      "url": "https://adstransparency.google.com/?region=GB&domain=electoralcommission.org.uk",
-      "source_type": "google_ads",
-      "retrieved_at": "2026-07-12T16:36:56.494499Z",
-      "archive_capture_at": null
-    },
-    {
-      "artifact_id": "ART-549d2c0fa854",
-      "url": "https://adstransparency.google.com/?region=US&amp;preset-date=Last+30+days&amp;domain=costco.com",
-      "source_type": "google_ads",
-      "retrieved_at": "2026-07-12T16:36:56.494545Z",
       "archive_capture_at": null
     },
     {
@@ -9169,54 +9594,6 @@
       "archive_capture_at": null
     },
     {
-      "artifact_id": "ART-336cbbedeb77",
-      "company_id": "CO-0cf92b8592a5",
-      "source_type": "google_ads",
-      "source_name": "google_ads",
-      "url": "https://adstransparency.google.com/faq?region=US",
-      "final_url": "https://adstransparency.google.com/faq?region=US",
-      "title": "Faq",
-      "author": null,
-      "published_at": null,
-      "first_observed_at": null,
-      "last_observed_at": null,
-      "retrieved_at": "2026-07-12T16:36:56.494350Z",
-      "time_window_ids": [
-        "TW-f65588e851cb",
-        "TW-44250f14cd68"
-      ],
-      "normalized_text": "Go to Ads Transparency Center home page. Google apps Main menu [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. [](https://www.google.com/intl/en/about/products) [Sign in](https://accounts.google.com/ServiceLogin?passive=1209600&continue=https://adstransparency.google.com/faq?region=US&followup=https://adstransparency.google.com/faq?region=US&ec=GAZAsQQ) [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. Google apps Main menu",
-      "content_hash": "4ec708885daa55da650869e98d8ceea7641911f6307210f646fa88f6742d5f7c",
-      "metadata": {
-        "advertiser": "Deel",
-        "platform_or_surface": "google_ads_transparency",
-        "creative_body": null,
-        "headline": "Faq",
-        "cta": null,
-        "format": null,
-        "first_observed": null,
-        "last_observed": null,
-        "region": null,
-        "landing_url": null,
-        "creative_hash": null,
-        "exa_query": "Deel ads",
-        "exa_filters": {
-          "includeDomains": [
-            "adstransparency.google.com"
-          ],
-          "numResults": 8
-        },
-        "discovery_via": "exa_search",
-        "exa_id": "https://adstransparency.google.com/faq?region=US",
-        "is_discovery_pointer": true
-      },
-      "screenshot_path": null,
-      "collection_method": "exa_discovery",
-      "is_partial": true,
-      "is_fixture": false,
-      "archive_capture_at": null
-    },
-    {
       "artifact_id": "ART-2333673d04d8",
       "company_id": "CO-0cf92b8592a5",
       "source_type": "google_ads",
@@ -9256,150 +9633,6 @@
         },
         "discovery_via": "exa_search",
         "exa_id": "https://adstransparency.google.com/advertiser/AR07644289033731833857?region=FR",
-        "is_discovery_pointer": true
-      },
-      "screenshot_path": null,
-      "collection_method": "exa_discovery",
-      "is_partial": true,
-      "is_fixture": false,
-      "archive_capture_at": null
-    },
-    {
-      "artifact_id": "ART-7ccc0b65eee1",
-      "company_id": "CO-0cf92b8592a5",
-      "source_type": "google_ads",
-      "source_name": "google_ads",
-      "url": "https://adstransparency.google.com/?authuser=0&region=DE",
-      "final_url": "https://adstransparency.google.com/?authuser=0&region=DE",
-      "title": null,
-      "author": null,
-      "published_at": null,
-      "first_observed_at": null,
-      "last_observed_at": null,
-      "retrieved_at": "2026-07-12T16:36:56.494453Z",
-      "time_window_ids": [
-        "TW-f65588e851cb",
-        "TW-44250f14cd68"
-      ],
-      "normalized_text": "Go to Ads Transparency Center home page. Google apps Main menu [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. [](https://www.google.com/intl/en/about/products) [Sign in](https://accounts.google.com/ServiceLogin?passive=1209600&continue=https://adstransparency.google.com/?authuser=0&region=DE&amp;followup=https://adstransparency.google.com/?authuser=0&region=DE&amp;ec=GAZAsQQ) [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. Google apps Main menu",
-      "content_hash": "d954a83829756566cd734fafab09177802afbe98fe601e51a28147b6c51f4f4a",
-      "metadata": {
-        "advertiser": "Deel",
-        "platform_or_surface": "google_ads_transparency",
-        "creative_body": null,
-        "headline": null,
-        "cta": null,
-        "format": null,
-        "first_observed": null,
-        "last_observed": null,
-        "region": null,
-        "landing_url": null,
-        "creative_hash": null,
-        "exa_query": "Deel ads",
-        "exa_filters": {
-          "includeDomains": [
-            "adstransparency.google.com"
-          ],
-          "numResults": 8
-        },
-        "discovery_via": "exa_search",
-        "exa_id": "https://adstransparency.google.com/?authuser=0&region=DE",
-        "is_discovery_pointer": true
-      },
-      "screenshot_path": null,
-      "collection_method": "exa_discovery",
-      "is_partial": true,
-      "is_fixture": false,
-      "archive_capture_at": null
-    },
-    {
-      "artifact_id": "ART-4443b7940e64",
-      "company_id": "CO-0cf92b8592a5",
-      "source_type": "google_ads",
-      "source_name": "google_ads",
-      "url": "https://adstransparency.google.com/?region=GB&domain=electoralcommission.org.uk",
-      "final_url": "https://adstransparency.google.com/?region=GB&domain=electoralcommission.org.uk",
-      "title": null,
-      "author": null,
-      "published_at": null,
-      "first_observed_at": null,
-      "last_observed_at": null,
-      "retrieved_at": "2026-07-12T16:36:56.494499Z",
-      "time_window_ids": [
-        "TW-f65588e851cb",
-        "TW-44250f14cd68"
-      ],
-      "normalized_text": "Go to Ads Transparency Center home page. Google apps Main menu [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. [](https://www.google.com/intl/en/about/products) [Sign in](https://accounts.google.com/ServiceLogin?passive=1209600&continue=https://adstransparency.google.com/?region=GB&domain=electoralcommission.org.uk&amp;followup=https://adstransparency.google.com/?region=GB&domain=electoralcommission.org.uk&amp;ec=GAZAsQQ) [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. Google apps Main menu",
-      "content_hash": "ca74b68031306848f6fedda87ea2069132b27fcaa14b8d833364ffdc3f709916",
-      "metadata": {
-        "advertiser": "Deel",
-        "platform_or_surface": "google_ads_transparency",
-        "creative_body": null,
-        "headline": null,
-        "cta": null,
-        "format": null,
-        "first_observed": null,
-        "last_observed": null,
-        "region": null,
-        "landing_url": null,
-        "creative_hash": null,
-        "exa_query": "Deel ads",
-        "exa_filters": {
-          "includeDomains": [
-            "adstransparency.google.com"
-          ],
-          "numResults": 8
-        },
-        "discovery_via": "exa_search",
-        "exa_id": "https://adstransparency.google.com/?region=GB&domain=electoralcommission.org.uk",
-        "is_discovery_pointer": true
-      },
-      "screenshot_path": null,
-      "collection_method": "exa_discovery",
-      "is_partial": true,
-      "is_fixture": false,
-      "archive_capture_at": null
-    },
-    {
-      "artifact_id": "ART-549d2c0fa854",
-      "company_id": "CO-0cf92b8592a5",
-      "source_type": "google_ads",
-      "source_name": "google_ads",
-      "url": "https://adstransparency.google.com/?region=US&amp;preset-date=Last+30+days&amp;domain=costco.com",
-      "final_url": "https://adstransparency.google.com/?region=US&amp;preset-date=Last+30+days&amp;domain=costco.com",
-      "title": null,
-      "author": null,
-      "published_at": null,
-      "first_observed_at": null,
-      "last_observed_at": null,
-      "retrieved_at": "2026-07-12T16:36:56.494545Z",
-      "time_window_ids": [
-        "TW-f65588e851cb",
-        "TW-44250f14cd68"
-      ],
-      "normalized_text": "Go to Ads Transparency Center home page. Google-apper Hovedmeny [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. [](https://www.google.no/intl/no/about/products) [Logg p\u00e5](https://accounts.google.com/ServiceLogin?passive=1209600&continue=https://adstransparency.google.com/?region=US&preset-date=Last+30+days&domain=costco.com&followup=https://adstransparency.google.com/?region=US&preset-date=Last+30+days&domain=costco.com&ec=GAZAsQQ) [Ads Transparency Center](https://adstransparency.google.com/) Go to Ads Transparency Center home page. Google-apper Hovedmeny",
-      "content_hash": "1fe6010403b819e75a277b458dd5f1aac2d74a0e68f2b4fb69e4b18df66e007f",
-      "metadata": {
-        "advertiser": "Deel",
-        "platform_or_surface": "google_ads_transparency",
-        "creative_body": null,
-        "headline": null,
-        "cta": null,
-        "format": null,
-        "first_observed": null,
-        "last_observed": null,
-        "region": null,
-        "landing_url": null,
-        "creative_hash": null,
-        "exa_query": "Deel ads",
-        "exa_filters": {
-          "includeDomains": [
-            "adstransparency.google.com"
-          ],
-          "numResults": 8
-        },
-        "discovery_via": "exa_search",
-        "exa_id": "https://adstransparency.google.com/?region=US&amp;preset-date=Last+30+days&amp;domain=costco.com",
         "is_discovery_pointer": true
       },
       "screenshot_path": null,
@@ -65089,7 +65322,7 @@
         "recruiter",
         "hr_leader"
       ],
-      "excerpt": "deel just launched its own native ATS. not a third-party tool. the same product we sell to customers, now running deel's own hiring. one-click apply with linkedin. AI sourcing and screening... | Piyush Shekhar Agree & Join LinkedIn By clicking Continue to join or sign in, you agr",
+      "excerpt": "deel just launched its own native ATS. not a third-party tool. the same product we sell to customers, now running deel's own hiring. one-click apply with linkedin. AI sourcing and screening... | Piyush Shekhar",
       "verticals": [
         "payroll",
         "hris_core_hr",
@@ -65109,7 +65342,7 @@
         "recruiter",
         "operations_leader"
       ],
-      "excerpt": "# Shira Harash \u00b7 LinkedIn \u00b7 2026-06-12 ## Author **Shira Harash** *Sales Turned Solutions Engineer | GTM @ Deel | Mom* Current role: Solutions Engineer at Deel ## Post Deel just launched two things this week that I have been watching build from the inside. \ud83d\udd25 A brand new careers p",
+      "excerpt": "Deel has launched DeelATS, an internal recruiting tool that the company now uses for all hiring, demonstrating confidence in the product.",
       "verticals": []
     },
     {
@@ -65124,7 +65357,7 @@
       "personas": [
         "payroll_manager"
       ],
-      "excerpt": "# Post by Ashish Jeet Mitra \u00b7 LinkedIn \u00b7 2026-06-10 **Ashish Jeet Mitra**: Payroll Operations Manager at Deel with 6 years 1 month of experience. Previous roles include Global Payroll Operations Team Leader at Deel, Global Payroll Operations Team Leader at Safeguard Global, and G",
+      "excerpt": "Deel launched a rebuilt careers page and proprietary ATS platform, demonstrating confidence in its all-in-one hiring and people management solution by using it for its own hiring.",
       "verticals": []
     },
     {
@@ -65140,7 +65373,7 @@
         "recruiter",
         "hr_leader"
       ],
-      "excerpt": "# Post by Harneet Singh Kalra \u00b7 LinkedIn \u00b7 2026-06-09 **Harneet Singh Kalra**: Payroll Implementation Manager at Deel with 13 years 9 months of experience. Previous roles include Manager at PwC India, Assistant Manager at PwC India, and Senior Associate at PwC India. Based in Del",
+      "excerpt": "Deel launches an AI-forward careers page with streamlined application and matching tools that reflect candidate demand and enable better global hiring.",
       "verticals": []
     },
     {
@@ -65156,7 +65389,7 @@
         "hr_leader",
         "recruiter"
       ],
-      "excerpt": "Deel Launches Native ATS for Streamlined Hiring | Yaron Lavi posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. ` `` `` `` `` `` `` ` # Deel Launches Native ATS f",
+      "excerpt": "Deel Launches Native ATS for Streamlined Hiring",
       "verticals": [
         "hris_core_hr",
         "talent_performance"
@@ -65176,7 +65409,7 @@
         "hr_leader",
         "operations_leader"
       ],
-      "excerpt": "We just made it possible for a company in New York to fund payroll in dollars, and for their employee in Berlin to receive it in stablecoins within minutes \ud83e\udd2f On one platform with no workarounds... | Alex Bouaziz | 320 comments Agree & Join LinkedIn By clicking Continue to join or",
+      "excerpt": "We just made it possible for a company in New York to fund payroll in dollars, and for their employee in Berlin to receive it in stablecoins within minutes \ud83e\udd2f On one platform with no workarounds... | Alex Bouaziz | 320 comments",
       "verticals": [
         "payroll"
       ]
@@ -65195,7 +65428,7 @@
         "hr_leader",
         "operations_leader"
       ],
-      "excerpt": "# Post by Deel \u00b7 LinkedIn \u00b7 2026-07-08 **Deel**: Deel provides global payroll, compliance, and HR solutions for hiring, managing, paying, and equiping anyone, anywhere. They offer solutions for payroll, HR, it, and immigration for every worker type, all in one platform from one t",
+      "excerpt": "Deel AI Analytics enables instant workforce insights through natural language queries on a unified dataset, eliminating the need for manual report building.",
       "verticals": [
         "payroll",
         "global_eor_contractors",
@@ -65216,7 +65449,7 @@
         "finance_leader",
         "security_or_compliance"
       ],
-      "excerpt": "# Post by Shirley Alexander (she/her) \u00b7 LinkedIn \u00b7 2026-07-09 **Shirley Alexander (she/her)**: Shirley Alexander currently works as Senior Talent Acquisition Specialist at Deel with 25 years 6 months of experience. Previous roles include Senior Talent Acquisition Partner at Qualc",
+      "excerpt": "Deel's new agentic workflow platform (Akai) automates repetitive manual workflows for global operations teams without requiring developers, APIs, or IT support, delivering significant time and case handling at scale.",
       "verticals": []
     },
     {
@@ -65232,7 +65465,7 @@
         "operations_leader",
         "people_ops_manager"
       ],
-      "excerpt": "# Shahriyar M. \u00b7 LinkedIn \u00b7 2026-06-05 ## Author **Shahriyar M.** *Design @ Deel | Mentor | MSc in Computer Science* Current role: Staff Product Designer at Deel ## Post Yesterday we launched the new Deel app. We've been rebuilding it from the ground up with one goal in mind: red",
+      "excerpt": "The new Deel app is rebuilt from scratch to reduce time workers spend on the platform by optimizing for mobile-specific user needs rather than feature parity with the web product.",
       "verticals": []
     },
     {
@@ -65248,7 +65481,7 @@
         "hr_leader",
         "recruiter"
       ],
-      "excerpt": "Big milestone for us at Deel \ud83d\ude4c Last week during The Big Deel we showed off a new pillar of Deel HR: our native ATS. Recruiting sits at the beginning of the HR journey. We know how important (and... | Dan Westgarth | 44 comments Agree & Join LinkedIn By clicking Continue to join o",
+      "excerpt": "Big milestone for us at Deel \ud83d\ude4c Last week during The Big Deel we showed off a new pillar of Deel HR: our native ATS. Recruiting sits at the beginning of the HR journey. We know how important (and... | Dan Westgarth | 44 comments",
       "verticals": [
         "talent_performance"
       ]
@@ -65266,7 +65499,7 @@
         "recruiter",
         "hr_leader"
       ],
-      "excerpt": "# Post by Alan P \u00b7 LinkedIn \u00b7 2026-07-07 **Alan P**: Global Head of Talent Acquisition at Deel with 19 years 5 months of experience. Previous roles include VP of People & Founding Team at Dott, Investor Acquired at Tuned, and Head of People, EMEA at ofo. Based in Amsterdam, North",
+      "excerpt": "AI agents are being integrated into ATS workflows to automate repetitive tasks and improve the hiring experience for teams and candidates.",
       "verticals": [
         "talent_performance"
       ]
@@ -65281,7 +65514,7 @@
       "primary_message": "Deel is hiring a Staff Product Designer to shape Design Systems and revamp the mobile app experience for 1.5 million workers globally.",
       "competitive_stance": null,
       "personas": [],
-      "excerpt": "We're hiring a Staff Product Designer to help us shape Design Systems at Deel. Here is my pitch: \u2022 You'll help shape the experience of 1.5 million workers across 150+ countries (we're revamping... | Shahriyar M. | 13 comments Agree & Join LinkedIn By clicking Continue to join or ",
+      "excerpt": "We're hiring a Staff Product Designer to help us shape Design Systems at Deel. Here is my pitch: \u2022 You'll help shape the experience of 1.5 million workers across 150+ countries (we're revamping... | Shahriyar M. | 13 comments",
       "verticals": []
     },
     {
@@ -65296,7 +65529,7 @@
       "personas": [
         "recruiter"
       ],
-      "excerpt": "# Jacinto Barreiros \u00b7 LinkedIn \u00b7 2026-07-02 ## Author **Jacinto Barreiros** *Senior Product Manager @ Deel | ex-Twilio, ex-Redfin* ## Post I'm incredibly proud to have led the product teams that built this! When we started, the challenge was clear: recruiting at scale shouldn't b",
+      "excerpt": "Deel built an AI-first recruitment system that dramatically reduces hiring time by automating candidate screening and surfacing qualified applicants at scale.",
       "verticals": [
         "talent_performance"
       ]
@@ -65315,7 +65548,7 @@
         "finance_leader",
         "operations_leader"
       ],
-      "excerpt": "Deel Expands to ChatGPT with Global Employment Platform | Lauren Zamora-Kelso posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. # Deel Expands to ChatGPT with Gl",
+      "excerpt": "Deel Expands to ChatGPT with Global Employment Platform",
       "verticals": []
     },
     {
@@ -65333,7 +65566,7 @@
         "operations_leader",
         "people_ops_manager"
       ],
-      "excerpt": "Deel AI Workforce launches with AI agents for HR, payroll, operations | Deel posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. 775,602 followers 9mo \ud83d\udd0a Deel AI Wo",
+      "excerpt": "Deel AI Workforce launches with AI agents for HR, payroll, operations",
       "verticals": [
         "payroll"
       ]
@@ -65353,7 +65586,7 @@
         "operations_leader",
         "founder_or_ceo"
       ],
-      "excerpt": "The Big Deel Summit wrapped in London and it WAS...kind of a big deal. We talked all things Akai: AI infrastructure built to do real work. Agents that handle hiring. Payroll that catches errors... | Deel | 102 comments Agree & Join LinkedIn By clicking Continue to join or sign in",
+      "excerpt": "The Big Deel Summit wrapped in London and it WAS...kind of a big deal. We talked all things Akai: AI infrastructure built to do real work. Agents that handle hiring. Payroll that catches errors... | Deel | 102 comments",
       "verticals": [
         "payroll",
         "compliance_legal"
@@ -65372,7 +65605,7 @@
         "finance_leader",
         "founder_or_ceo"
       ],
-      "excerpt": "Deel Stablecoin Wallet Eliminates Global Payout Fees | Rohit Jain posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. Full Stack Engineer @ Deel | React, Node, Nex",
+      "excerpt": "Deel Stablecoin Wallet Eliminates Global Payout Fees",
       "verticals": []
     },
     {
@@ -65387,7 +65620,7 @@
       "personas": [
         "founder_or_ceo"
       ],
-      "excerpt": "Deel Stablecoin Wallet Reduces Paycheck Erosion in Argentina | Nusabbeh Waqar posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. # Deel Stablecoin Wallet Reduces ",
+      "excerpt": "Deel Stablecoin Wallet Reduces Paycheck Erosion in Argentina",
       "verticals": [
         "spend_expense"
       ]
@@ -65404,7 +65637,7 @@
       "personas": [
         "product_manager"
       ],
-      "excerpt": "# Post by Menno Veen \u00b7 LinkedIn \u00b7 2026-07-08 **Menno Veen**: Group Product Manager at Deel with 12 years 8 months of experience. Previous roles include Product Lead - Global Payroll Calculations at Rippling, Head of Product at Twill, and Product Owner at Twill. Based in Netherlan",
+      "excerpt": "Deel is accelerating payroll onboarding by replacing manual specialist workflows with AI-driven automation to handle a rapidly scaling entity intake problem.",
       "verticals": [
         "payroll"
       ]
@@ -65421,7 +65654,7 @@
       "personas": [
         "unclassified_signals: Product Partnership Manager / Account Executive"
       ],
-      "excerpt": "# Shirley Alexander \u00b7 LinkedIn \u00b7 2026-05-11 ## Author **Shirley Alexander** *We're hiring!* Current role: Senior Talent Acquisition Specialist at Deel ## Post We're hiring a Product Partnership Manager Deel! Sounds fancy, but it's really an Account Executive role-just with deeper",
+      "excerpt": "Deel is hiring a Product Partnership Manager to identify, negotiate, and close strategic tech partnerships across North America and LATAM.",
       "verticals": []
     },
     {
@@ -65437,7 +65670,7 @@
         "founder_or_ceo",
         "operations_leader"
       ],
-      "excerpt": "# Post by Deel \u00b7 LinkedIn \u00b7 2026-07-01 **Deel**: Deel provides global payroll, compliance, and HR solutions for hiring, managing, paying, and equiping anyone, anywhere. They offer solutions for payroll, HR, it, and immigration for every worker type, all in one platform from one t",
+      "excerpt": "Customer relationships can evolve into deeper partnerships through shared problem-solving and co-creation.",
       "verticals": [
         "payroll",
         "compliance_legal"
@@ -65460,7 +65693,7 @@
         "people_ops_manager",
         "payroll_manager"
       ],
-      "excerpt": "Deel launches 7 new products for global hiring | Ronald G. posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. # Deel launches 7 new products for global hiring Pre",
+      "excerpt": "Deel launches 7 new products for global hiring",
       "verticals": [
         "payroll",
         "global_eor_contractors",
@@ -65485,7 +65718,7 @@
         "operations_leader",
         "founder_or_ceo"
       ],
-      "excerpt": "Every company says they want to hire the best talent, anywhere in the world \ud83c\udf0e Then someone asks: \"Can we actually get them a visa?\" Jira tickets. Spreadsheets. A 47-email thread with a law firm... | Mikita Manichau | 11 comments Agree & Join LinkedIn By clicking Continue to join ",
+      "excerpt": "Every company says they want to hire the best talent, anywhere in the world \ud83c\udf0e Then someone asks: \"Can we actually get them a visa?\" Jira tickets. Spreadsheets. A 47-email thread with a law firm... | Mikita Manichau | 11 comments",
       "verticals": [
         "immigration_mobility"
       ]
@@ -65504,7 +65737,7 @@
         "founder_or_ceo",
         "operations_leader"
       ],
-      "excerpt": "Deel's innovative solutions for global teams in 2026 | Deel posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. ##### Deel Drop: Fall Edition - Highlights https://",
+      "excerpt": "Deel's innovative solutions for global teams in 2026",
       "verticals": [
         "payroll",
         "time_attendance",
@@ -65526,7 +65759,7 @@
         "founder_or_ceo",
         "operations_leader"
       ],
-      "excerpt": "# Stephen W\u00fcnstel \u00b7 LinkedIn \u00b7 2026-06-25 ## Author **Stephen W\u00fcnstel** *Product Management @ Deel* Current role: Product Management at Deel ## Post Ship Whenever It's Ready: We shipped 15 small improvements without waiting for release gates. Running a 5-post series on Deel's AI ",
+      "excerpt": "Deel automated release gates to ship small improvements continuously without approval delays.",
       "verticals": []
     },
     {
@@ -65542,7 +65775,7 @@
         "finance_leader",
         "payroll_manager"
       ],
-      "excerpt": "# Saumil Sharma \u00b7 LinkedIn \u00b7 2026-06-22 ## Author **Saumil Sharma** *Senior Product Manager | Deel* Current role: Sr. Product Manager at Deel ## Post Running payroll calculations with AI? Bold. I'd stay away though. Don't get me wrong...AI is amazing. I use it every day. But some",
+      "excerpt": "AI should not be used for critical payroll calculation and tax filing tasks where errors are costly and irreversible.",
       "verticals": [
         "payroll"
       ]
@@ -65557,7 +65790,7 @@
       "primary_message": "Deel's AI Workforce product enables seven assignable AI agents to work alongside HR teams and inside HRIS systems to automate high-volume admin tasks.",
       "competitive_stance": "implicit_contrast",
       "personas": [],
-      "excerpt": "How Deel used AI tools to create a launch video in 6 days | Alan Roll posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's[User Agreement](https://www.linkedin.com/legal/user-agreement?trk=linkedin-tc_auth-button_us",
+      "excerpt": "How Deel used AI tools to create a launch video in 6 days",
       "verticals": []
     },
     {
@@ -65572,7 +65805,7 @@
       "personas": [
         "founder_or_ceo"
       ],
-      "excerpt": "Joined Deel: Fastest Growing Company in the World | Nusabbeh Waqar posted on the topic | LinkedIn Agree & Join LinkedIn By clicking Continue to join or sign in, you agree to LinkedIn's User Agreement, Privacy Policy, and Cookie Policy. # Joined Deel: Fastest Growing Company in th",
+      "excerpt": "Joined Deel: Fastest Growing Company in the World",
       "verticals": [
         "payroll"
       ]
@@ -65589,7 +65822,7 @@
       "personas": [
         "not_observed"
       ],
-      "excerpt": "Product management at Deel is intense by design. Most weekends I'm still running at full speed when Friday ends. The only thing that fixes that is getting outside. Long days, fast context switches... | Stephen A. W\u00fcnstel | 20 comments Agree & Join LinkedIn By clicking Continue to",
+      "excerpt": "Product management at Deel is intense by design. Most weekends I'm still running at full speed when Friday ends. The only thing that fixes that is getting outside. Long days, fast context switches... | Stephen A. W\u00fcnstel | 20 comments",
       "verticals": []
     },
     {
@@ -65748,7 +65981,25 @@
           "https://www.deel.com/solutions/hr/",
           "https://www.deel.com/case-studies/petvisor/"
         ],
-        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs."
+        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs.",
+        "focal_n_artifacts": 42,
+        "focal_top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "consolidation": 17,
+          "data_unification": 13,
+          "automation": 4,
+          "integration_ecosystem": 2,
+          "speed_to_value": 1,
+          "risk": 1,
+          "compliance": 1,
+          "security_and_control": 1
+        },
+        "competitor_share": 0.5528,
+        "focal_share": 0.3684
       },
       {
         "vertical": "global_eor_contractors",
@@ -65786,7 +66037,23 @@
           "https://www.deel.com/case-studies/petvisor/",
           "https://www.deel.com/deel-vs-competitors/papaya-global/"
         ],
-        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs."
+        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs.",
+        "focal_n_artifacts": 11,
+        "focal_top_themes": [
+          "consolidation",
+          "data_unification",
+          "compliance"
+        ],
+        "focal_theme_counts": {
+          "consolidation": 3,
+          "data_unification": 2,
+          "compliance": 2,
+          "speed_to_value": 1,
+          "risk": 1,
+          "integration_ecosystem": 1
+        },
+        "competitor_share": 0.3821,
+        "focal_share": 0.0965
       },
       {
         "vertical": "hris_core_hr",
@@ -65824,7 +66091,24 @@
           "https://www.deel.com/hr-platform/workflows/",
           "https://www.deel.com/solutions/hr/"
         ],
-        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs."
+        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs.",
+        "focal_n_artifacts": 32,
+        "focal_top_themes": [
+          "data_unification",
+          "consolidation",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "data_unification": 10,
+          "consolidation": 10,
+          "automation": 7,
+          "integration_ecosystem": 2,
+          "cost_reduction": 1,
+          "speed_to_value": 1,
+          "security_and_control": 1
+        },
+        "competitor_share": 0.3496,
+        "focal_share": 0.2807
       },
       {
         "vertical": "compliance_legal",
@@ -65862,7 +66146,22 @@
           "https://www.deel.com/hr-platform/workflows/",
           "https://www.deel.com/deel-vs-competitors/papaya-global/"
         ],
-        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs."
+        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs.",
+        "focal_n_artifacts": 15,
+        "focal_top_themes": [
+          "data_unification",
+          "consolidation",
+          "compliance"
+        ],
+        "focal_theme_counts": {
+          "data_unification": 7,
+          "consolidation": 3,
+          "compliance": 2,
+          "automation": 2,
+          "speed_to_value": 1
+        },
+        "competitor_share": 0.3008,
+        "focal_share": 0.1316
       },
       {
         "vertical": "talent_performance",
@@ -65900,7 +66199,23 @@
           "https://www.deel.com/solutions/hr/",
           "https://www.deel.com/deel-vs-competitors/papaya-global/"
         ],
-        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs."
+        "sample_message": "Deel offers transparent, flexible, and scalable pricing for hiring contractors, employees, and managing global payroll without hidden costs.",
+        "focal_n_artifacts": 14,
+        "focal_top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "consolidation": 5,
+          "data_unification": 3,
+          "automation": 3,
+          "speed_to_value": 1,
+          "all_in_one": 1,
+          "integration_ecosystem": 1
+        },
+        "competitor_share": 0.2439,
+        "focal_share": 0.1228
       },
       {
         "vertical": "immigration_mobility",
@@ -65937,7 +66252,12 @@
           "https://www.deel.com/segments/startups/",
           "https://www.deel.com/case-studies/marqvision/"
         ],
-        "sample_message": "Petvisor consolidated five fragmented payroll systems into a single centralized Deel platform, enabling one person to manage all global payrolls with improved e"
+        "sample_message": "Petvisor consolidated five fragmented payroll systems into a single centralized Deel platform, enabling one person to manage all global payrolls with improved e",
+        "focal_n_artifacts": 0,
+        "focal_top_themes": [],
+        "focal_theme_counts": {},
+        "competitor_share": 0.1951,
+        "focal_share": 0.0
       },
       {
         "vertical": "workforce_analytics",
@@ -65974,7 +66294,21 @@
           "https://www.deel.com/deel-vs-competitors/papaya-global/",
           "https://www.deel.com/deel-vs-competitors/gusto/"
         ],
-        "sample_message": "Deel HR enables companies to manage global HR operations end-to-end across 150+ countries from a single, unified system."
+        "sample_message": "Deel HR enables companies to manage global HR operations end-to-end across 150+ countries from a single, unified system.",
+        "focal_n_artifacts": 22,
+        "focal_top_themes": [
+          "data_unification",
+          "consolidation",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "data_unification": 11,
+          "consolidation": 8,
+          "automation": 2,
+          "speed_to_value": 1
+        },
+        "competitor_share": 0.1545,
+        "focal_share": 0.193
       },
       {
         "vertical": "benefits",
@@ -66008,7 +66342,24 @@
           "https://www.deel.com/solutions/",
           "https://www.deel.com/solutions/benefits/marketplace/"
         ],
-        "sample_message": "Deel provides a unified platform to hire, manage, and pay employees globally while handling compliance automatically, enabling startups to scale without operati"
+        "sample_message": "Deel provides a unified platform to hire, manage, and pay employees globally while handling compliance automatically, enabling startups to scale without operati",
+        "focal_n_artifacts": 22,
+        "focal_top_themes": [
+          "consolidation",
+          "data_unification",
+          "compliance"
+        ],
+        "focal_theme_counts": {
+          "consolidation": 8,
+          "data_unification": 7,
+          "compliance": 2,
+          "automation": 2,
+          "speed_to_value": 1,
+          "integration_ecosystem": 1,
+          "security_and_control": 1
+        },
+        "competitor_share": 0.1057,
+        "focal_share": 0.193
       },
       {
         "vertical": "it_device_management",
@@ -66043,7 +66394,23 @@
           "https://www.deel.com/deel-vs-competitors/rippling/",
           "https://www.deel.com/solutions/"
         ],
-        "sample_message": "Deel provides a unified platform to hire, manage, and pay employees globally while handling compliance automatically, enabling startups to scale without operati"
+        "sample_message": "Deel provides a unified platform to hire, manage, and pay employees globally while handling compliance automatically, enabling startups to scale without operati",
+        "focal_n_artifacts": 19,
+        "focal_top_themes": [
+          "data_unification",
+          "consolidation",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "data_unification": 7,
+          "consolidation": 6,
+          "automation": 3,
+          "integration_ecosystem": 1,
+          "security_and_control": 1,
+          "cross_system_workflow": 1
+        },
+        "competitor_share": 0.0976,
+        "focal_share": 0.1667
       },
       {
         "vertical": "time_attendance",
@@ -66074,7 +66441,22 @@
           "https://www.deel.com/deel-vs-competitors/papaya-global/",
           "https://www.deel.com/deel-vs-competitors/multiplier/"
         ],
-        "sample_message": "Deel HR enables companies to manage global HR operations end-to-end across 150+ countries from a single, unified system."
+        "sample_message": "Deel HR enables companies to manage global HR operations end-to-end across 150+ countries from a single, unified system.",
+        "focal_n_artifacts": 21,
+        "focal_top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "consolidation": 11,
+          "data_unification": 4,
+          "automation": 4,
+          "speed_to_value": 1,
+          "integration_ecosystem": 1
+        },
+        "competitor_share": 0.0813,
+        "focal_share": 0.1842
       },
       {
         "vertical": "identity_security",
@@ -66106,7 +66488,22 @@
           "https://www.deel.com/solutions/it/access-management/",
           "https://www.deel.com/solutions/"
         ],
-        "sample_message": "Deel provides a unified platform to hire, manage, and pay employees globally while handling compliance automatically, enabling startups to scale without operati"
+        "sample_message": "Deel provides a unified platform to hire, manage, and pay employees globally while handling compliance automatically, enabling startups to scale without operati",
+        "focal_n_artifacts": 15,
+        "focal_top_themes": [
+          "data_unification",
+          "automation",
+          "integration_ecosystem"
+        ],
+        "focal_theme_counts": {
+          "data_unification": 5,
+          "automation": 5,
+          "integration_ecosystem": 2,
+          "consolidation": 2,
+          "security_and_control": 1
+        },
+        "competitor_share": 0.065,
+        "focal_share": 0.1316
       },
       {
         "vertical": "spend_expense",
@@ -66135,7 +66532,22 @@
           "https://www.linkedin.com/posts/nusabbeh_redefining-pay-hold-earn-and-spend-with-activity-7467990245800562689-8Lsy",
           "https://www.linkedin.com/posts/deel_deel-drop-fall-edition-highlights-activity-7393651965441929217-YhgV"
         ],
-        "sample_message": "One unified platform simplifies global payroll operations with built-in compliance, flexible execution models, and consolidated visibility across all countries "
+        "sample_message": "One unified platform simplifies global payroll operations with built-in compliance, flexible execution models, and consolidated visibility across all countries ",
+        "focal_n_artifacts": 17,
+        "focal_top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "focal_theme_counts": {
+          "consolidation": 12,
+          "data_unification": 2,
+          "automation": 1,
+          "cross_system_workflow": 1,
+          "integration_ecosystem": 1
+        },
+        "competitor_share": 0.0244,
+        "focal_share": 0.1491
       }
     ],
     "by_artifact": {
@@ -66658,6 +67070,790 @@
     },
     "method": "deterministic keyword mapping over products/themes/messages/url (config taxonomy.product_verticals); not a model judgment"
   },
+  "focal_vertical_analysis": {
+    "verticals": [
+      {
+        "vertical": "payroll",
+        "n_artifacts": 42,
+        "n_linkedin_posts": 3,
+        "top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "theme_counts": {
+          "consolidation": 17,
+          "data_unification": 13,
+          "automation": 4,
+          "integration_ecosystem": 2,
+          "speed_to_value": 1,
+          "risk": 1,
+          "compliance": 1,
+          "security_and_control": 1
+        },
+        "stance_mix": {
+          "implicit_contrast": 21,
+          "category_attack": 10,
+          "none": 1,
+          "ignores": 4,
+          "named_comparison": 1
+        },
+        "personas": [
+          "hr_leader",
+          "finance_leader",
+          "operations_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/pricing",
+          "https://www.rippling.com/#",
+          "https://www.rippling.com/compare"
+        ],
+        "sample_message": "Rippling is a unified platform that consolidates HR, Finance, and IT operations in a single system."
+      },
+      {
+        "vertical": "hris_core_hr",
+        "n_artifacts": 32,
+        "n_linkedin_posts": 2,
+        "top_themes": [
+          "data_unification",
+          "consolidation",
+          "automation"
+        ],
+        "theme_counts": {
+          "data_unification": 10,
+          "consolidation": 10,
+          "automation": 7,
+          "integration_ecosystem": 2,
+          "cost_reduction": 1,
+          "speed_to_value": 1,
+          "security_and_control": 1
+        },
+        "stance_mix": {
+          "category_attack": 7,
+          "implicit_contrast": 18,
+          "none": 1,
+          "named_comparison": 1,
+          "ignores": 1
+        },
+        "personas": [
+          "hr_leader",
+          "operations_leader",
+          "it_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/#",
+          "https://www.rippling.com/products/it/automated-compliance",
+          "https://www.rippling.com/customers/y-combinator"
+        ],
+        "sample_message": "A unified platform that consolidates HR, IT, Finance, and Payroll while powering AI to automate work across all functions."
+      },
+      {
+        "vertical": "benefits",
+        "n_artifacts": 22,
+        "n_linkedin_posts": 0,
+        "top_themes": [
+          "consolidation",
+          "data_unification",
+          "compliance"
+        ],
+        "theme_counts": {
+          "consolidation": 8,
+          "data_unification": 7,
+          "compliance": 2,
+          "automation": 2,
+          "speed_to_value": 1,
+          "integration_ecosystem": 1,
+          "security_and_control": 1
+        },
+        "stance_mix": {
+          "implicit_contrast": 11,
+          "category_attack": 6,
+          "none": 1,
+          "ignores": 1
+        },
+        "personas": [
+          "hr_leader",
+          "finance_leader",
+          "operations_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/pricing",
+          "https://www.rippling.com/#",
+          "https://www.rippling.com/compare"
+        ],
+        "sample_message": "Rippling is a unified platform that consolidates HR, Finance, and IT operations in a single system."
+      },
+      {
+        "vertical": "workforce_analytics",
+        "n_artifacts": 22,
+        "n_linkedin_posts": 0,
+        "top_themes": [
+          "data_unification",
+          "consolidation",
+          "automation"
+        ],
+        "theme_counts": {
+          "data_unification": 11,
+          "consolidation": 8,
+          "automation": 2,
+          "speed_to_value": 1
+        },
+        "stance_mix": {
+          "none": 1,
+          "category_attack": 7,
+          "implicit_contrast": 7,
+          "ignores": 2
+        },
+        "personas": [
+          "hr_leader",
+          "operations_leader",
+          "finance_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/customers/chess",
+          "https://www.rippling.com/products/payroll/employer-of-record",
+          "https://www.rippling.com/customers/barrys"
+        ],
+        "sample_message": "Unified platform eliminates data fragmentation and manual processes, enabling rapid workforce scaling without dedicated HR or IT teams."
+      },
+      {
+        "vertical": "time_attendance",
+        "n_artifacts": 21,
+        "n_linkedin_posts": 3,
+        "top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "theme_counts": {
+          "consolidation": 11,
+          "data_unification": 4,
+          "automation": 4,
+          "speed_to_value": 1,
+          "integration_ecosystem": 1
+        },
+        "stance_mix": {
+          "implicit_contrast": 12,
+          "none": 1,
+          "category_attack": 5,
+          "ignores": 1
+        },
+        "personas": [
+          "hr_leader",
+          "operations_leader",
+          "finance_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/compare",
+          "https://www.rippling.com/customers/chess",
+          "https://www.rippling.com/products/payroll/employer-of-record"
+        ],
+        "sample_message": "Rippling unifies HR, IT, and Finance systems into a single platform that connects all your tools and data."
+      },
+      {
+        "vertical": "it_device_management",
+        "n_artifacts": 19,
+        "n_linkedin_posts": 1,
+        "top_themes": [
+          "data_unification",
+          "consolidation",
+          "automation"
+        ],
+        "theme_counts": {
+          "data_unification": 7,
+          "consolidation": 6,
+          "automation": 3,
+          "integration_ecosystem": 1,
+          "security_and_control": 1,
+          "cross_system_workflow": 1
+        },
+        "stance_mix": {
+          "implicit_contrast": 9,
+          "none": 1,
+          "category_attack": 6,
+          "ignores": 1
+        },
+        "personas": [
+          "it_leader",
+          "hr_leader",
+          "finance_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/pricing",
+          "https://www.rippling.com/products/it/automated-compliance",
+          "https://www.rippling.com/compare"
+        ],
+        "sample_message": "Rippling is a unified platform that consolidates HR, Finance, and IT operations in a single system."
+      },
+      {
+        "vertical": "spend_expense",
+        "n_artifacts": 17,
+        "n_linkedin_posts": 2,
+        "top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "theme_counts": {
+          "consolidation": 12,
+          "data_unification": 2,
+          "automation": 1,
+          "cross_system_workflow": 1,
+          "integration_ecosystem": 1
+        },
+        "stance_mix": {
+          "category_attack": 7,
+          "implicit_contrast": 8,
+          "ignores": 2
+        },
+        "personas": [
+          "finance_leader",
+          "operations_leader",
+          "hr_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/#",
+          "https://www.rippling.com/platform/workflows",
+          "https://www.rippling.com/customers/andros"
+        ],
+        "sample_message": "A unified platform that consolidates HR, IT, Finance, and Payroll while powering AI to automate work across all functions."
+      },
+      {
+        "vertical": "identity_security",
+        "n_artifacts": 15,
+        "n_linkedin_posts": 1,
+        "top_themes": [
+          "data_unification",
+          "automation",
+          "integration_ecosystem"
+        ],
+        "theme_counts": {
+          "data_unification": 5,
+          "automation": 5,
+          "integration_ecosystem": 2,
+          "consolidation": 2,
+          "security_and_control": 1
+        },
+        "stance_mix": {
+          "implicit_contrast": 9,
+          "category_attack": 3,
+          "ignores": 1
+        },
+        "personas": [
+          "it_leader",
+          "security_leader",
+          "operations_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/products/it/automated-compliance",
+          "https://www.rippling.com/platform/permissions",
+          "https://www.rippling.com/products/it/device-management"
+        ],
+        "sample_message": "SOC 2 compliance becomes a byproduct of normal business operations when identity, device, access, and employee systems are unified in a single platform."
+      },
+      {
+        "vertical": "compliance_legal",
+        "n_artifacts": 15,
+        "n_linkedin_posts": 0,
+        "top_themes": [
+          "data_unification",
+          "consolidation",
+          "compliance"
+        ],
+        "theme_counts": {
+          "data_unification": 7,
+          "consolidation": 3,
+          "compliance": 2,
+          "automation": 2,
+          "speed_to_value": 1
+        },
+        "stance_mix": {
+          "implicit_contrast": 7,
+          "category_attack": 6,
+          "named_comparison": 1,
+          "ignores": 1
+        },
+        "personas": [
+          "hr_leader",
+          "operations_leader",
+          "people_ops_manager"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/products/it/automated-compliance",
+          "https://www.rippling.com/products/payroll/employer-of-record",
+          "https://www.rippling.com/products/hr/lms"
+        ],
+        "sample_message": "SOC 2 compliance becomes a byproduct of normal business operations when identity, device, access, and employee systems are unified in a single platform."
+      },
+      {
+        "vertical": "talent_performance",
+        "n_artifacts": 14,
+        "n_linkedin_posts": 2,
+        "top_themes": [
+          "consolidation",
+          "data_unification",
+          "automation"
+        ],
+        "theme_counts": {
+          "consolidation": 5,
+          "data_unification": 3,
+          "automation": 3,
+          "speed_to_value": 1,
+          "all_in_one": 1,
+          "integration_ecosystem": 1
+        },
+        "stance_mix": {
+          "category_attack": 5,
+          "implicit_contrast": 7,
+          "ignores": 1
+        },
+        "personas": [
+          "hr_leader",
+          "finance_leader",
+          "operations_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/#",
+          "https://www.rippling.com/products/it/automated-compliance",
+          "https://www.rippling.com/platform/workflows"
+        ],
+        "sample_message": "A unified platform that consolidates HR, IT, Finance, and Payroll while powering AI to automate work across all functions."
+      },
+      {
+        "vertical": "global_eor_contractors",
+        "n_artifacts": 11,
+        "n_linkedin_posts": 1,
+        "top_themes": [
+          "consolidation",
+          "data_unification",
+          "compliance"
+        ],
+        "theme_counts": {
+          "consolidation": 3,
+          "data_unification": 2,
+          "compliance": 2,
+          "speed_to_value": 1,
+          "risk": 1,
+          "integration_ecosystem": 1
+        },
+        "stance_mix": {
+          "category_attack": 2,
+          "implicit_contrast": 6,
+          "ignores": 1
+        },
+        "personas": [
+          "hr_leader",
+          "finance_leader",
+          "operations_leader"
+        ],
+        "example_urls": [
+          "https://www.rippling.com/#",
+          "https://www.rippling.com/entity-vs-eor-cost-calculator",
+          "https://www.rippling.com/products/payroll/employer-of-record"
+        ],
+        "sample_message": "A unified platform that consolidates HR, IT, Finance, and Payroll while powering AI to automate work across all functions."
+      }
+    ],
+    "by_artifact": {
+      "ART-b2d4ed380867": [
+        "payroll",
+        "benefits",
+        "it_device_management"
+      ],
+      "ART-c1c42d7105ae": [
+        "payroll",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "benefits",
+        "talent_performance",
+        "spend_expense"
+      ],
+      "ART-573effbd48d4": [
+        "hris_core_hr",
+        "talent_performance",
+        "it_device_management",
+        "identity_security",
+        "compliance_legal"
+      ],
+      "ART-65290e73c3c3": [
+        "hris_core_hr"
+      ],
+      "ART-db8d2de11bb6": [
+        "payroll",
+        "benefits",
+        "time_attendance",
+        "it_device_management"
+      ],
+      "ART-c6ed2708ea18": [
+        "payroll"
+      ],
+      "ART-1388bb6c3d3e": [
+        "payroll"
+      ],
+      "ART-92bb8dfe710c": [
+        "payroll",
+        "hris_core_hr",
+        "talent_performance",
+        "spend_expense"
+      ],
+      "ART-53fde70ae71a": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "time_attendance",
+        "it_device_management",
+        "workforce_analytics"
+      ],
+      "ART-6037eefe5c32": [
+        "global_eor_contractors"
+      ],
+      "ART-ac4e9caf83b2": [
+        "it_device_management"
+      ],
+      "ART-7f6216118cf8": [
+        "payroll",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "benefits",
+        "talent_performance",
+        "time_attendance",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-dce7ab6e4707": [
+        "identity_security"
+      ],
+      "ART-c802b6b3fe6f": [
+        "hris_core_hr",
+        "it_device_management",
+        "identity_security"
+      ],
+      "ART-b7a88682004b": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "talent_performance",
+        "time_attendance",
+        "workforce_analytics"
+      ],
+      "ART-d485833dcfd1": [
+        "payroll",
+        "hris_core_hr"
+      ],
+      "ART-1833c56d07a8": [
+        "workforce_analytics"
+      ],
+      "ART-4a6761c603b5": [
+        "talent_performance",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-93c0d0ff60c7": [
+        "payroll",
+        "talent_performance",
+        "time_attendance",
+        "spend_expense"
+      ],
+      "ART-45ae7a748cb5": [
+        "payroll",
+        "it_device_management",
+        "identity_security"
+      ],
+      "ART-17c2f3cbdaff": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "time_attendance",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-361550a9bb81": [
+        "workforce_analytics"
+      ],
+      "ART-f7d392752fd8": [
+        "workforce_analytics"
+      ],
+      "ART-471b96f34eb2": [
+        "talent_performance",
+        "time_attendance"
+      ],
+      "ART-e24a141ca141": [
+        "payroll",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "benefits"
+      ],
+      "ART-a0e525fe7898": [
+        "time_attendance"
+      ],
+      "ART-43d069022fcc": [
+        "spend_expense"
+      ],
+      "ART-5ccb939f9268": [
+        "workforce_analytics"
+      ],
+      "ART-1ee3666346a4": [
+        "payroll",
+        "time_attendance",
+        "spend_expense"
+      ],
+      "ART-8ee73e7ec69b": [
+        "hris_core_hr",
+        "benefits"
+      ],
+      "ART-3ca1dfdb675e": [
+        "spend_expense"
+      ],
+      "ART-59650d888208": [
+        "payroll",
+        "global_eor_contractors"
+      ],
+      "ART-2a34b577cea5": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "spend_expense",
+        "it_device_management"
+      ],
+      "ART-89f2cc18576f": [
+        "compliance_legal"
+      ],
+      "ART-488791004a14": [
+        "hris_core_hr",
+        "it_device_management",
+        "identity_security"
+      ],
+      "ART-ee041e5fd642": [
+        "hris_core_hr",
+        "identity_security"
+      ],
+      "ART-05f81519f701": [
+        "payroll",
+        "time_attendance",
+        "compliance_legal"
+      ],
+      "ART-fe0d2ce20005": [
+        "benefits"
+      ],
+      "ART-9e8697e401cd": [
+        "payroll",
+        "global_eor_contractors"
+      ],
+      "ART-ca66e8321329": [
+        "payroll",
+        "hris_core_hr",
+        "time_attendance"
+      ],
+      "ART-e4c8928c5771": [
+        "payroll"
+      ],
+      "ART-597718ed3ef1": [
+        "payroll",
+        "workforce_analytics"
+      ],
+      "ART-c859566bdf4e": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "time_attendance",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-6de4626552fe": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "time_attendance"
+      ],
+      "ART-165b8e00fc05": [
+        "payroll",
+        "workforce_analytics"
+      ],
+      "ART-978b52a05b19": [
+        "payroll",
+        "hris_core_hr",
+        "time_attendance"
+      ],
+      "ART-c3f172910e45": [
+        "payroll",
+        "talent_performance"
+      ],
+      "ART-21022e306c70": [
+        "hris_core_hr",
+        "benefits"
+      ],
+      "ART-b8f726d01fb0": [
+        "payroll",
+        "it_device_management",
+        "workforce_analytics"
+      ],
+      "ART-22f61db7ae94": [
+        "it_device_management",
+        "identity_security",
+        "compliance_legal"
+      ],
+      "ART-9275483462be": [
+        "global_eor_contractors",
+        "benefits"
+      ],
+      "ART-dbf94bafd8ca": [
+        "payroll",
+        "spend_expense"
+      ],
+      "ART-41694369ff2b": [
+        "payroll",
+        "hris_core_hr",
+        "compliance_legal"
+      ],
+      "ART-7d2c044cac2e": [
+        "payroll"
+      ],
+      "ART-a2534e3edf01": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "talent_performance",
+        "time_attendance",
+        "compliance_legal"
+      ],
+      "ART-26a94f70c569": [
+        "payroll",
+        "global_eor_contractors",
+        "benefits",
+        "compliance_legal"
+      ],
+      "ART-4abdaa85df4f": [
+        "spend_expense"
+      ],
+      "ART-92bae3345e54": [
+        "hris_core_hr",
+        "benefits",
+        "it_device_management",
+        "identity_security",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-e1d2469059f7": [
+        "spend_expense",
+        "workforce_analytics"
+      ],
+      "ART-97fe9592a617": [
+        "spend_expense"
+      ],
+      "ART-0e49c8e23033": [
+        "workforce_analytics"
+      ],
+      "ART-da741d31c278": [
+        "spend_expense"
+      ],
+      "ART-1f0a76de38b6": [
+        "workforce_analytics"
+      ],
+      "ART-9e97a2a2027b": [
+        "payroll",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "benefits",
+        "talent_performance",
+        "time_attendance",
+        "workforce_analytics"
+      ],
+      "ART-a2529009e5c2": [
+        "payroll",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "benefits",
+        "talent_performance",
+        "time_attendance",
+        "spend_expense",
+        "it_device_management",
+        "identity_security",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-6a42603e4fd2": [
+        "it_device_management",
+        "identity_security",
+        "compliance_legal"
+      ],
+      "ART-e30eb29f723b": [
+        "hris_core_hr",
+        "spend_expense"
+      ],
+      "ART-8d8e28f23173": [
+        "workforce_analytics"
+      ],
+      "ART-c273dca5ac8d": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "it_device_management",
+        "identity_security"
+      ],
+      "ART-a407b197b636": [
+        "payroll",
+        "workforce_analytics",
+        "compliance_legal"
+      ],
+      "ART-c5e9b33b9543": [
+        "hris_core_hr"
+      ],
+      "ART-8bb8178dd77f": [
+        "identity_security",
+        "workforce_analytics"
+      ],
+      "ART-9353f8484a17": [
+        "it_device_management",
+        "identity_security"
+      ],
+      "ART-0740567b9df7": [
+        "hris_core_hr",
+        "it_device_management",
+        "identity_security"
+      ],
+      "ART-07aea9fb54cd": [
+        "payroll",
+        "hris_core_hr",
+        "benefits",
+        "time_attendance",
+        "spend_expense",
+        "it_device_management"
+      ],
+      "ART-bb4920b81d58": [
+        "payroll",
+        "spend_expense",
+        "it_device_management"
+      ],
+      "ART-bc32d0983b04": [
+        "time_attendance"
+      ],
+      "ART-7eab7970596a": [
+        "talent_performance"
+      ],
+      "ART-334eb17c3e42": [
+        "time_attendance"
+      ],
+      "ART-e53231109820": [
+        "hris_core_hr"
+      ],
+      "ART-76ae5572946c": [
+        "payroll"
+      ],
+      "ART-bf4c913c5206": [
+        "payroll",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "talent_performance",
+        "time_attendance",
+        "spend_expense",
+        "identity_security"
+      ],
+      "ART-efc3483cacb0": [
+        "payroll"
+      ]
+    },
+    "method": "deterministic keyword mapping over products/themes/messages/url (config taxonomy.product_verticals); not a model judgment"
+  },
   "channel_alignment": {
     "website_themes": {
       "consolidation": 27,
@@ -66691,29 +67887,64 @@
   },
   "theme_comparison": {
     "competitor_themes": {
-      "consolidation": 39,
-      "automation": 14,
-      "compliance": 10,
-      "integration_ecosystem": 8,
-      "global_hiring": 7,
-      "speed_to_value": 7,
-      "data_unification": 6,
-      "cost_reduction": 5,
       "native_platform_breadth": 5,
-      "employee_experience": 4
+      "compliance": 10,
+      "status": 0,
+      "data_unification": 6,
+      "integration_ecosystem": 8,
+      "cost_reduction": 5,
+      "consolidation": 39,
+      "global_hiring": 7,
+      "employee_experience": 4,
+      "speed_to_value": 7,
+      "automation": 14,
+      "all_in_one": 1
     },
     "focal_themes": {
-      "data_unification": 35,
-      "consolidation": 28,
-      "automation": 15,
-      "integration_ecosystem": 4,
-      "status": 4,
       "native_platform_breadth": 3,
       "compliance": 3,
+      "status": 4,
+      "data_unification": 35,
+      "integration_ecosystem": 4,
+      "cost_reduction": 1,
+      "consolidation": 28,
       "global_hiring": 2,
+      "employee_experience": 2,
       "speed_to_value": 2,
+      "automation": 15,
       "all_in_one": 2
-    }
+    },
+    "competitor_shares": {
+      "native_platform_breadth": 0.0407,
+      "compliance": 0.0813,
+      "status": 0.0,
+      "data_unification": 0.0488,
+      "integration_ecosystem": 0.065,
+      "cost_reduction": 0.0407,
+      "consolidation": 0.3171,
+      "global_hiring": 0.0569,
+      "employee_experience": 0.0325,
+      "speed_to_value": 0.0569,
+      "automation": 0.1138,
+      "all_in_one": 0.0081
+    },
+    "focal_shares": {
+      "native_platform_breadth": 0.0263,
+      "compliance": 0.0263,
+      "status": 0.0351,
+      "data_unification": 0.307,
+      "integration_ecosystem": 0.0351,
+      "cost_reduction": 0.0088,
+      "consolidation": 0.2456,
+      "global_hiring": 0.0175,
+      "employee_experience": 0.0175,
+      "speed_to_value": 0.0175,
+      "automation": 0.1316,
+      "all_in_one": 0.0175
+    },
+    "competitor_n_classified": 123,
+    "focal_n_classified": 114,
+    "note": "shares = count / n classified artifacts of that company; cross-company bars compare shares, raw counts shown alongside"
   },
   "temporal_baseline": {
     "prior_window": {
@@ -66726,10 +67957,17 @@
         "data_unification": 1,
         "native_platform_breadth": 1,
         "cross_system_workflow": 1
+      },
+      "themes_share": {
+        "consolidation": 0.5,
+        "automation": 0.2857,
+        "data_unification": 0.0714,
+        "native_platform_breadth": 0.0714,
+        "cross_system_workflow": 0.0714
       }
     },
     "current_window": {
-      "n_artifacts": 113,
+      "n_artifacts": 108,
       "themes": {
         "consolidation": 32,
         "automation": 10,
@@ -66741,8 +67979,21 @@
         "data_unification": 5,
         "employee_experience": 4,
         "security_and_control": 4
+      },
+      "themes_share": {
+        "consolidation": 0.2963,
+        "automation": 0.0926,
+        "compliance": 0.0926,
+        "integration_ecosystem": 0.0741,
+        "global_hiring": 0.0648,
+        "speed_to_value": 0.0648,
+        "cost_reduction": 0.0463,
+        "data_unification": 0.0463,
+        "employee_experience": 0.037,
+        "security_and_control": 0.037
       }
     },
+    "outside_windows": 1,
     "stable_themes": [
       "automation",
       "consolidation",
@@ -66765,7 +68016,7 @@
       "workforce_visibility"
     ],
     "receded_themes": [],
-    "note": "Prior membership = real archive-capture/published date inside the comparison window. The prior sample is small \u2014 treat emergence/recession as signals."
+    "note": "Prior membership = real archive-capture/published date inside the comparison window; undated live content is current. Windows have different sample sizes (14 vs 108) \u2014 compare shares, not counts; treat emergence/recession as signals. 1 dated artifact(s) fall outside both windows and are excluded."
   },
   "classifications": [
     {
@@ -79498,49 +80749,6 @@
       "classifier_confidence": "low"
     },
     {
-      "classification_id": "cls-b9945750c284",
-      "artifact_id": "ART-336cbbedeb77",
-      "company_id": "CO-0cf92b8592a5",
-      "primary_theme": null,
-      "supporting_themes": [],
-      "primary_message": null,
-      "secondary_messages": [],
-      "claim_specificity": "unknown",
-      "message_salience": 0.0,
-      "products": [
-        "Ads Transparency Center"
-      ],
-      "segments": [],
-      "personas": [],
-      "buyer_jobs": [],
-      "pains": [],
-      "category_entry_points": [],
-      "funnel_stages": [],
-      "claim_types": [],
-      "proof_types": [],
-      "rhetorical_moves": [],
-      "villain_exact_wording": [],
-      "villain_normalized": [],
-      "named_competitors": [],
-      "implied_competitor_classes": [],
-      "competitive_stance": null,
-      "promised_transformation_from": null,
-      "promised_transformation_to": null,
-      "cta": "Sign in",
-      "pricing_disclosure_level": "unknown",
-      "commercial_motion_signals": [
-        "Sign in requirement"
-      ],
-      "unclassified_signals": [
-        "Artifact contains only navigation elements and UI chrome (header, sign-in link, menu structure)",
-        "No substantive marketing message, claim, or argument present in provided content",
-        "Content appears to be FAQ page navigation metadata rather than marketing artifact body",
-        "is_partial=true indicates content may be incomplete; full FAQ content not captured",
-        "FAQ page structure suggests support/documentation content"
-      ],
-      "classifier_confidence": "low"
-    },
-    {
       "classification_id": "cls-422b977073be",
       "artifact_id": "ART-2333673d04d8",
       "company_id": "CO-0cf92b8592a5",
@@ -79575,143 +80783,6 @@
         "no marketing message, promotional content, or substantive argument present",
         "content appears to be partial/incomplete system interface markup",
         "Artifact contains only navigation chrome and UI elements from Google Ads Transparency Center interface; no marketing content, product information, pricing, packaging, or commercial motion signals present"
-      ],
-      "classifier_confidence": "low"
-    },
-    {
-      "classification_id": "cls-71c35dbef62a",
-      "artifact_id": "ART-7ccc0b65eee1",
-      "company_id": "CO-0cf92b8592a5",
-      "primary_theme": null,
-      "supporting_themes": [],
-      "primary_message": null,
-      "secondary_messages": [],
-      "claim_specificity": "unknown",
-      "message_salience": 0.0,
-      "products": [
-        "Ads Transparency Center"
-      ],
-      "segments": [],
-      "personas": [],
-      "buyer_jobs": [],
-      "pains": [],
-      "category_entry_points": [],
-      "funnel_stages": [],
-      "claim_types": [],
-      "proof_types": [],
-      "rhetorical_moves": [],
-      "villain_exact_wording": [],
-      "villain_normalized": [],
-      "named_competitors": [],
-      "implied_competitor_classes": [],
-      "competitive_stance": null,
-      "promised_transformation_from": null,
-      "promised_transformation_to": null,
-      "cta": "Sign in",
-      "pricing_disclosure_level": "unknown",
-      "commercial_motion_signals": [
-        "Sign in requirement"
-      ],
-      "unclassified_signals": [
-        "artifact is navigation/UI chrome only; contains no marketing message, value proposition, or argument structure",
-        "content appears to be the header and sign-in section of a Google product page, not a marketing artifact with persuasive messaging",
-        "This appears to be a navigation/sign-in page for Google's Ads Transparency Center, not a marketing artifact targeting a specific audience or buying situation",
-        "Content appears to be navigation/UI elements only",
-        "Artifact is partial and may be incomplete",
-        "Artifact contains only navigation UI elements (Google apps menu, sign-in link, Ads Transparency Center breadcrumbs); no marketing message, competitive claim, or proof content is present"
-      ],
-      "classifier_confidence": "low"
-    },
-    {
-      "classification_id": "cls-27761f3944e9",
-      "artifact_id": "ART-4443b7940e64",
-      "company_id": "CO-0cf92b8592a5",
-      "primary_theme": null,
-      "supporting_themes": [],
-      "primary_message": null,
-      "secondary_messages": [],
-      "claim_specificity": "unknown",
-      "message_salience": 0.0,
-      "products": [
-        "Ads Transparency Center"
-      ],
-      "segments": [
-        "not_observed"
-      ],
-      "personas": [
-        "not_observed"
-      ],
-      "buyer_jobs": [
-        "not_observed"
-      ],
-      "pains": [
-        "not_observed"
-      ],
-      "category_entry_points": [
-        "not_observed"
-      ],
-      "funnel_stages": [
-        "not_observed"
-      ],
-      "claim_types": [],
-      "proof_types": [],
-      "rhetorical_moves": [],
-      "villain_exact_wording": [],
-      "villain_normalized": [],
-      "named_competitors": [],
-      "implied_competitor_classes": [],
-      "competitive_stance": null,
-      "promised_transformation_from": null,
-      "promised_transformation_to": null,
-      "cta": "Sign in",
-      "pricing_disclosure_level": "unknown",
-      "commercial_motion_signals": [
-        "Sign in required"
-      ],
-      "unclassified_signals": [
-        "artifact appears to be a navigation/UI scaffold from Google Ads Transparency Center rather than a marketing artifact with communicative intent",
-        "content contains only navigation elements, sign-in links, and menu structure with no marketing messaging or claims",
-        "This appears to be a navigation page or system interface rather than a marketing artifact with audience targeting content",
-        "unverified_excerpt_dropped:[Sign in](https://accounts.google.com/ServiceLogin?passive=1209600&continue=http"
-      ],
-      "classifier_confidence": "low"
-    },
-    {
-      "classification_id": "cls-3005d99ecb2a",
-      "artifact_id": "ART-549d2c0fa854",
-      "company_id": "CO-0cf92b8592a5",
-      "primary_theme": null,
-      "supporting_themes": [],
-      "primary_message": null,
-      "secondary_messages": [],
-      "claim_specificity": "unknown",
-      "message_salience": 0.0,
-      "products": [],
-      "segments": [],
-      "personas": [],
-      "buyer_jobs": [],
-      "pains": [],
-      "category_entry_points": [],
-      "funnel_stages": [],
-      "claim_types": [],
-      "proof_types": [],
-      "rhetorical_moves": [],
-      "villain_exact_wording": [],
-      "villain_normalized": [],
-      "named_competitors": [],
-      "implied_competitor_classes": [],
-      "competitive_stance": null,
-      "promised_transformation_from": null,
-      "promised_transformation_to": null,
-      "cta": null,
-      "pricing_disclosure_level": "unknown",
-      "commercial_motion_signals": [],
-      "unclassified_signals": [
-        "Content appears to be navigation UI/page chrome from Google Ads Transparency Center rather than marketing messaging",
-        "No marketing claims, arguments, or value propositions detected",
-        "Artifact contains only navigation elements, login prompts, and menu labels",
-        "Is_partial flag indicates content may be incomplete",
-        "Artifact contains only Google Ads Transparency Center navigation and authentication UI elements with no product, pricing, packaging, or commercial motion content"
       ],
       "classifier_confidence": "low"
     }
@@ -80170,8 +81241,8 @@
       "change_id": "CHG-38593151443c",
       "company_id": "CO-0cf92b8592a5",
       "dimension": "theme_emergence",
-      "prior_state": "\u201ccost_reduction\u201d not observed in the prior-window sample",
-      "current_state": "\u201ccost_reduction\u201d present in 24 current-window artifacts",
+      "prior_state": "\u201ccost_reduction\u201d not observed in any of the 14 dated prior-window artifacts",
+      "current_state": "\u201ccost_reduction\u201d present in 30 current-window artifacts",
       "lifecycle": "emerging",
       "prior_evidence_ids": [
         "ART-111af4ae1e89",
@@ -80204,7 +81275,13 @@
         "ART-194e939f5a16",
         "ART-60e8422e0410",
         "ART-e22e14f14145",
-        "ART-265b19917189"
+        "ART-265b19917189",
+        "ART-56e6b2c7622f",
+        "ART-fed2d6a7ba75",
+        "ART-cc203bee0f73",
+        "ART-4c5c195d76a3",
+        "ART-f69954e6a63c",
+        "ART-ef47109e67a0"
       ],
       "first_detected_at": "2026-07-12T15:46:06.919964Z",
       "apparent_change_at": null,
@@ -80215,21 +81292,22 @@
         "The small prior-window sample (only 6 artifacts) may simply have lacked cost_reduction messaging by chance rather than it being truly absent from company communications at that time.",
         "The theme could reflect a segment-specific or seasonal campaign (e.g., economic downturn messaging) rather than a durable company-wide repositioning.",
         "Some of the 24 current artifacts may share a common source or template, inflating the apparent breadth of adoption."
-      ]
+      ],
+      "theme": "cost_reduction",
+      "prior_theme_count": 0,
+      "current_theme_count": 30,
+      "prior_window_n": 14,
+      "prior_evidence_role": "window_sample"
     },
     {
       "change_id": "CHG-24fcaf1b8c26",
       "company_id": "CO-0cf92b8592a5",
       "dimension": "theme_emergence",
-      "prior_state": "\u201cglobal_hiring\u201d not observed in the prior-window sample",
-      "current_state": "\u201cglobal_hiring\u201d present in 21 current-window artifacts",
-      "lifecycle": "emerging",
+      "prior_state": "\u201cglobal_hiring\u201d present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cglobal_hiring\u201d present in 33 current-window artifacts",
+      "lifecycle": "expanding",
       "prior_evidence_ids": [
-        "ART-111af4ae1e89",
-        "ART-1d530850a0c7",
-        "ART-b29021325778",
-        "ART-d120ca51f7fe",
-        "ART-9827090a1088"
+        "ART-c249ddcbccea"
       ],
       "current_evidence_ids": [
         "ART-4504605bc1ea",
@@ -80252,25 +81330,42 @@
         "ART-f728f3c75dc3",
         "ART-636fe63c55e0",
         "ART-60e8422e0410",
-        "ART-e22e14f14145"
+        "ART-e22e14f14145",
+        "ART-39db3bdefb26",
+        "ART-fed2d6a7ba75",
+        "ART-1d3e3bc13183",
+        "ART-6ff0e4619a22",
+        "ART-560a667497d0",
+        "ART-af4db07db244",
+        "ART-ddac0943e2f5",
+        "ART-60be8b235bb8",
+        "ART-f3fb5eee299d",
+        "ART-36e6de3460f2",
+        "ART-d5987cb133b6",
+        "ART-b017b9a88a12"
       ],
       "first_detected_at": "2026-07-12T15:46:10.857168Z",
       "apparent_change_at": null,
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change",
+        "prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift",
         "The theme may have existed under a different label or phrasing in the prior window that was not captured by the sample.",
         "The small prior-window sample size (5 artifacts vs 63 total current-window artifacts) could simply reflect limited historical coverage rather than true absence.",
         "This could be a segment-specific or campaign-specific push (e.g., a recruiting or expansion initiative) rather than a company-wide repositioning."
-      ]
+      ],
+      "theme": "global_hiring",
+      "prior_theme_count": 1,
+      "current_theme_count": 33,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
     },
     {
       "change_id": "CHG-a87b82460ea7",
       "company_id": "CO-0cf92b8592a5",
       "dimension": "theme_emergence",
-      "prior_state": "\u201cdata_accuracy\u201d not observed in the prior-window sample",
-      "current_state": "\u201cdata_accuracy\u201d present in 9 current-window artifacts",
+      "prior_state": "\u201cdata_accuracy\u201d not observed in any of the 14 dated prior-window artifacts",
+      "current_state": "\u201cdata_accuracy\u201d present in 13 current-window artifacts",
       "lifecycle": "emerging",
       "prior_evidence_ids": [
         "ART-111af4ae1e89",
@@ -80288,7 +81383,11 @@
         "ART-23536ba4b988",
         "ART-194e939f5a16",
         "ART-57d4d22859e8",
-        "ART-ad817077bf73"
+        "ART-ad817077bf73",
+        "ART-8d2513c0b021",
+        "ART-d4f63f581342",
+        "ART-167995f39a19",
+        "ART-9ffa71a65509"
       ],
       "first_detected_at": "2026-07-12T15:46:15.811243Z",
       "apparent_change_at": null,
@@ -80300,21 +81399,24 @@
         "The 'data_accuracy' theme could be a rebranding or rephrasing of a related prior concept (e.g., 'data quality' or 'precision') rather than a genuinely new theme",
         "This could reflect a segment-specific or campaign-specific push rather than company-wide repositioning, if the 9 current artifacts cluster around a single product line or channel",
         "Seasonal or event-driven messaging (e.g., a product launch, compliance push, or industry report) could explain a temporary spike rather than a sustained strategic shift"
-      ]
+      ],
+      "theme": "data_accuracy",
+      "prior_theme_count": 0,
+      "current_theme_count": 13,
+      "prior_window_n": 14,
+      "prior_evidence_role": "window_sample"
     },
     {
       "change_id": "CHG-897903f5e58a",
       "company_id": "CO-0cf92b8592a5",
       "dimension": "theme_emergence",
-      "prior_state": "\u201cemployee_experience\u201d not observed in the prior-window sample",
-      "current_state": "\u201cemployee_experience\u201d present in 14 current-window artifacts",
-      "lifecycle": "emerging",
+      "prior_state": "\u201cemployee_experience\u201d present but rare in the prior window (3 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cemployee_experience\u201d present in 22 current-window artifacts",
+      "lifecycle": "expanding",
       "prior_evidence_ids": [
-        "ART-111af4ae1e89",
-        "ART-1d530850a0c7",
-        "ART-b29021325778",
-        "ART-d120ca51f7fe",
-        "ART-9827090a1088"
+        "ART-70733a8c82e5",
+        "ART-6e6a875afe49",
+        "ART-c198644f32c9"
       ],
       "current_evidence_ids": [
         "ART-f07ca7d52b9b",
@@ -80330,73 +81432,97 @@
         "ART-0e665529aaf9",
         "ART-5b3ed68d95a8",
         "ART-636fe63c55e0",
-        "ART-e6ecf0c79357"
+        "ART-e6ecf0c79357",
+        "ART-60be8b235bb8",
+        "ART-7225d47d794d",
+        "ART-751cf06aec54",
+        "ART-aecda7d79561",
+        "ART-4c5c195d76a3",
+        "ART-f69954e6a63c",
+        "ART-d2aeea280856",
+        "ART-64cf532eb703"
       ],
       "first_detected_at": "2026-07-12T15:46:20.194844Z",
       "apparent_change_at": null,
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change",
+        "prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift",
         "The prior-window sample was small (only 6 artifacts) relative to the current window (63 artifacts), so the theme's absence earlier could partly reflect limited prior sampling rather than a true absence.",
         "The appearance of 'employee_experience' across 14 artifacts could reflect a segment-specific HR/recruiting campaign rather than a company-wide strategic repositioning.",
         "A rebranding of an existing HR-related theme (e.g., 'workplace culture' or 'talent experience') under a new label could create a false signal of an emerging theme."
-      ]
+      ],
+      "theme": "employee_experience",
+      "prior_theme_count": 3,
+      "current_theme_count": 22,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
     },
     {
       "change_id": "CHG-595fcf0353df",
       "company_id": "CO-0cf92b8592a5",
       "dimension": "theme_emergence",
-      "prior_state": "\u201ccross_system_workflow\u201d not observed in the prior-window sample",
-      "current_state": "\u201ccross_system_workflow\u201d present in 5 current-window artifacts",
-      "lifecycle": "emerging",
+      "prior_state": "\u201ccross_system_workflow\u201d present but rare in the prior window (4 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201ccross_system_workflow\u201d present in 10 current-window artifacts",
+      "lifecycle": "expanding",
       "prior_evidence_ids": [
-        "ART-111af4ae1e89",
-        "ART-1d530850a0c7",
-        "ART-b29021325778",
-        "ART-d120ca51f7fe",
-        "ART-9827090a1088"
+        "ART-c249ddcbccea",
+        "ART-edf178c1cd08",
+        "ART-adfc7a8286fc",
+        "ART-668cae58be22"
       ],
       "current_evidence_ids": [
         "ART-f8f40282be1a",
         "ART-defc1c9283f6",
         "ART-ad4bf60407c7",
         "ART-23536ba4b988",
-        "ART-ad817077bf73"
+        "ART-ad817077bf73",
+        "ART-e253009c71ce",
+        "ART-75866c9644fb",
+        "ART-1e8a75b15192",
+        "ART-6cfc2b94ab3d",
+        "ART-36e6de3460f2"
       ],
       "first_detected_at": "2026-07-12T15:46:30.380866Z",
       "apparent_change_at": null,
       "confidence": "low",
       "coverage": "medium",
       "alternative_explanations": [
-        "this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change",
+        "prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift",
         "The theme may have existed in prior period but was missed due to the small comparison sample (only 6 artifacts vs 63 current), a coverage gap rather than true absence.",
         "The apparent emergence could reflect a renamed or rebranded product/feature now labeled 'cross_system_workflow' rather than a genuinely new theme.",
         "This could be a segment-specific campaign or single product launch rather than company-wide repositioning.",
         "Seasonality or a recent product launch event could explain a temporary spike in this theme rather than a sustained strategic shift."
-      ]
+      ],
+      "theme": "cross_system_workflow",
+      "prior_theme_count": 4,
+      "current_theme_count": 10,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
     }
+  ],
+  "change_event_reconciliation": [
+    "CHG-24fcaf1b8c26 (global_hiring): relabeled emerging\u2192expanding \u2014 final corpus has 1 prior-window occurrence(s)",
+    "CHG-897903f5e58a (employee_experience): relabeled emerging\u2192expanding \u2014 final corpus has 3 prior-window occurrence(s)",
+    "CHG-595fcf0353df (cross_system_workflow): relabeled emerging\u2192expanding \u2014 final corpus has 4 prior-window occurrence(s)"
   ],
   "matrices": [
     {
       "name": "persona_channel_funnel",
       "matrix": {
         "personas": [
-          "(unspecified)",
           "finance_leader",
           "founder_or_ceo",
           "hr_leader",
           "it_leader",
           "legal_or_compliance",
-          "not_observed",
           "operations_leader",
           "payroll_manager",
           "people_ops_manager",
           "product_manager",
           "recruiter",
           "security_leader",
-          "security_or_compliance",
-          "unclassified_signals: Product Partnership Manager / Account Executive"
+          "security_or_compliance"
         ],
         "channels": [
           "events",
@@ -80472,19 +81598,8 @@
           "security_or_compliance": {
             "other": 1
           },
-          "(unspecified)": {
-            "other": 2,
-            "paid search": 6
-          },
           "product_manager": {
             "other": 1
-          },
-          "unclassified_signals: Product Partnership Manager / Account Executive": {
-            "other": 1
-          },
-          "not_observed": {
-            "other": 1,
-            "paid search": 1
           }
         }
       }
@@ -80493,20 +81608,108 @@
       "name": "category_entry_point_ownership",
       "matrix": [
         {
-          "cep": "consolidating_hr_tools",
-          "competitor_pages": 60,
-          "focal_pages": 81,
-          "ownership": "contested",
+          "cep": "opening_new_country",
+          "competitor_pages": 79,
+          "focal_pages": 16,
+          "competitor_share": 0.6423,
+          "focal_share": 0.1404,
+          "share_ratio": 4.58,
+          "share_delta": 0.5019,
+          "ownership": "competitor_advantage",
+          "ownership_basis": "4.58x share ratio, dominant side 79 pages",
+          "competitor_example_artifact_ids": [
+            "ART-4504605bc1ea",
+            "ART-2125e9fe86f8",
+            "ART-3b7689ec0af8",
+            "ART-90e7f10fb8e0",
+            "ART-79313fc4282b"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-c1c42d7105ae",
+            "ART-db8d2de11bb6",
+            "ART-c6ed2708ea18"
+          ],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
           ]
         },
         {
-          "cep": "opening_new_country",
-          "competitor_pages": 79,
-          "focal_pages": 16,
+          "cep": "hiring_first_international_employee",
+          "competitor_pages": 42,
+          "focal_pages": 9,
+          "competitor_share": 0.3415,
+          "focal_share": 0.0789,
+          "share_ratio": 4.33,
+          "share_delta": 0.2625,
+          "ownership": "competitor_advantage",
+          "ownership_basis": "4.33x share ratio, dominant side 42 pages",
+          "competitor_example_artifact_ids": [
+            "ART-4504605bc1ea",
+            "ART-90e7f10fb8e0",
+            "ART-79313fc4282b",
+            "ART-8b2f98998852",
+            "ART-45147107c4b1"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-db8d2de11bb6",
+            "ART-bf34d2800142",
+            "ART-6037eefe5c32"
+          ],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "integrating_an_acquisition",
+          "competitor_pages": 12,
+          "focal_pages": 4,
+          "competitor_share": 0.0976,
+          "focal_share": 0.0351,
+          "share_ratio": 2.78,
+          "share_delta": 0.0625,
+          "ownership": "competitor_advantage",
+          "ownership_basis": "2.78x share ratio, dominant side 12 pages",
+          "competitor_example_artifact_ids": [
+            "ART-3b7689ec0af8",
+            "ART-7585503a7a25",
+            "ART-84fffc657b92",
+            "ART-02773cc9b819",
+            "ART-7c878936dd5e"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-597718ed3ef1",
+            "ART-26a94f70c569",
+            "ART-318b9e5c841c"
+          ],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "consolidating_hr_tools",
+          "competitor_pages": 60,
+          "focal_pages": 81,
+          "competitor_share": 0.4878,
+          "focal_share": 0.7105,
+          "share_ratio": 1.46,
+          "share_delta": -0.2227,
           "ownership": "contested",
+          "ownership_basis": "1.46x share ratio \u2014 within crawl-composition noise",
+          "competitor_example_artifact_ids": [
+            "ART-4504605bc1ea",
+            "ART-f07ca7d52b9b",
+            "ART-2125e9fe86f8",
+            "ART-3b7689ec0af8",
+            "ART-90e7f10fb8e0"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-b2d4ed380867",
+            "ART-c1c42d7105ae",
+            "ART-65290e73c3c3"
+          ],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
@@ -80516,37 +81719,51 @@
           "cep": "automating_onboarding_offboarding",
           "competitor_pages": 38,
           "focal_pages": 55,
+          "competitor_share": 0.3089,
+          "focal_share": 0.4825,
+          "share_ratio": 1.56,
+          "share_delta": -0.1735,
           "ownership": "contested",
+          "ownership_basis": "1.56x share ratio \u2014 within crawl-composition noise",
+          "competitor_example_artifact_ids": [
+            "ART-f07ca7d52b9b",
+            "ART-2125e9fe86f8",
+            "ART-79313fc4282b",
+            "ART-a4f8fcbafed2",
+            "ART-7585503a7a25"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-b2d4ed380867",
+            "ART-c1c42d7105ae",
+            "ART-65290e73c3c3"
+          ],
           "top_verticals": [
             "payroll",
             "hris_core_hr"
-          ]
-        },
-        {
-          "cep": "hiring_first_international_employee",
-          "competitor_pages": 42,
-          "focal_pages": 9,
-          "ownership": "contested",
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
           ]
         },
         {
           "cep": "preparing_for_audit",
           "competitor_pages": 18,
           "focal_pages": 24,
+          "competitor_share": 0.1463,
+          "focal_share": 0.2105,
+          "share_ratio": 1.44,
+          "share_delta": -0.0642,
           "ownership": "contested",
-          "top_verticals": [
-            "payroll",
-            "hris_core_hr"
-          ]
-        },
-        {
-          "cep": "reducing_payroll_errors",
-          "competitor_pages": 12,
-          "focal_pages": 27,
-          "ownership": "contested",
+          "ownership_basis": "1.44x share ratio \u2014 within crawl-composition noise",
+          "competitor_example_artifact_ids": [
+            "ART-f07ca7d52b9b",
+            "ART-a4f8fcbafed2",
+            "ART-7585503a7a25",
+            "ART-84fffc657b92",
+            "ART-02773cc9b819"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-b2d4ed380867",
+            "ART-573effbd48d4",
+            "ART-bf34d2800142"
+          ],
           "top_verticals": [
             "payroll",
             "hris_core_hr"
@@ -80556,7 +81773,50 @@
           "cep": "managing_contractors_and_employees",
           "competitor_pages": 20,
           "focal_pages": 14,
+          "competitor_share": 0.1626,
+          "focal_share": 0.1228,
+          "share_ratio": 1.32,
+          "share_delta": 0.0398,
           "ownership": "contested",
+          "ownership_basis": "1.32x share ratio \u2014 within crawl-composition noise",
+          "competitor_example_artifact_ids": [
+            "ART-d378770b11eb",
+            "ART-84fffc657b92",
+            "ART-debb4bbaadc2",
+            "ART-4a4f82d82d6a",
+            "ART-f1ed3021d6c3"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-53fde70ae71a",
+            "ART-1833c56d07a8",
+            "ART-e24a141ca141"
+          ],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "replacing_a_peo",
+          "competitor_pages": 4,
+          "focal_pages": 5,
+          "competitor_share": 0.0325,
+          "focal_share": 0.0439,
+          "share_ratio": 1.35,
+          "share_delta": -0.0113,
+          "ownership": "contested",
+          "ownership_basis": "1.35x share ratio \u2014 within crawl-composition noise",
+          "competitor_example_artifact_ids": [
+            "ART-90e7f10fb8e0",
+            "ART-debb4bbaadc2",
+            "ART-838f572d1257",
+            "ART-1617e62bf15e"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-b2d4ed380867",
+            "ART-93c0d0ff60c7",
+            "ART-2a34b577cea5"
+          ],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
@@ -80566,54 +81826,163 @@
           "cep": "controlling_app_access",
           "competitor_pages": 7,
           "focal_pages": 24,
-          "ownership": "contested",
+          "competitor_share": 0.0569,
+          "focal_share": 0.2105,
+          "share_ratio": 3.7,
+          "share_delta": -0.1536,
+          "ownership": "focal_owns",
+          "ownership_basis": "3.7x share ratio, dominant side 24 pages",
+          "competitor_example_artifact_ids": [
+            "ART-79313fc4282b",
+            "ART-7585503a7a25",
+            "ART-4d052e00f8e5",
+            "ART-1d3e3bc13183",
+            "ART-560a667497d0"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-1388bb6c3d3e",
+            "ART-dce7ab6e4707",
+            "ART-c802b6b3fe6f"
+          ],
           "top_verticals": [
             "it_device_management",
             "identity_security"
           ]
         },
         {
-          "cep": "integrating_an_acquisition",
+          "cep": "reducing_payroll_errors",
           "competitor_pages": 12,
-          "focal_pages": 4,
-          "ownership": "contested",
+          "focal_pages": 27,
+          "competitor_share": 0.0976,
+          "focal_share": 0.2368,
+          "share_ratio": 2.43,
+          "share_delta": -0.1393,
+          "ownership": "focal_owns",
+          "ownership_basis": "2.43x share ratio, dominant side 27 pages",
+          "competitor_example_artifact_ids": [
+            "ART-4504605bc1ea",
+            "ART-defc1c9283f6",
+            "ART-be2efed5377d",
+            "ART-2cb3203cc7f8",
+            "ART-ef2e15843dd7"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-b7a88682004b",
+            "ART-d485833dcfd1",
+            "ART-4a6761c603b5"
+          ],
           "top_verticals": [
             "payroll",
-            "global_eor_contractors"
+            "hris_core_hr"
           ]
-        },
-        {
-          "cep": "not_observed",
-          "competitor_pages": 3,
-          "focal_pages": 11,
-          "ownership": "contested",
-          "top_verticals": []
         },
         {
           "cep": "reducing_software_spend",
           "competitor_pages": 1,
           "focal_pages": 9,
-          "ownership": "contested",
+          "competitor_share": 0.0081,
+          "focal_share": 0.0789,
+          "share_ratio": 9.71,
+          "share_delta": -0.0708,
+          "ownership": "focal_owns",
+          "ownership_basis": "9.71x share ratio, dominant side 9 pages",
+          "competitor_example_artifact_ids": [
+            "ART-02773cc9b819"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-c1c42d7105ae",
+            "ART-db8d2de11bb6",
+            "ART-1388bb6c3d3e"
+          ],
           "top_verticals": [
             "payroll",
             "immigration_mobility"
           ]
         },
         {
-          "cep": "replacing_a_peo",
-          "competitor_pages": 4,
-          "focal_pages": 5,
-          "ownership": "contested",
+          "cep": "moving_upmarket",
+          "competitor_pages": 1,
+          "focal_pages": 2,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0175,
+          "share_ratio": 2.16,
+          "share_delta": -0.0094,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 2) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-111af4ae1e89"
+          ],
+          "focal_example_artifact_ids": [
+            "ART-41694369ff2b",
+            "ART-07aea9fb54cd"
+          ],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
           ]
         },
         {
-          "cep": "moving_upmarket",
+          "cep": "expanding_into_new_markets_with_remote_teams",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-7f6216118cf8"
+          ],
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-9e8697e401cd"
+          ],
+          "top_verticals": []
+        },
+        {
+          "cep": "rapid_growth_scaling_employees",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-361550a9bb81"
+          ],
+          "top_verticals": []
+        },
+        {
+          "cep": "consolidating_fragmented_regional_workforce_providers",
           "competitor_pages": 1,
-          "focal_pages": 2,
-          "ownership": "contested",
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
@@ -80623,94 +81992,126 @@
           "cep": "replacing_traditional_cross_border_payment_rails",
           "competitor_pages": 1,
           "focal_pages": 0,
-          "ownership": "competitor_advantage",
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
           "top_verticals": []
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
-        },
-        {
-          "cep": "expanding_into_new_markets_with_remote_teams",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
+          "cep": "expanding_to_new_countries",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-ceb5d6ab049f"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "expanding_into_complex_field_markets",
           "competitor_pages": 1,
           "focal_pages": 0,
-          "ownership": "competitor_advantage",
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "managing_global_device_fleet",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4d052e00f8e5"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "it_device_management"
+          ]
+        },
+        {
+          "cep": "growing_remote_and_international_teams",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-0e665529aaf9"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "benefits"
           ]
         },
         {
           "cep": "expanding_service_offerings",
           "competitor_pages": 1,
           "focal_pages": 0,
-          "ownership": "competitor_advantage",
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-22cb144808e1"
+          ],
+          "focal_example_artifact_ids": [],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
           ]
-        },
-        {
-          "cep": "consolidating_fragmented_regional_workforce_providers",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "rapid_growth_scaling_employees",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
         },
         {
           "cep": "paying_contractors_and_employees_globally",
           "competitor_pages": 1,
           "focal_pages": 0,
-          "ownership": "competitor_advantage",
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
           "top_verticals": []
-        },
-        {
-          "cep": "managing_global_device_fleet",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "it_device_management"
-          ]
-        },
-        {
-          "cep": "expanding_to_new_countries",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "growing remote and international teams",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "benefits"
-          ]
         }
       ]
     }
@@ -80759,6 +82160,9 @@
         "cls-c8628905def3"
       ],
       "focal_proof_strength": "strong",
+      "competitor_theme_share": null,
+      "focal_theme_share": null,
+      "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "\u201cnative_platform_breadth\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "vertical_strengths": {
@@ -80825,6 +82229,9 @@
         "cls-27e6f08f5472"
       ],
       "focal_proof_strength": "strong",
+      "competitor_theme_share": null,
+      "focal_theme_share": null,
+      "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "\u201csecurity_and_control\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "vertical_strengths": {},
@@ -80882,6 +82289,9 @@
         "cls-144df9c975b6"
       ],
       "focal_proof_strength": "none",
+      "competitor_theme_share": null,
+      "focal_theme_share": null,
+      "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cworkforce_visibility\u201d with weak observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "vertical_strengths": {},
@@ -80950,6 +82360,9 @@
         "cls-ce2d9825b693"
       ],
       "focal_proof_strength": "strong",
+      "competitor_theme_share": null,
+      "focal_theme_share": null,
+      "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "vertical_strengths": {
@@ -81063,6 +82476,9 @@
         "cls-921a5abe4240"
       ],
       "focal_proof_strength": "strong",
+      "competitor_theme_share": null,
+      "focal_theme_share": null,
+      "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cautomation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "vertical_strengths": {
@@ -81152,6 +82568,9 @@
         "cls-6d26903eebd8"
       ],
       "focal_proof_strength": "strong",
+      "competitor_theme_share": null,
+      "focal_theme_share": null,
+      "sample_sufficiency": "ok",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201ccompliance\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "vertical_strengths": {
@@ -81573,12 +82992,15 @@
     }
   ],
   "opportunities_rejected": [],
-  "limitations": [],
+  "limitations": [
+    "Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 6 dimensions remain unattempted: focal_vulnerabilities, funnel, historical_pricing, historical_product, out_of_home, proof_strategy"
+  ],
   "negative_observations": [
     "https://www.deel.com/customers: HTTP 404",
     "Exa contents returned nothing.",
-    "Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized.",
-    "meta_ads: live collection is not configured (US commercial active ads are exposed only through the public Meta Ad Library UI; the API covers worldwide political/social-issue ads and UK/EU commercial windows only \u2014 no general commercial-ad API exists (\u00a739.7). Use a recorded fixture or compliant UI capture.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage."
+    "Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized. (superseded: a later Similarweb call succeeded \u2014 see Traffic & channel mix)",
+    "meta_ads: live collection is not configured (US commercial active ads are exposed only through the public Meta Ad Library UI; the API covers worldwide political/social-issue ads and UK/EU commercial windows only \u2014 no general commercial-ad API exists (\u00a739.7). Use a recorded fixture or compliant UI capture.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage.",
+    "4 google_ads discovery artifacts excluded at render (FAQ/blank/other-advertiser transparency pages); retained /advertiser pages are unverified discovery pointers"
   ],
   "tool_failures": [
     {
@@ -81607,8 +83029,8 @@
     "tool_calls": 19
   },
   "eval_summary": {
-    "n_artifacts": 130,
-    "n_classifications": 127,
+    "n_artifacts": 126,
+    "n_classifications": 123,
     "n_claims": 20,
     "n_opportunities": 3,
     "n_proof_gaps": 6,

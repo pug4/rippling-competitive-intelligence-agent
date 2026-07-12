@@ -1,14 +1,14 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T20:11:08.895761+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T22:46:35.925219+00:00*
 
 ## Executive summary
 
 - **Dominant company message:** Deel is an all-in-one global people platform that enables companies to expand internationally with unified payroll, HR, compliance, and workforce management across 150 countries. (repeated across ≥2 source classes and present on a top-level surface).
 - **Product-positioning read:** Deel's public pages cluster around consolidation, automation, compliance
-- **Emerging signal (low confidence, needs a prior-window baseline):** theme_emergence — “cost_reduction” not observed in the prior-window sample → “cost_reduction” present in 24 current-window artifacts.
+- **Emerging signal (low confidence, needs a prior-window baseline):** theme_emergence — “cost_reduction” not observed in any of the 14 dated prior-window artifacts → “cost_reduction” present in 30 current-window artifacts.
 - **Top-ranked Rippling opening:** The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure.
-- **Largest uncertainty:** optional channels (paid media, social) were not collected.
+- **Largest uncertainty:** coverage is thin on paid_media.
 
 ## Action Board
 
@@ -74,11 +74,11 @@ _Rating rubric: proof strength is the MODAL per-page strength for the theme (tie
   | ignores | 5 |
   | direct_attack | 1 |
 
-## Commercial motion (medium confidence — 54 observed CTAs, 101 pricing signals)
+## Commercial motion (medium confidence — 51 observed CTAs, 101 pricing signals)
 
 - **Inferred motion:** hybrid · **pricing disclosure:** partially_public (observed mix: hidden:90, sales_gated:5, partially_public:5, mixed_by_product:1)
   - _Pricing disclosure is the most-open level observed on ≥2 pages (best-evidence, noise-guarded); the mix shows every observed level. Corpus-wide read — disclosure can differ by product line._
-- **Dominant CTAs (share of observed):** other 0.67, book_demo 0.22, learn_more 0.09, contact_sales 0.02
+- **Dominant CTAs (share of observed):** other 0.65, book_demo 0.24, learn_more 0.1, contact_sales 0.02
 - **Apparent segment focus (by mentions):** mid_market (81), enterprise (81), startups (62), global_teams (56)
 - _Public-signal inference only — not CAC, conversion, or spend._
 
@@ -118,20 +118,23 @@ How the competitor positions in each product category it touches (keyword-derive
 
 ## Category entry points (Deel vs Rippling)
 
-| Buying trigger | Competitor | Rippling | Ownership | Verticals |
-|---|---:|---:|---|---|
-| consolidating_hr_tools | 60 | 81 | contested | payroll, global eor contractors |
-| opening_new_country | 79 | 16 | contested | payroll, global eor contractors |
-| automating_onboarding_offboarding | 38 | 55 | contested | payroll, hris core hr |
-| hiring_first_international_employee | 42 | 9 | contested | payroll, global eor contractors |
-| preparing_for_audit | 18 | 24 | contested | payroll, hris core hr |
-| reducing_payroll_errors | 12 | 27 | contested | payroll, hris core hr |
-| managing_contractors_and_employees | 20 | 14 | contested | payroll, global eor contractors |
-| controlling_app_access | 7 | 24 | contested | it device management, identity security |
-| integrating_an_acquisition | 12 | 4 | contested | payroll, global eor contractors |
-| not_observed | 3 | 11 | contested | — |
+| Buying trigger | Competitor | Rippling | Ownership | Basis | Verticals |
+|---|---:|---:|---|---|---|
+| opening new country | 79 (64%) | 16 (14%) | competitor_advantage | 4.58x share ratio, dominant side 79 pages | payroll, global eor contractors |
+| hiring first international employee | 42 (34%) | 9 (8%) | competitor_advantage | 4.33x share ratio, dominant side 42 pages | payroll, global eor contractors |
+| integrating an acquisition | 12 (10%) | 4 (4%) | competitor_advantage | 2.78x share ratio, dominant side 12 pages | payroll, global eor contractors |
+| consolidating hr tools | 60 (49%) | 81 (71%) | contested | 1.46x share ratio — within crawl-composition noise | payroll, global eor contractors |
+| automating onboarding offboarding | 38 (31%) | 55 (48%) | contested | 1.56x share ratio — within crawl-composition noise | payroll, hris core hr |
+| preparing for audit | 18 (15%) | 24 (21%) | contested | 1.44x share ratio — within crawl-composition noise | payroll, hris core hr |
+| managing contractors and employees | 20 (16%) | 14 (12%) | contested | 1.32x share ratio — within crawl-composition noise | payroll, global eor contractors |
+| replacing a peo | 4 (3%) | 5 (4%) | contested | 1.35x share ratio — within crawl-composition noise | payroll, global eor contractors |
+| controlling app access | 7 (6%) | 24 (21%) | focal_owns | 3.7x share ratio, dominant side 24 pages | it device management, identity security |
+| reducing payroll errors | 12 (10%) | 27 (24%) | focal_owns | 2.43x share ratio, dominant side 27 pages | payroll, hris core hr |
+| reducing software spend | 1 (1%) | 9 (8%) | focal_owns | 9.71x share ratio, dominant side 9 pages | payroll, immigration mobility |
 
-_Ownership counts are corpus-wide; the Verticals column shows which product categories carry each trigger. For a per-vertical read, scope the chat to that vertical._
+_12 low-sample trigger(s) (too few pages on either side to call) omitted here — full list incl. `insufficient_sample` rows in the JSON/UI._
+
+_Ownership is SHARE-normalized (count ÷ that company's classified corpus) so different corpus sizes can't fabricate a verdict; the Verticals column shows which product categories carry each trigger. For a per-vertical read, scope the chat to that vertical._
 
 ## Persona × channel coverage (observed)
 
@@ -141,36 +144,36 @@ _Cells are observed-page counts; an empty cell is **not observed**, not proof of
 
 | Persona | events | other | paid search | press | website | website (historical) |
 |---|---:|---:|---:|---:|---:|---:|
-| (unspecified) |  | 2 | 6 |  |  |  |
 | finance_leader | 2 | 10 |  | 5 | 23 | 5 |
 | founder_or_ceo | 2 | 9 |  | 1 | 31 | 6 |
 | hr_leader | 3 | 13 |  | 3 | 46 | 6 |
 | it_leader |  |  |  | 1 | 9 | 1 |
 | legal_or_compliance |  |  |  |  | 3 |  |
-| not_observed |  | 1 | 1 |  |  |  |
 | operations_leader | 1 | 14 |  | 4 | 38 | 4 |
+| payroll_manager |  | 3 |  |  | 2 |  |
+| people_ops_manager |  | 4 |  | 1 | 14 | 1 |
 
-## Deel LinkedIn employee posts (30)
+## Deel LinkedIn employee posts (showing 15 of 30)
 
-Individual public posts (Exa-extracted text + real post link), classified. Click a link to review the post on LinkedIn.
+Individual public posts (Exa-extracted text + real post link), classified. Click a link to review the post on LinkedIn. Full list in the JSON/UI.
 
 | Author | Theme | Stance | Post | Excerpt |
 |---|---|---|---|---|
 | Piyushshekhar | data_unification | implicit_contrast | [link](https://www.linkedin.com/posts/piyushshekhar_deel-just-launched-its-own-native-ats-not-activity-7473698093654261761-wyXp) | deel just launched its own native ATS. not a third-party tool. the same product we sell to |
-| Shiragross | native_platform_breadth | implicit_contrast | [link](https://www.linkedin.com/posts/shiragross_deel-just-launched-two-things-this-week-that-activity-7471124204063485952-RrTa) | # Shira Harash · LinkedIn · 2026-06-12 ## Author **Shira Harash** *Sales Turned Solutions  |
-| Ashish Jeet Mitra | all_in_one | category_attack | [link](https://www.linkedin.com/posts/ashish-jeet-mitra_join-deels-global-team-remote-jobs-in-activity-7470440920233078784-XYfU) | # Post by Ashish Jeet Mitra · LinkedIn · 2026-06-10 **Ashish Jeet Mitra**: Payroll Operati |
-| Singhharneet | speed_to_value | — | [link](https://www.linkedin.com/posts/singhharneet_we-received-over-13-million-job-applications-activity-7470016134663233536-S0aU) | # Post by Harneet Singh Kalra · LinkedIn · 2026-06-09 **Harneet Singh Kalra**: Payroll Imp |
-| Yaron Lavi Vp | consolidation | implicit_contrast | [link](https://www.linkedin.com/posts/yaron-lavi-vp_when-we-launched-deel-hr-the-vision-was-activity-7442227218753265664-fIsF) | Deel Launches Native ATS for Streamlined Hiring | Yaron Lavi posted on the topic | LinkedI |
+| Shiragross | native_platform_breadth | implicit_contrast | [link](https://www.linkedin.com/posts/shiragross_deel-just-launched-two-things-this-week-that-activity-7471124204063485952-RrTa) | Deel has launched DeelATS, an internal recruiting tool that the company now uses for all h |
+| Ashish Jeet Mitra | all_in_one | category_attack | [link](https://www.linkedin.com/posts/ashish-jeet-mitra_join-deels-global-team-remote-jobs-in-activity-7470440920233078784-XYfU) | Deel launched a rebuilt careers page and proprietary ATS platform, demonstrating confidenc |
+| Singhharneet | speed_to_value | — | [link](https://www.linkedin.com/posts/singhharneet_we-received-over-13-million-job-applications-activity-7470016134663233536-S0aU) | Deel launches an AI-forward careers page with streamlined application and matching tools t |
+| Yaron Lavi Vp | consolidation | implicit_contrast | [link](https://www.linkedin.com/posts/yaron-lavi-vp_when-we-launched-deel-hr-the-vision-was-activity-7442227218753265664-fIsF) | Deel Launches Native ATS for Streamlined Hiring |
 | Alexbouaziz | integration_ecosystem | implicit_contrast | [link](https://www.linkedin.com/posts/alexbouaziz_we-just-made-it-possible-for-a-company-in-activity-7462808619353440256-2fJ0) | We just made it possible for a company in New York to fund payroll in dollars, and for the |
-| Deel | data_unification | category_attack | [link](https://www.linkedin.com/posts/deel_deel-ai-analytics-is-live-ask-any-workforce-activity-7480613431809843200-KAc7) | # Post by Deel · LinkedIn · 2026-07-08 **Deel**: Deel provides global payroll, compliance, |
-| Shirleyleaalexander | cross_system_workflow | implicit_contrast | [link](https://www.linkedin.com/posts/shirleyleaalexander_deel-is-hiring-a-founding-account-executive-activity-7481023411255697408-KKGB) | # Post by Shirley Alexander (she/her) · LinkedIn · 2026-07-09 **Shirley Alexander (she/her |
-| Shahriyarmim | speed_to_value | — | [link](https://www.linkedin.com/posts/shahriyarmim_yesterday-we-launched-the-new-deel-app-activity-7468585820481036288-GcYo) | # Shahriyar M. · LinkedIn · 2026-06-05 ## Author **Shahriyar M.** *Design @ Deel | Mentor  |
+| Deel | data_unification | category_attack | [link](https://www.linkedin.com/posts/deel_deel-ai-analytics-is-live-ask-any-workforce-activity-7480613431809843200-KAc7) | Deel AI Analytics enables instant workforce insights through natural language queries on a |
+| Shirleyleaalexander | cross_system_workflow | implicit_contrast | [link](https://www.linkedin.com/posts/shirleyleaalexander_deel-is-hiring-a-founding-account-executive-activity-7481023411255697408-KKGB) | Deel's new agentic workflow platform (Akai) automates repetitive manual workflows for glob |
+| Shahriyarmim | speed_to_value | — | [link](https://www.linkedin.com/posts/shahriyarmim_yesterday-we-launched-the-new-deel-app-activity-7468585820481036288-GcYo) | The new Deel app is rebuilt from scratch to reduce time workers spend on the platform by o |
 | Dan Westgarth 710650a4 | native_platform_breadth | implicit_contrast | [link](https://www.linkedin.com/posts/dan-westgarth-710650a4_big-milestone-for-us-at-deel-last-week-activity-7442224497837035521-1kzg) | Big milestone for us at Deel 🙌 Last week during The Big Deel we showed off a new pillar of |
-| Alanprice | automation | — | [link](https://www.linkedin.com/posts/alanprice_at-deel-for-our-ats-product-were-reshaping-activity-7480212257050910720-d9zE) | # Post by Alan P · LinkedIn · 2026-07-07 **Alan P**: Global Head of Talent Acquisition at  |
+| Alanprice | automation | — | [link](https://www.linkedin.com/posts/alanprice_at-deel-for-our-ats-product-were-reshaping-activity-7480212257050910720-d9zE) | AI agents are being integrated into ATS workflows to automate repetitive tasks and improve |
 | Shahriyarmim | native_platform_breadth | — | [link](https://www.linkedin.com/posts/shahriyarmim_were-hiring-a-staff-product-designer-to-activity-7466161258359357440-_6mz) | We're hiring a Staff Product Designer to help us shape Design Systems at Deel. Here is my  |
-| Jacintobarreiros | automation | implicit_contrast | [link](https://www.linkedin.com/posts/jacintobarreiros_im-incredibly-proud-to-have-led-the-product-activity-7478440070786650112-UaWL) | # Jacinto Barreiros · LinkedIn · 2026-07-02 ## Author **Jacinto Barreiros** *Senior Produc |
-| Laurenzamora Kelso | integration_ecosystem | implicit_contrast | [link](https://www.linkedin.com/posts/laurenzamora-kelso_deel-is-now-inside-chatgpt-150-countries-activity-7462515453907591168-XMwr) | Deel Expands to ChatGPT with Global Employment Platform | Lauren Zamora-Kelso posted on th |
-| Deel | automation | implicit_contrast | [link](https://www.linkedin.com/posts/deel_deel-ai-workforce-launches-today-you-activity-7363179295680159744-xCbz) | Deel AI Workforce launches with AI agents for HR, payroll, operations | Deel posted on the |
+| Jacintobarreiros | automation | implicit_contrast | [link](https://www.linkedin.com/posts/jacintobarreiros_im-incredibly-proud-to-have-led-the-product-activity-7478440070786650112-UaWL) | Deel built an AI-first recruitment system that dramatically reduces hiring time by automat |
+| Laurenzamora Kelso | integration_ecosystem | implicit_contrast | [link](https://www.linkedin.com/posts/laurenzamora-kelso_deel-is-now-inside-chatgpt-150-countries-activity-7462515453907591168-XMwr) | Deel Expands to ChatGPT with Global Employment Platform |
+| Deel | automation | implicit_contrast | [link](https://www.linkedin.com/posts/deel_deel-ai-workforce-launches-today-you-activity-7363179295680159744-xCbz) | Deel AI Workforce launches with AI agents for HR, payroll, operations |
 
 ## Traffic & channel mix — Deel (Similarweb, estimated)
 
@@ -189,21 +192,21 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 **Prior window baseline (2025-07-12 → 2026-04-13, 14 dated artifacts):** themes observed then — consolidation (7), automation (4), data_unification (1), native_platform_breadth (1), cross_system_workflow (1)
 - **Stable (both windows):** automation, consolidation, cross_system_workflow, data_unification, native_platform_breadth
 - **Emerged (current only):** all_in_one, api_extensibility, category_creation, compliance, cost_reduction, employee_experience, global_hiring, integration_ecosystem, scalability, security_and_control, speed_to_value, workforce_visibility
-- _Prior membership = real archive-capture/published date inside the comparison window. The prior sample is small — treat emergence/recession as signals._
+- _Prior membership = real archive-capture/published date inside the comparison window; undated live content is current. Windows have different sample sizes (14 vs 108) — compare shares, not counts; treat emergence/recession as signals. 1 dated artifact(s) fall outside both windows and are excluded._
 
-- **theme_emergence** (emerging, confidence low): ““cost_reduction” not observed in the prior-window sample” → ““cost_reduction” present in 24 current-window artifacts”
+- **theme_emergence** (emerging, confidence low): ““cost_reduction” not observed in any of the 14 dated prior-window artifacts” → ““cost_reduction” present in 30 current-window artifacts”
   - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The small prior-window sample (only 6 artifacts) may simply have lacked cost_reduction messaging by chance rather than it being truly absent from company communications at that time.
-- **theme_emergence** (emerging, confidence low): ““global_hiring” not observed in the prior-window sample” → ““global_hiring” present in 21 current-window artifacts”
-  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The theme may have existed under a different label or phrasing in the prior window that was not captured by the sample.
-- **theme_emergence** (emerging, confidence low): ““data_accuracy” not observed in the prior-window sample” → ““data_accuracy” present in 9 current-window artifacts”
+- **theme_emergence** (expanding, confidence low): ““global_hiring” present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)” → ““global_hiring” present in 33 current-window artifacts”
+  - alternatives: prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift; The theme may have existed under a different label or phrasing in the prior window that was not captured by the sample.
+- **theme_emergence** (emerging, confidence low): ““data_accuracy” not observed in any of the 14 dated prior-window artifacts” → ““data_accuracy” present in 13 current-window artifacts”
   - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The theme may have existed in prior-period messaging but was missed due to the small comparison sample (only 6 artifacts vs 63 in current window), understating true prior presence
-- **theme_emergence** (emerging, confidence low): ““employee_experience” not observed in the prior-window sample” → ““employee_experience” present in 14 current-window artifacts”
-  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The prior-window sample was small (only 6 artifacts) relative to the current window (63 artifacts), so the theme's absence earlier could partly reflect limited prior sampling rather than a true absence.
+- **theme_emergence** (expanding, confidence low): ““employee_experience” present but rare in the prior window (3 of 14 dated artifacts, incl. supporting-theme mentions)” → ““employee_experience” present in 22 current-window artifacts”
+  - alternatives: prior-window sample is small (n=14); the growth ratio may reflect collection depth rather than a real shift; The prior-window sample was small (only 6 artifacts) relative to the current window (63 artifacts), so the theme's absence earlier could partly reflect limited prior sampling rather than a true absence.
 
 ## Research scope and coverage
 
 - Competitor **Deel** · focal **Rippling** · lookback 365d across 2 windows
-- Artifacts collected: 130 · classified: 127 · claims: 20
+- Artifacts collected: 126 · classified: 123 · claims: 20
 
 **Source distribution**
 
@@ -214,11 +217,11 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | customers pages | 19 |
 | exa_web | 12 |
 | comparison pages | 8 |
-| google_ads | 8 |
 | wayback snapshots | 6 |
 | homepage/platform | 5 |
 | news/launches | 5 |
 | events | 4 |
+| google_ads | 4 |
 | segment pages | 3 |
 | site map | 1 |
 | pricing pages | 1 |
@@ -234,39 +237,51 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 
 | Dimension | Level | Basis |
 |---|---|---|
-| identity | high | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| identity | high | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
 | current_website | high | 64 artifacts across sitemap, webpage sources |
 | current_product | medium | 63 artifacts across webpage sources |
 | pricing_and_packaging | high | 63 artifacts across webpage sources |
 | customer_proof | medium | 75 artifacts across exa_web, webpage sources |
+| paid_media | low | 4 artifacts across google_ads sources |
+| public_linkedin | medium | 30 artifacts across linkedin_post sources |
 | news_and_launches | medium | 17 artifacts across exa_web, news sources |
 | historical_website | medium | 6 artifacts across wayback sources |
+| historical_product | not_attempted | not attempted this run — absence of collection, not absence of activity |
+| historical_pricing | not_attempted | not attempted this run — absence of collection, not absence of activity |
 | historical_messages | medium | 18 artifacts across exa_web, wayback sources |
-| commercial_motion | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| personas_and_jobs | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| competitive_stance | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| portfolio_discovery | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| product_positioning | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| focal_current | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
-| focal_proof | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| commercial_motion | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| category_entry_points | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| personas_and_jobs | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| funnel | not_attempted | not attempted this run — absence of collection, not absence of activity |
+| proof_strategy | not_attempted | not attempted this run — absence of collection, not absence of activity |
+| competitive_stance | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| events | medium | 16 artifacts across events, exa_web sources |
+| out_of_home | not_attempted | not attempted this run — absence of collection, not absence of activity |
+| portfolio_discovery | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| product_positioning | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| launches_current | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| focal_current | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| focal_proof | medium | 126 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| focal_vulnerabilities | not_attempted | not attempted this run — absence of collection, not absence of activity |
 
 ## Limitations and missing data
 
-- No blocking limitations recorded.
+- Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 6 dimensions remain unattempted: focal_vulnerabilities, funnel, historical_pricing, historical_product, out_of_home, proof_strategy
 
 **Sources attempted with no usable data (negative observations):**
 
 - https://www.deel.com/customers: HTTP 404
 - Exa contents returned nothing.
-- Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized.
+- Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized. (superseded: a later Similarweb call succeeded — see Traffic & channel mix)
 - meta_ads: live collection is not configured (US commercial active ads are exposed only through the public Meta Ad Library UI; the API covers worldwide political/social-issue ads and UK/EU commercial windows only — no general commercial-ad API exists (§39.7). Use a recorded fixture or compliant UI capture.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage.
+- 4 google_ads discovery artifacts excluded at render (FAQ/blank/other-advertiser transparency pages); retained /advertiser pages are unverified discovery pointers
 - Not publicly knowable (excluded): actual ad performance/ROAS, exact spend, negotiated pricing, complete OOH/employee-post coverage, internal intent.
 
 ## Evidence appendix
 
-All 130 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources follow so every 'Rippling proof: …' rating is traceable within this deliverable. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`, `focal_evidence`). Note: `normalized_text` in the JSON is truncated to 1,500 chars per artifact for size; full text lives in the run store.
+All 126 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources follow so every 'Rippling proof: …' rating is traceable within this deliverable. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`, `focal_evidence`). Note: `normalized_text` in the JSON is truncated to 1,500 chars per artifact for size; full text lives in the run store.
 
-**Deel sources (130)**
+**Deel sources (126)**
 
 | Artifact | Source | Date | URL |
 |---|---|---|---|
@@ -394,11 +409,7 @@ All 130 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources
 | ART-7b3f168f5d | google_ads | 2026-07-12 | https://adstransparency.google.com/advertiser/AR005364037569 |
 | ART-22381b7c13 | google_ads | 2026-07-12 | https://adstransparency.google.com/advertiser/AR010815065751 |
 | ART-b732853e94 | google_ads | 2026-07-12 | https://adstransparency.google.com/advertiser/AR075301125164 |
-| ART-336cbbedeb | google_ads | 2026-07-12 | https://adstransparency.google.com/faq?region=US |
 | ART-2333673d04 | google_ads | 2026-07-12 | https://adstransparency.google.com/advertiser/AR076442890337 |
-| ART-7ccc0b65ee | google_ads | 2026-07-12 | https://adstransparency.google.com/?authuser=0&region=DE |
-| ART-4443b7940e | google_ads | 2026-07-12 | https://adstransparency.google.com/?region=GB&domain=elector |
-| ART-549d2c0fa8 | google_ads | 2026-07-12 | https://adstransparency.google.com/?region=US&amp;preset-dat |
 | ART-f40ab89135 | similarweb | 2026-07-12 | https://www.similarweb.com/website/deel.com/ |
 
 **Rippling (focal mirror) sources (115)** — run `RUN-bd6a0b7f7f50`
@@ -522,4 +533,4 @@ All 130 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources
 | ART-b86745883a | events | 2025-02-06 | https://www.rippling.com/ontheroad |
 
 ---
-*Stop reason: `runtime_exhausted` · iterations 19 · tool calls 19*
+*Stop reason: budget-bounded (hit the research-time cap) (raw: `runtime_exhausted`) · iterations 19 · tool calls 19*

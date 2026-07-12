@@ -255,17 +255,18 @@ def build_message_proof_gaps(
     """
     from .synthesis import proof_distribution
 
-    comp = _message_index(
-        _classifications(repository, competitor_run_id),
-        _artifact_meta(repository, competitor_run_id),
-    )
+    comp_cls = _classifications(repository, competitor_run_id)
+    focal_cls = _classifications(repository, focal_run_id) if focal_run_id else []
+    comp = _message_index(comp_cls, _artifact_meta(repository, competitor_run_id))
     focal = (
-        _message_index(
-            _classifications(repository, focal_run_id), _artifact_meta(repository, focal_run_id)
-        )
-        if focal_run_id
-        else {}
+        _message_index(focal_cls, _artifact_meta(repository, focal_run_id)) if focal_run_id else {}
     )
+    # Corpus denominators (niche-competitor normalization): 2 pages of a
+    # 12-page niche site is 16.7% of its marketing surface — not "thin" the way
+    # 2 pages of a 130-page corpus is. And a tiny focal mirror can't support a
+    # confident "focal proof is missing" attack verdict.
+    n_comp = max(1, len(comp_cls))
+    n_focal = len(focal_cls)
 
     gaps: list[MessageProofGap] = []
     for theme, slot in comp.items():
@@ -278,6 +279,10 @@ def build_message_proof_gaps(
         dist = proof_distribution(slot.get("per_page_proof", []))
         specificity = _modal(slot.get("specificities", []))
         n_pages = slot["count"]
+        theme_share = round(n_pages / n_comp, 4)
+        focal_theme_share = (
+            round(focal_slot["count"] / max(1, n_focal), 4) if focal_slot and n_focal else None
+        )
         # Whether ANY page carries strong proof — a 2-page theme where one page
         # is strong must not be declared "attackable/weak" off a modal tie (R3).
         has_strong_page = any(s == "strong" for s in slot.get("per_page_strength", []))
@@ -294,7 +299,34 @@ def build_message_proof_gaps(
             n_pages=n_pages,
             has_strong_page=has_strong_page,
             news_only=news_only,
+            theme_share=theme_share,
         )
+        # Small-corpus guards: disclose, never fabricate. A <15-page focal
+        # mirror cannot establish that focal proof is genuinely missing; a
+        # <15-page competitor corpus caps how confident any verdict can be.
+        sample_sufficiency = "ok"
+        if n_focal and n_focal < 15 and n_comp < 15:
+            sample_sufficiency = "insufficient_both"
+        elif n_focal and n_focal < 15:
+            sample_sufficiency = "insufficient_focal_sample"
+        elif n_comp < 15:
+            sample_sufficiency = "insufficient_competitor_sample"
+        if sample_sufficiency in ("insufficient_focal_sample", "insufficient_both") and (
+            overall == "attack"
+        ):
+            overall, attack_level = "investigate", "medium"
+            interpretation += (
+                f" Downgraded from attack: the focal corpus holds only {n_focal} classified "
+                "pages — focal proof status is not comparable at this sample size."
+            )
+        if sample_sufficiency in ("insufficient_competitor_sample", "insufficient_both") and (
+            attack_level == "high"
+        ):
+            attack_level = "medium"
+            interpretation += (
+                f" Attackability capped at medium: only {n_comp} classified competitor pages — "
+                "the corpus is too small for a high-confidence verdict."
+            )
         v_strengths, weakest_v = _vertical_strengths(slot, verticals_by_artifact)
         if weakest_v:
             interpretation += (
@@ -331,6 +363,9 @@ def build_message_proof_gaps(
                 focal_equivalent_claim=(focal_slot["message"] if focal_slot else None),
                 focal_proof_ids=(focal_slot["classification_ids"][:5] if focal_slot else []),
                 focal_proof_strength=focal_strength,
+                competitor_theme_share=theme_share,
+                focal_theme_share=focal_theme_share,
+                sample_sufficiency=sample_sufficiency,
                 actionable_interpretation=interpretation,
                 vertical_strengths=v_strengths,
                 weakest_vertical=weakest_v,
@@ -366,14 +401,17 @@ def _stance(
     n_pages: int = 2,
     has_strong_page: bool = False,
     news_only: bool = False,
+    theme_share: float = 0.0,
 ) -> tuple[str, str, str]:
     """(overall_stance, attackability_level, interpretation) — states what the
     evidence SHOWS, never converting a proof gap into a capability claim (#4).
 
-    R3: an "attack" verdict must not rest on a thin (< 3-page) theme, on a modal
-    tie where one page is actually strong, or on news/blog coverage only (which
-    isn't the competitor's own marketing surface)."""
-    thin = n_pages < 3 or has_strong_page or news_only
+    R3: an "attack" verdict must not rest on a thin theme, on a modal tie where
+    one page is actually strong, or on news/blog coverage only (which isn't the
+    competitor's own marketing surface). "Thin" is HYBRID (niche-competitor
+    normalization): <3 pages AND <15% of the corpus — 2 pages of a 12-page
+    niche site (16.7%) is a real investment, 2 pages of 130 is noise."""
+    thin = (n_pages < 3 and theme_share < 0.15) or has_strong_page or news_only
     if strength in ("weak", "none") and focal_strength in ("strong", "moderate") and not thin:
         return (
             "attack",

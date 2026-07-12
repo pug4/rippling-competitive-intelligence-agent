@@ -86,14 +86,27 @@ async def judge_claim(
             }
         )
     if v == "partially_supported":
+        # The narrowed wording is LLM-generated — re-run the builder's banned
+        # performance-term guard on it (red-team: the build-time ROAS/CAC/spend
+        # guard could be bypassed via narrowed_claim). On a hit, keep the
+        # original build-time-vetted statement.
+        from .claim_builder import _has_banned_term
+
+        narrowed = verdict.narrowed_claim or claim.statement
+        reason = verdict.reason or "narrowed to what the evidence supports"
+        if verdict.narrowed_claim and _has_banned_term(verdict.narrowed_claim):
+            narrowed = claim.statement
+            reason += (
+                " (narrowed wording rejected: performance term; original vetted statement retained)"
+            )
         return claim.model_copy(
             update={
-                "statement": verdict.narrowed_claim or claim.statement,
+                "statement": narrowed,
                 "status": "hypothesis",
                 "claim_confidence": "medium"
                 if claim.claim_confidence == "high"
                 else claim.claim_confidence,
-                "confidence_reason": verdict.reason or "narrowed to what the evidence supports",
+                "confidence_reason": reason,
             }
         )
     if v == "contradicted":

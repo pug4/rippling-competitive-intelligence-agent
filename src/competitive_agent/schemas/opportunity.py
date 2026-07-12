@@ -96,6 +96,14 @@ class MessageProofGap(VersionedModel):
     focal_equivalent_claim: str | None = None
     focal_proof_ids: list[str] = Field(default_factory=list)
     focal_proof_strength: ProofStrength = "none"
+    # Corpus normalization (niche-competitor requirement): raw page counts are
+    # not comparable across corpora of different sizes, so gaps also carry the
+    # theme's share of each company's classified corpus plus an explicit
+    # sample-sufficiency disclosure. Defaults keep old persisted records valid.
+    competitor_theme_share: float | None = None
+    focal_theme_share: float | None = None
+    # ok | insufficient_focal_sample | insufficient_competitor_sample | insufficient_both
+    sample_sufficiency: str = "ok"
     product_comparability: ProductComparability | None = None  # feedback #3
     actionable_interpretation: str
     # Per-product-vertical proof strengths (vertical -> {n_pages, strength}) and

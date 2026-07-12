@@ -155,7 +155,9 @@ def eval(
 
 @app.command()
 def adjudicate(
-    score: str = typer.Option(None, "--score", help="Path to adjudicated.json to compute FINAL accuracy"),
+    score: str = typer.Option(
+        None, "--score", help="Path to adjudicated.json to compute FINAL accuracy"
+    ),
 ) -> None:
     """Generate the human-adjudication page for the held-out labels, or score a
     completed adjudication into the FINAL reported accuracy."""
@@ -414,8 +416,12 @@ def portfolio(
 def ask(
     run_id: str = typer.Argument(...),
     question: str = typer.Argument(...),
-    execution_mode: str = typer.Option("live", "--execution-mode", help="live|fixture (chat needs a model)"),
-    vertical: str = typer.Option(None, "--vertical", help="Scope to a product vertical (e.g. payroll)"),
+    execution_mode: str = typer.Option(
+        "live", "--execution-mode", help="live|fixture (chat needs a model)"
+    ),
+    vertical: str = typer.Option(
+        None, "--vertical", help="Scope to a product vertical (e.g. payroll)"
+    ),
 ) -> None:
     """Ask the grounded analysis chatbot a follow-up question about a run."""
     import asyncio
@@ -433,8 +439,11 @@ def ask(
     if res.get("clarifying_question"):
         typer.echo(f"\n❓ To answer precisely: {res['clarifying_question']}")
     if res.get("needs_deeper_research"):
-        typer.echo("\n(Needs deeper research — try: competitive-agent deepen "
-                   + run_id + " --focus <dimension>)")
+        typer.echo(
+            "\n(Needs deeper research — try: competitive-agent deepen "
+            + run_id
+            + " --focus <dimension>)"
+        )
     if res.get("suggested_followups"):
         typer.echo("\nYou could ask next:")
         for f in res["suggested_followups"]:

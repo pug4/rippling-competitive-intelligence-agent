@@ -36,3 +36,13 @@ class ChangeEvent(VersionedModel):
     confidence: ConfidenceLevel
     coverage: ConfidenceLevel
     alternative_explanations: list[str] = Field(default_factory=list)
+    # Reconciliation fields (additive, defaulted so persisted rows still load):
+    # real per-theme counts under the FINAL corpus, so the UI can render
+    # "prior: 4 of 14" instead of a hardcoded "not observed" (red-team #1).
+    theme: str | None = None
+    prior_theme_count: int | None = None
+    current_theme_count: int | None = None
+    prior_window_n: int | None = None
+    # "window_sample" = prior ids are the window sample (theme absent there);
+    # "theme_occurrences" = prior ids actually contain the theme.
+    prior_evidence_role: str | None = None
