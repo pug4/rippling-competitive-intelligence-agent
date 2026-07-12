@@ -123,7 +123,25 @@ Format: date · decision · rationale · reversibility.
     product / pricing / comparison / proof / ads / news / reviews / historical
     (wayback). The Workday/Gusto extension is a documented, uncommitted option,
     not a silent omission.
-26. **Benchmark finding: `segment` inter-model agreement (0.06) is a
+26. **Genericness leak fixed (verification workflow finding).** With the focal
+    overridden via `--compare` (e.g. Deel vs Gusto), `brief.md` rendered the
+    right focal ("What Gusto should do") but `data.json` still hardcoded
+    "Rippling" in generated value strings, because two generators
+    (`nodes._focal_name`, `opportunity_engine` focal_name) read the STATIC
+    config focal instead of the resolved `state.focal_company`. Both now prefer
+    the resolved focal. Also renamed every `rippling_*` schema field to
+    `focal_*` (JSON schema → 1.2.0) so no output key implies Rippling when the
+    focal is someone else. Verified: Deel/Gusto, Salesforce/HubSpot,
+    Workday/Deel, Gusto/ADP all produce ZERO "rippling" in data.json. Rippling
+    remains only as the default focal VALUE (config) and a known-company seed.
+    `--compare` doubling as competitor-vs-competitor comparison is intentional:
+    the "focal" is just the comparison target, so any two companies compare.
+27. **Historical (Wayback) depth is config-driven** (`collection.historical`)
+    so a longitudinal run can request more snapshots + extra positioning pages
+    without code changes (priority #2). Wayback still returns only what the
+    archive actually captured, so requested ≠ collected — a real limitation, not
+    a bug.
+28. **Benchmark finding: `segment` inter-model agreement (0.06) is a
     taxonomy/convention mismatch, not a classifier defect.** Production commits
     to a *primary* segment and uses finer labels (`startups`, `global_teams`)
     while the independent labeler collapses multi-audience pages to `mixed`
