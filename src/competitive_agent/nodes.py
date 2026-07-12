@@ -62,6 +62,13 @@ _MAX_CLASSIFY_CHARS = 12000
 # Cap claims judged per refresh so a claim-heavy corpus can't stall the loop.
 _MAX_CLAIMS_JUDGED = 10
 
+# Level-B optional breadth actions (user priority #3): they must never delay the
+# focal mirror (comparison, priority #2) or opportunity generation.
+_OPTIONAL_ACTION_TYPES = {
+    "search_reviews", "search_jobs", "search_events", "search_ooh",
+    "enrich_similarweb", "search_google_ads", "search_meta_ads", "search_linkedin_ads",
+}
+
 # Family model class name -> classifications.family column value.
 _FAMILY_TABLE = {
     "MessageFamily": "message",
@@ -682,13 +689,16 @@ async def run_focal_mirror_check(state: DirectorState, ctx: GraphContext):
         return state, "generate_opportunities"
     if not state.classification_ids:
         return state, "generate_opportunities"
-    # Run the mirror only when the COMPETITOR side is fully collected — the
-    # focal pipeline is expensive and would otherwise starve the competitor's
-    # own collection if it ran on iteration 1. Trigger when competitor coverage
-    # is sufficient OR no competitor actions remain.
+    # Run the mirror once the COMPETITOR's REQUIRED coverage is collected — do
+    # not wait for optional Level-B breadth sources (they are priority #3 and
+    # must not delay the comparison, priority #2). Trigger when competitor
+    # coverage is sufficient OR only optional actions remain.
     ok, _ = cov.sufficient(state.coverage, state.mode, compare=False)
-    remaining = planner.propose_actions(state, ctx)
-    if not ok and remaining:
+    remaining_required = [
+        a for a in planner.propose_actions(state, ctx)
+        if a.action_type not in _OPTIONAL_ACTION_TYPES
+    ]
+    if not ok and remaining_required:
         return state, "generate_opportunities"
 
     from .comparison import run_focal_mirror
@@ -707,10 +717,15 @@ async def generate_opportunities(state: DirectorState, ctx: GraphContext):
     # Rule 7: no opportunity without the mirror when a focal company exists.
     if state.focal_company is not None and not ctx.scratch.get("focal_run_id"):
         return state, "critique_opportunities"
-    # Wait until the loop is otherwise ready to stop, so gaps see full corpus.
+    # Generate once the REQUIRED corpus (both sides) is collected — don't wait
+    # for optional Level-B breadth sources (priority #3). Opportunities are
+    # regenerated later if breadth materially changes the picture.
     ok, missing = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
-    proposals = planner.propose_actions(state, ctx)
-    if proposals and not ok:
+    remaining_required = [
+        a for a in planner.propose_actions(state, ctx)
+        if a.action_type not in _OPTIONAL_ACTION_TYPES
+    ]
+    if remaining_required and not ok:
         return state, "critique_opportunities"
 
     from .comparison import build_message_proof_gaps
