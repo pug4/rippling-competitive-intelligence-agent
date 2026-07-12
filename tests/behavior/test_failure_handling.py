@@ -29,8 +29,15 @@ def _ctx(sources: dict[str, bool]) -> ToolContext:
         company_id="c",
         mode="live",  # type: ignore[arg-type]
         config=AppConfig(
-            focal_company=FocalCompanyConfig(), sources=sources, execution={}, budgets={},
-            portfolio={}, windows={}, taxonomy={}, model_routes={}, source_capabilities={},
+            focal_company=FocalCompanyConfig(),
+            sources=sources,
+            execution={},
+            budgets={},
+            portfolio={},
+            windows={},
+            taxonomy={},
+            model_routes={},
+            source_capabilities={},
         ),
         settings=Settings(exa_api_key=""),
         repository=_FakeRepo(),
@@ -80,7 +87,9 @@ def test_low_value_source_is_skipped_with_reason(isolated_env: Path):
     from competitive_agent.config import get_settings
     from competitive_agent.runner import run_analysis
 
-    state = run_analysis("deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com")
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
     trace = get_settings().outputs_dir / "runs" / state.run_id / "trace.jsonl"
     events = [json.loads(x) for x in trace.read_text().splitlines() if x.strip()]
 

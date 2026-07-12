@@ -394,6 +394,7 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     # search never reaches LinkedIn; this surfaces how the company + its
     # employees position the product publicly, as a cited synthesis.
     _linkedin_slug = company.primary_domain.split(".")[0]
+    _num_posts = int((cfg.exa_agent.get("linkedin_num_posts", 15)) if cfg else 15)
     _optional(
         "exa_linkedin",
         "exa_agent",
@@ -403,8 +404,24 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             "company": name,
             "domain": company.primary_domain,
             "linkedin_url": f"https://www.linkedin.com/company/{_linkedin_slug}",
+            "num_posts": _num_posts,
         },
-        "Exa Agent researches the company's LinkedIn presence + employee posts (cited synthesis).",
+        "Exa Agent researches the competitor's LinkedIn: per-post employee content + synthesis.",
+        require_dim=False,
+    )
+    # Complementary discovery: LinkedIn-scoped Exa search (one artifact per post).
+    _optional(
+        "exa_linkedin",
+        "exa_search",
+        "search_linkedin_posts",
+        "public_linkedin",
+        {
+            "query": f'"{name}" LinkedIn post OR update from employees about product, hiring, or launches',
+            "category": "linkedin profile",
+            "include_domains": ["linkedin.com"],
+            "num_results": _num_posts,
+        },
+        "LinkedIn-scoped Exa search surfaces individual employee/company posts as their own artifacts.",
         require_dim=False,
     )
     _optional(

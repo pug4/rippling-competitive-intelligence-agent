@@ -128,6 +128,49 @@ def _focal_evidence(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     return out
 
 
+def _linkedin_posts(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Join each LinkedIn post artifact with its merged classification so the
+    brief/dashboard can showcase per-post: author, link, theme, stance, excerpt."""
+    cls_by_art = {c.get("artifact_id"): c for c in data["classifications"]}
+    out: list[dict[str, Any]] = []
+    for a in data["artifacts"]:
+        if a.get("source_type") != "linkedin_post":
+            continue
+        c = cls_by_art.get(a["artifact_id"], {})
+        meta = a.get("metadata", {}) or {}
+        out.append(
+            {
+                "artifact_id": a["artifact_id"],
+                "author": a.get("author"),
+                "author_role": meta.get("author_role"),
+                "post_url": a.get("url"),
+                "posted_at": a.get("published_at"),
+                "theme": c.get("primary_theme") or meta.get("theme"),
+                "primary_message": c.get("primary_message"),
+                "competitive_stance": c.get("competitive_stance"),
+                "personas": c.get("personas", []),
+                "excerpt": (a.get("normalized_text") or "")[:280],
+            }
+        )
+    return out
+
+
+def _similarweb_summary(data: dict[str, Any]) -> dict[str, Any]:
+    """Pull the Similarweb (estimated) traffic block from its artifact, if any."""
+    for a in data["artifacts"]:
+        if a.get("source_type") == "similarweb":
+            meta = a.get("metadata", {}) or {}
+            return {
+                "domain": meta.get("domain"),
+                "data_source": meta.get("data_source", "similarweb"),
+                "observation_period": meta.get("observation_period"),
+                "estimated": True,
+                "metrics": meta.get("metrics", {}),
+                "url": a.get("url"),
+            }
+    return {}
+
+
 def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any]:
     from . import synthesis
 
@@ -148,6 +191,8 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     focal_cls_models = _focal_classifications(ctx, state)
     ceps = synthesis.category_entry_points(data["classification_models"], focal_cls_models)
     focal_evidence = _focal_evidence(ctx, state)
+    linkedin_posts = _linkedin_posts(data)
+    similarweb = _similarweb_summary(data)
     # Source-URL registry (traceability chain): every collected source with its
     # provenance, so a claim's evidence id -> artifact id -> URL+timestamp is
     # resolvable from the JSON alone.
@@ -168,7 +213,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         {"name": "category_entry_point_ownership", "matrix": ceps},
     ]
     claims_list = data["claims"]
-    material_total = sum(1 for c in claims_list if c.get("status") not in ("rejected", "contradicted"))
+    material_total = sum(
+        1 for c in claims_list if c.get("status") not in ("rejected", "contradicted")
+    )
     eval_summary = {
         "n_artifacts": len(data["artifacts"]),
         "n_classifications": len(data["classifications"]),
@@ -239,6 +286,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Focal (Rippling) mirror evidence — so every "Rippling proof: …" claim is
         # traceable within this deliverable, not just in the sibling mirror run.
         "focal_evidence": focal_evidence,
+        # Competitor LinkedIn employee posts (one per post) + Similarweb traffic.
+        "linkedin_posts": linkedin_posts,
+        "similarweb": similarweb,
         "classifications": data["classifications"],
         "claims": data["claims"],
         # product_portfolios/launches require the deep §38 product-entity loop
@@ -494,6 +544,47 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         for persona in mtx["personas"][:8]:
             cells = mtx["cells"].get(persona, {})
             add(f"| {persona} | " + " | ".join(str(cells.get(ch, "")) for ch in channels) + " |")
+
+    # --- Competitor LinkedIn employee posts --------------------------------
+    posts = pkg.get("linkedin_posts") or []
+    add(f"\n## {company} LinkedIn employee posts ({len(posts)})\n")
+    if posts:
+        add(
+            "Individual public posts (Exa-extracted text + real post link), classified. "
+            "Click a link to review the post on LinkedIn.\n"
+        )
+        add("| Author | Theme | Stance | Post | Excerpt |")
+        add("|---|---|---|---|---|")
+        for p in posts[:15]:
+            who = p.get("author") or "?"
+            if p.get("author_role"):
+                who += f" ({p['author_role']})"
+            excerpt = (p.get("excerpt") or "").replace("\n", " ")[:90]
+            add(
+                f"| {who} | {p.get('theme') or '—'} | {p.get('competitive_stance') or '—'} | "
+                f"[link]({p.get('post_url')}) | {excerpt} |"
+            )
+    else:
+        add(
+            "_No individual LinkedIn posts were collected this run (needs Exa credits + the "
+            "`exa_linkedin` source enabled)._"
+        )
+
+    # --- Traffic & channel mix (Similarweb, estimated) ---------------------
+    sw = pkg.get("similarweb") or {}
+    if sw.get("metrics"):
+        label = "Similarweb" if sw.get("data_source") == "similarweb" else "public-web estimate"
+        add(f"\n## Traffic & channel mix — {company} ({label}, estimated)\n")
+        m = sw["metrics"]
+        for key in (
+            "estimated_monthly_visits",
+            "channel_mix",
+            "top_countries",
+            "digital_competitors",
+        ):
+            if key in m:
+                val = m[key].get("value") if isinstance(m[key], dict) else m[key]
+                add(f"- **{key.replace('_', ' ')}:** {val} _(estimated)_")
 
     # --- Strategy over time (feedback #25) ---------------------------------
     add("\n## Strategy over time\n")

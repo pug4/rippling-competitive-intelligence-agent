@@ -207,14 +207,36 @@ class SimilarwebTool(BaseTool):
                 error_message="parameter 'domain' is required for enrich_similarweb",
             )
 
+        cfg = getattr(context.config, "exa_agent", None) or {}
+        effort = str(cfg.get("effort", "auto")) if isinstance(cfg, dict) else "auto"
         query = self._build_query(domain)
-        payload = {
+
+        # Primary: with the Similarweb data partner attached. If that partner is
+        # not on the plan (provider_unavailable), fall back to a public-web
+        # traffic estimate (no partner) — user choice: degrade gracefully.
+        result = await self._run(action, domain, query, api_key, effort, with_similarweb=True)
+        if result.status == "unsupported" and result.error_type == "provider_unavailable":
+            result = await self._run(action, domain, query, api_key, effort, with_similarweb=False)
+        return result
+
+    async def _run(
+        self,
+        action: ResearchAction,
+        domain: str,
+        query: str,
+        api_key: str,
+        effort: str,
+        *,
+        with_similarweb: bool,
+    ) -> ToolResult:
+        payload: dict[str, Any] = {
             "query": query,
-            # Provider EXPLICITLY attached — this is what routes the run to
-            # Similarweb rather than plain web search.
-            "dataSources": [{"provider": "similarweb"}],
+            "effort": effort,
             "outputSchema": self._output_schema(),
         }
+        if with_similarweb:
+            # Provider EXPLICITLY attached — routes the run to Similarweb.
+            payload["dataSources"] = [{"provider": "similarweb"}]
 
         response = await self._post_run(payload, api_key)
         terminal = self._status_error(action, response, "run")
@@ -236,7 +258,9 @@ class SimilarwebTool(BaseTool):
             return poll_error
 
         output = self._output_from(data)
-        return self._map_output(action, domain, query, data, output)
+        return self._map_output(
+            action, domain, query, data, output, with_similarweb=with_similarweb
+        )
 
     # ---- HTTP -------------------------------------------------------------
 
@@ -269,6 +293,16 @@ class SimilarwebTool(BaseTool):
     ) -> ToolResult | None:
         """Map provider HTTP status to a typed failure; None means proceed."""
         code = response.status_code
+        if code == 402:
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="provider_out_of_credits",
+                error_message="Exa is out of credits (HTTP 402) — top up to enable Similarweb.",
+                negative_observations=[
+                    "Similarweb-via-Exa not collected: Exa key is out of credits (402)."
+                ],
+            )
         if code in (401, 403):
             return self._result(
                 action,
@@ -488,6 +522,8 @@ class SimilarwebTool(BaseTool):
         query: str,
         data: dict[str, Any],
         output: dict[str, Any] | None,
+        *,
+        with_similarweb: bool = True,
     ) -> ToolResult:
         cost_usd = self._cost(data)
 
@@ -518,7 +554,15 @@ class SimilarwebTool(BaseTool):
         if not isinstance(observation_period, str) or not observation_period.strip():
             observation_period = None
 
-        artifact = self._artifact(action, domain, query, data, metrics, observation_period)
+        artifact = self._artifact(
+            action,
+            domain,
+            query,
+            data,
+            metrics,
+            observation_period,
+            with_similarweb=with_similarweb,
+        )
 
         missing_core = [f for f in _CORE_METRIC_FIELDS if f not in metrics]
         negative_observations: list[str] = []
@@ -543,6 +587,8 @@ class SimilarwebTool(BaseTool):
         data: dict[str, Any],
         metrics: dict[str, dict[str, Any]],
         observation_period: str | None,
+        *,
+        with_similarweb: bool = True,
     ) -> RawArtifact:
         retrieval_timestamp = utcnow()
         # Similarweb's canonical page for this domain is the honest provenance
@@ -559,10 +605,11 @@ class SimilarwebTool(BaseTool):
             "unit": _METRIC_UNITS["estimated_monthly_visits"],  # primary-metric unit
             "retrieval_timestamp": retrieval_timestamp.isoformat(),
             # Provenance: how it was collected + the exact request.
-            "collected_via": "exa_agent",
+            "collected_via": "exa_agent" if with_similarweb else "exa_agent_public_web_fallback",
+            "data_source": "similarweb" if with_similarweb else "public_web_estimate",
             "provider_dependent": True,
             "exa_query": query,
-            "exa_data_sources": [{"provider": "similarweb"}],
+            "exa_data_sources": ([{"provider": "similarweb"}] if with_similarweb else []),
             "domain": domain,
             # Capability-checked, per-metric labeled estimates. Missing == missing.
             "metrics": metrics,

@@ -35,7 +35,10 @@ def test_get_missing_run_404(client):
 def test_create_run_validates_input(client):
     assert client.post("/api/runs", json={"company": ""}).status_code == 400
     assert client.post("/api/runs", json={"company": "x", "mode": "bogus"}).status_code == 400
-    assert client.post("/api/runs", json={"company": "x", "execution_mode": "bogus"}).status_code == 400
+    assert (
+        client.post("/api/runs", json={"company": "x", "execution_mode": "bogus"}).status_code
+        == 400
+    )
 
 
 def test_create_run_starts_job_and_completes(client):

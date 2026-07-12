@@ -77,7 +77,9 @@ def test_score_path_prioritizes_marketing_pages():
     cat, score = _score_path("https://x/blog/random-vs-thing")
     assert cat == "content" and score <= 0.2
     # Real product/solution pages must outrank a dedicated comparison page.
-    assert _score_path("https://x/solutions/payroll")[1] > _score_path("https://x/compare/a-vs-b")[1]
+    assert (
+        _score_path("https://x/solutions/payroll")[1] > _score_path("https://x/compare/a-vs-b")[1]
+    )
     # Bare 2-letter product hubs are products, not penalized as locales.
     assert _score_path("https://x/hr")[1] >= 0.7
 

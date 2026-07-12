@@ -70,6 +70,8 @@ _OPTIONAL_ACTION_TYPES = {
     "search_events",
     "search_ooh",
     "enrich_similarweb",
+    "research_linkedin",
+    "search_linkedin_posts",
     "search_google_ads",
     "search_meta_ads",
     "search_linkedin_ads",

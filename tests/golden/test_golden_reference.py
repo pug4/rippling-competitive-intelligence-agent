@@ -17,12 +17,31 @@ import pytest
 
 # The JSON package's prescribed top-level keys (blueprint §39.10 output contract).
 REQUIRED_JSON_KEYS = {
-    "schema_version", "run", "scope", "companies", "dominant_message",
-    "source_distribution", "corpus_skew_warnings", "coverage", "coverage_detail",
-    "commercial_motion", "product_positioning", "category_entry_points",
-    "persona_channel_matrix", "sources", "artifacts", "unclassified_artifacts",
-    "evidence", "focal_evidence", "classifications", "claims", "change_events",
-    "proof_gaps", "opportunities", "limitations", "negative_observations",
+    "schema_version",
+    "run",
+    "scope",
+    "companies",
+    "dominant_message",
+    "source_distribution",
+    "corpus_skew_warnings",
+    "coverage",
+    "coverage_detail",
+    "commercial_motion",
+    "product_positioning",
+    "category_entry_points",
+    "persona_channel_matrix",
+    "sources",
+    "artifacts",
+    "unclassified_artifacts",
+    "evidence",
+    "focal_evidence",
+    "classifications",
+    "claims",
+    "change_events",
+    "proof_gaps",
+    "opportunities",
+    "limitations",
+    "negative_observations",
 }
 
 # Brief sections that must always render (an empty one collapses to a one-liner
@@ -72,7 +91,9 @@ def test_trace_and_outputs_exist(fixture_run: Path):
     for f in ("brief.md", "data.json", "trace.jsonl"):
         assert (fixture_run / f).exists()
     # Trace is JSONL with an agentic loop (coverage assessment + action selection).
-    events = [json.loads(x) for x in (fixture_run / "trace.jsonl").read_text().splitlines() if x.strip()]
+    events = [
+        json.loads(x) for x in (fixture_run / "trace.jsonl").read_text().splitlines() if x.strip()
+    ]
     types = {e.get("event_type") for e in events}
     assert "coverage_assessed" in types
     assert "action_selected" in types

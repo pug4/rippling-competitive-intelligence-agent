@@ -38,6 +38,10 @@ _SOURCE_TYPE_BY_ACTION: dict[str, str] = {
     "search_exa_web": "exa_web",
     "search_news_launches": "news",
     "search_comparison_pages": "comparison",
+    # LinkedIn-scoped Exa search: each result (post/profile) becomes its own
+    # artifact with its URL + Exa-extracted text (a complementary discovery path
+    # to the Exa Agent's structured per-post research).
+    "search_linkedin_posts": "linkedin_post",
 }
 
 
@@ -113,6 +117,16 @@ class ExaSearchTool(BaseTool):
                 status="failed_terminal",
                 error_type="provider_auth",
                 error_message=f"Exa rejected the API key (HTTP {response.status_code}).",
+            )
+        if response.status_code == 402:
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="provider_out_of_credits",
+                error_message="Exa is out of credits (HTTP 402) — top up the Exa key to enable Exa sources.",
+                negative_observations=[
+                    f"Exa '{action.action_type}' not collected: Exa key is out of credits (402)."
+                ],
             )
         if response.status_code == 429:
             return self._result(

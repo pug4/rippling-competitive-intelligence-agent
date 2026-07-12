@@ -39,7 +39,9 @@ def _hbar(data: list[tuple[str, int]], color: str) -> str:
 
 def _proof_bar(strength: str | None, tag: str) -> str:
     lvl = _PROOF_LEVEL.get(str(strength or "none").lower(), 0)
-    color = "#4ade80" if lvl >= 3 else "#fbbf24" if lvl == 2 else "#f87171" if lvl >= 1 else "#2a2f3a"
+    color = (
+        "#4ade80" if lvl >= 3 else "#fbbf24" if lvl == 2 else "#f87171" if lvl >= 1 else "#2a2f3a"
+    )
     segs = "".join(
         f"<span class='seg' style='background:{color if i <= lvl else '#1f232c'}'></span>"
         for i in (1, 2, 3)
@@ -74,7 +76,9 @@ def _heatmap(pkg: dict[str, Any]) -> str:
     if not personas or not channels:
         return "<p class='empty'>No persona × channel matrix.</p>"
     mx = max([1] + [(cells.get(p, {}) or {}).get(c, 0) for p in personas for c in channels])
-    head = "<div class='hm-corner'></div>" + "".join(f"<div class='hm-col'>{_esc(c)}</div>" for c in channels)
+    head = "<div class='hm-corner'></div>" + "".join(
+        f"<div class='hm-col'>{_esc(c)}</div>" for c in channels
+    )
     body = []
     for p in personas:
         body.append(f"<div class='hm-rl'>{_esc(p.replace('_', ' '))}</div>")
@@ -104,8 +108,16 @@ def _timeline(pkg: dict[str, Any]) -> str:
         return "<p class='empty'>No temporal change met the both-periods evidence bar this run.</p>"
     windows = {w.get("label"): w for w in pkg.get("scope", {}).get("time_windows", [])}
     prior, cur = windows.get("comparison", {}), windows.get("current", {})
-    prior_lbl = f"{str(prior.get('start_at'))[:7]} → {str(prior.get('end_at'))[:7]}" if prior else "prior window"
-    cur_lbl = f"{str(cur.get('start_at'))[:7]} → {str(cur.get('end_at'))[:7]}" if cur else "current window"
+    prior_lbl = (
+        f"{str(prior.get('start_at'))[:7]} → {str(prior.get('end_at'))[:7]}"
+        if prior
+        else "prior window"
+    )
+    cur_lbl = (
+        f"{str(cur.get('start_at'))[:7]} → {str(cur.get('end_at'))[:7]}"
+        if cur
+        else "current window"
+    )
     mx = max([1] + [len(c.get("current_evidence_ids", [])) for c in changes])
 
     rows = []
@@ -199,8 +211,14 @@ def _content_map(pkg: dict[str, Any]) -> str:
             v = grid[p][f]
             a = (0.12 + 0.88 * (v / mx)) if v else 0
             # low/zero coverage is the OPPORTUNITY — outline empties
-            style = f"background:rgba(74,222,128,{a:.2f})" if v else "background:transparent;border-style:dashed"
-            cells.append(f"<div class='hm-cell' style='{style}' title='{_esc(p)} × {_esc(f)}: {v}'>{v or ''}</div>")
+            style = (
+                f"background:rgba(74,222,128,{a:.2f})"
+                if v
+                else "background:transparent;border-style:dashed"
+            )
+            cells.append(
+                f"<div class='hm-cell' style='{style}' title='{_esc(p)} × {_esc(f)}: {v}'>{v or ''}</div>"
+            )
     cols = f"140px repeat({len(funnel)}, minmax(64px,1fr))"
     grid_html = (
         f"<div class='hmwrap'><div class='heatmap' style='grid-template-columns:{cols}'>"
@@ -209,7 +227,7 @@ def _content_map(pkg: dict[str, Any]) -> str:
     # narrative hooks
     villains: Counter[str] = Counter()
     for c in cls:
-        for v in (c.get("villain_normalized") or []):
+        for v in c.get("villain_normalized") or []:
             villains[v] += 1
     emerging = [_theme_of(ce) for ce in pkg.get("change_events", [])]
     hooks = ", ".join(sorted({v for v, _ in villains.most_common(6)})) or "—"
@@ -228,12 +246,16 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     if not ceps:
         return "<p class='empty'>No category entry points extracted.</p>"
     own_color = {
-        "focal_owns": "#4ade80", "contested": "#fbbf24",
-        "competitor_advantage": "#f87171", "neither": "#9aa3b2",
+        "focal_owns": "#4ade80",
+        "contested": "#fbbf24",
+        "competitor_advantage": "#f87171",
+        "neither": "#9aa3b2",
     }
     mx = max([1] + [max(c.get("competitor_pages", 0), c.get("focal_pages", 0)) for c in ceps])
     rows = []
-    for c in sorted(ceps, key=lambda x: -(x.get("competitor_pages", 0) + x.get("focal_pages", 0)))[:10]:
+    for c in sorted(ceps, key=lambda x: -(x.get("competitor_pages", 0) + x.get("focal_pages", 0)))[
+        :10
+    ]:
         own = str(c.get("ownership", "neither"))
         col = own_color.get(own, "#9aa3b2")
         cw = c.get("competitor_pages", 0) / mx * 100
@@ -255,15 +277,64 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     )
 
 
+def _linkedin_posts(pkg: dict[str, Any], competitor: str) -> str:
+    posts = pkg.get("linkedin_posts") or []
+    if not posts:
+        return (
+            "<p class='empty'>No individual LinkedIn posts collected this run "
+            "(needs Exa credits + the exa_linkedin source).</p>"
+        )
+    rows = []
+    for p in posts[:15]:
+        who = _esc(p.get("author") or "?")
+        role = f" · {_esc(p['author_role'])}" if p.get("author_role") else ""
+        theme = _esc(p.get("theme") or "—")
+        stance = _esc(p.get("competitive_stance") or "—")
+        excerpt = _esc((p.get("excerpt") or "")[:220])
+        url = _esc(p.get("post_url") or "#")
+        rows.append(
+            f"<div class='lipost'><div class='lihead'><b>{who}</b>{role} "
+            f"<span class='pill'>{theme}</span> <span class='pill'>{stance}</span> "
+            f"<a href='{url}' target='_blank' rel='noopener'>view post ↗</a></div>"
+            f"<div class='liexcerpt'>{excerpt}</div></div>"
+        )
+    return (
+        f"<div class='sub'>{len(posts)} public posts by {_esc(competitor)} employees, each classified.</div>"
+        + "".join(rows)
+    )
+
+
+def _similarweb(pkg: dict[str, Any]) -> str:
+    sw = pkg.get("similarweb") or {}
+    m = sw.get("metrics") or {}
+    if not m:
+        return "<p class='empty'>No Similarweb traffic data this run (needs Exa credits).</p>"
+    label = "Similarweb" if sw.get("data_source") == "similarweb" else "public-web estimate"
+    stats = []
+    for key in ("estimated_monthly_visits", "channel_mix", "top_countries", "digital_competitors"):
+        if key in m:
+            v = m[key].get("value") if isinstance(m[key], dict) else m[key]
+            stats.append(
+                f"<div class='row'><b>{_esc(key.replace('_', ' '))}:</b> {_esc(v)} <i>(estimated)</i></div>"
+            )
+    return f"<div class='sub'>Source: {_esc(label)} · all values estimated.</div>" + "".join(stats)
+
+
 def build_dashboard(pkg: dict[str, Any]) -> str:
     companies = pkg.get("companies", [])
-    competitor = companies[0].get("canonical_name") if companies else pkg.get("scope", {}).get("company_input", "Competitor")
+    competitor = (
+        companies[0].get("canonical_name")
+        if companies
+        else pkg.get("scope", {}).get("company_input", "Competitor")
+    )
     focal = companies[1].get("canonical_name") if len(companies) > 1 else "Rippling"
     cls = pkg.get("classifications", [])
 
     src = sorted((pkg.get("source_distribution", {}) or {}).items(), key=lambda kv: -kv[1])
     themes = Counter(c["primary_theme"] for c in cls if c.get("primary_theme")).most_common(8)
-    stance = Counter(c["competitive_stance"] for c in cls if c.get("competitive_stance")).most_common()
+    stance = Counter(
+        c["competitive_stance"] for c in cls if c.get("competitive_stance")
+    ).most_common()
     total = sum(v for _, v in src)
     es = pkg.get("eval_summary", {})
     run = pkg.get("run", {})
@@ -324,6 +395,11 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .pmxaxis {{ text-align:center; font-size:11px; color:var(--muted); padding:4px; }}
 .hooks {{ font-size:12px; color:var(--muted); margin-top:10px; border-top:1px solid var(--border); padding-top:8px; }}
 .hooks b {{ color:var(--text); }}
+/* LinkedIn posts */
+.lipost {{ padding:8px 0; border-bottom:1px solid var(--border); }}
+.lihead {{ font-size:12px; margin-bottom:3px; }} .lihead b {{ color:var(--text); }}
+.lihead a {{ color:var(--accent); font-size:11px; margin-left:6px; }}
+.liexcerpt {{ font-size:12px; color:var(--muted); }}
 /* CEP diverging bars */
 .cephead {{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:6px; }}
 .ceprow {{ padding:6px 0; border-bottom:1px solid var(--border); }}
@@ -335,20 +411,20 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .cepside span {{ font-size:10px; color:var(--muted); font-variant-numeric:tabular-nums; }}
 </style>
 <h1>Competitive Marketing Intelligence — {_esc(competitor)} <span class='sub'>vs {_esc(focal)}</span></h1>
-<p class='sub'>Run <code>{_esc(run.get('run_id'))}</code> · mode {_esc(run.get('mode'))} · {_esc(run.get('execution_mode'))} · generated {_esc(str(run.get('generated_at'))[:19])}</p>
+<p class='sub'>Run <code>{_esc(run.get("run_id"))}</code> · mode {_esc(run.get("mode"))} · {_esc(run.get("execution_mode"))} · generated {_esc(str(run.get("generated_at"))[:19])}</p>
 <div class='card'>
-  <div class='stat'><b>{es.get('n_artifacts', total)}</b><span>artifacts</span></div>
-  <div class='stat'><b>{es.get('n_classifications', len(cls))}</b><span>classifications</span></div>
-  <div class='stat'><b>{es.get('n_proof_gaps', len(pkg.get('proof_gaps', [])))}</b><span>proof gaps</span></div>
-  <div class='stat'><b>{es.get('n_opportunities', len(pkg.get('opportunities', [])))}</b><span>opportunities</span></div>
-  <div class='stat'><b>{es.get('n_change_events', len(pkg.get('change_events', [])))}</b><span>changes over time</span></div>
+  <div class='stat'><b>{es.get("n_artifacts", total)}</b><span>artifacts</span></div>
+  <div class='stat'><b>{es.get("n_classifications", len(cls))}</b><span>classifications</span></div>
+  <div class='stat'><b>{es.get("n_proof_gaps", len(pkg.get("proof_gaps", [])))}</b><span>proof gaps</span></div>
+  <div class='stat'><b>{es.get("n_opportunities", len(pkg.get("opportunities", [])))}</b><span>opportunities</span></div>
+  <div class='stat'><b>{es.get("n_change_events", len(pkg.get("change_events", [])))}</b><span>changes over time</span></div>
 </div>
 
 <h2>Data at a glance</h2>
 <div class='grid2'>
-  <div class='card'><div class='title'>Source mix ({total} artifacts)</div>{_hbar(src, 'var(--accent)')}</div>
-  <div class='card'><div class='title'>Top message themes</div>{_hbar(themes, '#4ade80')}</div>
-  <div class='card'><div class='title'>Competitive stance (observed)</div>{_hbar(stance, '#fbbf24')}</div>
+  <div class='card'><div class='title'>Source mix ({total} artifacts)</div>{_hbar(src, "var(--accent)")}</div>
+  <div class='card'><div class='title'>Top message themes</div>{_hbar(themes, "#4ade80")}</div>
+  <div class='card'><div class='title'>Competitive stance (observed)</div>{_hbar(stance, "#fbbf24")}</div>
 </div>
 
 <h2>Message–proof gaps</h2>
@@ -370,6 +446,13 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 <h2>SEO / paid performance — category-entry-point ownership</h2>
 <div class='forwho'><b>IC:</b> target the yellow (contested) and red (competitor-advantage) intents with paid + comparison pages to capture demand. <b>Exec:</b> the mix of owned vs contested vs lost intents is the category-ownership map to invest against long-term.</div>
 <div class='card'>{_seo_cep(pkg, competitor, focal)}</div>
+
+<h2>{_esc(competitor)} LinkedIn employee posts</h2>
+<div class='forwho'><b>IC:</b> read what employees actually amplify and reply/counter-message. <b>Exec:</b> the themes employees repeat are the competitor's real, believed narrative — track drift over time.</div>
+<div class='card'>{_linkedin_posts(pkg, competitor)}</div>
+
+<h2>Traffic &amp; channel mix (estimated)</h2>
+<div class='card'>{_similarweb(pkg)}</div>
 
 <h2>Persona × channel coverage</h2>
 <div class='card'>{_heatmap(pkg)}</div>

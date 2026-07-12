@@ -73,5 +73,6 @@ collection:
 # partners (e.g. "similarweb") — leave empty if not on your Exa plan; the agent
 # still researches public web + LinkedIn without them.
 exa_agent:
-  effort: low
+  effort: auto
   data_sources: []
+  linkedin_num_posts: 15

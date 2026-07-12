@@ -43,6 +43,9 @@ SOURCE_QUALITY_BY_SOURCE_TYPE: dict[str, SourceQualityBand] = {
     "news": "medium",
     "comparison": "medium",
     "exa_web": "medium",
+    # A LinkedIn post is real public employee/company content (Exa-extracted with
+    # a cited URL); the LinkedIn synthesis blob stays low.
+    "linkedin_post": "medium",
 }
 DEFAULT_SOURCE_QUALITY: SourceQualityBand = "low"
 
@@ -117,6 +120,11 @@ def render_source_metadata(artifact: RawArtifact) -> str:
         + (artifact.published_at.isoformat() if artifact.published_at else "unknown"),
         f"retrieved_at: {artifact.retrieved_at.isoformat()}",
     ]
+    # Who posted (LinkedIn posts) — so the classifier knows it's employee/company
+    # authored content, not an anonymous marketing page.
+    if artifact.author:
+        role = artifact.metadata.get("author_role")
+        lines.append(f"author: {artifact.author}" + (f" ({role})" if role else ""))
     # Only real archive captures carry a capture timestamp (§40.1).
     if artifact.archive_capture_at is not None:
         lines.append(f"archive_capture_at: {artifact.archive_capture_at.isoformat()}")

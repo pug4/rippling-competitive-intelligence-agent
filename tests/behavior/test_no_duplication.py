@@ -31,7 +31,9 @@ def test_gaps_and_opportunities_are_not_duplicated(isolated_env: Path):
     from competitive_agent.config import get_settings
     from competitive_agent.runner import run_analysis
 
-    state = run_analysis("deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com")
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
     pkg = json.loads((get_settings().outputs_dir / "runs" / state.run_id / "data.json").read_text())
     gaps = pkg["proof_gaps"]
     opps = pkg["opportunities"]
@@ -51,13 +53,19 @@ def test_retry_reuse_does_not_run_away(isolated_env: Path):
     from competitive_agent.conversation import create_retry
     from competitive_agent.runner import run_analysis
 
-    parent = run_analysis("deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com")
+    parent = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
     diff = create_retry(parent.run_id, retry_mode="reanalyze_same_evidence")
     child = diff["child_run_id"]
 
     db = sqlite3.connect(str(get_settings().db_path))
-    sj = json.loads(db.execute("SELECT state_json FROM runs WHERE run_id=?", (child,)).fetchone()[0])
-    n_cls = db.execute("SELECT count(*) FROM classifications WHERE run_id=?", (child,)).fetchone()[0]
+    sj = json.loads(
+        db.execute("SELECT state_json FROM runs WHERE run_id=?", (child,)).fetchone()[0]
+    )
+    n_cls = db.execute("SELECT count(*) FROM classifications WHERE run_id=?", (child,)).fetchone()[
+        0
+    ]
     parent_cls = db.execute(
         "SELECT count(*) FROM classifications WHERE run_id=?", (parent.run_id,)
     ).fetchone()[0]

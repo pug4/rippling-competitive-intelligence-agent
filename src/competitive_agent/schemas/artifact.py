@@ -16,6 +16,9 @@ class RawArtifact(VersionedModel):
     url: str
     final_url: str
     title: str | None = None
+    # The person who authored the content (e.g. a LinkedIn post's poster). None
+    # for company-page/website content that has no individual author.
+    author: str | None = None
     published_at: datetime | None = None
     first_observed_at: datetime | None = None
     last_observed_at: datetime | None = None

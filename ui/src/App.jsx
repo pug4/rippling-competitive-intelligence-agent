@@ -61,6 +61,54 @@ function GapsVisual({ pkg }) {
   );
 }
 
+function LinkedInPosts({ pkg }) {
+  const posts = pkg.linkedin_posts || [];
+  const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
+  if (posts.length === 0) return null;
+  return (
+    <>
+      <h2>{competitor} LinkedIn employee posts ({posts.length})</h2>
+      <p className="empty" style={{ fontSize: 12 }}>
+        Individual public posts (Exa-extracted), each classified. Click to review on LinkedIn.
+      </p>
+      <div className="card">
+        {posts.slice(0, 15).map((p) => (
+          <div className="gaprow" key={p.artifact_id} style={{ gridTemplateColumns: "1fr" }}>
+            <div className="row">
+              <b>{p.author || "?"}</b>{p.author_role ? ` · ${p.author_role}` : ""}{" "}
+              <span className="pill">{p.theme || "—"}</span>
+              <span className="pill">{p.competitive_stance || "—"}</span>{" "}
+              <a href={p.post_url} target="_blank" rel="noreferrer">view post ↗</a>
+            </div>
+            <div className="row" style={{ color: "var(--muted)" }}>{p.excerpt}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function Similarweb({ pkg }) {
+  const sw = pkg.similarweb || {};
+  const m = sw.metrics || {};
+  if (Object.keys(m).length === 0) return null;
+  const label = sw.data_source === "similarweb" ? "Similarweb" : "public-web estimate";
+  return (
+    <>
+      <h2>Traffic & channel mix ({label}, estimated)</h2>
+      <div className="card">
+        {["estimated_monthly_visits", "channel_mix", "top_countries", "digital_competitors"].map((k) =>
+          m[k] != null ? (
+            <div className="row" key={k}>
+              <b>{k.replace(/_/g, " ")}:</b> {String(m[k].value != null ? m[k].value : m[k])} <i>(estimated)</i>
+            </div>
+          ) : null
+        )}
+      </div>
+    </>
+  );
+}
+
 function PersonaChannelHeatmap({ pkg }) {
   const m = pkg.persona_channel_matrix || {};
   if (!m.personas?.length) return null;
@@ -405,6 +453,8 @@ export default function App() {
             <GapsVisual pkg={pkg} />
             <Positioning pkg={pkg} />
             <StrategyOverTime pkg={pkg} />
+            <LinkedInPosts pkg={pkg} />
+            <Similarweb pkg={pkg} />
             <PersonaChannelHeatmap pkg={pkg} />
             <Coverage pkg={pkg} />
             <Evidence pkg={pkg} />

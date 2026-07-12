@@ -74,7 +74,9 @@ def create_run(req: NewRunRequest) -> dict[str, Any]:
     if req.mode not in _ALLOWED_MODES:
         raise HTTPException(status_code=400, detail=f"mode must be one of {sorted(_ALLOWED_MODES)}")
     if req.execution_mode not in _ALLOWED_EXEC:
-        raise HTTPException(status_code=400, detail=f"execution_mode must be one of {sorted(_ALLOWED_EXEC)}")
+        raise HTTPException(
+            status_code=400, detail=f"execution_mode must be one of {sorted(_ALLOWED_EXEC)}"
+        )
     job_id = "job-" + uuid.uuid4().hex[:12]
     with _JOBS_LOCK:
         _JOBS[job_id] = {
