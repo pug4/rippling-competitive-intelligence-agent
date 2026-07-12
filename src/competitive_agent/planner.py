@@ -225,11 +225,20 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     if state.mode in ("longitudinal", "comparative"):
         comparison = next((w for w in state.time_windows if w.purpose == "comparison"), None)
         if comparison is not None:
+            # Snapshot counts + extra positioning pages are config-tunable so a
+            # deeper temporal run (priority #2) can sample finer-grained history
+            # without a code change. Defaults preserve prior behavior.
+            hist_cfg = (cfg.collection.get("historical", {}) if cfg else {}) or {}
+            home_snaps = int(hist_cfg.get("homepage_snapshots", 4))
+            pos_snaps = int(hist_cfg.get("positioning_snapshots", 2))
             hist_targets = [
-                ("/", "homepage", 4),
-                ("/platform", "platform", 2),
-                ("/pricing", "pricing", 2),
+                ("/", "homepage", home_snaps),
+                ("/platform", "platform", pos_snaps),
+                ("/pricing", "pricing", pos_snaps),
             ]
+            for extra in hist_cfg.get("extra_pages", []) or []:
+                path = extra if str(extra).startswith("/") else f"/{extra}"
+                hist_targets.append((path, path.strip("/") or "page", pos_snaps))
             for path, label, snaps in hist_targets:
                 dim = "historical_website" if path == "/" else "historical_messages"
                 if not _needs(state, dim, "medium") and path != "/":

@@ -29,10 +29,10 @@ execution:
   refresh_rippling: false
 
 budgets:
-  research_budget_usd: 8.00
-  max_runtime_seconds: 1800
+  research_budget_usd: 10.00
+  max_runtime_seconds: 2700
   max_iterations: 60
-  max_tool_calls: 160
+  max_tool_calls: 200
   max_retries_per_source: 2
 
 portfolio:
@@ -58,3 +58,11 @@ collection:
   fetch_score_threshold: 0.3
   deep_crawl: true
   exa_site_discovery_results: 10
+  # Historical (Wayback) depth for longitudinal/comparative runs. More snapshots
+  # spread across the prior window give finer temporal resolution (priority #2:
+  # time-based accuracy); extra_pages archives more positioning surfaces so
+  # change detection has both periods on comparable pages. Tunable per run.
+  historical:
+    homepage_snapshots: 6
+    positioning_snapshots: 3
+    extra_pages: ["/products", "/solutions", "/hr-platform"]
