@@ -55,6 +55,41 @@ The trace shows: a source chosen because of a coverage gap, a fallback when a
 source returns nothing, temporal verification, the focal mirror, and a
 structured stop reason.
 
+## 4b. Conversation: follow-ups, challenge, retry (preserves the original)
+
+```bash
+RUN=$(ls -t outputs/runs | head -1)
+uv run competitive-agent ask "$RUN" "why do you believe this? show evidence"
+uv run competitive-agent challenge "$RUN"          # child run; adversarial re-read
+uv run competitive-agent retry "$RUN" --mode reanalyze_same_evidence
+```
+
+`ask` answers from stored evidence first. `challenge`/`retry` create a **child
+run** with a difference report and reuse the parent's evidence non-destructively
+— the original run is never mutated.
+
+## 4c. Multi-competitor portfolio (isolated + leak-checked)
+
+```bash
+uv run competitive-agent portfolio deel.com gusto.com workday.com \
+  --compare rippling.com --mode comparative --execution-mode fixture
+```
+
+Runs each competitor in its own pipeline, prints `isolation_verified: True`
+(a leak would exit non-zero), and synthesizes a cross-company view.
+
+## 4d. Benchmark (grounding + validity + provisional agreement)
+
+```bash
+uv run competitive-agent eval --suite all                              # pytest suites
+uv run competitive-agent eval-benchmark --package-run "$RUN" --split heldout
+cat evals/reports/benchmark_report.md
+```
+
+Objective layers (schema/excerpt validity, grounding) are final and pass; the
+classification layer is inter-model agreement, clearly marked **provisional**
+until human adjudication (`evals/adjudication_guide.md`).
+
 ## 5. Failure recovery (deterministic)
 
 Fixture mode includes empty-source, rate-limit, timeout, malformed-output, and
