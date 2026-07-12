@@ -153,6 +153,49 @@ def eval(
     raise typer.Exit(code=result.returncode)
 
 
+@app.command()
+def adjudicate(
+    score: str = typer.Option(None, "--score", help="Path to adjudicated.json to compute FINAL accuracy"),
+) -> None:
+    """Generate the human-adjudication page for the held-out labels, or score a
+    completed adjudication into the FINAL reported accuracy."""
+    from pathlib import Path as _P
+
+    from .config import get_settings
+    from .evals.adjudication_ui import (
+        build_adjudication_html,
+        render_final_section,
+        score_adjudication,
+    )
+    from .storage.repository import Repository
+
+    labels = _P("evals/labels.jsonl")
+    if not labels.exists():
+        typer.echo("error: evals/labels.jsonl not found — run eval-benchmark first", err=True)
+        raise typer.Exit(code=1)
+
+    if score:
+        results = score_adjudication(_P(score), labels)
+        out = _P("evals/adjudication_results.json")
+        out.write_text(__import__("json").dumps(results, indent=2))
+        report = _P("evals/reports/benchmark_report.md")
+        section = render_final_section(results)
+        if report.exists() and "FINAL — human-adjudicated" not in report.read_text():
+            report.write_text(report.read_text() + section)
+        typer.echo(f"FINAL accuracy written: {out} (+ appended to {report})")
+        for f, v in results["per_field_accuracy"].items():
+            acc = f"{v['accuracy']:.0%}" if v["accuracy"] is not None else "—"
+            typer.echo(f"  {f}: {acc} (n={v['n']})")
+        return
+
+    repo = Repository.open(get_settings().db_path)
+    html_out = _P("evals/adjudication.html")
+    html_out.write_text(build_adjudication_html(labels, repo))
+    typer.echo(f"adjudication page: {html_out}")
+    typer.echo("Open it in a browser, adjudicate, Export, then run:")
+    typer.echo("  uv run competitive-agent adjudicate --score <path-to>/adjudicated.json")
+
+
 @app.command("eval-benchmark")
 def eval_benchmark(
     package_run_id: str = typer.Option(
