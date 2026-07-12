@@ -58,6 +58,46 @@ uv run competitive-agent render RUN_ID      # re-render a stored run
 
 Outputs land in `outputs/runs/<RUN_ID>/` (`brief.md`, `data.json`, `trace.jsonl`).
 
+### Follow-ups, challenges, and retries (conversation)
+
+Every follow-up preserves the original run — a retry creates a **child run** with
+a difference report, and reuses the parent's evidence non-destructively (a
+`run_artifacts` junction lets runs share artifacts without reassigning rows):
+
+```bash
+uv run competitive-agent ask RUN_ID "why do you believe this? show evidence"
+uv run competitive-agent deepen RUN_ID --focus pricing      # collect deeper evidence
+uv run competitive-agent challenge RUN_ID --claim CLAIM_ID   # adversarial re-read
+uv run competitive-agent retry RUN_ID --mode reanalyze_same_evidence
+uv run competitive-agent feedback RUN_ID --thumbs-down --reason "too generic"
+```
+
+### Multi-competitor portfolio (isolated pipelines)
+
+```bash
+uv run competitive-agent portfolio deel.com gusto.com workday.com \
+  --compare rippling.com --mode comparative
+```
+
+Each competitor runs in its own isolated pipeline (own run_id / state / budget /
+trace); the coordinator validates each package against quality gates, proves
+**no cross-company evidence leakage**, and synthesizes a cross-company view. A
+detected leak is a hard error (non-zero exit).
+
+### Benchmark (grounding + validity + provisional classification agreement)
+
+```bash
+uv run competitive-agent eval-benchmark --package-run RUN_ID --split heldout
+uv run competitive-agent eval --suite all     # pytest suites
+```
+
+Writes `evals/{dataset.jsonl,labels.jsonl,reports/benchmark_report.md}`. Objective
+layers (schema/excerpt validity, grounding) are final; the classification layer
+is inter-model agreement (independent Sonnet labeler vs. production Haiku
+classifier) and is **provisional pending human adjudication** per
+`evals/adjudication_guide.md` — the report says so loudly and never presents it
+as final accuracy.
+
 ### Optional React UI (bonus)
 
 A Vite React app reads the same validated packages (Action Board, positioning,
