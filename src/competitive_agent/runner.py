@@ -30,9 +30,18 @@ def _build_registry():
     # Level-A report-critical adapters first; Level-B optional adapters after.
     # Each Level-B tool is gated by its own source flag and is non-blocking.
     for tool in (
-        WebsiteMapTool(), WebpageFetchTool(), WaybackTool(), ExaSearchTool(),
-        SimilarwebTool(), ReviewsTool(), JobsTool(), EventsTool(), OOHTool(),
-        GoogleAdsTool(), MetaAdsTool(), LinkedInAdsTool(),
+        WebsiteMapTool(),
+        WebpageFetchTool(),
+        WaybackTool(),
+        ExaSearchTool(),
+        SimilarwebTool(),
+        ReviewsTool(),
+        JobsTool(),
+        EventsTool(),
+        OOHTool(),
+        GoogleAdsTool(),
+        MetaAdsTool(),
+        LinkedInAdsTool(),
     ):
         registry.register(tool)
     return registry

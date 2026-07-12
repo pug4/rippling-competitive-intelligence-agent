@@ -82,7 +82,7 @@ def _build_queries(company: str) -> list[tuple[str, str]]:
         ("outdoor_campaign", f"{quoted} outdoor campaign"),
         ("campaign_agency", f"{quoted} campaign agency"),
         ("linkedin_posts", f"site:linkedin.com/posts {quoted} billboard"),
-        ("instagram", f'site:instagram.com {quoted} billboard'),
+        ("instagram", f"site:instagram.com {quoted} billboard"),
     ]
 
 
@@ -173,9 +173,7 @@ class OOHTool(BaseTool):
                         action,
                         status="failed_terminal",
                         error_type="provider_auth",
-                        error_message=(
-                            f"Exa rejected the API key (HTTP {response.status_code})."
-                        ),
+                        error_message=(f"Exa rejected the API key (HTTP {response.status_code})."),
                         cost_usd=cost_usd,
                     )
                 if response.status_code == 429:
@@ -258,7 +256,9 @@ class OOHTool(BaseTool):
             "transit, subway, and airport campaigns are only publicly discoverable "
             "when announced, photographed, or written about."
         )
-        query_failure_notes = [f"OOH query {failure} failed to complete." for failure in failed_queries]
+        query_failure_notes = [
+            f"OOH query {failure} failed to complete." for failure in failed_queries
+        ]
 
         if artifacts:
             return self._result(

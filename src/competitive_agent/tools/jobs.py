@@ -39,9 +39,7 @@ _DEFAULT_NUM_RESULTS = 8
 
 # Public ATS / job-board hosts scoped into the query so hits are genuinely
 # public postings rather than generic marketing pages.
-_JOB_SITE_SCOPE = (
-    "site:boards.greenhouse.io OR site:jobs.lever.co OR site:linkedin.com/jobs"
-)
+_JOB_SITE_SCOPE = "site:boards.greenhouse.io OR site:jobs.lever.co OR site:linkedin.com/jobs"
 
 
 def _parse_published(value: Any) -> datetime | None:
@@ -56,9 +54,7 @@ def _parse_published(value: Any) -> datetime | None:
 
 def _build_jobs_query(company: str) -> str:
     """The exact Exa query for a company's public job postings (§37.12)."""
-    return (
-        f'"{company}" careers OR jobs OR "we\'re hiring" {_JOB_SITE_SCOPE}'
-    )
+    return f'"{company}" careers OR jobs OR "we\'re hiring" {_JOB_SITE_SCOPE}'
 
 
 class JobsTool(BaseTool):
@@ -190,9 +186,7 @@ class JobsTool(BaseTool):
 
     # ---- response mapping --------------------------------------------------
 
-    def _map_response(
-        self, action: ResearchAction, query: str, data: dict[str, Any]
-    ) -> ToolResult:
+    def _map_response(self, action: ResearchAction, query: str, data: dict[str, Any]) -> ToolResult:
         results = data.get("results") or []
         request_id = data.get("requestId")
 

@@ -344,14 +344,24 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     # --- Commercial motion (feedback #20) ----------------------------------
     m = pkg.get("commercial_motion", {})
     if m and m.get("primary_motion") != "unclear":
-        add(f"\n## Commercial motion ({m.get('confidence', 'low')} confidence — {m.get('basis', '')})\n")
-        add(f"- **Inferred motion:** {m['primary_motion']} · **pricing disclosure:** {m.get('pricing_disclosure')}")
+        add(
+            f"\n## Commercial motion ({m.get('confidence', 'low')} confidence — {m.get('basis', '')})\n"
+        )
+        add(
+            f"- **Inferred motion:** {m['primary_motion']} · **pricing disclosure:** {m.get('pricing_disclosure')}"
+        )
         ctas = m.get("dominant_ctas") or {}
         if ctas:
-            add("- **Dominant CTAs (share of observed):** " + ", ".join(f"{k} {v}" for k, v in ctas.items()))
+            add(
+                "- **Dominant CTAs (share of observed):** "
+                + ", ".join(f"{k} {v}" for k, v in ctas.items())
+            )
         seg = m.get("segment_focus") or {}
         if seg:
-            add("- **Apparent segment focus (by mentions):** " + ", ".join(f"{k} ({v})" for k, v in seg.items()))
+            add(
+                "- **Apparent segment focus (by mentions):** "
+                + ", ".join(f"{k} ({v})" for k, v in seg.items())
+            )
         add("- _Public-signal inference only — not CAC, conversion, or spend._")
 
     # --- Product positioning (feedback #18) --------------------------------
@@ -379,7 +389,9 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     mtx = pkg.get("persona_channel_matrix") or {}
     if mtx.get("personas") and mtx.get("channels"):
         add("\n## Persona × channel coverage (observed)\n")
-        add("_Cells are observed-page counts; an empty cell is **not observed**, not proof of absence._\n")
+        add(
+            "_Cells are observed-page counts; an empty cell is **not observed**, not proof of absence._\n"
+        )
         channels = mtx["channels"][:6]
         add("| Persona | " + " | ".join(channels) + " |")
         add("|---|" + "|".join("---:" for _ in channels) + "|")
@@ -400,7 +412,11 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     else:
         snaps = [a for a in pkg["artifacts"] if a["source_type"] == "wayback"]
         snap_dates = sorted(
-            {str(a.get("archive_capture_at") or a.get("published_at") or "")[:10] for a in snaps if a.get("archive_capture_at") or a.get("published_at")}
+            {
+                str(a.get("archive_capture_at") or a.get("published_at") or "")[:10]
+                for a in snaps
+                if a.get("archive_capture_at") or a.get("published_at")
+            }
         )
         depth = "insufficient_history" if len(snaps) < 3 else "partial"
         add(f"**No confirmed strategic change** (historical support: `{depth}`).")
@@ -412,15 +428,24 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         )
         add(
             "- Pages compared: "
-            + (", ".join(sorted({a.get("metadata", {}).get("original_url", a["url"])[:50] for a in snaps})) or "homepage only")
+            + (
+                ", ".join(
+                    sorted(
+                        {a.get("metadata", {}).get("original_url", a["url"])[:50] for a in snaps}
+                    )
+                )
+                or "homepage only"
+            )
         )
         if len(snaps) < 3:
             add(
                 "- **Caveat:** this is too few historical observations to confirm OR rule out a trend. "
                 "A deeper archive sample (more snapshots across the window on platform/pricing pages) is needed."
             )
-        add("- Unresolved hypotheses a deeper sample could test: whether enterprise/platform language is "
-            "increasing; whether API/automation language is broadening.")
+        add(
+            "- Unresolved hypotheses a deeper sample could test: whether enterprise/platform language is "
+            "increasing; whether API/automation language is broadening."
+        )
 
     # --- Scope, coverage, sources (feedback #7, #8, #9, #36) ---------------
     add("\n## Research scope and coverage\n")

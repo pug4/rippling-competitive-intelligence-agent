@@ -25,7 +25,9 @@ def isolated_env(tmp_path, monkeypatch):
 def _run(company="example-hr.com"):
     from competitive_agent.runner import run_analysis
 
-    return run_analysis(company, mode="comparative", execution_mode="fixture", compare_to="rippling.com")
+    return run_analysis(
+        company, mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
 
 
 def test_feedback_persists(isolated_env: Path):
@@ -79,7 +81,10 @@ def test_followup_router_answers_from_state(isolated_env: Path):
     from competitive_agent.conversation import answer_followup
 
     state = _run()
-    assert answer_followup(state.run_id, "why do you believe this? show evidence")["route"] == "answer_from_state"
+    assert (
+        answer_followup(state.run_id, "why do you believe this? show evidence")["route"]
+        == "answer_from_state"
+    )
     assert answer_followup(state.run_id, "go deeper on pricing")["route"] == "focused_deep_dive"
     assert answer_followup(state.run_id, "challenge this conclusion")["route"] == "challenge"
 

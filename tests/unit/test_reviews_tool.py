@@ -134,9 +134,7 @@ async def test_live_maps_review_results_with_pain_language_framing() -> None:
         # Framing that must ride on every artifact.
         assert artifact.metadata["exa_query"] == expected_query
         assert artifact.metadata["source_perspective"] == "review_site"
-        assert (
-            artifact.metadata["representativeness"] == "non_representative_selection_biased"
-        )
+        assert artifact.metadata["representativeness"] == "non_representative_selection_biased"
 
     first = result.artifacts[0]
     assert "onboarding was painful" in first.normalized_text.lower()
@@ -187,9 +185,7 @@ async def test_rate_limit_is_failed_retryable() -> None:
 
 async def test_include_review_domains_can_be_disabled() -> None:
     tool = StubReviewsTool(_resp(200, json=EXA_RESULTS))
-    await tool.execute(
-        make_action(include_review_domains=False), make_context()
-    )
+    await tool.execute(make_action(include_review_domains=False), make_context())
     assert tool.sent_payload is not None
     assert "includeDomains" not in tool.sent_payload
 
@@ -215,7 +211,5 @@ async def test_fixture_mode_dispatches_recorded_reviews() -> None:
         assert artifact.source_type == "reviews"
         assert artifact.collection_method == "exa_reviews"
         assert artifact.metadata["source_perspective"] == "review_site"
-        assert (
-            artifact.metadata["representativeness"] == "non_representative_selection_biased"
-        )
+        assert artifact.metadata["representativeness"] == "non_representative_selection_biased"
     assert "onboarding is painful" in result.artifacts[0].normalized_text.lower()

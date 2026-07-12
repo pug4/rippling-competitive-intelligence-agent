@@ -172,7 +172,12 @@ class WebsiteMapTool(BaseTool):
         for url in urls:
             category, score = _score_path(url)
             page_map.append(
-                {"url": url, "path": urlsplit(url).path or "/", "category": category, "score": score}
+                {
+                    "url": url,
+                    "path": urlsplit(url).path or "/",
+                    "category": category,
+                    "score": score,
+                }
             )
         page_map.sort(key=lambda row: -float(row["score"]))
         page_map = page_map[:_MAX_MAP_URLS]

@@ -132,9 +132,15 @@ def eval(
 
 @app.command("eval-benchmark")
 def eval_benchmark(
-    package_run_id: str = typer.Option(None, "--package-run", help="Run id whose brief grounds Layer C"),
-    execution_mode: str = typer.Option("live", "--execution-mode", help="live|cached (needs a model key)"),
-    split: str = typer.Option("heldout", "--split", help="dev|heldout — heldout is the reported split"),
+    package_run_id: str = typer.Option(
+        None, "--package-run", help="Run id whose brief grounds Layer C"
+    ),
+    execution_mode: str = typer.Option(
+        "live", "--execution-mode", help="live|cached (needs a model key)"
+    ),
+    split: str = typer.Option(
+        "heldout", "--split", help="dev|heldout — heldout is the reported split"
+    ),
     limit: int = typer.Option(None, "--limit", help="Cap scored artifacts (cost control)"),
     per_company: int = typer.Option(18, "--per-company"),
 ) -> None:
@@ -154,7 +160,11 @@ def eval_benchmark(
     settings = get_settings()
     config = get_config()
     db_path = settings.db_path
-    focal = config.focal_company.get("name", "Rippling") if isinstance(config.focal_company, dict) else "Rippling"
+    focal = (
+        config.focal_company.get("name", "Rippling")
+        if isinstance(config.focal_company, dict)
+        else "Rippling"
+    )
 
     # Freeze the dataset split first (auditable, order-independent).
     items = assemble_dataset(db_path, per_company=per_company)
@@ -202,7 +212,9 @@ def eval_benchmark(
     report_path = eval_dir / "reports" / "benchmark_report.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(report_md, encoding="utf-8")
-    typer.echo(f"dataset: {eval_dir / 'dataset.jsonl'} ({result['composition']['total']} artifacts)")
+    typer.echo(
+        f"dataset: {eval_dir / 'dataset.jsonl'} ({result['composition']['total']} artifacts)"
+    )
     typer.echo(f"labels:  {eval_dir / 'labels.jsonl'}")
     typer.echo(f"report:  {report_path}")
     typer.echo(
@@ -212,12 +224,16 @@ def eval_benchmark(
     )
 
 
-def _run_retry(run_id: str, *, mode: str, target: str | None, reason: str | None, focus: list[str] | None) -> None:
+def _run_retry(
+    run_id: str, *, mode: str, target: str | None, reason: str | None, focus: list[str] | None
+) -> None:
     from .config import get_settings
     from .conversation import create_retry, write_diff_report
 
     try:
-        diff = create_retry(run_id, retry_mode=mode, target_id=target, user_reason=reason, focus=focus)
+        diff = create_retry(
+            run_id, retry_mode=mode, target_id=target, user_reason=reason, focus=focus
+        )
     except (KeyError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -230,15 +246,25 @@ def _run_retry(run_id: str, *, mode: str, target: str | None, reason: str | None
 
 
 @app.command()
-def deepen(run_id: str = typer.Argument(...), focus: list[str] = typer.Option(..., "--focus")) -> None:
+def deepen(
+    run_id: str = typer.Argument(...), focus: list[str] = typer.Option(..., "--focus")
+) -> None:
     """Focused deep dive on an existing run, reusing prior evidence."""
     _run_retry(run_id, mode="collect_deeper_evidence", target=None, reason=None, focus=list(focus))
 
 
 @app.command()
-def challenge(run_id: str = typer.Argument(...), claim: str = typer.Option(None, "--claim")) -> None:
+def challenge(
+    run_id: str = typer.Argument(...), claim: str = typer.Option(None, "--claim")
+) -> None:
     """Challenge a conclusion with counterevidence (child run preserves the parent)."""
-    _run_retry(run_id, mode="challenge_conclusion", target=claim, reason="challenge the conclusion", focus=None)
+    _run_retry(
+        run_id,
+        mode="challenge_conclusion",
+        target=claim,
+        reason="challenge the conclusion",
+        focus=None,
+    )
 
 
 @app.command()
@@ -263,8 +289,10 @@ def feedback(
         raise typer.Exit(code=1) from exc
     typer.echo(f"feedback recorded: {fid} ({ftype})")
     if thumbs_down:
-        typer.echo("Tip: `competitive-agent retry " + run_id + " --mode <reanalyze_same_evidence|"
-                   "collect_deeper_evidence|challenge_conclusion>` to create a child run.")
+        typer.echo(
+            "Tip: `competitive-agent retry " + run_id + " --mode <reanalyze_same_evidence|"
+            "collect_deeper_evidence|challenge_conclusion>` to create a child run."
+        )
 
 
 @app.command()

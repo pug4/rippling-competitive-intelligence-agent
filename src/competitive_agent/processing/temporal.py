@@ -120,7 +120,10 @@ def detect_candidate_changes(
     def theme_set(items: list[Any]) -> dict[str, list[str]]:
         out: dict[str, list[str]] = {}
         for c in items:
-            for t in [getattr(c, "primary_theme", None), *(getattr(c, "supporting_themes", []) or [])]:
+            for t in [
+                getattr(c, "primary_theme", None),
+                *(getattr(c, "supporting_themes", []) or []),
+            ]:
                 if t:
                     out.setdefault(t, []).append(c.artifact_id)
         return out

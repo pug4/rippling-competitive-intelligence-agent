@@ -69,9 +69,13 @@ def create_retry(
     """Create and drive a child run under ``retry_mode``, preserving lineage,
     then return a difference report (§25 retry output)."""
     if retry_mode not in RETRY_MODES:
-        raise ValueError(f"unknown retry_mode {retry_mode!r}; expected one of {sorted(RETRY_MODES)}")
+        raise ValueError(
+            f"unknown retry_mode {retry_mode!r}; expected one of {sorted(RETRY_MODES)}"
+        )
     parent_row = _load_parent(parent_run_id)
-    parent_ctx = _build_context(parent_run_id, execution_mode=parent_row["execution_mode"] or "fixture")
+    parent_ctx = _build_context(
+        parent_run_id, execution_mode=parent_row["execution_mode"] or "fixture"
+    )
     parent_state = load_state(parent_ctx.repository, parent_run_id)
 
     # Map retry mode -> child research mode / scope adjustments.
@@ -106,7 +110,9 @@ def create_retry(
     # Parent→child lineage is recorded on the child run row (parent_run_id +
     # retry_mode) by create_run above.
     child_state = asyncio.run(drive(child_state, child_ctx))
-    diff = _difference_report(parent_ctx, child_ctx, parent_run_id, child_state.run_id, retry_mode, user_reason)
+    diff = _difference_report(
+        parent_ctx, child_ctx, parent_run_id, child_state.run_id, retry_mode, user_reason
+    )
     return diff
 
 
@@ -121,14 +127,25 @@ def _counts(ctx, run_id: str) -> dict[str, Any]:
     opps = repo.list_opportunities(run_id=run_id)
     return {
         "artifacts": len(repo.list_artifacts(run_id=run_id)),
-        "claims": [getattr(c, "statement", "")[:80] for c in claims if c.__class__.__name__ == "StrategicClaim"],
+        "claims": [
+            getattr(c, "statement", "")[:80]
+            for c in claims
+            if c.__class__.__name__ == "StrategicClaim"
+        ],
         "changes": len([c for c in claims if c.__class__.__name__ == "ChangeEvent"]),
-        "opportunities": [getattr(o, "title", "") for o in opps if o.__class__.__name__ == "MarketingOpportunity"],
+        "opportunities": [
+            getattr(o, "title", "") for o in opps if o.__class__.__name__ == "MarketingOpportunity"
+        ],
     }
 
 
 def _difference_report(
-    parent_ctx, child_ctx, parent_run_id: str, child_run_id: str, retry_mode: str, user_reason: str | None
+    parent_ctx,
+    child_ctx,
+    parent_run_id: str,
+    child_run_id: str,
+    retry_mode: str,
+    user_reason: str | None,
 ) -> dict[str, Any]:
     p = _counts(parent_ctx, parent_run_id)
     c = _counts(child_ctx, child_run_id)
@@ -170,23 +187,39 @@ def answer_followup(run_id: str, question: str) -> dict[str, Any]:
     q = question.lower()
     # Cheap intent routing.
     if any(k in q for k in ("why", "evidence", "show")):
-        claims = [c for c in ctx.repository.list_claims(run_id=run_id) if c.__class__.__name__ == "StrategicClaim"]
+        claims = [
+            c
+            for c in ctx.repository.list_claims(run_id=run_id)
+            if c.__class__.__name__ == "StrategicClaim"
+        ]
         return {
             "route": "answer_from_state",
             "answer": "See the grounded claims and their evidence IDs.",
             "claims": [
-                {"statement": getattr(c, "statement", ""), "status": getattr(c, "status", ""),
-                 "evidence_ids": getattr(c, "evidence_ids", [])}
+                {
+                    "statement": getattr(c, "statement", ""),
+                    "status": getattr(c, "status", ""),
+                    "evidence_ids": getattr(c, "evidence_ids", []),
+                }
                 for c in claims[:10]
             ],
         }
     if "challenge" in q or "disprove" in q:
         return {"route": "challenge", "action": "run: competitive-agent challenge " + run_id}
     if any(k in q for k in ("deeper", "pricing", "enterprise", "go deeper")):
-        return {"route": "focused_deep_dive", "action": "run: competitive-agent deepen " + run_id + " --focus <dimension>"}
+        return {
+            "route": "focused_deep_dive",
+            "action": "run: competitive-agent deepen " + run_id + " --focus <dimension>",
+        }
     if "compare" in q or "run this again" in q:
-        return {"route": "compare_another_company", "action": "run: competitive-agent analyze <company>"}
-    return {"route": "clarify", "question": "Could you specify the dimension or company to focus on?"}
+        return {
+            "route": "compare_another_company",
+            "action": "run: competitive-agent analyze <company>",
+        }
+    return {
+        "route": "clarify",
+        "question": "Could you specify the dimension or company to focus on?",
+    }
 
 
 def write_diff_report(diff: dict[str, Any], out_dir: Any) -> Any:

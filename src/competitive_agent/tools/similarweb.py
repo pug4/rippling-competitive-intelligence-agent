@@ -602,7 +602,9 @@ class SimilarwebTool(BaseTool):
             if metric is None:
                 continue
             value = metric["value"]
-            rendered = value if isinstance(value, (int, float)) else json.dumps(value, sort_keys=True)
+            rendered = (
+                value if isinstance(value, (int, float)) else json.dumps(value, sort_keys=True)
+            )
             lines.append(f"- {field} (estimated, {metric['unit']}): {rendered}")
         return "\n".join(lines)
 

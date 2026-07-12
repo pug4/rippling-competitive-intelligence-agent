@@ -138,7 +138,8 @@ def dominant_message(
         if art:
             surface = (
                 _path_surface(_url_path(art.final_url or art.url))
-                or str(art.metadata.get("page_category")) or None
+                or str(art.metadata.get("page_category"))
+                or None
                 or art.source_type
             )
         theme_surfaces.setdefault(theme, set()).add(surface or "unknown")
@@ -295,8 +296,15 @@ def product_positioning(classifications: list[MarketingClassification]) -> list[
             if not key:
                 continue
             slot = products.setdefault(
-                key, {"product": key, "themes": Counter(), "personas": Counter(),
-                       "proof_types": Counter(), "ceps": Counter(), "pages": 0}
+                key,
+                {
+                    "product": key,
+                    "themes": Counter(),
+                    "personas": Counter(),
+                    "proof_types": Counter(),
+                    "ceps": Counter(),
+                    "pages": 0,
+                },
             )
             slot["pages"] += 1
             if c.primary_theme:
@@ -350,19 +358,26 @@ def category_entry_points(
             ownership = "focal_owns"
         else:
             ownership = "neither"
-        rows.append(
-            {"cep": cep, "competitor_pages": cn, "focal_pages": fn, "ownership": ownership}
-        )
+        rows.append({"cep": cep, "competitor_pages": cn, "focal_pages": fn, "ownership": ownership})
     rows.sort(key=lambda r: -(comp.get(str(r["cep"]), 0) + focal.get(str(r["cep"]), 0)))
     return rows
 
 
 # Source type -> channel bucket for the persona×channel×funnel matrix.
 _CHANNEL_OF_SOURCE = {
-    "webpage": "website", "sitemap": "website", "wayback": "website (historical)",
-    "exa_web": "website/social", "news": "press", "comparison": "comparison pages",
-    "reviews": "review sites", "jobs": "jobs", "events": "events", "ooh": "ooh",
-    "google_ads": "paid search", "meta_ads": "meta/instagram", "linkedin_ads": "paid linkedin",
+    "webpage": "website",
+    "sitemap": "website",
+    "wayback": "website (historical)",
+    "exa_web": "website/social",
+    "news": "press",
+    "comparison": "comparison pages",
+    "reviews": "review sites",
+    "jobs": "jobs",
+    "events": "events",
+    "ooh": "ooh",
+    "google_ads": "paid search",
+    "meta_ads": "meta/instagram",
+    "linkedin_ads": "paid linkedin",
     "similarweb": "traffic (estimated)",
 }
 
@@ -410,7 +425,9 @@ def commercial_motion(classifications: list[MarketingClassification]) -> dict[st
             motion_signals[sig.lower()] += 1
 
     total_cta = sum(cta_counts.values())
-    dominant_ctas = {k: round(v / total_cta, 2) for k, v in cta_counts.most_common(5)} if total_cta else {}
+    dominant_ctas = (
+        {k: round(v / total_cta, 2) for k, v in cta_counts.most_common(5)} if total_cta else {}
+    )
     pricing = pricing_levels.most_common(1)[0][0] if pricing_levels else "unknown"
 
     # Infer primary motion from the CTA mix + pricing gating (public signals).
@@ -438,7 +455,10 @@ def commercial_motion(classifications: list[MarketingClassification]) -> dict[st
 
 _CTA_NORMAL = [
     ("book_demo", ("book a demo", "get a demo", "request a demo", "schedule a demo", "see a demo")),
-    ("contact_sales", ("contact sales", "talk to sales", "talk to an expert", "get a quote", "request pricing")),
+    (
+        "contact_sales",
+        ("contact sales", "talk to sales", "talk to an expert", "get a quote", "request pricing"),
+    ),
     ("start_free", ("start free", "get started free", "try free", "free trial", "start for free")),
     ("sign_up", ("sign up", "get started", "create account")),
     ("learn_more", ("learn more", "explore", "read more")),

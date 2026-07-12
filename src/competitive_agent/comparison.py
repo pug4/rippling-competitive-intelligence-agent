@@ -62,7 +62,9 @@ async def run_focal_mirror(state: DirectorState, ctx: Any) -> str | None:
     # The focal mirror is a bounded baseline, not the star of the run: cap its
     # budget to a fraction of the parent so it can never starve the competitor
     # analysis (§38.27 bounded concurrency, §39.7 bounded runs).
-    remaining = max(120.0, state.max_runtime_seconds - (utcnow() - state.started_at).total_seconds())
+    remaining = max(
+        120.0, state.max_runtime_seconds - (utcnow() - state.started_at).total_seconds()
+    )
     focal_state.max_runtime_seconds = int(min(focal_state.max_runtime_seconds, remaining * 0.55))
     focal_state.max_iterations = min(focal_state.max_iterations, 22)
     focal_state.max_tool_calls = min(focal_state.max_tool_calls, 70)
@@ -247,8 +249,14 @@ def build_message_proof_gaps(
 
         # Attackability rubric (feedback #17): distinct dimensions, not one label.
         overall, attack_level, interpretation = _stance(
-            competitor_name, focal_name, theme, strength, focal_strength,
-            n_pages=n_pages, has_strong_page=has_strong_page, news_only=news_only,
+            competitor_name,
+            focal_name,
+            theme,
+            strength,
+            focal_strength,
+            n_pages=n_pages,
+            has_strong_page=has_strong_page,
+            news_only=news_only,
         )
         detail = AttackabilityAssessment(
             proof_gap="high" if strength in ("weak", "none") else "low",

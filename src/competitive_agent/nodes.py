@@ -65,8 +65,14 @@ _MAX_CLAIMS_JUDGED = 10
 # Level-B optional breadth actions (user priority #3): they must never delay the
 # focal mirror (comparison, priority #2) or opportunity generation.
 _OPTIONAL_ACTION_TYPES = {
-    "search_reviews", "search_jobs", "search_events", "search_ooh",
-    "enrich_similarweb", "search_google_ads", "search_meta_ads", "search_linkedin_ads",
+    "search_reviews",
+    "search_jobs",
+    "search_events",
+    "search_ooh",
+    "enrich_similarweb",
+    "search_google_ads",
+    "search_meta_ads",
+    "search_linkedin_ads",
 }
 
 # Family model class name -> classifications.family column value.
@@ -341,7 +347,11 @@ async def _execute_reuse_evidence(state: DirectorState, ctx: GraphContext, actio
     if ctx.trace:
         ctx.trace.append(
             "action_selected",
-            {"action_type": "reuse_evidence", "reused_artifacts": len(reused), "parent_run_id": parent_id},
+            {
+                "action_type": "reuse_evidence",
+                "reused_artifacts": len(reused),
+                "parent_run_id": parent_id,
+            },
         )
     return state, "normalize_and_deduplicate"
 
@@ -587,7 +597,9 @@ async def refresh_claims(state: DirectorState, ctx: GraphContext):
     if not ctx.scratch.get("evidence_dirty") or ctx.gateway is None:
         return state, "check_contradictions"
     ok, _ = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
-    remaining = [a for a in planner.propose_actions(state, ctx) if a.action_type != "search_wayback"]
+    remaining = [
+        a for a in planner.propose_actions(state, ctx) if a.action_type != "search_wayback"
+    ]
     near_stop = ok or not remaining
     if not near_stop:
         return state, "check_contradictions"
@@ -735,7 +747,8 @@ async def run_focal_mirror_check(state: DirectorState, ctx: GraphContext):
     # coverage is sufficient OR only optional actions remain.
     ok, _ = cov.sufficient(state.coverage, state.mode, compare=False)
     remaining_required = [
-        a for a in planner.propose_actions(state, ctx)
+        a
+        for a in planner.propose_actions(state, ctx)
         if a.action_type not in _OPTIONAL_ACTION_TYPES
     ]
     if not ok and remaining_required:
@@ -762,7 +775,8 @@ async def generate_opportunities(state: DirectorState, ctx: GraphContext):
     # regenerated later if breadth materially changes the picture.
     ok, missing = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
     remaining_required = [
-        a for a in planner.propose_actions(state, ctx)
+        a
+        for a in planner.propose_actions(state, ctx)
         if a.action_type not in _OPTIONAL_ACTION_TYPES
     ]
     if remaining_required and not ok:

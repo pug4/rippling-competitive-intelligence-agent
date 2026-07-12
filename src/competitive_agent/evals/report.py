@@ -11,7 +11,9 @@ from __future__ import annotations
 from typing import Any
 
 
-def render_report(result: dict[str, Any], *, run_id: str | None = None, cost_latency: dict | None = None) -> str:
+def render_report(
+    result: dict[str, Any], *, run_id: str | None = None, cost_latency: dict | None = None
+) -> str:
     comp = result["composition"]
     d = result["layer_d_classification"]
     lines: list[str] = []
@@ -124,13 +126,21 @@ def _weak_spots(d: dict[str, Any], result: dict[str, Any]) -> str:
     weak: list[str] = []
     for name, acc in d["single_field_agreement"].items():
         if acc < 0.6:
-            weak.append(f"- **{name}**: low agreement ({acc:.2f}) — likely genuine "
-                        "ambiguity or divergent taxonomies; prioritize for adjudication.")
+            weak.append(
+                f"- **{name}**: low agreement ({acc:.2f}) — likely genuine "
+                "ambiguity or divergent taxonomies; prioritize for adjudication."
+            )
     if d["unsupported_inference_rate"] > 0.1:
-        weak.append(f"- Unsupported-inference rate {d['unsupported_inference_rate']:.2f} "
-                    "exceeds 0.10 — the classifier is asserting fields the independent "
-                    "labeler found no evidence for; investigate.")
+        weak.append(
+            f"- Unsupported-inference rate {d['unsupported_inference_rate']:.2f} "
+            "exceeds 0.10 — the classifier is asserting fields the independent "
+            "labeler found no evidence for; investigate."
+        )
     if result["n_failed"]:
-        weak.append(f"- {result['n_failed']} artifact(s) failed classification/labeling "
-                    "(see per-artifact records).")
-    return "\n".join(weak) if weak else "- No field fell below the 0.60 agreement floor on this split."
+        weak.append(
+            f"- {result['n_failed']} artifact(s) failed classification/labeling "
+            "(see per-artifact records)."
+        )
+    return (
+        "\n".join(weak) if weak else "- No field fell below the 0.60 agreement floor on this split."
+    )

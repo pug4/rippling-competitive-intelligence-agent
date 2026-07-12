@@ -65,10 +65,7 @@ def _parse_published(value: Any) -> datetime | None:
 
 def _build_query(company: str) -> str:
     """Event-footprint query: presence roles OR'd across conference contexts."""
-    return (
-        f'"{company}" sponsor OR exhibitor OR speaker OR booth OR keynote '
-        "OR webinar conference"
-    )
+    return f'"{company}" sponsor OR exhibitor OR speaker OR booth OR keynote OR webinar conference'
 
 
 class EventsTool(BaseTool):
@@ -195,9 +192,7 @@ class EventsTool(BaseTool):
 
     # ---- response mapping --------------------------------------------------
 
-    def _map_response(
-        self, action: ResearchAction, query: str, data: dict[str, Any]
-    ) -> ToolResult:
+    def _map_response(self, action: ResearchAction, query: str, data: dict[str, Any]) -> ToolResult:
         results = data.get("results") or []
         request_id = data.get("requestId")
 

@@ -22,7 +22,15 @@ Stance = Literal[
     "ignores", "implicit_contrast", "named_comparison", "direct_attack", "not_observed"
 ]
 ClaimType = Literal[
-    "capability", "outcome", "status", "fear", "identity", "cost", "risk", "category", "not_observed"
+    "capability",
+    "outcome",
+    "status",
+    "fear",
+    "identity",
+    "cost",
+    "risk",
+    "category",
+    "not_observed",
 ]
 Salience = Literal["low", "medium", "high"]
 Funnel = Literal["awareness", "consideration", "evaluation", "decision", "retention_expansion"]
@@ -36,7 +44,9 @@ class ArtifactLabel(BaseModel):
     salience_band: Salience = "medium"
     segment: Segment = "not_observed"
     persona: str = Field(default="not_observed", description="Organizational role targeted")
-    category_entry_point: str = Field(default="not_observed", description="The buying trigger/situation")
+    category_entry_point: str = Field(
+        default="not_observed", description="The buying trigger/situation"
+    )
     funnel_stage: Funnel = "awareness"
     claim_type: ClaimType = "not_observed"
     proof_type: str = Field(default="not_observed", description="Strongest proof offered")

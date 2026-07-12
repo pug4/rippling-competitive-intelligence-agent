@@ -82,7 +82,9 @@ async def _run_portfolio_async(
                 state, ctx = create_run(
                     company,
                     mode=mode,
-                    execution_mode=cast("Literal['live', 'cached', 'fixture'] | None", execution_mode),
+                    execution_mode=cast(
+                        "Literal['live', 'cached', 'fixture'] | None", execution_mode
+                    ),
                     compare_to=compare_to,
                     lookback_days=lookback_days,
                 )
@@ -153,7 +155,9 @@ def _build_package(state: DirectorState, ctx: Any) -> dict[str, Any]:
     claims = repo.list_claims(run_id=run_id)
     opps = repo.list_opportunities(run_id=run_id)
 
-    artifact_company_ids = sorted({a.company_id for a in artifacts if getattr(a, "company_id", None)})
+    artifact_company_ids = sorted(
+        {a.company_id for a in artifacts if getattr(a, "company_id", None)}
+    )
     gate = _quality_gate(state, artifacts, classifications)
     return {
         "company_run_id": run_id,
@@ -169,7 +173,9 @@ def _build_package(state: DirectorState, ctx: Any) -> dict[str, Any]:
             "change_events": len(state.change_event_ids),
         },
         "artifact_company_ids": artifact_company_ids,
-        "opportunities": [getattr(o, "title", "") for o in opps if o.__class__.__name__ == "MarketingOpportunity"],
+        "opportunities": [
+            getattr(o, "title", "") for o in opps if o.__class__.__name__ == "MarketingOpportunity"
+        ],
         "quality_gate_results": gate,
         "quality_gate_passed": all(gate.values()),
         "stop_reason": state.stop_reason,
@@ -177,7 +183,9 @@ def _build_package(state: DirectorState, ctx: Any) -> dict[str, Any]:
     }
 
 
-def _quality_gate(state: DirectorState, artifacts: list[Any], classifications: list[Any]) -> dict[str, bool]:
+def _quality_gate(
+    state: DirectorState, artifacts: list[Any], classifications: list[Any]
+) -> dict[str, bool]:
     """Minimal package-validity gate (§37.34): a package that fails is flagged,
     never silently dropped from synthesis."""
     return {
@@ -195,7 +203,9 @@ def assert_no_cross_company_leakage(packages: list[dict[str, Any]]) -> dict[str,
     violations: list[str] = []
     own_ids = {p["company_id"] for p in packages}
     for p in packages:
-        foreign = [cid for cid in p["artifact_company_ids"] if cid != p["company_id"] and cid in own_ids]
+        foreign = [
+            cid for cid in p["artifact_company_ids"] if cid != p["company_id"] and cid in own_ids
+        ]
         if foreign:
             violations.append(
                 f"{p['company_input']} ({p['company_id']}) references evidence from {foreign}"
@@ -230,7 +240,9 @@ def _synthesize(packages: list[dict[str, Any]], *, focal: str) -> dict[str, Any]
     return {
         "focal_company": focal,
         "companies_synthesized": [p["company_input"] for p in valid],
-        "excluded_failed_gate": [p["company_input"] for p in packages if not p["quality_gate_passed"]],
+        "excluded_failed_gate": [
+            p["company_input"] for p in packages if not p["quality_gate_passed"]
+        ],
         "coverage_leaders_by_dimension": leaders,
         "opportunity_themes_across_multiple_competitors": shared,
     }

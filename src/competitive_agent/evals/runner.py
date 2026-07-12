@@ -28,7 +28,9 @@ from .grounding import check_package
 from .labeling import classification_to_pred, label_artifact, label_to_gold
 
 
-async def _classify_and_label(item: DatasetItem, repo: Any, gateway: Any, prompts: Any, taxonomy: dict, focal: str):
+async def _classify_and_label(
+    item: DatasetItem, repo: Any, gateway: Any, prompts: Any, taxonomy: dict, focal: str
+):
     """Run BOTH paths on one artifact, independently, over the REAL stored record."""
     from ..processing.classify import classify_artifact
 
@@ -144,7 +146,10 @@ def _classification_summary(report: EvalReport) -> dict[str, Any]:
         "n_artifacts": report.n_artifacts,
         "single_field_agreement": {k: v.accuracy() for k, v in report.single.items()},
         "ordinal_field_agreement": {
-            k: {"exact": v.accuracy(), "within_one": (v.within_one_band / v.total if v.total else 0.0)}
+            k: {
+                "exact": v.accuracy(),
+                "within_one": (v.within_one_band / v.total if v.total else 0.0),
+            }
             for k, v in report.ordinal.items()
         },
         "multi_field_prf": {

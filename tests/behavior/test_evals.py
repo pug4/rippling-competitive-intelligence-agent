@@ -67,7 +67,11 @@ def test_grounding_flags_unsupported_opportunity_and_broken_claim():
         ],
         "change_events": [
             {"change_id": "CH1", "prior_evidence_ids": ["E1"], "current_evidence_ids": ["E2"]},
-            {"change_id": "CH2", "prior_evidence_ids": [], "current_evidence_ids": ["E2"]},  # missing period
+            {
+                "change_id": "CH2",
+                "prior_evidence_ids": [],
+                "current_evidence_ids": ["E2"],
+            },  # missing period
         ],
         "opportunities": [
             {"opportunity_id": "O1", "supporting_claim_ids": ["C1"]},
@@ -87,21 +91,36 @@ def test_report_carries_provisional_banner():
     from competitive_agent.evals.report import render_report
 
     result = {
-        "composition": {"total": 10, "by_company": {"deel.com": 10}, "by_source_type": {}, "by_split": {}},
+        "composition": {
+            "total": 10,
+            "by_company": {"deel.com": 10},
+            "by_source_type": {},
+            "by_split": {},
+        },
         "scored_split": "heldout",
         "n_scored": 5,
         "n_failed": 0,
         "layer_a_schema_validity": 1.0,
         "layer_b_excerpt_validity": 1.0,
         "layer_c_grounding": {
-            "ok": True, "citation_coverage": 1.0, "material_claims": 3, "grounded_claims": 3,
-            "broken_evidence_refs": [], "excerpts_checked": 3, "excerpts_unverified": [],
-            "opportunities_missing_support": [], "changes_missing_period": [],
+            "ok": True,
+            "citation_coverage": 1.0,
+            "material_claims": 3,
+            "grounded_claims": 3,
+            "broken_evidence_refs": [],
+            "excerpts_checked": 3,
+            "excerpts_unverified": [],
+            "opportunities_missing_support": [],
+            "changes_missing_period": [],
         },
         "layer_d_classification": {
-            "n_artifacts": 5, "single_field_agreement": {"segment": 0.8},
-            "ordinal_field_agreement": {}, "multi_field_prf": {},
-            "excerpt_validity": 1.0, "unsupported_inference_rate": 0.0, "note": "inter-model agreement",
+            "n_artifacts": 5,
+            "single_field_agreement": {"segment": 0.8},
+            "ordinal_field_agreement": {},
+            "multi_field_prf": {},
+            "excerpt_validity": 1.0,
+            "unsupported_inference_rate": 0.0,
+            "note": "inter-model agreement",
         },
     }
     md = render_report(result)
