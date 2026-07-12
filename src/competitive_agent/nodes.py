@@ -119,7 +119,12 @@ def _taxonomy(ctx: GraphContext) -> dict[str, Any]:
     return ctx.config.taxonomy if ctx.config else {}
 
 
-def _focal_name(ctx: GraphContext) -> str:
+def _focal_name(ctx: GraphContext, state: DirectorState | None = None) -> str:
+    # Prefer the RESOLVED focal (e.g. the --compare target) over the static
+    # config default, so generated text (proof gaps, opportunities) names the
+    # actual focal company, not always "Rippling".
+    if state is not None and state.focal_company is not None:
+        return state.focal_company.canonical_name
     return ctx.config.focal_company.name if ctx.config else "Rippling"
 
 
@@ -480,7 +485,7 @@ async def extract_and_classify(state: DirectorState, ctx: GraphContext):
                 ctx.gateway,
                 prompts,
                 taxonomy,
-                focal_company_name=_focal_name(ctx),
+                focal_company_name=_focal_name(ctx, state),
                 company_id=artifact.company_id,
             )
             return artifact, evidence, extraction_report, merged, families
@@ -791,7 +796,7 @@ async def generate_opportunities(state: DirectorState, ctx: GraphContext):
         ctx.scratch.get("focal_run_id"),
         ctx.repository,
         competitor_name=state.company.canonical_name if state.company else "competitor",
-        focal_name=_focal_name(ctx),
+        focal_name=_focal_name(ctx, state),
     )
     for gap in gaps:
         ctx.repository.save_opportunity(state.run_id, gap)

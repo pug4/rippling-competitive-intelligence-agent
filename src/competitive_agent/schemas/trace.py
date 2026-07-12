@@ -42,7 +42,7 @@ TRACE_EVENT_TYPES: frozenset[str] = frozenset(
         "temporal_change_candidate",
         "temporal_change_verified",
         "temporal_change_rejected",
-        "rippling_mirror_completed",
+        "focal_mirror_completed",
         "opportunity_generated",
         "opportunity_rejected",
         "stop_selected",

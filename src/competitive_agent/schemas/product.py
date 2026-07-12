@@ -272,14 +272,14 @@ class ProductGapRecord(VersionedModel):
     gap_id: str
     portfolio_run_id: str | None = None
     competitor_company_run_id: str
-    rippling_company_run_id: str
+    focal_company_run_id: str
 
     gap_type: ProductGapType
     title: str
     description: str
 
     competitor_product_ids: list[str]
-    rippling_product_ids: list[str]
+    focal_product_ids: list[str]
 
     target_segments: list[str]
     target_personas: list[str]
@@ -290,10 +290,10 @@ class ProductGapRecord(VersionedModel):
     competitor_public_capability: str | None = None
     competitor_proof_strength: Literal["high", "medium", "low", "unknown"]
 
-    rippling_position: str
-    rippling_public_capability: str | None = None
-    rippling_proof_ids: list[str]
-    rippling_proof_status: Literal["available", "partial", "missing"]
+    focal_position: str
+    focal_public_capability: str | None = None
+    focal_proof_ids: list[str]
+    focal_proof_status: Literal["available", "partial", "missing"]
 
     observed_over_time: bool
     prior_state: str | None = None
@@ -306,7 +306,7 @@ class ProductGapRecord(VersionedModel):
     legal_review_required: bool
 
     competitor_evidence_ids: list[str]
-    rippling_evidence_ids: list[str]
+    focal_evidence_ids: list[str]
 
     claim_confidence: ConfidenceLevel
     research_coverage: CoverageLevel
@@ -350,7 +350,7 @@ class ProductMarketingStrategy(VersionedModel):
     target_personas: list[str]
     buyer_problem: str
 
-    rippling_product_focus: list[str]
+    focal_product_focus: list[str]
     competitor_product_focus: list[str]
 
     positioning_statement: str

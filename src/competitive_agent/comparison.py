@@ -77,7 +77,7 @@ async def run_focal_mirror(state: DirectorState, ctx: Any) -> str | None:
     ctx.scratch[reuse_key] = focal_state.run_id
     if ctx.trace:
         ctx.trace.append(
-            "rippling_mirror_completed",
+            "focal_mirror_completed",
             {"focal_run_id": focal_state.run_id, "stop_reason": focal_state.stop_reason},
         )
     return focal_state.run_id
@@ -260,7 +260,7 @@ def build_message_proof_gaps(
         )
         detail = AttackabilityAssessment(
             proof_gap="high" if strength in ("weak", "none") else "low",
-            rippling_proof="high" if focal_strength in ("strong", "moderate") else "low",
+            focal_proof="high" if focal_strength in ("strong", "moderate") else "low",
             product_comparability="partial",  # refined by the opportunity-stage gate
             structural_defensibility="medium",
             counterattack_risk="high" if strength == "strong" else "medium",
@@ -284,9 +284,9 @@ def build_message_proof_gaps(
                 strongest_proof_id=None,
                 proof_strength=strength,
                 missing_proof=missing,
-                rippling_equivalent_claim=(focal_slot["message"] if focal_slot else None),
-                rippling_proof_ids=(focal_slot["classification_ids"][:5] if focal_slot else []),
-                rippling_proof_strength=focal_strength,
+                focal_equivalent_claim=(focal_slot["message"] if focal_slot else None),
+                focal_proof_ids=(focal_slot["classification_ids"][:5] if focal_slot else []),
+                focal_proof_strength=focal_strength,
                 actionable_interpretation=interpretation,
                 attackability=attack_level,  # type: ignore[arg-type]
                 attackability_detail=detail,

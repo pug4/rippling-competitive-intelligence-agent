@@ -82,7 +82,7 @@ _VALID_CATEGORIES = {
 
 class ComparabilityDraft(BaseModel):
     competitor_product: str = ""
-    rippling_product: str = ""
+    focal_product: str = ""
     shared_buyer_job: str | None = None
     shared_workflow: str | None = None
     overlapping_capabilities: list[str] = Field(default_factory=list)
@@ -141,7 +141,7 @@ class OpportunityDraft(BaseModel):
 
 
 def _already_saying_it(gap: MessageProofGap) -> str:
-    return "underweighted" if gap.rippling_equivalent_claim else "net_new"
+    return "underweighted" if gap.focal_equivalent_claim else "net_new"
 
 
 def _is_generic(draft: OpportunityDraft) -> bool:
@@ -216,7 +216,13 @@ async def generate_from_gaps(
         from .prompt_registry import PromptRegistry
 
         prompts = PromptRegistry()
-    focal_name = ctx.config.focal_company.name if ctx.config else "Rippling"
+    # Prefer the RESOLVED focal (the --compare target) over the static config
+    # default, so opportunity text names the actual focal, not always "Rippling".
+    focal_name = (
+        state.focal_company.canonical_name
+        if state.focal_company is not None
+        else (ctx.config.focal_company.name if ctx.config else "Rippling")
+    )
     competitor = state.company.canonical_name if state.company else "the competitor"
 
     opportunities: list[MarketingOpportunity] = []
@@ -243,8 +249,8 @@ async def generate_from_gaps(
             theme=gap.short_label or gap.claim_type,
             proof_distribution=dist,
             proof_strength=gap.proof_strength,
-            focal_equivalent=gap.rippling_equivalent_claim or "not observed",
-            focal_strength=gap.rippling_proof_strength,
+            focal_equivalent=gap.focal_equivalent_claim or "not observed",
+            focal_strength=gap.focal_proof_strength,
             already_saying_it=_already_saying_it(gap),
         )
         try:
@@ -309,7 +315,7 @@ def _to_opportunity(
     comparability = ProductComparability(
         competitor_product=draft.product_comparability.competitor_product
         or f"{competitor} product",
-        rippling_product=draft.product_comparability.rippling_product
+        focal_product=draft.product_comparability.focal_product
         or (draft.focal_product_focus[0] if draft.focal_product_focus else f"{focal} product"),
         shared_buyer_job=draft.product_comparability.shared_buyer_job,
         shared_workflow=draft.product_comparability.shared_workflow,
@@ -368,8 +374,8 @@ def _to_opportunity(
         target_segment=draft.target_segment,
         target_personas=draft.target_personas,
         target_jobs=draft.target_jobs,
-        rippling_product_focus=draft.focal_product_focus,
-        rippling_segment=draft.target_segment,
+        focal_product_focus=draft.focal_product_focus,
+        focal_segment=draft.target_segment,
         channels=draft.channels or ["website", "paid_linkedin"],
         funnel_insertion_point=draft.funnel_insertion_point,
         message_angle=draft.message_angle,
@@ -377,9 +383,9 @@ def _to_opportunity(
         promised_transformation=draft.promised_transformation,
         competitor_proof_strength=gap.proof_strength,
         competitor_proof_gap=", ".join(gap.missing_proof) or "proof concentration unclear",
-        rippling_proof_ids=gap.rippling_proof_ids,
-        rippling_proof_status=proof_status,
-        rippling_current_usage=_already_saying_it(gap),
+        focal_proof_ids=gap.focal_proof_ids,
+        focal_proof_status=proof_status,
+        focal_current_usage=_already_saying_it(gap),
         structural_defensibility=draft.structural_defensibility
         if draft.structural_defensibility in ("high", "medium", "low")
         else "medium",

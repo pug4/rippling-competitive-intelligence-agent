@@ -18,7 +18,7 @@ from .graph import GraphContext
 from .schemas.common import utcnow
 from .state import DirectorState
 
-JSON_SCHEMA_VERSION = "1.1.0"
+JSON_SCHEMA_VERSION = "1.2.0"
 
 
 def run_output_dir(state: DirectorState, ctx: GraphContext) -> Path:
@@ -309,10 +309,10 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             if comp:
                 add(
                     f"  - Product comparability: **{comp.get('comparability', 'weak')}** "
-                    f"({comp.get('competitor_product', '?')} vs {comp.get('rippling_product', '?')})"
+                    f"({comp.get('competitor_product', '?')} vs {comp.get('focal_product', '?')})"
                 )
             add(
-                f"  - {focal} proof: {o['rippling_proof_status']} · already-saying-it: {o['rippling_current_usage']} "
+                f"  - {focal} proof: {o['focal_proof_status']} · already-saying-it: {o['focal_current_usage']} "
                 f"· legal review: {o['legal_review_required']}"
             )
             add(f"  - Risk (backfire): {o['why_this_could_backfire']}")
@@ -341,7 +341,7 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             label = g.get("short_label") or g["claim_text"][:40]
             stance = (g.get("attackability_detail") or {}).get("overall", g["attackability"])
             add(
-                f"| {label} | {g['proof_strength']} | {g.get('rippling_proof_strength', 'n/a')} | "
+                f"| {label} | {g['proof_strength']} | {g.get('focal_proof_strength', 'n/a')} | "
                 f"{stance} | {g.get('claim_specificity', 'unknown')} |"
             )
         add("")

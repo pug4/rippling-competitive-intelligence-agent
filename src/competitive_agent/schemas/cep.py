@@ -27,5 +27,5 @@ class CategoryEntryPoint(VersionedModel):
     last_observed_at: datetime | None = None
     lifecycle: str = "unknown"
     observed_message_share: float | None = None
-    rippling_coverage: CEPCoverage = "not_observed"
+    focal_coverage: CEPCoverage = "not_observed"
     strategic_status: CEPStrategicStatus

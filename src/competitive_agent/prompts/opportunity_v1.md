@@ -51,7 +51,7 @@ Return:
 - category_entry_point (the buying trigger) or null
 - channels, funnel_insertion_point, deliverable_type
 - focal_product_focus (which {{ focal_company }} products), focal_proof_status (available|partial|missing)
-- product_comparability: {competitor_product, rippling_product, shared_buyer_job, overlapping_capabilities, materially_different_capabilities, comparability (strong|partial|weak), rationale}
+- product_comparability: {competitor_product, focal_product, shared_buyer_job, overlapping_capabilities, materially_different_capabilities, comparability (strong|partial|weak), rationale}
 - structural_defensibility (high|medium|low), why_competitor_cannot_easily_copy
 - why_this_could_backfire (the strongest counterattack risk)
 - comparative_claim_risk (low|medium|high), legal_review_required (bool)

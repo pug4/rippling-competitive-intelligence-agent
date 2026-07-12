@@ -1,9 +1,9 @@
 """Opportunity outputs: message-proof gaps and marketing opportunities.
 
 ``MarketingOpportunity`` merges the §23 schema with the §37.9 extra
-required fields (which add ``rippling_segment``; all thirteen §37.9
+required fields (which add ``focal_segment``; all thirteen §37.9
 fields are declared without defaults so pydantic enforces them). The
-``rippling_*`` field names are kept verbatim from the blueprint contract;
+``focal_*`` field names are kept verbatim from the blueprint contract;
 the focal-generic rename applies only to ``focal.py`` (logged decision).
 """
 
@@ -57,7 +57,7 @@ class ProductComparability(VersionedModel):
     before a comparative recommendation is made (feedback #3)."""
 
     competitor_product: str
-    rippling_product: str
+    focal_product: str
     shared_buyer_job: str | None = None
     shared_workflow: str | None = None
     overlapping_capabilities: list[str] = Field(default_factory=list)
@@ -70,7 +70,7 @@ class AttackabilityAssessment(VersionedModel):
     """Ordinal attackability rubric (feedback #17) — not a single opaque label."""
 
     proof_gap: ConfidenceLevel
-    rippling_proof: ConfidenceLevel
+    focal_proof: ConfidenceLevel
     product_comparability: Comparability
     structural_defensibility: ConfidenceLevel
     counterattack_risk: ConfidenceLevel
@@ -93,9 +93,9 @@ class MessageProofGap(VersionedModel):
     strongest_proof_id: str | None = None
     proof_strength: ProofStrength
     missing_proof: list[str] = Field(default_factory=list)
-    rippling_equivalent_claim: str | None = None
-    rippling_proof_ids: list[str] = Field(default_factory=list)
-    rippling_proof_strength: ProofStrength = "none"
+    focal_equivalent_claim: str | None = None
+    focal_proof_ids: list[str] = Field(default_factory=list)
+    focal_proof_strength: ProofStrength = "none"
     product_comparability: ProductComparability | None = None  # feedback #3
     actionable_interpretation: str
     attackability: ConfidenceLevel
@@ -173,8 +173,8 @@ class MarketingOpportunity(VersionedModel):
     target_segment: str
     target_personas: list[str] = Field(default_factory=list)
     target_jobs: list[str] = Field(default_factory=list)
-    rippling_product_focus: list[str]
-    rippling_segment: str
+    focal_product_focus: list[str]
+    focal_segment: str
 
     channels: list[str] = Field(default_factory=list)
     funnel_insertion_point: str
@@ -184,10 +184,10 @@ class MarketingOpportunity(VersionedModel):
 
     competitor_proof_strength: str
     competitor_proof_gap: str
-    rippling_proof_ids: list[str]
-    rippling_proof_status: str
+    focal_proof_ids: list[str]
+    focal_proof_status: str
 
-    rippling_current_usage: str
+    focal_current_usage: str
     structural_defensibility: str
     copyability: str
     why_competitor_cannot_easily_copy: str
