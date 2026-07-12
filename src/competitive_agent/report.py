@@ -137,7 +137,10 @@ def _honest_coverage(state: DirectorState, data: dict[str, Any]) -> dict[str, st
     runtime cap mid-collection."""
     coverage = dict(state.coverage)
     first_party = sum(1 for a in data["artifacts"] if a.get("source_type") == "webpage")
-    thin = first_party < 10 or state.stop_reason == "runtime_exhausted"
+    # Thin = few first-party pages. A runtime-capped stop only downgrades when
+    # the page evidence is ALSO modest — 60+ fetched pages is genuinely high
+    # coverage regardless of why the loop stopped.
+    thin = first_party < 10 or (state.stop_reason == "runtime_exhausted" and first_party < 20)
     if thin:
         for dim in ("current_website", "pricing_and_packaging"):
             if coverage.get(dim) == "high":
