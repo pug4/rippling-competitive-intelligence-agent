@@ -534,6 +534,63 @@ def _action_board(pkg: dict[str, Any], focal: str) -> str:
     return "".join(cards)
 
 
+def _scorecard(pkg: dict[str, Any], competitor: str, focal: str) -> str:
+    """One-glance action counts (exec feedback: verbs, not prose)."""
+    ceps = pkg.get("category_entry_points") or []
+    own = {
+        k: sum(1 for r in ceps if r.get("ownership") == k)
+        for k in ("competitor_advantage", "contested", "focal_owns", "insufficient_sample")
+    }
+    gaps = pkg.get("proof_gaps") or []
+    verbs = {"attack": 0, "investigate": 0, "reframe": 0}
+    for g in gaps:
+        v = (g.get("attackability_detail") or {}).get("overall") or (
+            "attack"
+            if g.get("attackability") == "high"
+            else "investigate"
+            if g.get("attackability") == "medium"
+            else "reframe"
+        )
+        verbs["reframe" if v == "concede" else v] = verbs.get("reframe" if v == "concede" else v, 0) + 1
+    changes = pkg.get("change_events") or []
+    n_emerging = sum(1 for c in changes if c.get("lifecycle") == "emerging")
+    n_expanding = sum(1 for c in changes if c.get("lifecycle") == "expanding")
+    n_stable = len((pkg.get("temporal_baseline") or {}).get("stable_themes") or [])
+    if not (ceps or gaps or changes):
+        return ""
+    rows = []
+    if ceps:
+        rows.append(
+            f"<div class='scrow'><b>Search intents ({len(ceps)}):</b> "
+            f"<span class='atag' style='color:#f87171;border-color:#f87171'>{own['competitor_advantage']} {_esc(competitor).upper()}-OWNED</span>"
+            f"<span class='atag' style='color:#fbbf24;border-color:#fbbf24'>{own['contested']} CONTESTED</span>"
+            f"<span class='atag' style='color:#4ade80;border-color:#4ade80'>{own['focal_owns']} {_esc(focal).upper()}-OWNED</span>"
+            f"<span class='atag'>{own['insufficient_sample']} TOO THIN TO CALL</span>"
+            f" → target the contested set; defend what {_esc(focal)} owns</div>"
+        )
+    if gaps:
+        rows.append(
+            f"<div class='scrow'><b>Attack surface ({len(gaps)} claims):</b> "
+            f"<span class='atag' style='color:#4ade80;border-color:#4ade80'>{verbs['attack']} ATTACK</span>"
+            f"<span class='atag' style='color:#fbbf24;border-color:#fbbf24'>{verbs['investigate']} INVESTIGATE</span>"
+            f"<span class='atag' style='color:#f87171;border-color:#f87171'>{verbs['reframe']} AVOID</span>"
+            + (
+                " → start where they claim what they can't prove</div>"
+                if verbs["attack"]
+                else " → no clean attack this run — build proof on the INVESTIGATE list first</div>"
+            )
+        )
+    if changes or n_stable:
+        rows.append(
+            f"<div class='scrow'><b>Theme momentum:</b> "
+            f"<span class='atag' style='color:#fbbf24;border-color:#fbbf24'>{n_emerging} EMERGING</span>"
+            f"<span class='atag' style='color:#6ea8fe;border-color:#6ea8fe'>{n_expanding} EXPANDING</span>"
+            f"<span class='atag'>{n_stable} STABLE</span>"
+            " → counter the moving themes before they harden</div>"
+        )
+    return "<div class='card'>" + "".join(rows) + "</div>"
+
+
 def build_dashboard(pkg: dict[str, Any]) -> str:
     companies = pkg.get("companies", [])
     competitor = (
@@ -652,6 +709,8 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .stg {{ font-size:11px; color:var(--muted); border-left:2px solid var(--accent); padding-left:8px; }}
 .stg b {{ color:var(--text); }} .stg .ok {{ color:#4ade80; }} .stg .no {{ color:#f87171; }}
 .banner {{ border:1px solid #fbbf24; color:#fbbf24; border-radius:8px; padding:10px 12px; font-size:12px; margin:10px 0; }}
+.atag {{ font-size:10px; font-weight:700; letter-spacing:.05em; padding:2px 7px; border-radius:4px; border:1px solid var(--border); display:inline-block; margin:2px 4px 2px 0; white-space:nowrap; color:var(--muted); }}
+.scrow {{ font-size:12px; margin:6px 0; }} .scrow b {{ color:var(--text); }}
 </style>
 <h1>Competitive Marketing Intelligence — {_esc(competitor)} <span class='sub'>vs {_esc(focal)}</span></h1>
 <p class='sub'>Run <code>{_esc(run.get("run_id"))}</code> · mode {_esc(run.get("mode"))} · {_esc(run.get("execution_mode"))} · {_esc(run.get("stop_reason_label") or run.get("stop_reason") or "")} · generated {_esc(str(run.get("generated_at"))[:19])}</p>
@@ -663,6 +722,9 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
   <div class='stat'><b>{es.get("n_opportunities", len(pkg.get("opportunities", [])))}</b><span>opportunities</span></div>
   <div class='stat'><b>{es.get("n_change_events", len(pkg.get("change_events", [])))}</b><span>changes over time</span></div>
 </div>
+
+<h2>Scorecard — the analysis as actions</h2>
+{_scorecard(pkg, competitor, focal)}
 
 <h2>Action Board — what {_esc(focal)} should do</h2>
 <div class='forwho'><b>Exec:</b> the ranked openings with their kill rules — fund, watch, or kill. <b>IC:</b> each card carries the full experiment plan (metric, guardrails, staged gates).</div>

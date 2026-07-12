@@ -1,8 +1,13 @@
-# Loom walkthrough script (~6–8 min)
+# Loom walkthrough script (~7–9 min)
 
-A tight demo of the Competitive Marketing Intelligence Director. Lead with
-accuracy and the agentic loop; treat the UI as a bonus. Every claim shown on
-screen resolves to evidence — that is the point.
+A tight demo of the Competitive Marketing Intelligence Agent. Lead with
+accuracy and the agentic loop, then the UI — it now carries the analysis depth.
+Every claim shown on screen resolves to evidence — that is the point.
+
+**Before recording:** `make api` running on :8000, UI open on :5173 with the
+flagship run `RUN-b256fab1c1dd` (deel.com vs rippling.com, live) selected.
+A frozen copy of the same run lives in `docs/reference_scenario/` if you want
+a file to open instead.
 
 ## 0. Framing (30s)
 
@@ -10,85 +15,107 @@ screen resolves to evidence — that is the point.
 > company, any industry — and it produces an evidence-grounded read of their
 > public marketing strategy: how they position now, how that changed over time,
 > how it compares to a focal company (here, Rippling), and what defensible
-> marketing actions that surfaces. Rippling is just config — the focal company,
-> the competitor list, and the taxonomy are all swappable."
+> marketing actions that surfaces. Rippling is just config — the focal company
+> and the taxonomy are swappable, and comparisons are corpus-size-normalized so
+> it works against a 12-page niche competitor as honestly as against Deel."
 
-## 1. It's a real agentic loop, not a script (90s)
+## 1. It's a real agentic loop, not a script (75s)
 
-- Open `outputs/runs/<REF_RUN>/trace.jsonl`. Scroll the `event_type` stream.
-- Point at a `coverage_assessed` → `actions_proposed` → `action_selected`
-  sequence: *"It assesses what it knows, proposes actions, scores them, and
-  records the rationale and the alternatives it didn't pick."*
-- Show one `fallback_selected` and one `tool_failed`→recovery: *"A provider
-  failure is a typed result, not a crash — it falls back and keeps going."*
-- Show `stop_selected` with its reason: *"It stops for an explainable reason —
-  here, required coverage reached — not a fixed step count."*
+- Open `outputs/runs/RUN-b256fab1c1dd/trace.jsonl`. Scroll the `event_type`
+  stream: `coverage_assessed` → `actions_proposed` → `action_selected`.
+  *"It assesses what it knows, proposes actions, scores them, and records the
+  rationale AND the alternatives it didn't pick — 19 of these cycles."*
+- `grep tool_failed` and `grep source_skipped`: *"A provider failure or an
+  empty source is a typed result, not a crash — it's recorded and the loop
+  keeps going."* (Do NOT grep `fallback_selected` — it does not occur in this
+  trace.)
+- `grep stop_selected`: *"It stops for an explainable reason. This run ran to
+  its research-time budget — and the report says exactly that: 'budget-bounded
+  (hit the research-time cap)', with what remained unattempted disclosed as a
+  limitation."*
 
 ## 1b. Tool & model choices (30s — assignment-required beat)
 
 > "Model routing: high-volume bounded classification runs on **Haiku** (fast,
-> cheap, schema-forced); planning, temporal judgment, opportunity generation,
-> and the chat run on **Sonnet-tier** — reasoning stays in Claude. **Exa** is
-> used strictly for what it's best at — retrieval: neural search, domain-scoped
-> discovery, published-date-windowed sampling, and the Agent for LinkedIn post
-> extraction — every Exa result is re-classified and verbatim-verified by our
-> own pipeline. **Wayback CDX** gives real capture timestamps for temporal
-> claims. **Meta/LinkedIn ad libraries** have no public commercial API — we
-> propose the attempt and record a typed, honest skip rather than fake data
-> (see docs/adr/0002-model-routing.md and provider_notes.md)."
+> cheap, schema-forced); temporal judgment, claims, opportunity generation, and
+> the chat run on the reasoning tier — reasoning stays in Claude. **Exa** is
+> used strictly for retrieval: neural search, domain-scoped discovery,
+> published-date-windowed sampling, the Agent for per-post LinkedIn extraction,
+> and the Similarweb enrichment — every Exa result is re-classified and
+> verbatim-verified by our own pipeline. **Wayback CDX** gives real capture
+> timestamps for temporal claims. **Meta/LinkedIn ad libraries** have no public
+> commercial API — we record a typed, honest skip rather than fake data."
 
-## 2. Accuracy is enforced by the application, not trusted from the model (90s)
+## 2. Accuracy is enforced by the application, not trusted from the model (75s)
 
-- Open `brief.md`, scroll to the **Evidence appendix**. Every quoted excerpt is
-  re-verified verbatim against stored source text.
-- Show the run log line `dropped unverifiable excerpt…`: *"If the model quotes
-  something that isn't in the page, we drop it. The app is the accuracy gate."*
-- Point at a rejected claim / the "not publicly knowable" rule: *"ROAS, CAC,
-  spend — rejected. We never estimate what isn't public."*
+- UI → **Sources & evidence** tab → **Claims ledger (20)**: expand one claim.
+  *"Every strategic claim carries its status, why we hold this confidence,
+  alternative explanations, and the verbatim evidence rows behind it. The
+  grounding gate on this run: 20 of 20 material claims cited, zero broken
+  evidence references. If the model quotes something that isn't in the page,
+  the app drops it — the application is the accuracy gate."*
+- Scroll to the **Data honesty** card: *"What we attempted and found nothing,
+  what failed, what we excluded — 4 junk ad-transparency pages were excluded at
+  render, and it says so. Absence is a finding, never hidden."*
+- *"ROAS, CAC, spend — banned. We never estimate what isn't public."*
 
-## 3. Current standing — the depth (60s)
+## 3. Depth: scorecard, verticals, LinkedIn, traffic (90s)
 
-- `brief.md` → **Current public positioning**: dominant message chosen by
-  authority × salience (homepage/platform pages outrank a blog post), the
-  villain wording verbatim, the stance distribution, proof distribution.
-- **Message–proof gaps**: *"Where the competitor makes a claim they can't back —
-  and whether Rippling can."*
+- **Overview** tab: the **strategic scorecard** — one glance shows who owns the
+  search intents, where Deel out-messages Rippling (share-of-corpus deltas),
+  theme momentum (emerging/expanding/stable), and the attack surface (how many
+  gaps say ATTACK vs INVESTIGATE vs AVOID). Every tile carries an action tag
+  and clicks through to its deep-dive tab.
+- Ask the grounded chat one question on camera (e.g. *"Which buying triggers
+  does Deel own vs Rippling after normalizing for corpus size?"*) — it answers
+  from this run's evidence only, cites sources, and can scope to one product
+  vertical with the Focus selector.
+- **Product marketing** tab: the **attack/defend quadrant** (each repeated
+  claim plotted by their proof vs ours), key topics side-by-side (counts AND
+  share-of-corpus), the vertical×theme heatmap, gaps with ACTION tags and
+  click-through to exact source pages, and the Action Board — every play has
+  an experiment plan: metric, guardrails, staged proceed/stop gates, kill rule.
+- **LinkedIn** tab: *"30 individual employee posts — including the CEO — each
+  classified for theme, stance, and product vertical, with the real post
+  link."*
+- **Performance marketing** tab: **search-intent ownership,
+  share-normalized** — *"Raw counts lie across corpus sizes. A 79-vs-16 page
+  blowout is 'Deel advantage' at a 4.6× share ratio; and where the sample is
+  too thin to call, it says 'insufficient sample' instead of asserting
+  ownership — 12 of 23 triggers here."* Plus Similarweb traffic (labeled
+  estimated) and audience-affinity competitors.
 
 ## 4. Change over time — honestly (45s)
 
-- **Strategy over time**: *"A change is only asserted when there's evidence in
-  BOTH periods, with real Wayback capture dates. Emerging themes are marked low
-  confidence, and we always add the coverage-asymmetry caveat — absence in the
-  archive is not absence in the world."*
+- **Strategy changes** tab: *"The prior-window baseline shows what WAS there —
+  14 dated artifacts. Change events are detected mid-run and then RECONCILED
+  against the final corpus, so the system can never claim a theme 'emerged'
+  that its own baseline saw earlier: three of the five signals here were
+  auto-relabeled from 'emerging' to 'expanding — present but rare in the prior
+  window (e.g. 4 of 14)'. Every event keeps the coverage-asymmetry caveat —
+  absence in the archive is not absence in the world."*
 
-## 5. Rippling-relative actions (60s)
+## 5. Rippling-relative actions (45s)
 
-- **Action Board** (first thing in the brief): *"Ordered for Rippling. Each
-  action carries an experiment hypothesis, scale/iterate/kill rules, and a
-  backfire risk."*
-- **What not to attack**: *"Just as important — where attacking would backfire
-  because Rippling is exposed on the same axis."*
+- Brief `## Action Board` (or the dashboard's opening section): *"Ordered for
+  Rippling, tagged P1/P2/P3. Each action carries proof status, backfire risk,
+  staged proceed/stop gates, and a kill rule."*
+- **What not to attack**: *"Just as important — where attacking would backfire."*
 
-## 6. Conversation, portfolio, honesty (60s)
+## 6. Conversation, portfolio, honesty (45s)
 
-- `competitive-agent ask <RUN> "why do you believe this?"` → answers from stored
-  evidence. `deepen`/`challenge`/`retry` create **child runs** with a diff and
-  reuse the parent's evidence non-destructively — the original is never lost.
+- `competitive-agent ask <RUN> "why do you believe this?"` → answers from
+  stored evidence. `challenge`/`retry` create **child runs** with a diff and
+  reuse the parent's evidence non-destructively.
 - `competitive-agent portfolio deel.com gusto.com workday.com` → isolated
-  pipelines, and it proves **no cross-company leakage** before synthesizing.
-- `evals/reports/benchmark_report.md`: *"Grounding and validity are objective
-  and final. The classification numbers are inter-model agreement, clearly
-  marked provisional until human adjudication — we don't ship an accuracy number
-  we haven't earned."*
-
-## 7. Bonus UI (30s)
-
-- `make api` + `make ui-dev` → the React app reads the same validated package:
-  Action Board, positioning, coverage, evidence drill-down. *"No separate
-  analytics — one source of truth."*
+  pipelines, provably no cross-company leakage. Modes (snapshot, comparative,
+  longitudinal) run concurrently — the UI queues them as background jobs.
+- Benchmark: *"Grounding and validity are objective and final. Classification
+  accuracy is human-adjudicated on a held-out set — we don't ship an accuracy
+  number we haven't earned."*
 
 ## Close (15s)
 
-> "Everything you saw is reproducible from a stored run, runs locally, and works
-> for any competitor. The design bias throughout is: show the evidence, or don't
-> make the claim."
+> "Everything you saw is reproducible from a stored run, runs locally, and
+> works for any competitor at any size — the design bias throughout is: show
+> the evidence, or don't make the claim."

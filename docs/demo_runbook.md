@@ -17,9 +17,9 @@ cp .env.example .env         # add ANTHROPIC_API_KEY (required for live) and EXA
 uv run competitive-agent demo-check --mode fixture
 ```
 
-Runs the full pipeline on synthetic `example-hr.com` fixtures: resolve →
-plan → collect → classify → focal mirror → message–proof gaps → opportunities →
-Markdown/JSON/trace. Prints `DEMO CHECK OK`. Output in
+Runs the full pipeline on deterministic `deel.com` fixtures (comparative mode):
+resolve → plan → collect → classify → focal mirror → message–proof gaps →
+opportunities → Markdown/JSON/trace. Prints `DEMO CHECK OK`. Output in
 `outputs/runs/<RUN_ID>/`.
 
 ## 2. Live single-source proof
@@ -47,13 +47,13 @@ actions with backfire risk.
 ```bash
 RUN=$(ls -t outputs/runs | head -1)
 grep action_selected outputs/runs/$RUN/trace.jsonl   # each choice + alternatives considered
-grep -E "fallback_selected|stop_selected" outputs/runs/$RUN/trace.jsonl
+grep -E "tool_failed|source_skipped|stop_selected" outputs/runs/$RUN/trace.jsonl
 cat outputs/runs/$RUN/brief.md
 ```
 
-The trace shows: a source chosen because of a coverage gap, a fallback when a
-source returns nothing, temporal verification, the focal mirror, and a
-structured stop reason.
+The trace shows: a source chosen because of a coverage gap, a typed skip when a
+source returns nothing (`source_skipped`), temporal verification, the focal
+mirror, and a structured stop reason (`stop_selected`).
 
 ## 4b. Conversation: follow-ups, challenge, retry (preserves the original)
 
@@ -101,7 +101,7 @@ renders. You can see this in any live run's trace:
 
 ```bash
 RUN=$(ls -t outputs/runs | head -1)
-grep -E "tool_failed|fallback_selected|skipped_disabled" outputs/runs/$RUN/trace.jsonl
+grep -E "tool_failed|source_skipped|skipped_disabled" outputs/runs/$RUN/trace.jsonl
 ```
 
 - **Disabled/unavailable sources** (e.g. Meta/LinkedIn ads, off by default)
@@ -119,8 +119,16 @@ make ui-install   # one-time
 make ui-dev       # terminal 2 — Vite on :5173
 ```
 
-Open http://localhost:5173 — Action Board, positioning, coverage, evidence
-drill-down over the same JSON packages.
+Open http://localhost:5173 — six tabs over the same JSON packages: Overview
+(strategic scorecard, grounded chat with vertical scoping, top actions),
+Product marketing (attack/defend quadrant, key-topic shares, vertical heatmap,
+gaps with action tags, Action Board with experiment plans), LinkedIn (30
+classified employee posts with links), Strategy changes (prior-window baseline
++ reconciled change events), Performance marketing (share-normalized
+search-intent ownership, Similarweb estimates), and Sources & evidence
+(coverage, 20-claim evidence ledger, data-honesty card, every artifact).
+New analyses queue as background jobs — snapshot/comparative/longitudinal can
+run concurrently.
 
 ## Demo safety notes
 

@@ -726,6 +726,47 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         add(f"- **Top-ranked {focal} opening:** {opps[0]['title']}.")
     add(f"- **Largest uncertainty:** {_largest_uncertainty(pkg)}.")
 
+    # --- Scorecard: the whole analysis as action counts (exec feedback:
+    # findings must read as verbs, not prose) --------------------------------
+    _sc_ceps = pkg.get("category_entry_points") or []
+    _own = {k: sum(1 for r in _sc_ceps if r.get("ownership") == k) for k in
+            ("competitor_advantage", "contested", "focal_owns", "insufficient_sample")}
+    _verbs = {"attack": 0, "investigate": 0, "reframe": 0}
+    for g in gaps:
+        v = (g.get("attackability_detail") or {}).get("overall") or (
+            "attack" if g.get("attackability") == "high"
+            else "investigate" if g.get("attackability") == "medium" else "reframe"
+        )
+        _verbs["reframe" if v == "concede" else v] = _verbs.get("reframe" if v == "concede" else v, 0) + 1
+    _n_emerging = sum(1 for c in changes if c.get("lifecycle") == "emerging")
+    _n_expanding = sum(1 for c in changes if c.get("lifecycle") == "expanding")
+    _n_stable = len((pkg.get("temporal_baseline") or {}).get("stable_themes") or [])
+    if _sc_ceps or gaps or changes:
+        add("\n### Scorecard\n")
+        if _sc_ceps:
+            add(
+                f"- **Search intents ({len(_sc_ceps)}):** {_own['competitor_advantage']} {company}-owned · "
+                f"{_own['contested']} contested · {_own['focal_owns']} {focal}-owned · "
+                f"{_own['insufficient_sample']} too thin to call → **target the contested set; "
+                f"defend what {focal} owns**"
+            )
+        if gaps:
+            _atk_action = (
+                "start where they claim what they can't prove"
+                if _verbs["attack"]
+                else "no clean attack this run — build proof on the INVESTIGATE list first"
+            )
+            add(
+                f"- **Attack surface ({len(gaps)} repeated claims):** {_verbs['attack']} ATTACK · "
+                f"{_verbs['investigate']} INVESTIGATE · {_verbs['reframe']} AVOID/REFRAME → "
+                f"**{_atk_action}**"
+            )
+        if changes or _n_stable:
+            add(
+                f"- **Theme momentum:** {_n_emerging} emerging · {_n_expanding} expanding · "
+                f"{_n_stable} stable → **counter the moving themes before they harden**"
+            )
+
     # --- Action Board — Rippling-first (feedback #28) -----------------------
     add("\n## Action Board\n")
     add(f"### What {focal} should do")

@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T23:15:20.507235+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T23:55:37.056477+00:00*
 
 ## Executive summary
 
@@ -9,6 +9,12 @@
 - **Emerging signal (low confidence, needs a prior-window baseline):** theme_emergence — “cost_reduction” not observed in any of the 14 dated prior-window artifacts → “cost_reduction” present in 30 current-window artifacts.
 - **Top-ranked Rippling opening:** The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure.
 - **Largest uncertainty:** coverage is thin on paid_media.
+
+### Scorecard
+
+- **Search intents (23):** 3 Deel-owned · 5 contested · 3 Rippling-owned · 12 too thin to call → **target the contested set; defend what Rippling owns**
+- **Attack surface (6 repeated claims):** 0 ATTACK · 3 INVESTIGATE · 3 AVOID/REFRAME → **no clean attack this run — build proof on the INVESTIGATE list first**
+- **Theme momentum:** 2 emerging · 3 expanding · 13 stable → **counter the moving themes before they harden**
 
 ## Action Board
 

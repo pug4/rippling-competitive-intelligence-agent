@@ -193,6 +193,146 @@ function ChatPanel({ runId, pkg }) {
 
 /* --------------------------- overview tab ------------------------------ */
 
+// Action-verb tag: execs act on verbs, not jargon. Derived from the gap
+// engine's own stance verdict (attack/investigate/reframe/concede).
+const ACTION_VERB = {
+  attack: ["ATTACK", "--good"],
+  investigate: ["INVESTIGATE", "--warn"],
+  reframe: ["AVOID / REFRAME", "--bad"],
+  concede: ["AVOID", "--bad"],
+};
+function gapVerb(g) {
+  return (
+    (g.attackability_detail || {}).overall ||
+    (g.attackability === "high" ? "attack" : g.attackability === "medium" ? "investigate" : "reframe")
+  );
+}
+function ActionTag({ verb, title }) {
+  const [label, color] = ACTION_VERB[verb] || [String(verb || "REVIEW").toUpperCase(), "--border"];
+  return (
+    <span className="atag" style={{ color: `var(${color})`, borderColor: `var(${color})` }}
+          title={title || `recommended stance: ${verb}`}>{label}</span>
+  );
+}
+
+// OVERVIEW — strategic scorecard: one glance = where to act. Every tile is a
+// graph + an action line + a click-through to its deep-dive tab. All numbers
+// come from the validated package (no new analytics, §40.6).
+function StrategicScorecard({ pkg, go }) {
+  const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const ceps = (pkg.category_entry_points || []).filter((c) => !CEP_PLACEHOLDER.test(String(c.cep)));
+  const ownCount = (o) => ceps.filter((c) => c.ownership === o).length;
+  const own = {
+    competitor_advantage: ownCount("competitor_advantage"),
+    contested: ownCount("contested"),
+    focal_owns: ownCount("focal_owns"),
+    insufficient_sample: ownCount("insufficient_sample") + ownCount("not_compared") + ownCount("neither"),
+  };
+  const ownTotal = Math.max(1, ceps.length);
+  const OWN_META = [
+    ["competitor_advantage", "--bad", `${competitor} owns`],
+    ["contested", "--warn", "contested"],
+    ["focal_owns", "--good", `${focal} owns`],
+    ["insufficient_sample", "--border", "too thin to call"],
+  ];
+
+  const tc = pkg.theme_comparison || {};
+  const hasFocalThemes = Object.keys(tc.focal_shares || {}).length > 0;
+  const deltas = hasFocalThemes
+    ? Object.keys(tc.competitor_shares || {})
+        .map((t) => ({ t, d: (tc.competitor_shares[t] || 0) - ((tc.focal_shares || {})[t] || 0) }))
+        .sort((a, b) => b.d - a.d)
+    : [];
+  const theyLead = deltas.filter((x) => x.d > 0.02).slice(0, 3);
+  const weLead = deltas.filter((x) => x.d < -0.02).slice(-3).reverse();
+  const maxD = Math.max(0.01, ...deltas.map((x) => Math.abs(x.d)));
+
+  const changes = pkg.change_events || [];
+  const nEmerging = changes.filter((c) => c.lifecycle === "emerging").length;
+  const nExpanding = changes.filter((c) => c.lifecycle === "expanding").length;
+  const nStable = (pkg.temporal_baseline?.stable_themes || []).length;
+
+  const gaps = pkg.proof_gaps || [];
+  const verbs = { attack: 0, investigate: 0, reframe: 0 };
+  gaps.forEach((g) => {
+    const v = gapVerb(g);
+    verbs[v === "concede" ? "reframe" : v] = (verbs[v === "concede" ? "reframe" : v] || 0) + 1;
+  });
+
+  if (ceps.length === 0 && gaps.length === 0 && changes.length === 0) return null;
+  return (
+    <>
+      <h2>Strategic scorecard <Info tip="The whole analysis at a glance — who owns the buying intents (share-normalized), where message investment diverges, what's moving, and how many openings say ATTACK. Every tile clicks through to its deep-dive tab with sources." /></h2>
+      <div className="grid2">
+        <div className="card sctile" onClick={() => go("performance")} title="open Performance marketing → full ownership map with contributing pages">
+          <div className="title">Search-intent ownership ({ceps.length} triggers)</div>
+          <div className="scstack">
+            {OWN_META.map(([k, color]) => own[k] > 0 && (
+              <div key={k} className="scseg" style={{ width: `${(own[k] / ownTotal) * 100}%`, background: `var(${color})` }} title={`${own[k]} ${k.replace(/_/g, " ")}`} />
+            ))}
+          </div>
+          <div className="sclegend">
+            {OWN_META.map(([k, color, label]) => (
+              <span key={k}><span className="scdot" style={{ background: `var(${color})` }} /> {own[k]} {label}</span>
+            ))}
+          </div>
+          <div className="scaction">→ target the {own.contested} contested intents; defend the {own.focal_owns} you own</div>
+        </div>
+
+        {hasFocalThemes && (
+          <div className="card sctile" onClick={() => go("product")} title="open Product marketing → full key-topics comparison">
+            <div className="title">Message-investment deltas (share of corpus)</div>
+            {theyLead.map(({ t, d }) => (
+              <div className="scdelta" key={t}>
+                <span className="sclabel" title={t}>{t.replace(/_/g, " ")}</span>
+                <div className="scbarwrap"><div className="scbar comp" style={{ width: `${(d / maxD) * 100}%` }} /></div>
+                <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>CLOSE GAP +{Math.round(d * 100)}pt</span>
+              </div>
+            ))}
+            {weLead.map(({ t, d }) => (
+              <div className="scdelta" key={t}>
+                <span className="sclabel" title={t}>{t.replace(/_/g, " ")}</span>
+                <div className="scbarwrap"><div className="scbar focal" style={{ width: `${(-d / maxD) * 100}%` }} /></div>
+                <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>PRESS +{Math.round(-d * 100)}pt</span>
+              </div>
+            ))}
+            <div className="scaction">→ {competitor} out-messages {focal} on {theyLead.length} themes; {focal} leads on {weLead.length}</div>
+          </div>
+        )}
+
+        <div className="card sctile" onClick={() => go("changes")} title="open Strategy changes → reconciled events + prior-window baseline">
+          <div className="title">Theme momentum</div>
+          <div className="scmomentum">
+            <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>{nEmerging} EMERGING</span>
+            <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}>{nExpanding} EXPANDING</span>
+            <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}>{nStable} STABLE</span>
+          </div>
+          <div className="scaction">
+            → {nEmerging + nExpanding > 0
+              ? `watch the ${nEmerging + nExpanding} moving themes — counter before they harden`
+              : "no messaging movement detected — their story is static"}
+          </div>
+        </div>
+
+        <div className="card sctile" onClick={() => go("product")} title="open Product marketing → gaps with sources + Action Board">
+          <div className="title">Attack surface ({gaps.length} repeated claims)</div>
+          <div className="scmomentum">
+            <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>{verbs.attack || 0} ATTACK</span>
+            <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>{verbs.investigate || 0} INVESTIGATE</span>
+            <span className="atag" style={{ color: "var(--bad)", borderColor: "var(--bad)" }}>{verbs.reframe || 0} AVOID</span>
+          </div>
+          <div className="scaction">
+            → {verbs.attack > 0
+              ? `${verbs.attack} claim(s) they can't prove and ${focal} can — start there`
+              : "no clean attack this run — build proof on the investigate list first"}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // EXEC — the Overview tab's tooltip promises "top actions"; deliver them here
 // instead of burying the Action Board below six gap rows on another tab.
 function TopActions({ pkg, onOpenBoard }) {
@@ -294,7 +434,11 @@ function GapsSection({ pkg, srcIdx }) {
           <div className="gaprow" key={g.claim_id}>
             <div>
               <div className="gaplabel" title={g.claim_text}>{g.short_label}</div>
-              {pill(g.attackability)}
+              <ActionTag verb={gapVerb(g)} title={`attackability ${g.attackability} → ${gapVerb(g)}`} />
+              {g.sample_sufficiency && g.sample_sufficiency !== "ok" && (
+                <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
+                      title="sample too small for a confident verdict — disclosed, not asserted">THIN SAMPLE</span>
+              )}
             </div>
             <div className="gapbars">
               <ProofBar strength={g.proof_strength} label={competitor} />
@@ -321,12 +465,14 @@ function Opportunities({ pkg, srcIdx }) {
   return (
     <>
       <h2>{focal}-relative recommended actions <Info tip={`Defensible marketing plays generated from the gaps — each with proof status, backfire risk, an experiment hypothesis, and a kill rule. 'Already-saying-it' = whether ${focal} currently uses this angle.`} /></h2>
-      {opps.map((o) => {
+      {opps.map((o, i) => {
         const gap = (o.supporting_claim_ids || []).map((id) => gapsById[id]).find(Boolean);
         const sources = gap ? srcIdx[normTheme(gap.short_label)] : null;
         return (
           <div className="card" key={o.opportunity_id}>
             <div className="title">
+              <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
+                    title="priority = the engine's overall ranking (defensibility, proof status, comparability)">P{i + 1}</span>{" "}
               {o.title} <span className="pill" title="deliverable type">{o.deliverable_type}</span>{" "}
               <span title="structural defensibility — how hard this is for the competitor to copy">{pill(o.structural_defensibility)}</span>
             </div>
@@ -360,6 +506,47 @@ function Opportunities({ pkg, srcIdx }) {
           </div>
         );
       })}
+    </>
+  );
+}
+
+// PRODUCT MARKETING — attack/defend quadrant: each repeated claim plotted by
+// THEIR proof (x) vs OUR proof (y). The quadrant IS the action.
+const PROOF_LVL = { none: 0, weak: 1, moderate: 2, medium: 2, strong: 3, high: 3 };
+function AttackDefendMatrix({ pkg }) {
+  const gaps = pkg.proof_gaps || [];
+  if (gaps.length === 0) return null;
+  const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const attCol = { high: "--good", medium: "--warn", low: "--bad" };
+  return (
+    <>
+      <h2>Attack / defend quadrant <Info tip={`Each repeated ${competitor} claim plotted by their observed proof strength (→) vs ${focal}'s (↑). Top-left = ATTACK (they claim it, can't prove it, you can). Bottom-left = BUILD PROOF (whitespace). Bottom-right = AT RISK (fund proof here). Dot color = attackability.`} /></h2>
+      <div className="card">
+        <div className="admwrap">
+          <div className="admy">{focal} proof →</div>
+          <div className="admgrid">
+            <div className="admq tl">ATTACK<br /><i>they're weak, we're strong</i></div>
+            <div className="admq tr">DIFFERENTIATE<br /><i>both strong</i></div>
+            <div className="admq bl">BUILD PROOF<br /><i>whitespace</i></div>
+            <div className="admq br">AT RISK<br /><i>they're strong, we're weak</i></div>
+            {gaps.map((g, i) => {
+              const cx = (PROOF_LVL[String(g.proof_strength || "none").toLowerCase()] || 0) / 3 * 100;
+              const cy = (PROOF_LVL[String(g.focal_proof_strength || "none").toLowerCase()] || 0) / 3 * 100;
+              const x = Math.min(94, Math.max(6, cx + ((i % 3) - 1) * 4));
+              const y = Math.min(92, Math.max(8, cy + ((Math.floor(i / 3) % 3) - 1) * 4));
+              return (
+                <div key={g.claim_id} className="admdot"
+                     style={{ left: `${x}%`, bottom: `${y}%`, background: `var(${attCol[g.attackability] || "--border"})` }}
+                     title={`${g.short_label}: ${competitor} ${g.proof_strength} · ${focal} ${g.focal_proof_strength} → ${gapVerb(g).toUpperCase()}`}>
+                  <span>{g.short_label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="admx">{competitor} proof →</div>
+      </div>
     </>
   );
 }
@@ -1212,6 +1399,7 @@ export default function App() {
             {tab === "overview" && (
               <>
                 <ChatPanel key={selected} runId={selected} pkg={pkg} />
+                <StrategicScorecard pkg={pkg} go={setTab} />
                 <TopActions pkg={pkg} onOpenBoard={() => setTab("product")} />
                 <Positioning pkg={pkg} />
                 <DataVisuals pkg={pkg} />
@@ -1219,6 +1407,7 @@ export default function App() {
             )}
             {tab === "product" && (
               <>
+                <AttackDefendMatrix pkg={pkg} />
                 <KeyTopicsComparison pkg={pkg} />
                 <VerticalThemeHeatmap pkg={pkg} />
                 <GapsSection pkg={pkg} srcIdx={srcIdx} />
