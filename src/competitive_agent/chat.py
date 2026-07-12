@@ -28,8 +28,15 @@ CHAT_SYSTEM = (
     "evidence excerpt it comes from. If the data genuinely does not contain the answer, say so "
     "plainly and set needs_deeper_research=true. You may compare across competitors when the "
     "cross-competitor summaries support it. Be concise and insight-dense — you are talking to a "
-    "growth marketer who wants to act. Always propose 2-3 specific follow-up questions the user "
-    "could ask next. Respond ONLY via the structured tool."
+    "growth marketer who wants to act.\n\n"
+    "BE GENUINELY CONVERSATIONAL: if the question is ambiguous, underspecified, or would be "
+    "answered very differently depending on the user's intent (e.g. 'their positioning' — "
+    "enterprise vs SMB? current vs historical? 'best channel' — for demand gen vs brand?), do NOT "
+    "guess. Set clarifying_question to ONE crisp question that would let you answer precisely, "
+    "give your best partial answer for the most likely reading, and say which reading you assumed. "
+    "Only ask when the answer genuinely forks — never for stalling. "
+    "Always propose 2-3 specific follow-up questions the user could ask next. "
+    "Respond ONLY via the structured tool."
 )
 
 # Char budget for the grounded context. Structured findings are always included;
@@ -47,6 +54,11 @@ class ChatResponse(BaseModel):
     )
     needs_deeper_research: bool = Field(
         default=False, description="True if the run's data cannot answer this question."
+    )
+    clarifying_question: str | None = Field(
+        default=None,
+        description="ONE crisp question back to the user when their question is ambiguous and "
+        "the answer genuinely forks on their intent. Null when the question is clear.",
     )
     confidence: str = Field(default="medium", description="high | medium | low")
 
@@ -279,6 +291,7 @@ async def chat_about_run(
             "suggested_followups": out.suggested_followups,
             "grounded_in": out.grounded_in,
             "needs_deeper_research": out.needs_deeper_research,
+            "clarifying_question": out.clarifying_question,
             "confidence": out.confidence,
         }
     except Exception as exc:  # never crash the chat surface
@@ -287,6 +300,7 @@ async def chat_about_run(
             f"({type(exc).__name__}). Set ANTHROPIC_API_KEY (live) to enable chat.",
             "suggested_followups": [],
             "grounded_in": [],
+            "clarifying_question": None,
             "needs_deeper_research": False,
             "confidence": "low",
             "error": type(exc).__name__,

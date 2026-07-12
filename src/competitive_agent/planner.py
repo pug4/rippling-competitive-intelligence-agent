@@ -287,6 +287,27 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                         fallbacks=["search_news_launches"],
                     )
                 )
+            # Prior-window sampling from Exa's index (start+end published dates):
+            # real published-in-window content/news — a second temporal source
+            # beyond Wayback's sparse archive. Retrieval only; Claude classifies.
+            if _needs(state, "historical_messages", "medium"):
+                proposals.append(
+                    _mk(
+                        state,
+                        "search_exa_web",
+                        "exa_search",
+                        "historical_messages",
+                        {
+                            "query": f'"{company.canonical_name}" product OR platform OR pricing OR launch',
+                            "num_results": 6,
+                            "start_published_date": comparison.start_at.date().isoformat(),
+                            "end_published_date": comparison.end_at.date().isoformat(),
+                        },
+                        "Prior-window Exa sampling (published-date bounded) adds real "
+                        "comparison-period evidence beyond the Wayback archive.",
+                        reliability=0.55,
+                    )
+                )
 
     # 4. News and launches.
     if _needs(state, "news_and_launches"):
@@ -416,8 +437,9 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         "search_linkedin_posts",
         "public_linkedin",
         {
+            # Domain scoping does the targeting; Exa's current category list has
+            # no LinkedIn value (an invalid category 400s the request).
             "query": f'"{name}" LinkedIn post OR update from employees about product, hiring, or launches',
-            "category": "linkedin profile",
             "include_domains": ["linkedin.com"],
             "num_results": _num_posts,
         },

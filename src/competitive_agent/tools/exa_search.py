@@ -204,6 +204,13 @@ class ExaSearchTool(BaseTool):
         if start_published_date:
             payload["startPublishedDate"] = str(start_published_date)
             filters["startPublishedDate"] = str(start_published_date)
+        # Both bounds together let the planner sample a PRIOR time window from
+        # Exa's index — real published-in-window evidence beyond Wayback's
+        # sparse archive (retrieval only; classification stays in Claude).
+        end_published_date = params.get("end_published_date")
+        if end_published_date:
+            payload["endPublishedDate"] = str(end_published_date)
+            filters["endPublishedDate"] = str(end_published_date)
         category = params.get("category")
         if category:
             payload["category"] = str(category)

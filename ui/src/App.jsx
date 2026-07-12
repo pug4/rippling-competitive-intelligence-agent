@@ -103,6 +103,9 @@ function ChatPanel({ runId, pkg }) {
         {messages.map((m, i) => (
           <div key={i} className={`chatmsg ${m.role}`}>
             <div className="chatbubble">{m.answer || m.content}</div>
+            {m.role === "assistant" && m.clarifying_question && (
+              <div className="clarify">❓ {m.clarifying_question} <span className="clarifyhint">(reply below to refine)</span></div>
+            )}
             {m.role === "assistant" && m.needs_deeper_research && (
               <div className="chatnote">Needs deeper research — run a focused deep-dive.</div>
             )}

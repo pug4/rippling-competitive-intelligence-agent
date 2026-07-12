@@ -384,6 +384,8 @@ def ask(
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(res["answer"])
+    if res.get("clarifying_question"):
+        typer.echo(f"\n❓ To answer precisely: {res['clarifying_question']}")
     if res.get("needs_deeper_research"):
         typer.echo("\n(Needs deeper research — try: competitive-agent deepen "
                    + run_id + " --focus <dimension>)")
