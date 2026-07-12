@@ -26,21 +26,49 @@ from ..schemas.source import ResearchAction, ToolCapabilities, ToolResult
 from .base import BaseTool, ToolContext
 
 # Marketing-relevant path patterns -> (category, score). Higher score = fetch
-# sooner. Data, not logic: retargeting to another industry edits this table.
+# sooner. FIRST match wins, so order matters. Data, not logic: retargeting to
+# another industry edits this table.
 PRIORITY_PATTERNS: tuple[tuple[str, str, float], ...] = (
     (r"/pricing|/plans", "pricing", 1.0),
-    (r"/platform", "platform", 0.9),
-    (r"/products?(/|$)", "product", 0.88),
-    (r"/solutions?(/|$)", "product", 0.82),
-    (r"/compare|/versus|/vs-|-vs-|/alternative", "comparison", 0.85),
+    # platform hubs incl. Deel's /hr-platform and any *-platform slug
+    (r"/platform|-platform(/|$)", "platform", 0.9),
+    (r"/products?(/|$)|/solutions?(/|$)|/use-cases?(/|$)", "product", 0.86),
+    # Common B2B product-category hubs (generic across HR/fintech/etc.), so real
+    # product pages are never left at the 0.1 default. Bare 2-letter hubs /it /hr
+    # are products here, not locales (see _is_non_english_locale_path).
+    (
+        r"/(payroll|peo|eor|hris|hcm|benefits|onboarding|offboarding|compliance|"
+        r"contractors?|global-hiring|universal-hr|workforce|mobility|immigration|"
+        r"engage|it|hr)(/|$)",
+        "product",
+        0.8,
+    ),
     (r"/customers?|/case-stud", "customers", 0.75),
     (r"/why-", "product", 0.7),
-    (r"/enterprise", "segment", 0.68),
+    (r"/enterprise|/segments?/", "segment", 0.68),
+    # Comparison: ONLY dedicated compare pages, not blog '-vs-' SEO posts (those
+    # are capped by _LOWVALUE_SUBTREES first). Scored BELOW product so a real
+    # product page never loses the fetch budget to a comparison page.
+    (
+        r"^/compare|/versus|/alternatives?|/[a-z0-9]+-vs-[a-z0-9-]+/?$|-vs-competitors",
+        "comparison",
+        0.72,
+    ),
     (r"/security", "product", 0.6),
     (r"/integrations?", "product", 0.55),
-    (r"/press|/news(room)?|/blog/product", "press", 0.5),
+    (r"/press|/news(room)?", "press", 0.5),
     (r"/changelog|/releases|/whats-new", "changelog", 0.5),
     (r"/about", "about", 0.4),
+)
+
+# SEO/content subtrees are capped regardless of slug — this is the single
+# biggest lever: it stops '-vs-' blog/glossary posts (w2-vs-1099, iam-vs-pam)
+# from borrowing the comparison score and flooding the fetch budget ahead of
+# real product pages (audit finding).
+_LOWVALUE_SUBTREES = re.compile(
+    r"/(blog|glossary|resources?|guides?|academy|learn|help|support|docs|"
+    r"templates?|tools|dictionary|hub)(/|$)",
+    re.IGNORECASE,
 )
 
 _MAX_MAP_URLS = 500
@@ -62,15 +90,23 @@ _CANONICAL_SEED_PATHS = (
     "/",
     "/pricing",
     "/platform",
+    "/product",
     "/products",
+    "/solutions",
     "/customers",
-    "/why",
+    "/case-studies",
+    "/use-cases",
+    "/security",
+    "/integrations",
 )
 
 
 def _is_non_english_locale_path(path: str) -> bool:
     segments = [s for s in path.split("/") if s]
-    if not segments:
+    # A BARE 2-letter segment (/it, /hr, /es) is a product hub / landing page,
+    # not a locale prefix — locales always PREFIX further path segments
+    # (/es/blog/...). Only penalize when a locale code is followed by content.
+    if len(segments) < 2:
         return False
     first = segments[0].lower()
     return bool(_LOCALE_RE.match(first)) and first not in _ENGLISH_LOCALES
@@ -80,6 +116,10 @@ def _score_path(url: str) -> tuple[str, float]:
     path = urlsplit(url).path or "/"
     if path in ("", "/"):
         return "home", 0.95
+    # Low-value SEO/content subtrees are capped BEFORE the priority patterns so a
+    # blog '-vs-' post can never inherit the comparison score.
+    if _LOWVALUE_SUBTREES.search(path):
+        return "content", 0.12
     category, score = "other", 0.1
     for pattern, cat, sc in PRIORITY_PATTERNS:
         if re.search(pattern, path, re.IGNORECASE):

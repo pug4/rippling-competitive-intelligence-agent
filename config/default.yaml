@@ -66,3 +66,12 @@ collection:
     homepage_snapshots: 6
     positioning_snapshots: 3
     extra_pages: ["/products", "/solutions", "/hr-platform"]
+
+# Exa Agent (agentic web research) — used for the LinkedIn / social-presence
+# dimension the plain search never reaches. effort trades cost vs depth
+# (minimal|low|medium|high|xhigh|auto). data_sources attaches premium Exa
+# partners (e.g. "similarweb") — leave empty if not on your Exa plan; the agent
+# still researches public web + LinkedIn without them.
+exa_agent:
+  effort: low
+  data_sources: []

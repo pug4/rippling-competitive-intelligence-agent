@@ -72,7 +72,14 @@ def test_score_path_prioritizes_marketing_pages():
     assert _score_path("https://x/pricing")[0] == "pricing"
     assert _score_path("https://x/compare/x-vs-y")[0] == "comparison"
     assert _score_path("https://x/")[0] == "home"
-    assert _score_path("https://x/blog/random")[0] == "other"
+    # SEO/content subtrees are capped as low-value 'content' (audit fix): a
+    # /blog '-vs-' post must NOT borrow the comparison score and flood the queue.
+    cat, score = _score_path("https://x/blog/random-vs-thing")
+    assert cat == "content" and score <= 0.2
+    # Real product/solution pages must outrank a dedicated comparison page.
+    assert _score_path("https://x/solutions/payroll")[1] > _score_path("https://x/compare/a-vs-b")[1]
+    # Bare 2-letter product hubs are products, not penalized as locales.
+    assert _score_path("https://x/hr")[1] >= 0.7
 
 
 async def test_sitemap_map_scores_and_orders(tmp_path):

@@ -92,6 +92,23 @@ def _too_many_failures(state: DirectorState, source: str, action_type: str, cap:
     return bool(rec and rec.attempts >= cap)
 
 
+def _diversify_pending(pending: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Round-robin score-descending pages across categories so no single
+    high-scoring category (e.g. dozens of /solutions/* pages) floods the fetch
+    budget and starves pricing/customers/platform (audit: per-category quota)."""
+    from collections import OrderedDict
+
+    buckets: OrderedDict[str, list[dict[str, Any]]] = OrderedDict()
+    for p in pending:  # pending is already score-descending
+        buckets.setdefault(str(p.get("category", "other")), []).append(p)
+    out: list[dict[str, Any]] = []
+    while any(buckets.values()):
+        for cat in list(buckets):
+            if buckets[cat]:
+                out.append(buckets[cat].pop(0))
+    return out
+
+
 def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     """Rule-driven proposals for the current coverage state."""
     if state.company is None:
@@ -188,9 +205,13 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     if page_map:
         fetched: set[str] = set(ctx.scratch.get(f"fetched_urls:{company.company_id}", []))
         real_fetched = {u for u in fetched if "sitemap" not in u}
-        pending = [
-            p for p in page_map if p["url"] not in fetched and float(p.get("score", 0)) >= threshold
-        ]
+        pending = _diversify_pending(
+            [
+                p
+                for p in page_map
+                if p["url"] not in fetched and float(p.get("score", 0)) >= threshold
+            ]
+        )
         need_dims = [
             d
             for d in (
@@ -363,6 +384,23 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         "commercial_motion",
         {"domain": company.primary_domain},
         "Similarweb (estimated) traffic and channel mix add a demand-side view.",
+        require_dim=False,
+    )
+    # LinkedIn / social presence via the Exa Agent (agentic research). The plain
+    # search never reaches LinkedIn; this surfaces how the company + its
+    # employees position the product publicly, as a cited synthesis.
+    _linkedin_slug = company.primary_domain.split(".")[0]
+    _optional(
+        "exa_linkedin",
+        "exa_agent",
+        "research_linkedin",
+        "public_linkedin",
+        {
+            "company": name,
+            "domain": company.primary_domain,
+            "linkedin_url": f"https://www.linkedin.com/company/{_linkedin_slug}",
+        },
+        "Exa Agent researches the company's LinkedIn presence + employee posts (cited synthesis).",
         require_dim=False,
     )
     _optional(

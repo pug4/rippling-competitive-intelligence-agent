@@ -1,0 +1,33 @@
+{
+ "action_id": "ACT-fixture-linkedin",
+ "tool_name": "exa_agent",
+ "status": "success",
+ "artifacts": [
+  {
+   "artifact_id": "ART-fxli01",
+   "company_id": "example-hr",
+   "source_type": "linkedin",
+   "source_name": "exa_agent",
+   "url": "https://www.linkedin.com/company/example-hr",
+   "final_url": "https://www.linkedin.com/company/example-hr",
+   "title": "Exa Agent research: research_linkedin",
+   "retrieved_at": "2026-07-11T00:00:00Z",
+   "time_window_ids": [],
+   "raw_text": "Example HR's LinkedIn presence emphasizes three public messaging themes. First, consolidation: the company page positions Example HR as the all-in-one workforce platform that replaces fragmented HR, payroll, and IT point solutions. Second, compliance: employees frequently post about running global payroll and hiring compliantly across many countries. Third, automation: leaders amplify posts about automating onboarding and policy enforcement. The primary audience addressed is HR and IT leaders at mid-market and enterprise companies. Sources: Example HR LinkedIn company page; employee posts from the VP of Product and Head of Compliance.",
+   "normalized_text": "Example HR's LinkedIn presence emphasizes three public messaging themes. First, consolidation: the company page positions Example HR as the all-in-one workforce platform that replaces fragmented HR, payroll, and IT point solutions. Second, compliance: employees frequently post about running global payroll and hiring compliantly across many countries. Third, automation: leaders amplify posts about automating onboarding and policy enforcement. The primary audience addressed is HR and IT leaders at mid-market and enterprise companies.",
+   "content_hash": "fxli00000000000000000000000000000000000000000000000000000000li01",
+   "metadata": {
+    "exa_agent_run_id": "agent_run_fixture",
+    "exa_agent_query": "Research Example HR's LinkedIn presence and positioning",
+    "citations": ["Example HR LinkedIn company page", "employee posts"],
+    "provider_synthesis": true
+   },
+   "collection_method": "exa_agent",
+   "is_partial": true,
+   "is_fixture": true
+  }
+ ],
+ "negative_observations": [],
+ "latency_ms": 0,
+ "cost_usd": 0.0
+}

@@ -60,6 +60,7 @@ class AppConfig(BaseModel):
     portfolio: dict[str, Any]
     windows: dict[str, Any]
     collection: dict[str, Any] = {}
+    exa_agent: dict[str, Any] = {}
     taxonomy: dict[str, Any]
     model_routes: dict[str, Any]
     source_capabilities: dict[str, Any]
@@ -86,6 +87,7 @@ def get_config() -> AppConfig:
         portfolio=default.get("portfolio", {}),
         windows=default.get("windows", {}),
         collection=default.get("collection", {}),
+        exa_agent=default.get("exa_agent", {}),
         taxonomy=_load_yaml(CONFIG_DIR / "taxonomy.yaml"),
         model_routes=_load_yaml(CONFIG_DIR / "model_routes.yaml"),
         source_capabilities=_load_yaml(CONFIG_DIR / "source_capabilities.yaml"),

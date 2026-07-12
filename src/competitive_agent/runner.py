@@ -17,6 +17,7 @@ from .state import DirectorState
 def _build_registry():
     from .tools.ads import GoogleAdsTool, LinkedInAdsTool, MetaAdsTool
     from .tools.events import EventsTool
+    from .tools.exa_agent import ExaAgentTool
     from .tools.exa_search import ExaSearchTool
     from .tools.jobs import JobsTool
     from .tools.ooh import OOHTool
@@ -34,6 +35,7 @@ def _build_registry():
         WebpageFetchTool(),
         WaybackTool(),
         ExaSearchTool(),
+        ExaAgentTool(),
         SimilarwebTool(),
         ReviewsTool(),
         JobsTool(),
