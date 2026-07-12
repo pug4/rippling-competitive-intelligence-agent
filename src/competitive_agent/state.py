@@ -80,7 +80,8 @@ class DirectorState(VersionedModel):
 
     # Budgets
     budget_usd: float = 5.0
-    spent_usd: float = 0.0
+    spent_usd: float = 0.0  # tool costs (model costs tracked separately below)
+    model_cost_usd: float = 0.0  # cumulative model spend, synced from the gateway
     max_runtime_seconds: int = 600
     started_at: datetime = Field(default_factory=utcnow)
     max_iterations: int = 40
@@ -92,8 +93,11 @@ class DirectorState(VersionedModel):
     stop_reason: str | None = None
     pending_user_question: str | None = None
 
+    def total_spend_usd(self) -> float:
+        return self.spent_usd + self.model_cost_usd
+
     def budget_exhausted(self) -> bool:
-        return self.spent_usd >= self.budget_usd
+        return self.total_spend_usd() >= self.budget_usd
 
     def runtime_exhausted(self) -> bool:
         return (utcnow() - self.started_at).total_seconds() >= self.max_runtime_seconds

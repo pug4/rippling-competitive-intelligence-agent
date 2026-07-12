@@ -141,7 +141,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
             "generated_at": utcnow().isoformat(),
             "stop_reason": state.stop_reason,
             "iterations": state.iteration,
-            "spent_usd": round(state.spent_usd, 4),
+            "tool_cost_usd": round(state.spent_usd, 4),
+            "model_cost_usd": round(state.model_cost_usd, 4),
+            "total_spend_usd": round(state.total_spend_usd(), 4),
         },
         "scope": {
             "company_input": state.company_input,

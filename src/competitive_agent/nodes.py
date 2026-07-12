@@ -822,6 +822,11 @@ async def decide_continue_or_stop(state: DirectorState, ctx: GraphContext):
     state.iteration += 1
     reason: str | None = None
 
+    # Sync the dominant cost (model calls) from the gateway so the dollar budget
+    # reflects real spend, not just tool costs.
+    if ctx.gateway is not None:
+        state.model_cost_usd = ctx.gateway.total_cost_usd
+
     if state.budget_exhausted():
         reason = "budget_exhausted"
     elif state.runtime_exhausted():

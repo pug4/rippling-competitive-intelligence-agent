@@ -120,9 +120,17 @@ class AnthropicGateway:
         self._settings = settings
         self._routes = routes
         self._request_timeout: float = float(routes.get("request_timeout_seconds", 90))
+        # Cumulative model spend across this gateway's lifetime, so the research
+        # loop's dollar budget counts the dominant cost (model calls), not just
+        # tool costs.
+        self._total_cost_usd: float = 0.0
         # Created lazily so tests can inject a fake client object before any
         # network-capable client is constructed.
         self._client: Any = None
+
+    @property
+    def total_cost_usd(self) -> float:
+        return self._total_cost_usd
 
     def _get_client(self) -> Any:
         if self._client is None:
@@ -195,6 +203,7 @@ class AnthropicGateway:
         def result(
             output: BaseModel, model: str, *, repaired: bool, escalated: bool
         ) -> ModelResult:
+            self._total_cost_usd += cost_usd
             return ModelResult(
                 output=output,
                 model_id=model,
@@ -264,6 +273,12 @@ class FixtureGateway:
     def __init__(self, settings: Settings, routes: dict[str, Any] | None = None) -> None:
         self._settings = settings
         self._routes = routes or {}
+        # Fixtures are free, but keep the interface uniform with the live gateway.
+        self._total_cost_usd: float = 0.0
+
+    @property
+    def total_cost_usd(self) -> float:
+        return self._total_cost_usd
 
     async def generate_structured(
         self,
