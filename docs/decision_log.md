@@ -123,3 +123,14 @@ Format: date · decision · rationale · reversibility.
     product / pricing / comparison / proof / ads / news / reviews / historical
     (wayback). The Workday/Gusto extension is a documented, uncommitted option,
     not a silent omission.
+26. **Benchmark finding: `segment` inter-model agreement (0.06) is a
+    taxonomy/convention mismatch, not a classifier defect.** Production commits
+    to a *primary* segment and uses finer labels (`startups`, `global_teams`)
+    while the independent labeler collapses multi-audience pages to `mixed`
+    (11/20 held-out). The only truly vocabulary-aligned agreement signals are
+    `claim_type` (0.71) and `competitive_stance` (0.67). Free-form fields
+    (`primary_message`, `persona`, CEP, `proof_type`) score ~0 by construction
+    (exact match on paraphrases). Consequence: the reported classification
+    numbers are agreement, not accuracy; human adjudication (or semantic
+    scoring) is required before any accuracy claim — the report says so and the
+    weak-spots section only flags aligned closed-vocab fields as real.
