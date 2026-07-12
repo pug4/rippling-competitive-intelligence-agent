@@ -19,14 +19,22 @@ CHAT_TASK = "analysis_chat"
 
 CHAT_SYSTEM = (
     "You are a competitive-intelligence analyst answering follow-up questions about a "
-    "COMPLETED marketing analysis. Answer ONLY from the RUN FINDINGS provided — never "
-    "invent facts, numbers, or sources. If the findings do not contain the answer, say so "
-    "plainly and set needs_deeper_research=true (suggest what to research). Ground claims in "
-    "the specific findings (theme, proof gap, opportunity, post, or change) they come from. "
-    "Be concise and insight-dense — you are talking to a growth marketer who wants to act. "
-    "Always propose 2-3 specific, useful follow-up questions the user could ask next to get "
-    "more specific. Respond ONLY via the structured tool."
+    "COMPLETED marketing analysis. You are given the FULL dataset for this run: every "
+    "source (with URL + timestamp), every extracted evidence excerpt, every classification, "
+    "every grounded claim WITH its justification, all message-proof gaps, opportunities, "
+    "temporal changes, LinkedIn posts, and traffic — plus the focal company's mirror data and "
+    "brief summaries of OTHER competitors analyzed. Answer ONLY from this data — never invent "
+    "facts, numbers, or sources. When you make a claim, CITE the specific source URL or "
+    "evidence excerpt it comes from. If the data genuinely does not contain the answer, say so "
+    "plainly and set needs_deeper_research=true. You may compare across competitors when the "
+    "cross-competitor summaries support it. Be concise and insight-dense — you are talking to a "
+    "growth marketer who wants to act. Always propose 2-3 specific follow-up questions the user "
+    "could ask next. Respond ONLY via the structured tool."
 )
+
+# Char budget for the grounded context. Structured findings are always included;
+# raw evidence excerpts fill the remainder and truncate last (with a disclosed note).
+_CONTEXT_BUDGET_CHARS = 280_000
 
 
 class ChatResponse(BaseModel):
@@ -49,68 +57,189 @@ def _package_path(run_id: str) -> Path:
     return Path(get_settings().outputs_dir) / "runs" / run_id / "data.json"
 
 
-def _fmt_list(items: list[Any], fields: list[str], limit: int = 8) -> str:
+def _fmt_list(items: list[Any], fields: list[str], limit: int | None = None) -> str:
     lines = []
-    for it in items[:limit]:
+    for it in items[: (limit or len(items))]:
         parts = [f"{f}={it.get(f)}" for f in fields if it.get(f) not in (None, "", [])]
         if parts:
             lines.append("  - " + " · ".join(str(p) for p in parts))
     return "\n".join(lines)
 
 
-def build_context(pkg: dict[str, Any]) -> str:
-    """Compact, grounded digest of the run's findings for the chat prompt."""
+def _artifact_urls(pkg: dict[str, Any]) -> dict[str, str]:
+    urls: dict[str, str] = {}
+    for a in pkg.get("artifacts", []):
+        urls[a.get("artifact_id")] = a.get("url") or ""
+    for s in pkg.get("sources", []):
+        urls.setdefault(s.get("artifact_id"), s.get("url") or "")
+    return urls
+
+
+def _classifications_block(pkg: dict[str, Any], urls: dict[str, str]) -> str:
+    lines = []
+    for c in pkg.get("classifications", []):
+        u = urls.get(str(c.get("artifact_id")), "")
+        bits = [
+            f"theme={c.get('primary_theme')}",
+            f'msg="{(c.get("primary_message") or "")[:120]}"',
+        ]
+        for f in ("segments", "personas", "category_entry_points", "claim_types", "proof_types",
+                  "villain_exact_wording", "competitive_stance", "cta", "pricing_disclosure_level"):
+            if c.get(f):
+                bits.append(f"{f}={c.get(f)}")
+        lines.append(f"  - [{u}] " + " · ".join(str(b) for b in bits))
+    return "\n".join(lines)
+
+
+def _claims_block(pkg: dict[str, Any], ev_by_id: dict[str, dict], urls: dict[str, str]) -> str:
+    lines = []
+    for cl in pkg.get("claims", []):
+        just = []
+        for eid in (cl.get("evidence_ids") or [])[:4]:
+            ev = ev_by_id.get(eid)
+            if ev:
+                just.append(f'"{(ev.get("exact_excerpt") or "")[:140]}" [{urls.get(str(ev.get("artifact_id")), "")}]')
+        lines.append(
+            f"  - CLAIM [{cl.get('status')}, conf {cl.get('claim_confidence')}]: {cl.get('statement')}\n"
+            f"      justification: {cl.get('confidence_reason') or 'n/a'}\n"
+            + ("      evidence: " + " | ".join(just) if just else "")
+        )
+    return "\n".join(lines)
+
+
+def _evidence_block(pkg: dict[str, Any], urls: dict[str, str], budget: int) -> tuple[str, int]:
+    """Every evidence excerpt with its source URL + quality, up to a char budget."""
+    lines = []
+    used = 0
+    total = len(pkg.get("evidence", []))
+    shown = 0
+    for ev in pkg.get("evidence", []):
+        u = urls.get(str(ev.get("artifact_id")), "")
+        line = f'  - [{ev.get("source_quality")}|{u}] "{(ev.get("exact_excerpt") or "")[:220]}"'
+        if used + len(line) > budget:
+            break
+        lines.append(line)
+        used += len(line)
+        shown += 1
+    note = "" if shown >= total else f"\n  … ({total - shown} more excerpts omitted for length; ask about a specific source)"
+    return "\n".join(lines) + note, used
+
+
+def build_context(pkg: dict[str, Any], cross: str = "", budget_chars: int = _CONTEXT_BUDGET_CHARS) -> str:
+    """FULL grounded context: all sources, evidence, classifications, claims (with
+    justifications), gaps, opportunities, temporal, LinkedIn, traffic, focal mirror,
+    and cross-competitor summaries. Structured findings always included; raw
+    evidence excerpts fill the remaining budget and truncate last."""
     companies = pkg.get("companies", [])
     competitor = (companies[0].get("canonical_name") if companies else pkg.get("scope", {}).get("company_input")) or "the competitor"
     focal = companies[1].get("canonical_name") if len(companies) > 1 else "Rippling"
     dom = pkg.get("dominant_message", {}) or {}
     es = pkg.get("eval_summary", {}) or {}
     sw = pkg.get("similarweb", {}) or {}
+    urls = _artifact_urls(pkg)
+    ev_by_id = {e.get("evidence_id"): e for e in pkg.get("evidence", [])}
+    fe = pkg.get("focal_evidence", {}) or {}
 
     sections = [
         f"COMPETITOR: {competitor}   FOCAL COMPANY: {focal}",
-        f"Dominant message: {dom.get('label') or 'n/a'} (theme: {dom.get('theme')})",
-        f"Corpus: {es.get('n_artifacts', '?')} artifacts, {es.get('n_claims', '?')} claims, "
-        f"{es.get('n_proof_gaps', '?')} proof gaps, {es.get('n_opportunities', '?')} opportunities.",
+        f"Dominant message: {dom.get('label') or 'n/a'} (theme: {dom.get('theme')}; basis: {dom.get('reason')})",
+        f"Corpus: {es.get('n_artifacts', '?')} artifacts · {es.get('n_classifications','?')} classifications · "
+        f"{es.get('n_claims', '?')} claims · {es.get('n_proof_gaps', '?')} proof gaps · "
+        f"{es.get('n_opportunities', '?')} opportunities · {es.get('n_change_events','?')} changes.",
     ]
+    # Full structured findings (always included).
     if pkg.get("proof_gaps"):
-        sections.append(
-            "MESSAGE–PROOF GAPS (competitor claim → who can prove it):\n"
-            + _fmt_list(pkg["proof_gaps"], ["short_label", "attackability", "proof_strength", "focal_proof_strength", "claim_specificity"])
-        )
+        sections.append("ALL MESSAGE–PROOF GAPS:\n" + _fmt_list(
+            pkg["proof_gaps"],
+            ["short_label", "claim_text", "attackability", "proof_strength", "focal_proof_strength",
+             "claim_specificity", "missing_proof", "actionable_interpretation", "why_attack_might_backfire"]))
     if pkg.get("opportunities"):
-        sections.append(
-            f"{focal} OPPORTUNITIES (recommended actions):\n"
-            + _fmt_list(pkg["opportunities"], ["title", "message_angle", "focal_proof_status", "why_this_could_backfire"], 5)
-        )
+        sections.append(f"ALL {focal} OPPORTUNITIES:\n" + _fmt_list(
+            pkg["opportunities"],
+            ["title", "message_angle", "focal_proof_status", "focal_current_usage",
+             "structural_defensibility", "why_this_could_backfire", "experiment_hypothesis", "kill_rule"]))
+    if pkg.get("claims"):
+        sections.append("ALL GROUNDED CLAIMS (with justifications + cited evidence):\n"
+                        + _claims_block(pkg, ev_by_id, urls))
+    if pkg.get("classifications"):
+        sections.append("ALL CLASSIFICATIONS (per source):\n" + _classifications_block(pkg, urls))
     if pkg.get("change_events"):
-        sections.append(
-            "STRATEGY OVER TIME (low-confidence emerging signals):\n"
-            + _fmt_list(pkg["change_events"], ["dimension", "prior_state", "current_state", "confidence"], 6)
-        )
+        sections.append("STRATEGY OVER TIME:\n" + _fmt_list(
+            pkg["change_events"], ["dimension", "prior_state", "current_state", "confidence",
+                                   "lifecycle", "alternative_explanations"]))
     if pkg.get("linkedin_posts"):
-        sections.append(
-            f"{competitor} LINKEDIN EMPLOYEE POSTS:\n"
-            + _fmt_list(pkg["linkedin_posts"], ["author", "author_role", "theme", "competitive_stance", "excerpt"], 8)
-        )
+        sections.append(f"{competitor} LINKEDIN EMPLOYEE POSTS:\n" + _fmt_list(
+            pkg["linkedin_posts"], ["author", "author_role", "theme", "competitive_stance",
+                                    "post_url", "excerpt"]))
     cm = pkg.get("commercial_motion", {}) or {}
     if cm:
-        sections.append(
-            f"COMMERCIAL MOTION: {cm.get('primary_motion')} · pricing disclosure {cm.get('pricing_disclosure')} · "
-            f"segment focus {cm.get('segment_focus')}"
-        )
+        sections.append("COMMERCIAL MOTION: " + json.dumps(cm)[:600])
     if pkg.get("category_entry_points"):
-        sections.append(
-            "CATEGORY ENTRY POINTS (search intents, ownership):\n"
-            + _fmt_list(pkg["category_entry_points"], ["cep", "ownership", "competitor_pages", "focal_pages"], 8)
-        )
+        sections.append("CATEGORY ENTRY POINTS (ownership):\n" + _fmt_list(
+            pkg["category_entry_points"], ["cep", "ownership", "competitor_pages", "focal_pages"]))
+    if pkg.get("product_positioning"):
+        sections.append("PRODUCT POSITIONING: " + json.dumps(pkg["product_positioning"])[:800])
     if sw.get("metrics"):
-        sections.append(f"TRAFFIC (est., {sw.get('data_source')}): {json.dumps(sw['metrics'])[:400]}")
+        sections.append(f"TRAFFIC (est., {sw.get('data_source')}): {json.dumps(sw['metrics'])[:600]}")
+    # All sources (URL + type + timestamp).
+    if pkg.get("sources"):
+        sections.append("ALL SOURCES (url · type · retrieved):\n" + "\n".join(
+            f"  - {s.get('url')} · {s.get('source_type')} · {str(s.get('retrieved_at'))[:10]}"
+            for s in pkg["sources"]))
+    # Focal (Rippling) mirror.
+    if fe.get("artifacts"):
+        sections.append(f"{focal} MIRROR SOURCES ({len(fe['artifacts'])}):\n" + "\n".join(
+            f"  - {a.get('url')} · {a.get('source_type')}" for a in fe["artifacts"][:40]))
     if pkg.get("limitations"):
-        sections.append("LIMITATIONS: " + "; ".join(str(x) for x in pkg["limitations"][:6]))
+        sections.append("LIMITATIONS: " + "; ".join(str(x) for x in pkg["limitations"]))
     if pkg.get("corpus_skew_warnings"):
-        sections.append("CORPUS CAVEATS: " + "; ".join(str(x) for x in pkg["corpus_skew_warnings"][:4]))
-    return "\n\n".join(sections)
+        sections.append("CORPUS CAVEATS: " + "; ".join(str(x) for x in pkg["corpus_skew_warnings"]))
+    if cross:
+        sections.append("OTHER COMPETITORS ANALYZED (for comparison):\n" + cross)
+
+    body = "\n\n".join(sections)
+    # Fill remaining budget with raw evidence excerpts (the source justifications).
+    remaining = max(0, budget_chars - len(body))
+    if remaining > 500 and pkg.get("evidence"):
+        ev_text, _ = _evidence_block(pkg, urls, remaining - 200)
+        body += "\n\nALL EVIDENCE EXCERPTS (source justifications):\n" + ev_text
+    return body
+
+
+def cross_competitor_summaries(current_run_id: str, competitor_id: str | None) -> str:
+    """One-line summaries of OTHER competitors analyzed (from stored runs), so the
+    chat can compare across competitors."""
+    from .config import get_settings
+
+    runs_dir = Path(get_settings().outputs_dir) / "runs"
+    if not runs_dir.exists():
+        return ""
+    seen: set[str] = set()
+    lines: list[str] = []
+    paths = sorted(runs_dir.glob("*/data.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in paths:
+        if path.parent.name == current_run_id:
+            continue
+        try:
+            other = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        comps = other.get("companies", [])
+        cid = comps[0].get("company_id") if comps else None
+        name = comps[0].get("canonical_name") if comps else other.get("scope", {}).get("company_input")
+        if not name or name in seen or cid == competitor_id:
+            continue
+        seen.add(name)
+        dom = other.get("dominant_message", {}) or {}
+        gaps = [g.get("short_label") for g in (other.get("proof_gaps") or [])[:5]]
+        lines.append(
+            f"  - {name} (vs {(comps[1].get('canonical_name') if len(comps) > 1 else '?')}): "
+            f"dominant='{dom.get('label') or dom.get('theme')}'; top gaps={gaps}; "
+            f"{other.get('eval_summary', {}).get('n_artifacts', '?')} artifacts."
+        )
+        if len(lines) >= 6:
+            break
+    return "\n".join(lines)
 
 
 async def chat_about_run(
@@ -124,7 +253,10 @@ async def chat_about_run(
     if not path.exists():
         raise KeyError(f"run not found (no data.json): {run_id}")
     pkg = json.loads(path.read_text(encoding="utf-8"))
-    context = build_context(pkg)
+    comps = pkg.get("companies", [])
+    competitor_id = comps[0].get("company_id") if comps else None
+    cross = cross_competitor_summaries(run_id, competitor_id)
+    context = build_context(pkg, cross=cross)
 
     from .config import get_config, get_settings
     from .model_gateway import build_gateway
