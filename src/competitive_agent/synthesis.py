@@ -92,8 +92,12 @@ def dominant_message(
             str(art.metadata.get("page_category", art.source_type)) if art else "unknown"
         )
         theme_source_classes.setdefault(theme, set()).add(art.source_type if art else "unknown")
-        if weight > theme_best.get(theme, -1):
-            theme_best[theme] = weight
+        # The human-readable LABEL comes from the highest-AUTHORITY page for the
+        # theme (homepage > platform > product), so a high-salience niche page
+        # can't hijack the label away from the company-level surface.
+        label_score = authority * 10 + sal
+        if label_score > theme_best.get(theme, -1):
+            theme_best[theme] = label_score
             theme_label[theme] = c.primary_message or theme
 
     if not theme_weight:

@@ -195,28 +195,42 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                 )
             )
 
-    # 3. Historical evidence for longitudinal/comparative modes.
-    if state.mode in ("longitudinal", "comparative") and _needs(state, "historical_website"):
+    # 3. Historical evidence for longitudinal/comparative modes. Temporal depth
+    # (priority: time-based accuracy) needs MORE than one homepage snapshot:
+    # sample several homepage captures across the window AND archive the key
+    # positioning pages (platform/pricing/product) so change detection has both
+    # periods on comparable surfaces.
+    if state.mode in ("longitudinal", "comparative"):
         comparison = next((w for w in state.time_windows if w.purpose == "comparison"), None)
         if comparison is not None:
-            proposals.append(
-                _mk(
-                    state,
-                    "search_wayback",
-                    "wayback",
-                    "historical_website",
-                    {
-                        "url": f"https://www.{company.primary_domain}/",
-                        "window_start": comparison.start_at.date().isoformat(),
-                        "window_end": comparison.end_at.date().isoformat(),
-                        "max_snapshots": 2,
-                    },
-                    "A temporal claim needs prior-period evidence; the historical homepage is the highest-value missing source.",
-                    reliability=0.6,
-                    latency=15.0,
-                    fallbacks=["search_news_launches"],
+            hist_targets = [
+                ("/", "homepage", 4),
+                ("/platform", "platform", 2),
+                ("/pricing", "pricing", 2),
+            ]
+            for path, label, snaps in hist_targets:
+                dim = "historical_website" if path == "/" else "historical_messages"
+                if not _needs(state, dim, "medium") and path != "/":
+                    continue
+                proposals.append(
+                    _mk(
+                        state,
+                        "search_wayback",
+                        "wayback",
+                        "historical_website",
+                        {
+                            "url": f"https://www.{company.primary_domain}{path}",
+                            "window_start": comparison.start_at.date().isoformat(),
+                            "window_end": comparison.end_at.date().isoformat(),
+                            "max_snapshots": snaps,
+                        },
+                        f"Temporal depth: archive the {label} across the prior window so change "
+                        "detection has both periods on a comparable surface.",
+                        reliability=0.6,
+                        latency=15.0,
+                        fallbacks=["search_news_launches"],
+                    )
                 )
-            )
 
     # 4. News and launches.
     if _needs(state, "news_and_launches"):

@@ -316,14 +316,29 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             if ch.get("alternative_explanations"):
                 add(f"  - alternatives: {'; '.join(ch['alternative_explanations'][:2])}")
     else:
-        wayback_n = sum(1 for a in pkg["artifacts"] if a["source_type"] == "wayback")
-        add(
-            f"**No confirmed strategic change.** {wayback_n} historical snapshot(s) were compared against "
-            f"current pages; the normalized theme did not differ enough to clear the both-period bar. "
-            "Unresolved hypotheses that a deeper historical sample could test:"
+        snaps = [a for a in pkg["artifacts"] if a["source_type"] == "wayback"]
+        snap_dates = sorted(
+            {str(a.get("archive_capture_at") or a.get("published_at") or "")[:10] for a in snaps if a.get("archive_capture_at") or a.get("published_at")}
         )
-        add("- whether enterprise/platform language is increasing;")
-        add("- whether API/automation language is broadening.")
+        depth = "insufficient_history" if len(snaps) < 3 else "partial"
+        add(f"**No confirmed strategic change** (historical support: `{depth}`).")
+        add(
+            f"- Compared {len(snaps)} archived snapshot(s)"
+            + (f" from {', '.join(snap_dates)}" if snap_dates else "")
+            + " against current pages; the normalized theme did not differ enough to clear the "
+            "both-period bar."
+        )
+        add(
+            "- Pages compared: "
+            + (", ".join(sorted({a.get("metadata", {}).get("original_url", a["url"])[:50] for a in snaps})) or "homepage only")
+        )
+        if len(snaps) < 3:
+            add(
+                "- **Caveat:** this is too few historical observations to confirm OR rule out a trend. "
+                "A deeper archive sample (more snapshots across the window on platform/pricing pages) is needed."
+            )
+        add("- Unresolved hypotheses a deeper sample could test: whether enterprise/platform language is "
+            "increasing; whether API/automation language is broadening.")
 
     # --- Scope, coverage, sources (feedback #7, #8, #9, #36) ---------------
     add("\n## Research scope and coverage\n")
