@@ -1,68 +1,236 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-d72fc4002311` · mode `comparative` · execution `live` · generated 2026-07-11T23:14:12.829506+00:00*
+*Run `RUN-60b37e044954` · mode `comparative` · execution `live` · generated 2026-07-12T02:25:12.084284+00:00*
+
+## Executive summary
+
+- **Dominant company message:** Deel offers transparent, flexible, scalable pricing for hiring and managing global talent without hidden fees or long-term contracts. (repeated across ≥2 source classes and present on a top-level surface).
+- **Product-positioning read:** Deel's public pages cluster around consolidation, compliance, security_and_control
+- **Confirmed change:** theme_emergence — “cost_reduction” not observed in the prior-window sample → “cost_reduction” present in 9 current-window artifacts.
+- **Most defensible Rippling opening:** Contractor Misclassification Workflow Demo: Show the Compliance Checks, Not Just Claim Them.
+- **Largest uncertainty:** no platform page was captured — the platform/consolidation narrative is inferred from product and secondary pages.
 
 ## Action Board
 
-### Largest strategy changes
-- No temporal change met the both-periods evidence bar in this run.
+### What Rippling should do
+- **Contractor Misclassification Workflow Demo: Show the Compliance Checks, Not Just Claim Them** `product_marketing_proof` [medium]
+  - Why now: Both Rippling and Deel claim automatic compliance protection in hiring/payroll workflows, but neither company's public proof currently shows the actual mechanics of how misclassification risk is caught before it happens. Rippling has an opportunity to close this gap first by publishing a concrete, inspectable workflow demonstration of its contractor misclassification safeguards — turning an underweighted, weakly-proven claim into a specific, verifiable product artifact rather than a marketing assertion.
+  - Product comparability: **weak** (Deel Payroll/Compliance (hiring + payroll workflow automation) vs Rippling Global Contractor Management + Compliance)
+  - Rippling proof: missing · already-saying-it: underweighted · legal review: True
+  - Risk (backfire): If Rippling's actual product demo does not clearly show automated *pre-emptive* misclassification prevention (vs. after-the-fact flagging or manual review support), the asset could expose a gap between the marketing claim and true product depth, inviting a "you don't actually prevent this automatically either" counterattack from Deel or skeptical buyers/analysts.
+  - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
+  - Kill rule: If product/legal review at build stage cannot substantiate genuine pre-emptive (vs. reactive) misclassification prevention, or if validation testing reveals credibility/accuracy problems that can't be resolved through revision, kill this specific proof asset and reframe compliance messaging around risk-reduction rather than prevention.
+- **"Policy on Autopilot": A category-entry campaign targeting the enforcement gap in AI-hype automation talk** `demand_gen_campaign` [medium]
+  - Why now: While the industry debates which AI wrapper (chatbot, copilot, agent) to bolt onto workflows, the actual operational pain for IT/HR/Finance leaders is that policies (access, compliance, offboarding, entitlements) don't enforce themselves without manual maintenance. Rippling has demonstrated strong proof of automating policy enforcement across people and systems — this campaign targets the buying moment when a company realizes their automation stack is full of assertions but their policies still rely on humans to police them.
+  - Product comparability: **weak** (Deel AI (chatbots, copilots, agents for HR/payroll workflows) vs Rippling policy enforcement automation (Unity/IT/Workflow Studio))
+  - Rippling proof: available · already-saying-it: underweighted · legal review: True
+  - Risk (backfire): Deel could respond that "policy enforcement" and "AI agents" are different problems and accuse Rippling of a strawman comparison — arguing they were never claiming to solve enforcement, only task automation via AI. Because comparability is weak, running this as an implicit "we do automation better" campaign risks being seen as an apples-to-oranges attack, which could undermine credibility if called out publicly.
+  - Campaign: audience IT/HR/Finance ops leaders at mid-market and multi-entity/global companies currently evaluating or having recently adopted AI-based HR/workforce tools, In-market accounts researching 'AI agents HR' or 'automation platform' category terms, Existing pipeline accounts that have engaged with competitor AI-automation content; channels LinkedIn sponsored content, Search (category + competitor terms), Programmatic retargeting display; metric Marketing-qualified leads (MQLs) / demo requests attributed to campaign from target segment
+  - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
+  - Kill rule: Kill or pause the campaign if, after two full reporting cycles at minimum sample size, primary metric is below 50% of target AND guardrail metrics show rising negative sentiment or sales objections tied to comparative framing.
+- **Deel Payroll Model Objection Battlecard: Managed vs. Self-Serve Flexibility Claim** `competitive_enablement` [medium]
+  - Why now: Deel asserts two payroll service models (managed and self-serve) on "the same underlying platform," but has shown only a feature assertion and a product demonstration—no independent proof of data continuity or workflow parity between the two modes. Equip sales/CS to probe this gap directly: ask Deel prospects what actually stays unified (data model, approvals, reporting) when switching service models, and position Rippling's own unified employee/business data layer (as demonstrated via App Studio) as an area Rippling can show, not just assert.
+  - Product comparability: **weak** (Deel Payroll (managed + self-serve models) vs Rippling Payroll / App Studio unified data layer)
+  - Rippling proof: partial · already-saying-it: underweighted · legal review: True
+  - Risk (backfire): If sales reps push the "ask Deel about continuity" objection too aggressively without Rippling having its own strong, demonstrable proof of seamless payroll-model switching, Deel or prospects could counter by asking Rippling the identical question—exposing that Rippling also lacks published proof of payroll service-model continuity, turning the battlecard into a boomerang.
+  - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
+  - Kill rule: Kill or pull the battlecard if legal determines the comparative framing poses unacceptable risk, or if pilot deals show the objection consistently backfires by inviting unanswerable counter-questions about Rippling's own payroll continuity
 
-### Strongest message–proof gaps
-- **Deel API enables customizable automation of global HR and payroll workflows with enterprise-grade security and scalability.** — competitor proof: weak; attackability: high. Deel repeats the “integration_breadth” message with weak public proof, while Rippling shows strong proof on the same theme — a direct out-prove opportunity.
-- **Deel unified Gomboc's HR systems across US and international operations, eliminating manual admin work and reducing operational complexity as they scaled.** — competitor proof: strong; attackability: low. Deel proves “consolidation” strongly; Rippling's observed proof is strong. Don't attack the claim head-on — reframe around a structural advantage Deel can't easily copy, or concede this ground.
-- **Automatically manage access across your organization as teams change, keeping permissions accurate and secure without manual intervention.** — competitor proof: strong; attackability: low. Deel proves “automation” strongly; Rippling's observed proof is moderate. Don't attack the claim head-on — reframe around a structural advantage Deel can't easily copy, or concede this ground.
+### Strongest message–proof gaps (competitor vs Rippling)
+| Gap | Competitor proof | Rippling proof | Stance | Specificity |
+|---|---|---|---|---|
+| compliance | weak | weak | investigate | high |
+| automation | weak | strong | investigate | high |
+| native platform breadth | none | weak | investigate | high |
+| workforce visibility | none | none | investigate | medium |
+| integration ecosystem | none | none | investigate | high |
 
-### Rippling-relative recommended actions
-- **Deel API Claims vs. Rippling Data Cloud: A Proof-Gap Research & Asset-Building Sprint** (research_asset, defensibility medium)
-  - Angle: Deel markets its API as enabling "customizable automation of global HR and payroll workflows with enterprise-grade security and scalability," but publishes no product demonstration or named customer story to substantiate it. Rippling's own Data Cloud claim (unifying HR/business data for AI-powered analytics and automated workflows without tool-switching) is directionally the stronger structural claim, but Rippling is currently underweighting it in market messaging. The action is NOT to run a head-to-head comparative claim (Rippling lacks its own named-customer proof for this specific angle yet) — it is to build the proof asset first: a real, demoable workflow-automation walkthrough plus a named customer story showing Data Cloud automating a cross-system HR/payroll workflow, so Rippling can credibly own "unified automation" before contrasting it against Deel's unproven claim.
-  - Focal proof status: missing; already-saying-it: underweighted
-  - Why it could backfire: If Rippling attacks Deel's "weak proof" while simultaneously lacking its own named-customer demonstration for Data Cloud automation, Deel (or analysts/buyers) can flip the criticism back on Rippling for the same gap — inviting a "glass houses" counterattack and undermining Rippling's credibility rather than building it.
-  - Experiment: If Rippling produces a concrete product demonstration and secures one named customer story showing Data Cloud automating a real cross-system HR/payroll workflow, then sales and marketing can credibly reposition "unified automation" as a Rippling-owned, provable differentiator (vs. Deel's unsubstantiated equivalent claim), improving win rates and message resonance in competitive Deel deals. — kill rule: If no named customer will go on record within one sales quarter, or legal blocks the comparative framing, kill the comparative angle and revert to a standalone capability story without referencing Deel
-- **Build a US-HQ, Global-Scale Customer Proof Asset: Rippling Unified-Platform Case Study to Counter Deel's Gomboc Story** (research_asset, defensibility medium)
-  - Angle: Deel's proof point shows it can unify HR admin for a company scaling internationally from a contractor/EOR base — but that proof is about consolidating Deel's own EOR-adjacent modules, not a true single-system-of-record spanning HR, payroll, IT, and finance. Rippling's angle: 'One employee record, one system, from day-one hire to global scale — HR, payroll, IT, and finance unified natively, not stitched together after the fact.' This should be run as a proof-building action first: source and publish an independent, verifiable Rippling customer story (ideally a company that scaled US-to-global) that demonstrates the same category of before/after operational-complexity reduction Deel claims for Gomboc, with third-party or quantifiable validation.
-  - Focal proof status: missing; already-saying-it: underweighted
-  - Why it could backfire: Deel can respond by pointing out its own proof (Gomboc) is already strong and independently referenced, while Rippling's counter-asset is new and unvalidated; if Rippling publishes a comparative claim before securing real independent validation, Deel or analysts could call out the asymmetry — Deel has proof, Rippling has narrative — undermining Rippling's credibility on the exact 'proof' dimension it's attacking.
-  - Experiment: If Rippling sources and publishes an independently validated customer story demonstrating unified HR/payroll/IT/finance reducing operational complexity during US-to-global scaling, then mid-market prospects evaluating Deel will rate Rippling's unification claim as more credible and be more likely to request a comparison demo, closing the current proof gap versus Deel's Gomboc story. — kill rule: If no customer willing to provide named/verifiable proof within one quarter, or if legal review flags the comparative framing as unsubstantiated, kill the comparative angle and revert to a non-comparative capability-only content asset
-- **Proof-Building Asset: "Automated Access Governance" Depth Comparison (Rippling vs Deel)** (research_asset, defensibility medium)
-  - Angle: Rippling already claims automatic policy enforcement across all systems without manual maintenance — but this is underweighted and unsubstantiated with concrete artifacts (screenshots, workflow diagrams, customer quotes) versus Deel's strong, specific claim about automatic access management as teams change. The angle to run: "See exactly how Rippling keeps access accurate as your org changes — down to the workflow" — but only after building the specific proof (a demo/workflow walkthrough showing org-change-triggered permission updates) that mirrors the specificity of Deel's claim. Do not run a comparative claim yet; first close the specificity gap.
-  - Focal proof status: missing; already-saying-it: underweighted
-  - Why it could backfire: If Rippling publishes a comparative claim before it has equally strong, specific proof (demo footage, named customer, quantified outcome), Deel or analysts could publicly challenge Rippling to show its own workflow, exposing that Rippling's claim is currently more generic ("policies across all systems") than Deel's specific "as teams change" framing — turning an attempted attack into evidence of Rippling being the less rigorous vendor on this exact dimension.
-  - Experiment: If we produce a concrete, demo-based proof asset showing Rippling automatically updates access/permissions when team structures change, then sales and marketing can credibly reposition the existing 'automatic policy enforcement' claim as equally or more specific than Deel's, increasing win rate in competitive deals where access governance is a stated priority. — kill rule: If legal review finds the underlying capability cannot be substantiated with a real product workflow within one quarter, kill the comparative framing entirely and restrict messaging to the existing generic policy-enforcement claim
+_Proof distributions and the exact repeated claims are in the Evidence appendix._
 
-## Research scope and coverage
-
-- Competitor: **Deel** · Focal comparison: **Rippling**
-- Lookback: 365 days across 2 windows
-- Artifacts collected: 20 · classifications: 19 · claims: 19
-
-| Dimension | Coverage |
-|---|---|
-| commercial_motion | medium |
-| competitive_stance | medium |
-| current_product | medium |
-| current_website | high |
-| customer_proof | medium |
-| focal_current | medium |
-| focal_proof | medium |
-| historical_messages | medium |
-| historical_website | medium |
-| identity | high |
-| news_and_launches | medium |
-| personas_and_jobs | medium |
-| portfolio_discovery | medium |
-| product_positioning | medium |
+### What not to attack
+- **consolidation** — Deel proves “consolidation” strongly and Rippling's observed proof is strong. Don't attack the claim head-on — reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)
+- **security and control** — Deel proves “security_and_control” strongly and Rippling's observed proof is strong. Don't attack the claim head-on — reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)
 
 ## Current public positioning
 
-- Dominant message: **Deel automates tax compliance by guiding contractors to submit the correct tax forms based on location and entity type, eliminating administrative burden and misclassification risk.**
-- Villains / status quo attacked: complexity, compliance_risk, cost_and_waste, global_expansion_friction, legacy_software
-- Competitive stance observed: category_attack, ignores, implicit_contrast, named_comparison
+- **Dominant company message:** Deel offers transparent, flexible, scalable pricing for hiring and managing global talent without hidden fees or long-term contracts.
+  - Basis: surfaces None, comparison, customers, home, other, pricing, product; source classes events, exa_web, reviews, wayback, webpage
+- **Themes observed:** consolidation (24), compliance (9), security_and_control (5), native_platform_breadth (3), automation (3), global_hiring (2), cost_reduction (2), workforce_visibility (2)
+- **Villain / status-quo wording (exact):**
+  - “fragmented local providers”
+  - “complex legal requirements”
+  - “setting up a local entity”
+  - “existing HRIS platform”
+  - “reliance on in-country partners can reduce service quality”
+  - normalized: complexity, compliance_risk, cost_and_waste, global_expansion_friction, legacy_software, manual_work, named_company, point_solution_sprawl
+- **Competitive stance distribution:**
+  | Stance | Artifacts |
+  |---|---:|
+  | implicit_contrast | 22 |
+  | category_attack | 9 |
+  | named_comparison | 5 |
+  | ignores | 3 |
+  | direct_attack | 1 |
+
+## Commercial motion (medium confidence — 31 observed CTAs, 42 pricing signals)
+
+- **Inferred motion:** sales_led · **pricing disclosure:** hidden
+- **Dominant CTAs (share of observed):** other 0.45, book_demo 0.45, learn_more 0.1
+- **Apparent segment focus (by mentions):** mid_market (45), enterprise (45), smb (31), global_teams (27)
+- _Public-signal inference only — not CAC, conversion, or spend._
+
+## Product positioning
+
+| Product | Pages | Themes | Personas | Proof |
+|---|---:|---|---|---|
+| Deel IT | 9 | security_and_control, consolidation | it_leader, operations_leader | feature_assertion, quantified_customer_outcome |
+| Deel Payroll | 8 | consolidation, compliance | finance_leader, operations_leader | quantified_customer_outcome, named_customer_story |
+| Compliance Hub | 7 | consolidation | hr_leader, founder_or_ceo | feature_assertion, certification_or_compliance_record |
+| Deel Mobility | 6 | compliance, consolidation | hr_leader, operations_leader | feature_assertion, quantified_customer_outcome |
+| PEO | 6 | consolidation, workforce_visibility | hr_leader, finance_leader | quantified_customer_outcome, named_customer_story |
+| EOR (Employer of Record) | 6 | consolidation, compliance | hr_leader, founder_or_ceo | quantified_customer_outcome, feature_assertion |
+| HRIS | 5 | consolidation, data_unification | hr_leader, founder_or_ceo | quantified_customer_outcome, feature_assertion |
+| Payroll | 5 | consolidation, compliance | hr_leader, finance_leader | quantified_customer_outcome, feature_assertion |
+| Onboarding | 5 | consolidation | hr_leader, founder_or_ceo | feature_assertion, named_customer_story |
+| Deel Hire | 5 | consolidation, compliance | finance_leader, operations_leader | feature_assertion, named_customer_story |
+
+## Category entry points (Deel vs Rippling)
+
+| Buying trigger | Competitor | Rippling | Ownership |
+|---|---:|---:|---|
+| opening_new_country | 39 | 0 | competitor_advantage |
+| consolidating_hr_tools | 29 | 8 | contested |
+| hiring_first_international_employee | 22 | 0 | competitor_advantage |
+| automating_onboarding_offboarding | 16 | 0 | competitor_advantage |
+| managing_contractors_and_employees | 11 | 0 | competitor_advantage |
+| reducing_payroll_errors | 9 | 0 | competitor_advantage |
+| preparing_for_audit | 8 | 0 | competitor_advantage |
+| replacing_a_peo | 7 | 0 | competitor_advantage |
+| integrating_an_acquisition | 7 | 0 | competitor_advantage |
+| controlling_app_access | 6 | 0 | competitor_advantage |
+
+## Persona × channel coverage (observed)
+
+_Cells are observed-page counts; an empty cell is **not observed**, not proof of absence._
+
+| Persona | events | press | review sites | website | website (historical) | website/social |
+|---|---:|---:|---:|---:|---:|---:|
+| finance_leader | 3 | 4 | 3 | 16 | 4 | 9 |
+| founder_or_ceo | 2 | 3 | 1 | 11 | 4 | 5 |
+| hr_leader | 3 | 3 | 4 | 20 | 4 | 8 |
+| it_leader |  |  |  | 7 | 1 | 4 |
+| legal_or_compliance |  |  |  | 2 |  | 1 |
+| operations_leader | 1 | 5 | 3 | 14 | 4 | 9 |
+| payroll_manager |  |  |  | 2 |  | 1 |
+| people_ops_manager |  |  | 1 | 6 |  | 2 |
+
+## Strategy over time
+
+- **theme_emergence** (emerging, confidence low): ““cost_reduction” not observed in the prior-window sample” → ““cost_reduction” present in 9 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The small prior-window sample (only 4 artifacts) may simply have missed pre-existing cost_reduction messaging rather than it being genuinely absent
+- **theme_emergence** (emerging, confidence low): ““automation” not observed in the prior-window sample” → ““automation” present in 7 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The small prior-period sample (only 4 artifacts) may simply have missed pre-existing 'automation' messaging due to limited archive coverage rather than the theme being genuinely new.
+- **theme_emergence** (emerging, confidence low): ““employee_experience” not observed in the prior-window sample” → ““employee_experience” present in 7 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The 'employee_experience' theme may have existed in prior periods but was missed due to the small comparison sample (only 4 artifacts vs 29 current), understating true prior presence.
+- **theme_emergence** (emerging, confidence low): ““global_hiring” not observed in the prior-window sample” → ““global_hiring” present in 8 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The prior-window sample (only 4 artifacts) may simply lack coverage of channels where 'global_hiring' language already existed, creating a false emergence signal.
+
+## Research scope and coverage
+
+- Competitor **Deel** · focal **Rippling** · lookback 365d across 2 windows
+- Artifacts collected: 57 · classified: 56 · claims: 10
+- **Corpus-skew warnings:**
+  - no platform page was captured — the platform/consolidation narrative is inferred from product and secondary pages
+
+**Source distribution**
+
+| Source | Count |
+|---|---:|
+| comparison pages | 26 |
+| exa_web | 10 |
+| news/launches | 5 |
+| wayback snapshots | 4 |
+| reviews | 4 |
+| events | 4 |
+| site map | 1 |
+| pricing pages | 1 |
+| other pages | 1 |
+| homepage/platform | 1 |
+
+**Not classified**
+
+- sitemap (https://www.deel.com/) — site map (URL list, not marketing content)
+
+**Coverage (what each rating is based on)**
+
+| Dimension | Level | Basis |
+|---|---|---|
+| identity | high | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| current_website | high | 30 artifacts across sitemap, webpage sources |
+| current_product | medium | 29 artifacts across webpage sources |
+| pricing_and_packaging | high | 29 artifacts across webpage sources |
+| news_and_launches | medium | 15 artifacts across exa_web, news sources |
+| historical_website | medium | 4 artifacts across wayback sources |
+| historical_messages | medium | 14 artifacts across exa_web, wayback sources |
+| commercial_motion | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| personas_and_jobs | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| competitive_stance | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| portfolio_discovery | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| product_positioning | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| focal_current | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
+| focal_proof | medium | 57 artifacts across events, exa_web, news, reviews, wayback, webpage sources |
 
 ## Limitations and missing data
 
-- claim building unavailable: TimeoutError
-- Not publicly knowable and therefore excluded: actual ad performance/ROAS, exact spend, negotiated pricing, complete OOH/employee-post coverage, internal intent.
+- Final claim-deepening was partially unavailable; the report used the previously validated claim set and added no unsupported claim.
+- Not publicly knowable (excluded): actual ad performance/ROAS, exact spend, negotiated pricing, complete OOH/employee-post coverage, internal intent.
 
-## Run trace
+## Evidence appendix
 
-- Stop reason: `no_remaining_actions_with_expected_value; unmet_dimensions=['pricing_and_packaging']` · iterations: 5 · tool calls: 5
+Every source with its provenance. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`).
+
+| Artifact | Source | Date | URL |
+|---|---|---|---|
+| ART-5fa6a98027 | sitemap | 2026-07-12 | https://www.deel.com/ |
+| ART-873fc9e791 | webpage | 2026-07-12 | https://www.deel.com/pricing/ |
+| ART-b611a0a314 | webpage | 2026-07-12 | https://www.deel.com/platform |
+| ART-bb27b784e6 | webpage | 2026-07-12 | https://www.deel.com/legal/platform-terms-of-service/ |
+| ART-e1e459267f | webpage | 2026-07-12 | https://www.deel.com/blog/deel-vs-multiplier-honest-employer |
+| ART-853837346c | webpage | 2026-07-12 | https://www.deel.com/blog/h1b-faqs-change-of-status-vs-consu |
+| ART-2ffa5b3a5f | webpage | 2026-07-12 | https://www.deel.com/blog/lease-vs-buy-equipment-analysis/ |
+| ART-084f656a96 | webpage | 2026-07-12 | https://www.deel.com/blog/deel-payroll-self-serve-vs-managed |
+| ART-61e20e7c6b | webpage | 2026-07-12 | https://www.deel.com/blog/eb2-vs-eb3-eb-2-and-eb-3-immigrant |
+| ART-945350c2c9 | webpage | 2026-07-12 | https://www.deel.com/blog/authentication-vs-authorization/ |
+| ART-936f0001e3 | webpage | 2026-07-12 | https://www.deel.com/deel-vs-competitors/ontop/ |
+| ART-a831c39bc7 | webpage | 2026-07-12 | https://www.deel.com/blog/pre-tax-vs-post-tax-deductions/ |
+| ART-06dcef6feb | webpage | 2026-07-12 | https://www.deel.com/blog/deel-vs-velocity-global-honest-emp |
+| ART-af44eed0ad | webpage | 2026-07-12 | https://www.deel.com/blog/w2-vs-1099/ |
+| ART-22fa42eb2f | webpage | 2026-07-12 | https://www.deel.com/resources/eor-vs-entity-decision-tree/ |
+| ART-8d4671c915 | webpage | 2026-07-12 | https://www.deel.com/resources/a-guide-to-peo-vs-eor/ |
+| ART-b200a5249c | webpage | 2026-07-12 | https://www.deel.com/blog/mdm-vs-mam/ |
+| ART-e4c54bb6a9 | webpage | 2026-07-12 | https://www.deel.com/blog/agents-vs-copilots-vs-chatbots/ |
+| ART-18ba58ea86 | webpage | 2026-07-12 | https://www.deel.com/blog/competency-vs-skill-matrix/ |
+| ART-a69ae86e0d | webpage | 2026-07-12 | https://www.deel.com/blog/hmo-vs-ppo-guide/ |
+| ART-3f33c48182 | webpage | 2026-07-12 | https://www.deel.com/blog/international-entrepreneur-rule-vs |
+| ART-4af948d626 | webpage | 2026-07-12 | https://www.deel.com/blog/floating-holiday-vs-pto/ |
+| ART-cf67f7b6a4 | webpage | 2026-07-12 | https://www.deel.com/blog/tax-id-vs-ein/ |
+| ART-cc4cd67004 | webpage | 2026-07-12 | https://www.deel.com/blog/getting-paid-1099-vs-w-2/ |
+| ART-97882f87c2 | webpage | 2026-07-12 | https://www.deel.com/blog/developmental-vs-evaluative-feedba |
+| ART-eaecd372f2 | webpage | 2026-07-12 | https://www.deel.com/blog/ztna-vs-vpn/ |
+| ART-220784ef20 | webpage | 2026-07-12 | https://www.deel.com/blog/deel-vs-ontop-honest-employer-of-r |
+| ART-425ce9c51f | webpage | 2026-07-12 | https://www.deel.com/blog/deel-it-vs-firstbase/ |
+| ART-78d1dc1e70 | webpage | 2026-07-12 | https://www.deel.com/blog/peo-vs-hro/ |
+| ART-d6fc7c1d11 | webpage | 2026-07-12 | https://www.deel.com/blog/iam-vs-pam/ |
+| ART-7331c67c81 | wayback | 2025-07-12 | https://web.archive.org/web/20250712163525id_/https://www.de |
+| ART-50b5e2931c | wayback | 2025-10-01 | https://web.archive.org/web/20251001081236id_/https://www.de |
+| ART-fe961cc3d6 | wayback | 2026-01-01 | https://web.archive.org/web/20260101133927id_/https://www.de |
+| ART-6d813e2f44 | wayback | 2026-04-01 | https://web.archive.org/web/20260401212929id_/https://www.de |
+| ART-4b1056293f | news | 2026-05-12 | https://business.scoop.co.nz/2026/05/12/deel-unveils-akai-by |
+| ART-77026d0610 | news | 2025-08-18 | https://www.businesswire.com/news/home/20250818288059/en/Dee |
+| ART-8da6cf4f0e | news | 2026-03-01 | https://community.scoop.co.nz/2026/03/deel-unifies-the-globa |
+| ART-0cae9a3812 | news | 2026-06-17 | https://internationalbusinessnews.co.uk/deel-launches-field- |
+| ART-f2619a8e96 | news | 2026-06-03 | https://stripe.com/newsroom/news/deel-and-stripe |
+| ART-e66aba09c7 | reviews | 2025-04-30 | https://www.g2.com/products/deel/reviews |
+
+---
+*Stop reason: `runtime_exhausted` · iterations 14 · tool calls 14*
