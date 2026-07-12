@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T18:42:07.438198+00:00",
+    "generated_at": "2026-07-12T18:50:27.826183+00:00",
     "stop_reason": "runtime_exhausted",
     "iterations": 19,
     "tool_cost_usd": 0.12,
@@ -92,7 +92,8 @@
     "exa_web": 12,
     "linkedin_post": 30,
     "events": 4,
-    "google_ads": 8
+    "google_ads": 8,
+    "similarweb": 1
   },
   "corpus_skew_warnings": [],
   "coverage": {
@@ -134,6 +135,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -141,7 +143,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "current_website",
@@ -248,6 +250,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -255,7 +258,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "personas_and_jobs",
@@ -267,6 +270,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -274,7 +278,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "competitive_stance",
@@ -286,6 +290,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -297,7 +302,7 @@
         "public_social",
         "reviews"
       ],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "portfolio_discovery",
@@ -309,6 +314,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -316,7 +322,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "product_positioning",
@@ -328,6 +334,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -339,7 +346,7 @@
         "public_social",
         "reviews"
       ],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "focal_current",
@@ -351,6 +358,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -358,7 +366,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     },
     {
       "dimension": "focal_proof",
@@ -370,6 +378,7 @@
         "google_ads",
         "linkedin_post",
         "news",
+        "similarweb",
         "wayback",
         "webpage"
       ],
@@ -377,7 +386,7 @@
       "represented_periods": 2,
       "failed_sources": [],
       "missing_sources": [],
-      "reason": "129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources"
+      "reason": "130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources"
     }
   ],
   "commercial_motion": {
@@ -829,11 +838,14 @@
       ]
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
+      "cep": "expanding_to_new_countries",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "rapid_growth_scaling_employees",
@@ -860,19 +872,13 @@
       ]
     },
     {
-      "cep": "paying_contractors_and_employees_globally",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": []
-    },
-    {
-      "cep": "growing remote and international teams",
+      "cep": "expanding_service_offerings",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage",
       "top_verticals": [
-        "benefits"
+        "payroll",
+        "global_eor_contractors"
       ]
     },
     {
@@ -882,6 +888,15 @@
       "ownership": "competitor_advantage",
       "top_verticals": [
         "it_device_management"
+      ]
+    },
+    {
+      "cep": "growing remote and international teams",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": [
+        "benefits"
       ]
     },
     {
@@ -895,27 +910,21 @@
       ]
     },
     {
-      "cep": "expanding_service_offerings",
+      "cep": "paying_contractors_and_employees_globally",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage",
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "expanding_to_new_countries",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
+      "top_verticals": []
     },
     {
       "cep": "expanding_into_new_markets_with_remote_teams",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "ownership": "focal_owns",
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_globally_safely",
       "competitor_pages": 0,
       "focal_pages": 1,
       "ownership": "focal_owns",
@@ -1932,6 +1941,13 @@
       "url": "https://adstransparency.google.com/?region=US&amp;preset-date=Last+30+days&amp;domain=costco.com",
       "source_type": "google_ads",
       "retrieved_at": "2026-07-12T16:36:56.494545Z",
+      "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-f40ab89135eb",
+      "url": "https://www.similarweb.com/website/deel.com/",
+      "source_type": "similarweb",
+      "retrieved_at": "2026-07-12T18:48:00.061533Z",
       "archive_capture_at": null
     }
   ],
@@ -9391,6 +9407,139 @@
       "is_partial": true,
       "is_fixture": false,
       "archive_capture_at": null
+    },
+    {
+      "artifact_id": "ART-f40ab89135eb",
+      "company_id": "CO-0cf92b8592a5",
+      "source_type": "similarweb",
+      "source_name": "similarweb",
+      "url": "https://www.similarweb.com/website/deel.com/",
+      "final_url": "https://www.similarweb.com/website/deel.com/",
+      "title": "Similarweb estimated traffic \u2014 deel.com",
+      "author": null,
+      "published_at": null,
+      "first_observed_at": null,
+      "last_observed_at": null,
+      "retrieved_at": "2026-07-12T18:48:00.061533Z",
+      "time_window_ids": [],
+      "normalized_text": "Similarweb estimated web analytics for deel.com. All values estimated. - estimated_monthly_visits (estimated, visits/month): 3460695 - digital_competitors (estimated, domain): [{\"affinity\": 1, \"domain\": \"remote.com\"}, {\"affinity\": 0.9239130434782608, \"domain\": \"oysterhr.com\"}, {\"affinity\": 0.9021739130434782, \"domain\": \"usemultiplier.com\"}, {\"affinity\": 0.8804347826086957, \"domain\": \"rippling.com\"}, {\"affinity\": 0.8478260869565217, \"domain\": \"bamboohr.com\"}, {\"affinity\": 0.8260869565217391, \"domain\": \"papayaglobal.com\"}, {\"affinity\": 0.8043478260869564, \"domain\": \"hibob.com\"}, {\"affinity\": 0.7826086956521738, \"domain\": \"nativeteams.com\"}, {\"affinity\": 0.7499999999999999, \"domain\": \"myob.com\"}, {\"affinity\": 0.7282608695652174, \"domain\": \"books.zoho.com\"}, {\"affinity\": 0.7065217391304348, \"domain\": \"workstream.us\"}, {\"affinity\": 0.6847826086956521, \"domain\": \"alegra.com\"}, {\"affinity\": 0.6630434782608695, \"domain\": \"bill-one.com\"}, {\"affinity\": 0.6413043478260869, \"domain\": \"greythr.com\"}, {\"affinity\": 0.6195652173913042, \"domain\": \"fortnox.se\"}, {\"affinity\": 0.5978260869565217, \"domain\": \"fakturownia.pl\"}, {\"affinity\": 0.5760869565217391, \"domain\": \"onvio.com.br\"}, {\"affinity\": 0.5543478260869565, \"domain\": \"meinvoice.vn\"}, {\"affinity\": 0.5326086956521738, \"domain\": \"flowaccount.com\"}, {\"affinity\": 0.5108695652173912, \"domain\": \"lexware.de\"}]",
+      "content_hash": "e55dc144bf9ee87c6453987de0fa36901386741fa46d5bfb41c4c7a9770bef4d",
+      "metadata": {
+        "provider": "similarweb",
+        "observation_period": null,
+        "estimated": true,
+        "unit": "visits/month",
+        "retrieval_timestamp": "2026-07-12T18:48:00.061533+00:00",
+        "collected_via": "exa_agent",
+        "data_source": "similarweb",
+        "provider_dependent": true,
+        "exa_query": "Using Similarweb, report web-analytics estimates for the domain deel.com: estimated monthly visits, the monthly traffic trend, the marketing channel mix shares (direct, referral, social, organic search, paid search, display, mail), the top countries by traffic share, digital competitors, and estimated paid keywords when available. Report only what Similarweb provides; omit unknown fields.",
+        "exa_data_sources": [
+          {
+            "provider": "similarweb"
+          }
+        ],
+        "domain": "deel.com",
+        "metrics": {
+          "estimated_monthly_visits": {
+            "value": 3460695,
+            "estimated": true,
+            "unit": "visits/month"
+          },
+          "digital_competitors": {
+            "value": [
+              {
+                "domain": "remote.com",
+                "affinity": 1
+              },
+              {
+                "domain": "oysterhr.com",
+                "affinity": 0.9239130434782608
+              },
+              {
+                "domain": "usemultiplier.com",
+                "affinity": 0.9021739130434782
+              },
+              {
+                "domain": "rippling.com",
+                "affinity": 0.8804347826086957
+              },
+              {
+                "domain": "bamboohr.com",
+                "affinity": 0.8478260869565217
+              },
+              {
+                "domain": "papayaglobal.com",
+                "affinity": 0.8260869565217391
+              },
+              {
+                "domain": "hibob.com",
+                "affinity": 0.8043478260869564
+              },
+              {
+                "domain": "nativeteams.com",
+                "affinity": 0.7826086956521738
+              },
+              {
+                "domain": "myob.com",
+                "affinity": 0.7499999999999999
+              },
+              {
+                "domain": "books.zoho.com",
+                "affinity": 0.7282608695652174
+              },
+              {
+                "domain": "workstream.us",
+                "affinity": 0.7065217391304348
+              },
+              {
+                "domain": "alegra.com",
+                "affinity": 0.6847826086956521
+              },
+              {
+                "domain": "bill-one.com",
+                "affinity": 0.6630434782608695
+              },
+              {
+                "domain": "greythr.com",
+                "affinity": 0.6413043478260869
+              },
+              {
+                "domain": "fortnox.se",
+                "affinity": 0.6195652173913042
+              },
+              {
+                "domain": "fakturownia.pl",
+                "affinity": 0.5978260869565217
+              },
+              {
+                "domain": "onvio.com.br",
+                "affinity": 0.5760869565217391
+              },
+              {
+                "domain": "meinvoice.vn",
+                "affinity": 0.5543478260869565
+              },
+              {
+                "domain": "flowaccount.com",
+                "affinity": 0.5326086956521738
+              },
+              {
+                "domain": "lexware.de",
+                "affinity": 0.5108695652173912
+              }
+            ],
+            "estimated": true,
+            "unit": "domain"
+          }
+        },
+        "exa_run_id": "agent_run_8314a94dea4d473594ea517eea3aa96b"
+      },
+      "screenshot_path": null,
+      "collection_method": "exa_similarweb",
+      "is_partial": true,
+      "is_fixture": false,
+      "archive_capture_at": null
     }
   ],
   "unclassified_artifacts": [
@@ -9405,6 +9554,12 @@
       "source_type": "google_ads",
       "url": "https://adstransparency.google.com/advertiser/AR01081506575115354113/creative/CR05252544410855407617?region=DE&amp;sig=AH_1rP8AAAAAY6b2lwyaca37ghj_GCMJ6tNWUCs&amp;hl=en",
       "reason": "too little extractable text"
+    },
+    {
+      "artifact_id": "ART-f40ab89135eb",
+      "source_type": "similarweb",
+      "url": "https://www.similarweb.com/website/deel.com/",
+      "reason": "classification unavailable"
     }
   ],
   "evidence": [
@@ -65455,7 +65610,106 @@
       "verticals": []
     }
   ],
-  "similarweb": {},
+  "similarweb": {
+    "domain": "deel.com",
+    "data_source": "similarweb",
+    "observation_period": null,
+    "estimated": true,
+    "metrics": {
+      "estimated_monthly_visits": {
+        "value": 3460695,
+        "estimated": true,
+        "unit": "visits/month"
+      },
+      "digital_competitors": {
+        "value": [
+          {
+            "domain": "remote.com",
+            "affinity": 1
+          },
+          {
+            "domain": "oysterhr.com",
+            "affinity": 0.9239130434782608
+          },
+          {
+            "domain": "usemultiplier.com",
+            "affinity": 0.9021739130434782
+          },
+          {
+            "domain": "rippling.com",
+            "affinity": 0.8804347826086957
+          },
+          {
+            "domain": "bamboohr.com",
+            "affinity": 0.8478260869565217
+          },
+          {
+            "domain": "papayaglobal.com",
+            "affinity": 0.8260869565217391
+          },
+          {
+            "domain": "hibob.com",
+            "affinity": 0.8043478260869564
+          },
+          {
+            "domain": "nativeteams.com",
+            "affinity": 0.7826086956521738
+          },
+          {
+            "domain": "myob.com",
+            "affinity": 0.7499999999999999
+          },
+          {
+            "domain": "books.zoho.com",
+            "affinity": 0.7282608695652174
+          },
+          {
+            "domain": "workstream.us",
+            "affinity": 0.7065217391304348
+          },
+          {
+            "domain": "alegra.com",
+            "affinity": 0.6847826086956521
+          },
+          {
+            "domain": "bill-one.com",
+            "affinity": 0.6630434782608695
+          },
+          {
+            "domain": "greythr.com",
+            "affinity": 0.6413043478260869
+          },
+          {
+            "domain": "fortnox.se",
+            "affinity": 0.6195652173913042
+          },
+          {
+            "domain": "fakturownia.pl",
+            "affinity": 0.5978260869565217
+          },
+          {
+            "domain": "onvio.com.br",
+            "affinity": 0.5760869565217391
+          },
+          {
+            "domain": "meinvoice.vn",
+            "affinity": 0.5543478260869565
+          },
+          {
+            "domain": "flowaccount.com",
+            "affinity": 0.5326086956521738
+          },
+          {
+            "domain": "lexware.de",
+            "affinity": 0.5108695652173912
+          }
+        ],
+        "estimated": true,
+        "unit": "domain"
+      }
+    },
+    "url": "https://www.similarweb.com/website/deel.com/"
+  },
   "product_vertical_analysis": {
     "verticals": [
       {
@@ -80189,11 +80443,14 @@
           ]
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
+          "cep": "expanding_to_new_countries",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "rapid_growth_scaling_employees",
@@ -80220,19 +80477,13 @@
           ]
         },
         {
-          "cep": "paying_contractors_and_employees_globally",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": []
-        },
-        {
-          "cep": "growing remote and international teams",
+          "cep": "expanding_service_offerings",
           "competitor_pages": 1,
           "focal_pages": 0,
           "ownership": "competitor_advantage",
           "top_verticals": [
-            "benefits"
+            "payroll",
+            "global_eor_contractors"
           ]
         },
         {
@@ -80242,6 +80493,15 @@
           "ownership": "competitor_advantage",
           "top_verticals": [
             "it_device_management"
+          ]
+        },
+        {
+          "cep": "growing remote and international teams",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": [
+            "benefits"
           ]
         },
         {
@@ -80255,27 +80515,21 @@
           ]
         },
         {
-          "cep": "expanding_service_offerings",
+          "cep": "paying_contractors_and_employees_globally",
           "competitor_pages": 1,
           "focal_pages": 0,
           "ownership": "competitor_advantage",
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "expanding_to_new_countries",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
+          "top_verticals": []
         },
         {
           "cep": "expanding_into_new_markets_with_remote_teams",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "ownership": "focal_owns",
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_globally_safely",
           "competitor_pages": 0,
           "focal_pages": 1,
           "ownership": "focal_owns",
@@ -81176,7 +81430,7 @@
     "tool_calls": 19
   },
   "eval_summary": {
-    "n_artifacts": 129,
+    "n_artifacts": 130,
     "n_classifications": 127,
     "n_claims": 20,
     "n_opportunities": 3,

@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T18:42:07.438198+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T18:50:27.826183+00:00*
 
 ## Executive summary
 
@@ -172,6 +172,11 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | Laurenzamora Kelso | integration_ecosystem | implicit_contrast | [link](https://www.linkedin.com/posts/laurenzamora-kelso_deel-is-now-inside-chatgpt-150-countries-activity-7462515453907591168-XMwr) | Deel Expands to ChatGPT with Global Employment Platform | Lauren Zamora-Kelso posted on th |
 | Deel | automation | implicit_contrast | [link](https://www.linkedin.com/posts/deel_deel-ai-workforce-launches-today-you-activity-7363179295680159744-xCbz) | Deel AI Workforce launches with AI agents for HR, payroll, operations | Deel posted on the |
 
+## Traffic & channel mix — Deel (Similarweb, estimated)
+
+- **estimated monthly visits:** 3,460,695 _(estimated)_
+- **digital competitors (audience affinity):** remote.com (1.00), oysterhr.com (0.92), usemultiplier.com (0.90), rippling.com (0.88), bamboohr.com (0.85), papayaglobal.com (0.83), hibob.com (0.80), nativeteams.com (0.78) _(estimated)_
+
 ## Message investment & advocacy alignment (Deel)
 
 - **Paid messaging:** ad-library artifacts are discovery pointers only — US commercial ad creative text is not publicly extractable, so no paid-vs-organic theme comparison is possible (disclosed, not estimated).
@@ -193,7 +198,7 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 ## Research scope and coverage
 
 - Competitor **Deel** · focal **Rippling** · lookback 365d across 2 windows
-- Artifacts collected: 129 · classified: 127 · claims: 20
+- Artifacts collected: 130 · classified: 127 · claims: 20
 
 **Source distribution**
 
@@ -212,17 +217,19 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | segment pages | 3 |
 | site map | 1 |
 | pricing pages | 1 |
+| similarweb | 1 |
 
 **Not classified**
 
 - sitemap (https://www.deel.com/) — site map (URL list, not marketing content)
 - google_ads (https://adstransparency.google.com/advertiser/AR010815065751) — too little extractable text
+- similarweb (https://www.similarweb.com/website/deel.com/) — classification unavailable
 
 **Coverage (what each rating is based on)**
 
 | Dimension | Level | Basis |
 |---|---|---|
-| identity | high | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
+| identity | high | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
 | current_website | high | 64 artifacts across sitemap, webpage sources |
 | current_product | medium | 63 artifacts across webpage sources |
 | pricing_and_packaging | high | 63 artifacts across webpage sources |
@@ -230,13 +237,13 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | news_and_launches | medium | 17 artifacts across exa_web, news sources |
 | historical_website | medium | 6 artifacts across wayback sources |
 | historical_messages | medium | 18 artifacts across exa_web, wayback sources |
-| commercial_motion | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
-| personas_and_jobs | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
-| competitive_stance | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
-| portfolio_discovery | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
-| product_positioning | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
-| focal_current | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
-| focal_proof | medium | 129 artifacts across events, exa_web, google_ads, linkedin_post, news, wayback, webpage sources |
+| commercial_motion | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| personas_and_jobs | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| competitive_stance | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| portfolio_discovery | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| product_positioning | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| focal_current | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
+| focal_proof | medium | 130 artifacts across events, exa_web, google_ads, linkedin_post, news, similarweb, wayback, webpage sources |
 
 ## Limitations and missing data
 
@@ -252,9 +259,9 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 
 ## Evidence appendix
 
-All 129 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources follow so every 'Rippling proof: …' rating is traceable within this deliverable. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`, `focal_evidence`). Note: `normalized_text` in the JSON is truncated to 1,500 chars per artifact for size; full text lives in the run store.
+All 130 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources follow so every 'Rippling proof: …' rating is traceable within this deliverable. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`, `focal_evidence`). Note: `normalized_text` in the JSON is truncated to 1,500 chars per artifact for size; full text lives in the run store.
 
-**Deel sources (129)**
+**Deel sources (130)**
 
 | Artifact | Source | Date | URL |
 |---|---|---|---|
@@ -387,6 +394,7 @@ All 129 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources
 | ART-7ccc0b65ee | google_ads | 2026-07-12 | https://adstransparency.google.com/?authuser=0&region=DE |
 | ART-4443b7940e | google_ads | 2026-07-12 | https://adstransparency.google.com/?region=GB&domain=elector |
 | ART-549d2c0fa8 | google_ads | 2026-07-12 | https://adstransparency.google.com/?region=US&amp;preset-dat |
+| ART-f40ab89135 | similarweb | 2026-07-12 | https://www.similarweb.com/website/deel.com/ |
 
 **Rippling (focal mirror) sources (115)** — run `RUN-bd6a0b7f7f50`
 

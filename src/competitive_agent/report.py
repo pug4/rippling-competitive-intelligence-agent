@@ -722,8 +722,23 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             "top_countries",
             "digital_competitors",
         ):
-            if key in m:
-                val = m[key].get("value") if isinstance(m[key], dict) else m[key]
+            if key not in m:
+                continue
+            val = m[key].get("value") if isinstance(m[key], dict) else m[key]
+            if key == "digital_competitors" and isinstance(val, list):
+                comp_bits = [
+                    f"{c.get('domain')} ({float(c.get('affinity', 0)):.2f})"
+                    for c in val[:8]
+                    if isinstance(c, dict)
+                ]
+                add(
+                    "- **digital competitors (audience affinity):** "
+                    + ", ".join(comp_bits)
+                    + " _(estimated)_"
+                )
+            elif key == "estimated_monthly_visits" and isinstance(val, (int, float)):
+                add(f"- **estimated monthly visits:** {int(val):,} _(estimated)_")
+            else:
                 add(f"- **{key.replace('_', ' ')}:** {val} _(estimated)_")
 
     # --- Channel alignment: paid vs organic vs employee advocacy -----------

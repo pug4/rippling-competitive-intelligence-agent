@@ -52,8 +52,8 @@ _RETRY_BASE_DELAY = 0.5
 
 # Bounded polling for an async Agent run. All of this stays well inside the base
 # boundary's asyncio timeout so the adapter can never block the report.
-_POLL_MAX_ATTEMPTS = 6
-_POLL_DELAY_SECONDS = 1.5
+_POLL_MAX_ATTEMPTS = 40  # agent runs take 30-60s; 9s gave up before completion
+_POLL_DELAY_SECONDS = 3.0
 
 _ACTION_TYPES: tuple[str, ...] = ("enrich_similarweb",)
 
@@ -417,12 +417,21 @@ class SimilarwebTool(BaseTool):
 
     @staticmethod
     def _output_from(data: dict[str, Any]) -> dict[str, Any] | None:
-        """Locate the structured-output object matching our schema, tolerantly."""
+        """Locate the structured-output object matching our schema, tolerantly.
+
+        The live Agent API nests the schema-shaped object at output.structured
+        ({"output": {"text": ..., "structured": {...}}}); returning the WRAPPER
+        made validation find zero metric fields and report empty (bug)."""
         if not isinstance(data, dict):
             return None
         for key in ("output", "result", "data", "outputs"):
             candidate = data.get(key)
-            if isinstance(candidate, dict) and candidate:
+            if not (isinstance(candidate, dict) and candidate):
+                continue
+            inner = candidate.get("structured")
+            if isinstance(inner, dict) and inner:
+                return inner
+            if any(field in candidate for field in _CORE_METRIC_FIELDS):
                 return candidate
         # Some responses inline the schema fields at the top level.
         if any(field in data for field in _CORE_METRIC_FIELDS):
@@ -448,15 +457,15 @@ class SimilarwebTool(BaseTool):
             "properties": {
                 "estimated_monthly_visits": {
                     "type": "number",
-                    "description": "Estimated total monthly visits (visits/month).",
+                    "description": "Estimated total monthly visits (visits/month), from Similarweb.",
                 },
                 "observation_period": {
                     "type": "string",
-                    "description": "Period the estimates describe, e.g. a month range.",
+                    "description": "Period the Similarweb estimates describe, e.g. a month range.",
                 },
                 "traffic_trend": {
                     "type": "array",
-                    "description": "Monthly estimated visits over time.",
+                    "description": "Monthly estimated visits over time, from Similarweb.",
                     "items": {
                         "type": "object",
                         "properties": {
@@ -467,12 +476,12 @@ class SimilarwebTool(BaseTool):
                 },
                 "channel_mix": {
                     "type": "object",
-                    "description": "Share of traffic by acquisition channel (0-1).",
+                    "description": "Share of traffic by acquisition channel (0-1), from Similarweb.",
                     "properties": {key: {"type": "number"} for key in _CHANNEL_KEYS},
                 },
                 "top_countries": {
                     "type": "array",
-                    "description": "Top countries by estimated traffic share.",
+                    "description": "Top countries by estimated traffic share, from Similarweb.",
                     "items": {
                         "type": "object",
                         "properties": {
@@ -483,7 +492,7 @@ class SimilarwebTool(BaseTool):
                 },
                 "digital_competitors": {
                     "type": "array",
-                    "description": "Similar/competing sites by audience overlap.",
+                    "description": "Similar/competing sites by audience overlap, from Similarweb.",
                     "items": {
                         "type": "object",
                         "properties": {
@@ -494,7 +503,7 @@ class SimilarwebTool(BaseTool):
                 },
                 "estimated_paid_keywords": {
                     "type": "number",
-                    "description": "Estimated count of paid search keywords (when available).",
+                    "description": "Estimated count of paid search keywords, from Similarweb (when available).",
                 },
             },
         }
