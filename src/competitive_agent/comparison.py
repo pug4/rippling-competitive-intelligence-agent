@@ -89,6 +89,20 @@ def _classifications(repository: Any, run_id: str) -> list[MarketingClassificati
     return out
 
 
+def _artifact_meta(repository: Any, run_id: str) -> dict[str, tuple[str, float]]:
+    """artifact_id -> (source_type, authority) for representative-message and
+    news-only checks (reviewer R3/R6)."""
+    from .synthesis import artifact_authority
+
+    out: dict[str, tuple[str, float]] = {}
+    try:
+        for a in repository.list_artifacts(run_id=run_id):
+            out[a.artifact_id] = (a.source_type, artifact_authority(a))
+    except Exception:
+        pass
+    return out
+
+
 def _proof_strength(proof_types: set[str]) -> ProofStrength:
     if proof_types & _STRONG:
         return "strong"
@@ -99,40 +113,44 @@ def _proof_strength(proof_types: set[str]) -> ProofStrength:
     return "none"
 
 
-def _message_index(classifications: list[MarketingClassification]) -> dict[str, dict[str, Any]]:
-    """theme -> {message, artifact_ids, proof_types, count, classification_ids}.
-
-    Keyed on the NORMALIZED theme so a theme recurs across pages (free-form
-    primary messages are unique per page and would never form a repeated
-    claim). The human-readable ``message`` keeps the most salient descriptive
-    sentence seen for the theme.
+def _message_index(
+    classifications: list[MarketingClassification],
+    artifact_meta: dict[str, tuple[str, float]] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """theme -> aggregate for the theme. The representative ``message`` comes
+    from the page with the highest AUTHORITY × salience (R6) — not the single
+    most-salient page — so a stablecoin blog post can't represent
+    ``data_unification``. ``source_types`` supports the news-only attack guard.
     """
+    meta = artifact_meta or {}
     index: dict[str, dict[str, Any]] = {}
     for c in classifications:
         theme = (c.primary_theme or c.primary_message or "").strip().lower()
         if not theme:
             continue
         label = c.primary_message or c.primary_theme or theme
+        source_type, authority = meta.get(c.artifact_id, ("unknown", 0.4))
         slot = index.setdefault(
             theme,
             {
                 "message": label,
-                "best_salience": -1.0,
+                "best_label_score": -1.0,
                 "artifact_ids": set(),
                 "proof_types": set(),
-                # Per-page proof strengths, so the theme's strength is the modal
-                "per_page_strength": [],  # per-page value, not the inflated union
+                "per_page_strength": [],
+                "source_types": set(),
                 "primary_count": 0,
                 "count": 0,
                 "classification_ids": [],
             },
         )
-        # Keep the descriptive message from the most salient artifact.
-        sal = c.message_salience if c.message_salience is not None else 0.0
-        if sal > slot["best_salience"]:
-            slot["best_salience"] = sal
+        sal = c.message_salience if c.message_salience is not None else 0.4
+        label_score = authority * (0.4 + sal)
+        if label_score > slot["best_label_score"]:
+            slot["best_label_score"] = label_score
             slot["message"] = label
         slot["artifact_ids"].add(c.artifact_id)
+        slot["source_types"].add(source_type)
         slot["proof_types"] |= set(c.proof_types)
         slot["per_page_strength"].append(_proof_strength(set(c.proof_types)))
         slot.setdefault("per_page_proof", []).append(list(c.proof_types))
@@ -198,8 +216,17 @@ def build_message_proof_gaps(
     """
     from .synthesis import proof_distribution
 
-    comp = _message_index(_classifications(repository, competitor_run_id))
-    focal = _message_index(_classifications(repository, focal_run_id)) if focal_run_id else {}
+    comp = _message_index(
+        _classifications(repository, competitor_run_id),
+        _artifact_meta(repository, competitor_run_id),
+    )
+    focal = (
+        _message_index(
+            _classifications(repository, focal_run_id), _artifact_meta(repository, focal_run_id)
+        )
+        if focal_run_id
+        else {}
+    )
 
     gaps: list[MessageProofGap] = []
     for theme, slot in comp.items():
@@ -211,10 +238,17 @@ def build_message_proof_gaps(
         missing = [p for p in _PROOF_STRENGTH_ORDER[:4] if p not in slot["proof_types"]]
         dist = proof_distribution(slot.get("per_page_proof", []))
         specificity = _modal(slot.get("specificities", []))
+        n_pages = slot["count"]
+        # Whether ANY page carries strong proof — a 2-page theme where one page
+        # is strong must not be declared "attackable/weak" off a modal tie (R3).
+        has_strong_page = any(s == "strong" for s in slot.get("per_page_strength", []))
+        source_types = set(slot.get("source_types", []))
+        news_only = bool(source_types) and source_types.issubset({"news", "exa_web", "comparison"})
 
         # Attackability rubric (feedback #17): distinct dimensions, not one label.
         overall, attack_level, interpretation = _stance(
-            competitor_name, focal_name, theme, strength, focal_strength
+            competitor_name, focal_name, theme, strength, focal_strength,
+            n_pages=n_pages, has_strong_page=has_strong_page, news_only=news_only,
         )
         detail = AttackabilityAssessment(
             proof_gap="high" if strength in ("weak", "none") else "low",
@@ -270,17 +304,44 @@ def _modal(values: list[str]) -> str:
 
 
 def _stance(
-    competitor: str, focal: str, theme: str, strength: str, focal_strength: str
+    competitor: str,
+    focal: str,
+    theme: str,
+    strength: str,
+    focal_strength: str,
+    n_pages: int = 2,
+    has_strong_page: bool = False,
+    news_only: bool = False,
 ) -> tuple[str, str, str]:
     """(overall_stance, attackability_level, interpretation) — states what the
-    evidence SHOWS, never converting a proof gap into a capability claim (#4)."""
-    if strength in ("weak", "none") and focal_strength in ("strong", "moderate"):
+    evidence SHOWS, never converting a proof gap into a capability claim (#4).
+
+    R3: an "attack" verdict must not rest on a thin (< 3-page) theme, on a modal
+    tie where one page is actually strong, or on news/blog coverage only (which
+    isn't the competitor's own marketing surface)."""
+    thin = n_pages < 3 or has_strong_page or news_only
+    if strength in ("weak", "none") and focal_strength in ("strong", "moderate") and not thin:
         return (
             "attack",
             "high",
             f"{competitor} repeats the “{theme}” message but the observed public proof is "
             f"{strength}; {focal} shows {focal_strength} proof on the same theme. This is a direct "
             "out-prove opening (the evidence shows a proof gap, not that the capability is absent).",
+        )
+    if strength in ("weak", "none") and focal_strength in ("strong", "moderate") and thin:
+        why = (
+            "only " + str(n_pages) + " page(s)"
+            if n_pages < 3
+            else "one page already carries strong proof"
+            if has_strong_page
+            else "grounded only in third-party news/blog coverage, not the competitor's own pages"
+        )
+        return (
+            "investigate",
+            "medium",
+            f"“{theme}” LOOKS attackable ({competitor} {strength} vs {focal} {focal_strength}), but "
+            f"the read is thin ({why}). Fetch {competitor}'s own product page for this theme before "
+            "committing to a comparative attack.",
         )
     if strength in ("weak", "none"):
         return (

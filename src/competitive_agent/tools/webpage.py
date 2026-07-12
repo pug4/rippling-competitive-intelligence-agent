@@ -164,18 +164,18 @@ class WebsiteMapTool(BaseTool):
                 or [f"no sitemap or homepage anchors discoverable for {domain}"],
             )
 
+        # Score EVERY url, then sort by score, THEN truncate — otherwise a large
+        # sitemap's unordered set is cut to _MAX_MAP_URLS before ranking and the
+        # highest-value pages (homepage, pricing, platform) can be dropped before
+        # they are ever seen (reviewer R2 root cause).
         page_map: list[dict[str, Any]] = []
-        for url in list(urls)[:_MAX_MAP_URLS]:
+        for url in urls:
             category, score = _score_path(url)
             page_map.append(
-                {
-                    "url": url,
-                    "path": urlsplit(url).path or "/",
-                    "category": category,
-                    "score": score,
-                }
+                {"url": url, "path": urlsplit(url).path or "/", "category": category, "score": score}
             )
-        page_map.sort(key=lambda row: float(row["score"]), reverse=True)
+        page_map.sort(key=lambda row: -float(row["score"]))
+        page_map = page_map[:_MAX_MAP_URLS]
         artifact = RawArtifact(
             artifact_id=new_id("ART"),
             company_id=action.company_id,
@@ -186,8 +186,8 @@ class WebsiteMapTool(BaseTool):
             title=f"Page map for {domain}",
             retrieved_at=utcnow(),
             time_window_ids=list(action.time_window_ids),
-            raw_text="\n".join(row["url"] for row in page_map),
-            normalized_text="\n".join(row["url"] for row in page_map),
+            raw_text="\n".join(str(row["url"]) for row in page_map),
+            normalized_text="\n".join(str(row["url"]) for row in page_map),
             content_hash=content_hash("\n".join(sorted(urls))),
             metadata={"page_map": page_map, "map_size": len(page_map)},
             collection_method="sitemap_map",

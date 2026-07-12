@@ -21,7 +21,21 @@ from competitive_agent.synthesis import (
 )
 
 
-def _art(aid, source_type, category="", url="https://x/"):
+# Realistic URL per surface, since authority is now URL-path-driven (reviewer R2).
+_URL_BY_CATEGORY = {
+    "home": "https://x/",
+    "platform": "https://x/platform",
+    "product": "https://x/products/thing",
+    "customers": "https://x/customers/acme",
+    "pricing": "https://x/pricing",
+    "other": "https://x/blog/a-post",
+    "": "https://x/blog/a-post",
+}
+
+
+def _art(aid, source_type, category="", url=None):
+    if url is None:
+        url = _URL_BY_CATEGORY.get(category, "https://x/blog/a-post")
     return RawArtifact(
         artifact_id=aid,
         company_id="c1",
@@ -55,16 +69,21 @@ def test_authority_homepage_beats_blog():
     assert artifact_authority(_art("c", "sitemap")) == 0.0
 
 
-def test_dominant_message_requires_top_surface_and_multi_source():
-    # A niche theme repeated only on low-authority pages is NOT company-level.
-    arts = [_art("a1", "exa_web"), _art("a2", "exa_web")]
+def test_dominant_message_requires_home_or_platform_and_multi_source():
+    # A niche theme only on blog/exa pages is NOT company-level (no home/platform).
+    arts = [_art("a1", "exa_web", "other"), _art("a2", "exa_web", "other")]
     cls = [_cls("a1", "compliance"), _cls("a2", "compliance")]
     dom = dominant_message(cls, arts)
     assert dom["theme"] == "compliance"
-    assert dom["is_company_level"] is False  # no top-level surface, one source class
+    assert dom["is_company_level"] is False
 
-    # Same theme on a homepage across two source classes IS company-level.
-    arts2 = [_art("h", "webpage", "home"), _art("w", "wayback")]
+    # Product pages alone (no home/platform) must NOT certify company-level (R2).
+    arts_p = [_art("p1", "webpage", "product"), _art("p2", "wayback", "product")]
+    cls_p = [_cls("p1", "consolidation"), _cls("p2", "consolidation")]
+    assert dominant_message(cls_p, arts_p)["is_company_level"] is False
+
+    # Homepage across two source classes IS company-level.
+    arts2 = [_art("h", "webpage", "home"), _art("w", "wayback", "home")]
     cls2 = [_cls("h", "consolidation"), _cls("w", "consolidation")]
     dom2 = dominant_message(cls2, arts2)
     assert dom2["is_company_level"] is True

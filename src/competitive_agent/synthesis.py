@@ -53,9 +53,53 @@ _STRONG_PROOF = {
 _MODERATE_PROOF = {"customer_quotation", "customer_logo"}
 
 
+def _url_path(url: str) -> str:
+    from urllib.parse import urlsplit
+
+    # Strip a wayback prefix if present, then take the path.
+    if "web.archive.org" in url and "/https://" in url:
+        url = url.split("id_/", 1)[-1] if "id_/" in url else url
+    return (urlsplit(url).path or "/").rstrip("/") or "/"
+
+
+def _path_surface(path: str) -> str | None:
+    """Map a URL path to a marketing surface, independent of source_type — so an
+    Exa-discovered or archived homepage is still recognized as the homepage
+    (reviewer R2: an exa_web homepage must not be flattened to 0.35)."""
+    if path in ("", "/"):
+        return "home"
+    first = path.strip("/").split("/")[0].lower()
+    if first in ("platform",):
+        return "platform"
+    if first in ("pricing", "plans"):
+        return "pricing"
+    if first in ("products", "product", "solutions", "solution"):
+        return "product"
+    if first in ("customers", "customer", "case-studies"):
+        return "customers"
+    return None
+
+
 def artifact_authority(artifact: RawArtifact) -> float:
-    """0..1 weight for how company-representative a surface is (feedback #1)."""
+    """0..1 weight for how company-representative a surface is (feedback #1).
+
+    Authority is driven by the URL PATH first (a homepage is a homepage whether
+    fetched first-party, discovered via Exa, or archived), then by page_category,
+    then by source type. This stops a niche product page out-weighting the real
+    homepage just because the homepage arrived as an ``exa_web`` result (R2).
+    """
+    if artifact.source_type == "sitemap":
+        return 0.0
+    surface = _path_surface(_url_path(artifact.final_url or artifact.url))
     category = str(artifact.metadata.get("page_category", "")).lower()
+    if surface and surface in _SURFACE_AUTHORITY:
+        base = _SURFACE_AUTHORITY[surface]
+        # A first-party fetch of the surface is fully authoritative; an archived
+        # or Exa-discovered copy of the same surface is slightly discounted.
+        if artifact.source_type == "webpage":
+            return base
+        if artifact.source_type in ("wayback", "exa_web"):
+            return max(base * 0.85, _SOURCE_TYPE_AUTHORITY.get(artifact.source_type, 0.2))
     if artifact.source_type == "webpage" and category in _SURFACE_AUTHORITY:
         return _SURFACE_AUTHORITY[category]
     return _SOURCE_TYPE_AUTHORITY.get(artifact.source_type, 0.2)
@@ -88,26 +132,43 @@ def dominant_message(
         sal = c.message_salience if c.message_salience is not None else 0.5
         weight = authority * (0.5 + sal)
         theme_weight[theme] = theme_weight.get(theme, 0.0) + weight
-        theme_surfaces.setdefault(theme, set()).add(
-            str(art.metadata.get("page_category", art.source_type)) if art else "unknown"
-        )
+        # Recognize the surface by URL PATH first (a discovered/archived homepage
+        # is still the homepage), then page_category, then source type.
+        surface = None
+        if art:
+            surface = (
+                _path_surface(_url_path(art.final_url or art.url))
+                or str(art.metadata.get("page_category")) or None
+                or art.source_type
+            )
+        theme_surfaces.setdefault(theme, set()).add(surface or "unknown")
         theme_source_classes.setdefault(theme, set()).add(art.source_type if art else "unknown")
-        # The human-readable LABEL comes from the highest-AUTHORITY page for the
-        # theme (homepage > platform > product), so a high-salience niche page
-        # can't hijack the label away from the company-level surface.
-        label_score = authority * 10 + sal
-        if label_score > theme_best.get(theme, -1):
-            theme_best[theme] = label_score
-            theme_label[theme] = c.primary_message or theme
+        # The human-readable LABEL comes from the page that best REPRESENTS the
+        # theme: authority AND salience together, with a salience floor so a
+        # very-low-salience niche page (e.g. a mobility page at 0.24) cannot
+        # supply the label even if its surface authority is high (R1).
+        if sal >= 0.35:
+            label_score = authority * (0.4 + sal)
+            if label_score > theme_best.get(theme, -1):
+                theme_best[theme] = label_score
+                theme_label[theme] = c.primary_message or theme
 
     if not theme_weight:
         return {"theme": None, "is_company_level": False, "label": None, "reason": "no themes"}
 
     top = max(theme_weight, key=lambda t: theme_weight[t])
-    top_level_surfaces = {"home", "platform", "product"}
-    on_top_surface = bool(theme_surfaces[top] & top_level_surfaces)
+    # Fallback label if no page cleared the salience floor for the top theme.
+    if top not in theme_label:
+        for c in classifications:
+            if (c.primary_theme or c.primary_message) == top and c.primary_message:
+                theme_label[top] = c.primary_message
+                break
+    # Company-level requires a genuine home/platform surface — NOT a product page
+    # alone (R2): 6 product pages must not certify a company-level claim.
+    company_surfaces = {"home", "platform"}
+    on_company_surface = bool(theme_surfaces[top] & company_surfaces)
     multi_source = len(theme_source_classes[top]) >= 2
-    is_company_level = on_top_surface and multi_source
+    is_company_level = on_company_surface and multi_source
     return {
         "theme": top,
         "label": theme_label.get(top, top),
@@ -135,20 +196,25 @@ def corpus_skew(artifacts: list[RawArtifact]) -> list[str]:
     if by_source.most_common(1)[0][1] / n > 0.6:
         s, cnt = by_source.most_common(1)[0]
         warnings.append(f"{cnt}/{n} artifacts are '{s}' — one source class dominates the corpus")
-    low_authority = sum(1 for a in collectible if artifact_authority(a) < 0.35)
+    low_authority = sum(1 for a in collectible if artifact_authority(a) <= 0.35)
     if low_authority / n > 0.5:
         warnings.append(
-            f"{low_authority}/{n} artifacts are low-authority (blog/docs/search) — "
+            f"{low_authority}/{n} artifacts are low-authority (blog/docs/search/exa) — "
             "top-level marketing surfaces are under-represented"
         )
-    top_surface = sum(
-        1
-        for a in collectible
-        if str(a.metadata.get("page_category", "")).lower() in ("home", "platform", "product")
-    )
-    if top_surface == 0:
+    # Warn specifically when the two most company-representative surfaces are
+    # missing (R2): a corpus of product pages alone cannot certify company-level
+    # positioning. Recognize the surface by URL path, not only page_category.
+    surfaces = {_path_surface(_url_path(a.final_url or a.url)) for a in collectible}
+    if "home" not in surfaces:
         warnings.append(
-            "no homepage/platform/product page was classified — positioning is inferred from secondary surfaces"
+            "no homepage was captured as a first-party page — company-level positioning is "
+            "inferred from secondary surfaces and should be treated as provisional"
+        )
+    elif "platform" not in surfaces:
+        warnings.append(
+            "no platform page was captured — the platform/consolidation narrative is inferred "
+            "from product and secondary pages"
         )
     return warnings
 
