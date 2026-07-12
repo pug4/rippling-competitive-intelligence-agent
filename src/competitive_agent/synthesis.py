@@ -380,7 +380,9 @@ _CHANNEL_OF_SOURCE = {
     "webpage": "website",
     "sitemap": "website",
     "wayback": "website (historical)",
-    "exa_web": "website/social",
+    # Search-discovered pages are still website content — labeling them "social"
+    # overstated social coverage (audit).
+    "exa_web": "website (search-discovered)",
     "news": "press",
     "comparison": "comparison pages",
     "reviews": "review sites",
@@ -440,7 +442,27 @@ def commercial_motion(classifications: list[MarketingClassification]) -> dict[st
     dominant_ctas = (
         {k: round(v / total_cta, 2) for k, v in cta_counts.most_common(5)} if total_cta else {}
     )
-    pricing = pricing_levels.most_common(1)[0][0] if pricing_levels else "unknown"
+    # Pricing disclosure is a BEST-EVIDENCE property, not a modal one: most pages
+    # aren't pricing pages, so the mode says "hidden" even when the actual
+    # pricing page publicly shows starting prices (audit: factual error — Deel's
+    # /pricing shows "$14/worker/mo" yet the aggregate read "hidden"). Report the
+    # MOST-DISCLOSING level with >=2 observations (noise guard against a single
+    # stray classification); fall back to the most-disclosing single, then mode.
+    _DISCLOSURE_OPENNESS = [
+        "fully_public",
+        "calculator",
+        "starting_price_only",
+        "partially_public",
+        "sales_gated",
+        "hidden",
+    ]
+    pricing = next(
+        (lvl for lvl in _DISCLOSURE_OPENNESS if pricing_levels.get(lvl, 0) >= 2),
+        next(
+            (lvl for lvl in _DISCLOSURE_OPENNESS if pricing_levels.get(lvl)),
+            pricing_levels.most_common(1)[0][0] if pricing_levels else "unknown",
+        ),
+    )
 
     # Infer primary motion from the CTA mix + pricing gating (public signals).
     demo = cta_counts.get("book_demo", 0) + cta_counts.get("contact_sales", 0)
@@ -457,6 +479,7 @@ def commercial_motion(classifications: list[MarketingClassification]) -> dict[st
     return {
         "primary_motion": motion,
         "pricing_disclosure": pricing,
+        "pricing_disclosure_mix": dict(pricing_levels),
         "dominant_ctas": dominant_ctas,
         "segment_focus": {k: v for k, v in segment_counts.most_common(4)},
         "signals": [s for s, _ in motion_signals.most_common(6)],

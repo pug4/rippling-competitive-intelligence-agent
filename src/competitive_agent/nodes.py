@@ -34,6 +34,34 @@ _KNOWN_COMPANIES = {
     "rippling": ("Rippling", "rippling.com"),
     "rippling.com": ("Rippling", "rippling.com"),
     "example-hr.com": ("Example-HR", "example-hr.com"),  # fixture world
+    # Common Rippling-space competitors (payroll/HRIS/spend/IT/workforce) so a
+    # plain NAME resolves on the first command; unknown names still get the
+    # clarifying question rather than a guess.
+    "bamboohr": ("BambooHR", "bamboohr.com"),
+    "justworks": ("Justworks", "justworks.com"),
+    "paylocity": ("Paylocity", "paylocity.com"),
+    "paycom": ("Paycom", "paycom.com"),
+    "paychex": ("Paychex", "paychex.com"),
+    "adp": ("ADP", "adp.com"),
+    "trinet": ("TriNet", "trinet.com"),
+    "remote": ("Remote", "remote.com"),
+    "oyster": ("Oyster", "oysterhr.com"),
+    "multiplier": ("Multiplier", "usemultiplier.com"),
+    "papaya global": ("Papaya Global", "papayaglobal.com"),
+    "papayaglobal": ("Papaya Global", "papayaglobal.com"),
+    "hibob": ("HiBob", "hibob.com"),
+    "bob": ("HiBob", "hibob.com"),
+    "personio": ("Personio", "personio.com"),
+    "namely": ("Namely", "namely.com"),
+    "zenefits": ("TriNet Zenefits", "zenefits.com"),
+    "ukg": ("UKG", "ukg.com"),
+    "brex": ("Brex", "brex.com"),
+    "ramp": ("Ramp", "ramp.com"),
+    "navan": ("Navan", "navan.com"),
+    "expensify": ("Expensify", "expensify.com"),
+    "velocity global": ("Velocity Global", "velocityglobal.com"),
+    "atlas": ("Atlas", "atlashxm.com"),
+    "safeguard global": ("Safeguard Global", "safeguardglobal.com"),
 }
 
 # Coverage effect of a successful action, by action type and page category.

@@ -486,6 +486,27 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         {"advertiser": name, "domain": company.primary_domain},
         "Google Ads Transparency shows observed public creatives (no performance).",
     )
+    # Meta / LinkedIn ad libraries: named in the assignment. Live commercial-ad
+    # APIs don't exist publicly (§39.7) so these degrade to a typed
+    # unsupported/skip — but the loop must PROPOSE them so the attempt and its
+    # honest limitation are visible in the trace (audit: previously dead code —
+    # never proposed at all).
+    _optional(
+        "meta_ads",
+        "meta_ads",
+        "search_meta_ads",
+        "paid_media",
+        {"advertiser": name, "domain": company.primary_domain},
+        "Meta Ad Library attempt: US commercial ads are UI-only; typed skip when unreachable.",
+    )
+    _optional(
+        "linkedin_ads",
+        "linkedin_ads",
+        "search_linkedin_ads",
+        "paid_media",
+        {"advertiser": name, "domain": company.primary_domain},
+        "LinkedIn Ad Library attempt: API is political/EU-only; typed skip when unreachable.",
+    )
 
     return [p for p in proposals if allowed(p)]
 

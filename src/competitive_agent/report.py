@@ -432,6 +432,13 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             )
         add("")
         add("_Proof distributions and the exact repeated claims are in the Evidence appendix._")
+        add(
+            f"\n_Rating rubric: proof 'none' = no third-party/quantified proof observed (a feature "
+            f"assertion or demo alone doesn't count); 'weak' = assertions/demos only; 'moderate' = "
+            f"some named-customer or partial quantified proof; 'strong' = repeated quantified/"
+            f"third-party proof. '{focal} proof: missing/partial/available' rates {focal}'s own "
+            f"publishable proof for the equivalent claim._"
+        )
     else:
         add("- _No repeated competitor theme with a proof gap was observed in this corpus._")
 
@@ -467,7 +474,8 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         )
         add(f"- **{label}:** {dom.get('label')}")
         add(
-            f"  - Basis: surfaces {', '.join(dom.get('surfaces', []))}; source classes {', '.join(dom.get('source_classes', []))}"
+            f"  - Basis: surfaces {', '.join(s for s in dom.get('surfaces', []) if s and s != 'None')}; "
+            f"source classes {', '.join(dom.get('source_classes', []))}"
         )
     themes = _theme_counts(cls)
     if themes:
@@ -677,26 +685,28 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     add("\n## Evidence appendix\n")
     focal_ev = pkg.get("focal_evidence") or {}
     focal_arts = focal_ev.get("artifacts") or []
+    n_comp, n_focal = len(pkg["artifacts"]), len(focal_arts)
     add(
-        f"Competitor ({company}) sources below; the focal ({focal}) mirror's "
-        f"{len(focal_arts)} sources follow so every '{focal} proof: …' rating is "
-        "traceable within this deliverable. Claims resolve to evidence IDs "
-        "(see JSON `claims[].evidence_ids`, `focal_evidence`).\n"
+        f"All {n_comp} competitor ({company}) sources below; all {n_focal} focal ({focal}) "
+        f"mirror sources follow so every '{focal} proof: …' rating is traceable within this "
+        "deliverable. Claims resolve to evidence IDs (see JSON `claims[].evidence_ids`, "
+        "`focal_evidence`). Note: `normalized_text` in the JSON is truncated to 1,500 chars "
+        "per artifact for size; full text lives in the run store.\n"
     )
-    add(f"**{company} sources**\n")
+    add(f"**{company} sources ({n_comp})**\n")
     add("| Artifact | Source | Date | URL |")
     add("|---|---|---|---|")
-    for a in pkg["artifacts"][:40]:
+    for a in pkg["artifacts"]:
         date = a.get("archive_capture_at") or a.get("published_at") or a.get("retrieved_at") or ""
         add(
             f"| {a['artifact_id'][:14]} | {a['source_type']} | {str(date)[:10]} | {a['url'][:60]} |"
         )
 
     if focal_arts:
-        add(f"\n**{focal} (focal mirror) sources** — run `{focal_ev.get('run_id', '?')}`\n")
+        add(f"\n**{focal} (focal mirror) sources ({n_focal})** — run `{focal_ev.get('run_id', '?')}`\n")
         add("| Artifact | Source | Date | URL |")
         add("|---|---|---|---|")
-        for a in focal_arts[:30]:
+        for a in focal_arts:
             date = (
                 a.get("archive_capture_at") or a.get("published_at") or a.get("retrieved_at") or ""
             )

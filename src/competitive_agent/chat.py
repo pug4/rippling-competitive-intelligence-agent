@@ -296,8 +296,8 @@ async def chat_about_run(
         }
     except Exception as exc:  # never crash the chat surface
         return {
-            "answer": "I couldn't reach the analysis model for this question "
-            f"({type(exc).__name__}). Set ANTHROPIC_API_KEY (live) to enable chat.",
+            "answer": "I couldn't reach the analysis model for this question. "
+            "Set ANTHROPIC_API_KEY in .env (live mode) to enable chat.",
             "suggested_followups": [],
             "grounded_in": [],
             "clarifying_question": None,

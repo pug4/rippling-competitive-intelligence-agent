@@ -12,8 +12,10 @@ sources:
   exa_linkedin: true
   similarweb: true
   google_ads: true
-  meta_ads: false
-  linkedin_ads: false
+  # Meta/LinkedIn ad libraries are proposed so the attempt + honest limitation
+  # show in the trace; live they degrade to a typed unsupported/skip (§39.7).
+  meta_ads: true
+  linkedin_ads: true
   reviews: true
   jobs: true
   events: true

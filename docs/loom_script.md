@@ -24,6 +24,19 @@ screen resolves to evidence — that is the point.
 - Show `stop_selected` with its reason: *"It stops for an explainable reason —
   here, required coverage reached — not a fixed step count."*
 
+## 1b. Tool & model choices (30s — assignment-required beat)
+
+> "Model routing: high-volume bounded classification runs on **Haiku** (fast,
+> cheap, schema-forced); planning, temporal judgment, opportunity generation,
+> and the chat run on **Sonnet-tier** — reasoning stays in Claude. **Exa** is
+> used strictly for what it's best at — retrieval: neural search, domain-scoped
+> discovery, published-date-windowed sampling, and the Agent for LinkedIn post
+> extraction — every Exa result is re-classified and verbatim-verified by our
+> own pipeline. **Wayback CDX** gives real capture timestamps for temporal
+> claims. **Meta/LinkedIn ad libraries** have no public commercial API — we
+> propose the attempt and record a typed, honest skip rather than fake data
+> (see docs/adr/0002-model-routing.md and provider_notes.md)."
+
 ## 2. Accuracy is enforced by the application, not trusted from the model (90s)
 
 - Open `brief.md`, scroll to the **Evidence appendix**. Every quoted excerpt is
