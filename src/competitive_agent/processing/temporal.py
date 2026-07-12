@@ -111,6 +111,35 @@ def detect_candidate_changes(
                 "prior_count": len(prior_arts),
             }
         )
+
+    # Theme EMERGENCE / retreat: a theme present in one window and absent in the
+    # other is a candidate change even when the DOMINANT theme is unchanged
+    # (reviewer R4 — the AI/automation thread emerging in the current window was
+    # being washed out by the modal-only comparison). These are inherently
+    # lower-confidence and the judge weights them by sample depth.
+    def theme_set(items: list[Any]) -> dict[str, list[str]]:
+        out: dict[str, list[str]] = {}
+        for c in items:
+            for t in [getattr(c, "primary_theme", None), *(getattr(c, "supporting_themes", []) or [])]:
+                if t:
+                    out.setdefault(t, []).append(c.artifact_id)
+        return out
+
+    prior_themes = theme_set(prior)
+    current_themes = theme_set(current)
+    for theme, arts in current_themes.items():
+        if theme not in prior_themes and len(arts) >= 2:
+            candidates.append(
+                {
+                    "dimension": "theme_emergence",
+                    "prior_state": f"“{theme}” not observed in the prior-window sample",
+                    "current_state": f"“{theme}” present in {len(arts)} current-window artifacts",
+                    "prior_artifact_ids": [c.artifact_id for c in prior][:5],
+                    "current_artifact_ids": arts,
+                    "prior_count": len(prior),
+                    "emergence": True,
+                }
+            )
     return candidates
 
 
