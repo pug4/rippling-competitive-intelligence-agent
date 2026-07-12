@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-60b37e044954` · mode `comparative` · execution `live` · generated 2026-07-12T02:51:29.917149+00:00*
+*Run `RUN-60b37e044954` · mode `comparative` · execution `live` · generated 2026-07-12T03:28:52.434595+00:00*
 
 ## Executive summary
 

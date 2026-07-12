@@ -1,11 +1,11 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "run": {
     "run_id": "RUN-60b37e044954",
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T02:51:29.917149+00:00",
+    "generated_at": "2026-07-12T03:28:52.434595+00:00",
     "stop_reason": "runtime_exhausted",
     "iterations": 14,
     "tool_cost_usd": 0.098,
@@ -733,7 +733,7 @@
       "ownership": "contested"
     },
     {
-      "cep": "expanding_global_teams",
+      "cep": "expanding_global_team",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage"
@@ -751,7 +751,7 @@
       "ownership": "competitor_advantage"
     },
     {
-      "cep": "expanding_global_team",
+      "cep": "expanding_global_teams",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage"
@@ -42599,17 +42599,17 @@
       "missing_proof": [
         "independent_validation"
       ],
-      "rippling_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_strength": "weak",
+      "focal_proof_strength": "weak",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201ccompliance\u201d with weak observed proof and Rippling's proof is weak. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -42654,21 +42654,21 @@
         "independent_validation",
         "product_demonstration"
       ],
-      "rippling_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "\u201cautomation\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -42710,19 +42710,19 @@
         "independent_validation",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": "App Studio enables non-technical users to build custom internal applications quickly without coding, powered by unified employee and business data in Rippling.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "App Studio enables non-technical users to build custom internal applications quickly without coding, powered by unified employee and business data in Rippling.",
+      "focal_proof_ids": [
         "cls-30dc232cea87",
         "cls-5fd2ad1fb958",
         "cls-1c3bb5976454"
       ],
-      "rippling_proof_strength": "weak",
+      "focal_proof_strength": "weak",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cnative_platform_breadth\u201d with none observed proof and Rippling's proof is weak. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -42763,15 +42763,15 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": null,
-      "rippling_proof_ids": [],
-      "rippling_proof_strength": "none",
+      "focal_equivalent_claim": null,
+      "focal_proof_ids": [],
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cworkforce_visibility\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -42811,18 +42811,18 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
+      "focal_proof_ids": [
         "cls-a22f0043f0c3",
         "cls-1ffc0f8cf3e3"
       ],
-      "rippling_proof_strength": "none",
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cintegration_ecosystem\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -42874,21 +42874,21 @@
       "strongest_proof_id": null,
       "proof_strength": "strong",
       "missing_proof": [],
-      "rippling_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
+      "focal_proof_ids": [
         "cls-2538ea3c5525",
         "cls-ececcd00fa3f",
         "cls-20af5fa764ea",
         "cls-b7ff7209f5c7",
         "cls-05125171018d"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "high",
@@ -42936,17 +42936,17 @@
       "missing_proof": [
         "independent_validation"
       ],
-      "rippling_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_strength": "weak",
+      "focal_proof_strength": "weak",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201ccompliance\u201d with weak observed proof and Rippling's proof is weak. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -42991,21 +42991,21 @@
         "independent_validation",
         "product_demonstration"
       ],
-      "rippling_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "\u201cautomation\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43047,19 +43047,19 @@
         "independent_validation",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": "App Studio enables non-technical users to build custom internal applications quickly without coding, powered by unified employee and business data in Rippling.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "App Studio enables non-technical users to build custom internal applications quickly without coding, powered by unified employee and business data in Rippling.",
+      "focal_proof_ids": [
         "cls-30dc232cea87",
         "cls-5fd2ad1fb958",
         "cls-1c3bb5976454"
       ],
-      "rippling_proof_strength": "weak",
+      "focal_proof_strength": "weak",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cnative_platform_breadth\u201d with none observed proof and Rippling's proof is weak. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43100,15 +43100,15 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": null,
-      "rippling_proof_ids": [],
-      "rippling_proof_strength": "none",
+      "focal_equivalent_claim": null,
+      "focal_proof_ids": [],
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cworkforce_visibility\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43148,18 +43148,18 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
+      "focal_proof_ids": [
         "cls-a22f0043f0c3",
         "cls-1ffc0f8cf3e3"
       ],
-      "rippling_proof_strength": "none",
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cintegration_ecosystem\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43211,21 +43211,21 @@
       "strongest_proof_id": null,
       "proof_strength": "strong",
       "missing_proof": [],
-      "rippling_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
+      "focal_proof_ids": [
         "cls-2538ea3c5525",
         "cls-ececcd00fa3f",
         "cls-20af5fa764ea",
         "cls-b7ff7209f5c7",
         "cls-05125171018d"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "high",
@@ -43273,17 +43273,17 @@
       "missing_proof": [
         "independent_validation"
       ],
-      "rippling_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_strength": "weak",
+      "focal_proof_strength": "weak",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201ccompliance\u201d with weak observed proof and Rippling's proof is weak. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43328,21 +43328,21 @@
         "independent_validation",
         "product_demonstration"
       ],
-      "rippling_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "\u201cautomation\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43383,15 +43383,15 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": null,
-      "rippling_proof_ids": [],
-      "rippling_proof_strength": "none",
+      "focal_equivalent_claim": null,
+      "focal_proof_ids": [],
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cworkforce_visibility\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43431,18 +43431,18 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
+      "focal_proof_ids": [
         "cls-a22f0043f0c3",
         "cls-1ffc0f8cf3e3"
       ],
-      "rippling_proof_strength": "none",
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cintegration_ecosystem\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43494,21 +43494,21 @@
       "strongest_proof_id": null,
       "proof_strength": "strong",
       "missing_proof": [],
-      "rippling_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
+      "focal_proof_ids": [
         "cls-2538ea3c5525",
         "cls-ececcd00fa3f",
         "cls-20af5fa764ea",
         "cls-b7ff7209f5c7",
         "cls-05125171018d"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "high",
@@ -43554,17 +43554,17 @@
       "strongest_proof_id": null,
       "proof_strength": "strong",
       "missing_proof": [],
-      "rippling_equivalent_claim": "Rippling delivers enterprise-grade security built into its platform architecture with comprehensive compliance certifications and rigorous audits.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling delivers enterprise-grade security built into its platform architecture with comprehensive compliance certifications and rigorous audits.",
+      "focal_proof_ids": [
         "cls-31316c521148"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201csecurity_and_control\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "high",
@@ -43612,17 +43612,17 @@
       "missing_proof": [
         "independent_validation"
       ],
-      "rippling_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling reduces contractor misclassification risk and administrative burden through a unified platform that handles compliance, liability, and global contractor management.",
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_strength": "weak",
+      "focal_proof_strength": "weak",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201ccompliance\u201d with weak observed proof and Rippling's proof is weak. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43667,21 +43667,21 @@
         "independent_validation",
         "product_demonstration"
       ],
-      "rippling_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling automates the enforcement of company policies across people and systems without manual maintenance.",
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "\u201cautomation\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43722,15 +43722,15 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": null,
-      "rippling_proof_ids": [],
-      "rippling_proof_strength": "none",
+      "focal_equivalent_claim": null,
+      "focal_proof_ids": [],
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cworkforce_visibility\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43770,18 +43770,18 @@
         "product_demonstration",
         "named_customer_story"
       ],
-      "rippling_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling's native integrations create a unified system where apps stay in sync and unlock advanced platform capabilities for managing users, automating workflows, and controlling your entire tech stack.",
+      "focal_proof_ids": [
         "cls-a22f0043f0c3",
         "cls-1ffc0f8cf3e3"
       ],
-      "rippling_proof_strength": "none",
+      "focal_proof_strength": "none",
       "product_comparability": null,
       "actionable_interpretation": "Deel repeats \u201cintegration_ecosystem\u201d with none observed proof and Rippling's proof is none. Treat as a proof-building play \u2014 the public evidence does not yet establish who can prove it better.",
       "attackability": "medium",
       "attackability_detail": {
         "proof_gap": "high",
-        "rippling_proof": "low",
+        "focal_proof": "low",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "medium",
@@ -43833,21 +43833,21 @@
       "strongest_proof_id": null,
       "proof_strength": "strong",
       "missing_proof": [],
-      "rippling_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling PEO delivers big-company benefits and expert HR compliance support on the industry's #1 rated HR software platform.",
+      "focal_proof_ids": [
         "cls-2538ea3c5525",
         "cls-ececcd00fa3f",
         "cls-20af5fa764ea",
         "cls-b7ff7209f5c7",
         "cls-05125171018d"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201cconsolidation\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "high",
@@ -43893,17 +43893,17 @@
       "strongest_proof_id": null,
       "proof_strength": "strong",
       "missing_proof": [],
-      "rippling_equivalent_claim": "Rippling delivers enterprise-grade security built into its platform architecture with comprehensive compliance certifications and rigorous audits.",
-      "rippling_proof_ids": [
+      "focal_equivalent_claim": "Rippling delivers enterprise-grade security built into its platform architecture with comprehensive compliance certifications and rigorous audits.",
+      "focal_proof_ids": [
         "cls-31316c521148"
       ],
-      "rippling_proof_strength": "strong",
+      "focal_proof_strength": "strong",
       "product_comparability": null,
       "actionable_interpretation": "Deel proves \u201csecurity_and_control\u201d strongly and Rippling's observed proof is strong. Don't attack the claim head-on \u2014 reframe around a structural advantage, or concede this ground. (Strong competitor proof here is what the evidence shows; it is not a claim about Rippling's underlying capability.)",
       "attackability": "low",
       "attackability_detail": {
         "proof_gap": "low",
-        "rippling_proof": "high",
+        "focal_proof": "high",
         "product_comparability": "partial",
         "structural_defensibility": "medium",
         "counterattack_risk": "high",
@@ -43971,7 +43971,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Payroll/Compliance (hiring + payroll workflow automation)",
-        "rippling_product": "Rippling Global Contractor Management + Compliance",
+        "focal_product": "Rippling Global Contractor Management + Compliance",
         "shared_buyer_job": "Prevent contractor misclassification and compliance errors during hiring/payroll",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -43997,12 +43997,12 @@
         "Automate payroll compliance checks across jurisdictions",
         "Reduce manual review burden for HR/legal on contractor status"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Global Workforce/EOR",
         "Rippling Contractor Management",
         "Rippling Compliance Engine"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Rippling website product page",
         "Sales enablement (AE-led demo)",
@@ -44015,11 +44015,11 @@
       "promised_transformation": "From: \"Trust our claim that compliance rules apply automatically\" \u2192 To: \"See the specific misclassification checks, triggers, and workflow interventions in a live product walkthrough, with named-customer context where available.\"",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_status": "missing",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "missing",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "If Rippling publishes a specific, inspectable workflow demonstration (not just an assertion) of how its compliance engine intercepts misclassification risk, it sets a proof-format bar that requires Deel to expose its own workflow logic in equal detail \u2014 something neither company has done yet per current evidence, making the concrete demo a moderately durable proof advantage until matched.",
@@ -44111,7 +44111,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel AI (chatbots, copilots, agents for HR/payroll workflows)",
-        "rippling_product": "Rippling policy enforcement automation (Unity/IT/Workflow Studio)",
+        "focal_product": "Rippling policy enforcement automation (Unity/IT/Workflow Studio)",
         "shared_buyer_job": "Reduce manual operational overhead in managing global workforce systems via automation",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44138,12 +44138,12 @@
         "Reduce manual policy maintenance during onboarding/offboarding/role changes",
         "Evaluate whether new AI/automation tooling actually reduces operational overhead vs. adding another interface to manage"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Unity (policy engine)",
         "Rippling IT (access/device management)",
         "Rippling Workflow Studio/Automation"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "LinkedIn sponsored content (IT/HR ops targeting)",
         "Search (competitor + category terms)",
@@ -44157,15 +44157,15 @@
       "promised_transformation": "From: manually re-checking and re-applying policies every time people, systems, or roles change \u2192 To: policies that enforce themselves automatically across the full employee and systems lifecycle, without a maintenance task list.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation, product_demonstration",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_status": "available",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "available",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "Rippling's policy enforcement automation is reportedly built on a unified underlying data/systems model across HR, IT, and Finance \u2014 replicating enforcement-without-manual-maintenance would require Deel to have equivalent cross-system source-of-truth architecture, not just an AI interface layer. However, this defensibility claim rests on Rippling's internal architecture and should be validated with concrete proof before being used as a hard claim in creative.",
@@ -44236,7 +44236,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Payroll (managed + self-serve models)",
-        "rippling_product": "Rippling Payroll / App Studio unified data layer",
+        "focal_product": "Rippling Payroll / App Studio unified data layer",
         "shared_buyer_job": "Choosing a payroll service model that scales with company needs without fragmenting employee/company data",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44263,12 +44263,12 @@
         "Compare Deel and Rippling payroll flexibility claims during vendor evaluation",
         "De-risk a payroll platform decision for a growing global workforce"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Payroll",
         "App Studio",
         "Unified Employee Data Platform"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Sales enablement portal (battlecard doc)",
         "Internal SE/solutions-consultant training session",
@@ -44281,13 +44281,13 @@
       "promised_transformation": "From: reps and buyers taking Deel's \"flexible service models, same platform\" claim at face value \u2192 To: reps trained to ask specific, falsifiable questions about data/workflow continuity across Deel's service models, and to point to Rippling's own unified-data demonstrations (e.g., App Studio) where Rippling has proof to show.",
       "competitor_proof_strength": "none",
       "competitor_proof_gap": "quantified_customer_outcome, independent_validation, named_customer_story",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-30dc232cea87",
         "cls-5fd2ad1fb958",
         "cls-1c3bb5976454"
       ],
-      "rippling_proof_status": "partial",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "partial",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "Rippling's differentiation opportunity rests on its unified employee/business data architecture underlying App Studio; if genuine, this is structural to Rippling's data model rather than a surface feature, making it harder for Deel to replicate quickly. However, this defensibility is not yet proven with strong Rippling evidence, so the claim must stay narrow (data unification observed in App Studio) rather than extending to payroll-model continuity, which is unverified for both companies.",
@@ -44358,7 +44358,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Payroll & HR compliance workflows",
-        "rippling_product": "Rippling Global Payroll / Contractor Management",
+        "focal_product": "Rippling Global Payroll / Contractor Management",
         "shared_buyer_job": "Hiring, paying, and managing global contractors while minimizing misclassification and compliance risk",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44383,12 +44383,12 @@
         "Avoiding contractor misclassification penalties",
         "Evaluating global workforce platforms during vendor selection"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Global Payroll",
         "Rippling Contractor Management",
         "Rippling Compliance Workflows"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Rippling website product page",
         "Sales enablement / demo environment",
@@ -44401,11 +44401,11 @@
       "promised_transformation": "From: an opaque, trust-me claim about automatic compliance and misclassification prevention \u2192 To: a visible, step-by-step demonstration of the actual workflow checkpoints where Rippling surfaces or blocks a compliance/misclassification risk before it becomes a mistake.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_status": "missing",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "missing",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "Rippling's claimed advantage rests on the depth of its unified employment/HR/payroll data model potentially enabling more contextual compliance checks; if Rippling can substantiate this with a real workflow demonstration, replicating that requires Deel to expose its own backend logic in equally granular fashion, which neither company has done publicly yet \u2014 making the first-mover demonstration a durable proof asset regardless of underlying parity.",
@@ -44497,7 +44497,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel AI (chatbots, copilots, agents framework messaging)",
-        "rippling_product": "Rippling Workflow Automation / policy enforcement engine",
+        "focal_product": "Rippling Workflow Automation / policy enforcement engine",
         "shared_buyer_job": "Automate recurring operational tasks across people and systems using AI/automation rather than manual processes",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44525,12 +44525,12 @@
         "Reduce manual audit and remediation work for policy violations",
         "Evaluate whether AI/automation claims translate into working enforcement today rather than roadmap promises"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Workflow Automation",
         "Rippling IT (device/app policy enforcement)",
         "Rippling Unified Employee Policies"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "LinkedIn sponsored content targeting IT/HR/Compliance titles",
         "Search ads on category terms (e.g., 'policy enforcement automation', 'automated compliance HR IT')",
@@ -44543,15 +44543,15 @@
       "promised_transformation": "From: policies that live in documents/spreadsheets and require manual, recurring enforcement across disconnected systems \u2192 To: policies that are automatically and continuously enforced across people and systems as conditions change, without manual maintenance.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation, product_demonstration",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_status": "partial",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "partial",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "Rippling's policy enforcement automation is reportedly built on its unified employee/system data model, which underpins cross-system enforcement without manual reconciliation. Competitors would need equivalent underlying system unification to replicate this specific enforcement mechanism, not just AI-agent messaging. However, this defensibility claim rests on internal proof strength that has not yet been externally validated at scale, so it should be treated as medium rather than high until customer-facing proof is built.",
@@ -44622,7 +44622,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Payroll (managed + self-serve models)",
-        "rippling_product": "Rippling Payroll / App Studio",
+        "focal_product": "Rippling Payroll / App Studio",
         "shared_buyer_job": "Support flexible payroll service delivery (managed vs self-serve) without switching platforms",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44649,11 +44649,11 @@
         "De-risk vendor switching costs mid-contract",
         "Assess whether a single platform can support hybrid payroll service models across entities"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Payroll",
         "App Studio"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Sales enablement portal",
         "Internal Slack/competitive-intel channel",
@@ -44666,13 +44666,13 @@
       "promised_transformation": "From: sales reps accepting Deel's \"one platform, two models\" claim at face value in competitive deals \u2192 To: reps equipped with a structured objection-handling battlecard that surfaces unverified seams in Deel's model and invites prospects to request a live demonstration of the switch.",
       "competitor_proof_strength": "none",
       "competitor_proof_gap": "quantified_customer_outcome, independent_validation, named_customer_story",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-30dc232cea87",
         "cls-5fd2ad1fb958",
         "cls-1c3bb5976454"
       ],
-      "rippling_proof_status": "partial",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "partial",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "This action is not about a durable product moat but about being first to systematically document and operationalize discovery questions around an unproven claim; Deel could neutralize this quickly by publishing its own migration/architecture proof, so defensibility rests on speed and sales execution rather than structural advantage.",
@@ -44743,7 +44743,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Payroll/Compliance (HR + payroll platform)",
-        "rippling_product": "Rippling Global Payroll & Contractor Management",
+        "focal_product": "Rippling Global Payroll & Contractor Management",
         "shared_buyer_job": "Ensure contractor and payroll compliance across jurisdictions without manual legal review for every hire",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44768,12 +44768,12 @@
         "Run payroll across jurisdictions while staying compliant with local labor rules",
         "Evaluate vendor compliance automation claims before switching platforms"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Global Payroll",
         "Rippling Contractor Management",
         "Rippling Compliance/Employment Law engine"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Rippling website product page",
         "Sales enablement (AE demo library)",
@@ -44786,11 +44786,11 @@
       "promised_transformation": "From: an unverified assertion that \"compliance rules apply automatically\" \u2192 To: a concrete, inspectable demonstration of specific compliance checkpoints inside Rippling's contractor hiring/payroll workflow, with named-customer context where available.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_status": "missing",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "missing",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "If Rippling's advantage comes from unifying compliance logic with its broader HRIS/IT/Finance data model (e.g., single source of employment data feeding compliance rules), this integration depth is harder for a payroll-and-EOR-focused competitor to replicate quickly \u2014 but this must be verified via internal product review before making the claim publicly.",
@@ -44883,7 +44883,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel AI (chatbots, copilots, agents for HR/payroll tasks)",
-        "rippling_product": "Rippling policy automation across HR/IT/systems",
+        "focal_product": "Rippling policy automation across HR/IT/systems",
         "shared_buyer_job": "Automate recurring operational work in HR/IT so teams spend less time on manual, repetitive tasks",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -44910,12 +44910,12 @@
         "Reduce manual policy-maintenance overhead across HR/IT/Finance systems",
         "Evaluate which AI/automation investments deliver real operational ROI vs hype"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling IT (device & app policy management)",
         "Rippling HR core (policy/workflow automation)",
         "Rippling Compliance/permissions automation"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "LinkedIn sponsored content",
         "programmatic display retargeting",
@@ -44929,15 +44929,15 @@
       "promised_transformation": "From: manually maintaining and re-enforcing policies across disconnected people/systems as things change \u2192 To: policies that automatically and continuously enforce themselves across the org without manual upkeep.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation, product_demonstration",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_status": "partial",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "partial",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "Rippling's policy-enforcement automation is reportedly built on its unified employee/system data model spanning HR, IT, and Finance, which is architecturally harder to replicate quickly than adding a conversational AI layer on top of a more modular system \u2014 though this claim should be validated with concrete proof before campaign launch.",
@@ -45008,7 +45008,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Benefits (PPO/HMO plan offerings)",
-        "rippling_product": "Rippling Benefits Administration",
+        "focal_product": "Rippling Benefits Administration",
         "shared_buyer_job": "Provide compliant, visible benefits coverage for a distributed/multi-state workforce",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -45034,12 +45034,12 @@
         "Compare Deel vs. Rippling on workforce visibility and compliance",
         "Handle prospect objections citing competitor benefits claims"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Benefits Administration",
         "Rippling Global/Multi-state Compliance",
         "Rippling Workforce Analytics/Visibility"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Internal sales enablement portal",
         "Sales engineering enablement session",
@@ -45053,9 +45053,9 @@
       "promised_transformation": "From: reps caught flat-footed when prospects cite Deel's PPO/HMO coverage claim as a differentiator \u2192 To: reps confidently reframing the claim as an industry-standard insurance fact, then pivoting to a fair, evidence-based comparison of each platform's actual benefits administration and compliance workflows.",
       "competitor_proof_strength": "none",
       "competitor_proof_gap": "quantified_customer_outcome, independent_validation, product_demonstration, named_customer_story",
-      "rippling_proof_ids": [],
-      "rippling_proof_status": "missing",
-      "rippling_current_usage": "net_new",
+      "focal_proof_ids": [],
+      "focal_proof_status": "missing",
+      "focal_current_usage": "net_new",
       "structural_defensibility": "low",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "This is not a structural defensibility play since the underlying claim (PPO vs HMO network breadth) is a general insurance-market fact available to any platform offering benefits brokerage, including Rippling. The defensibility here is procedural: Rippling can build a reusable objection-handling discipline and a habit of demanding specificity/proof from competitors' claims, which is a repeatable enablement muscle rather than a product moat.",
@@ -45126,7 +45126,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Global Payroll & Hiring Compliance Engine",
-        "rippling_product": "Rippling Global Contractor Management & Payroll Compliance",
+        "focal_product": "Rippling Global Contractor Management & Payroll Compliance",
         "shared_buyer_job": "Hire, classify, and pay international contractors/employees while staying compliant with local labor law",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -45152,12 +45152,12 @@
         "Ensure payroll runs reflect current local compliance rules",
         "Reduce manual legal/compliance review burden in global hiring"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Global Payroll",
         "Rippling Global Workforce / Contractor Management",
         "Rippling Compliance/EOR"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Rippling website product page",
         "Sales enablement demo environment",
@@ -45170,11 +45170,11 @@
       "promised_transformation": "From: an unverified assertion that compliance \"just happens\" in the background \u2192 To: a visible, walkthrough-able workflow where a buyer can see the specific rule check, the trigger point, and the outcome it prevents, evaluated against Rippling's actual product behavior.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-dbd5a713245a"
       ],
-      "rippling_proof_status": "missing",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "missing",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "If Rippling produces a concrete, technical, workflow-level demonstration (not just marketing copy) of its own compliance rule engine acting inside hiring/payroll, this raises the proof bar in the category; Deel would need to match with equivalent technical transparency rather than additional assertions, which takes longer to produce credibly.",
@@ -45267,7 +45267,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel AI (chatbots, copilots, agents for automation)",
-        "rippling_product": "Rippling policy enforcement automation",
+        "focal_product": "Rippling policy enforcement automation",
         "shared_buyer_job": "Reduce manual, repetitive operational work in HR/IT through automation",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -45294,12 +45294,12 @@
         "Reduce manual audit/remediation work across HR and IT systems",
         "Evaluate AI-labeled automation claims against real operational proof"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Unity (policy engine)",
         "Rippling IT (device/access policy)",
         "Rippling HR workflows"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "LinkedIn sponsored content",
         "Search (category + competitor-adjacent terms)",
@@ -45313,15 +45313,15 @@
       "promised_transformation": "From manually policing policy compliance across disconnected systems \u2192 to policy enforcement that runs automatically as employee data changes, with no manual maintenance loop.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation, product_demonstration",
-      "rippling_proof_ids": [
+      "focal_proof_ids": [
         "cls-9f8a876a7450",
         "cls-0e81f6d4fcf8",
         "cls-2b34b4b3005c",
         "cls-b67056f8b7c8",
         "cls-4964b6b54e0e"
       ],
-      "rippling_proof_status": "available",
-      "rippling_current_usage": "underweighted",
+      "focal_proof_status": "available",
+      "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "Rippling's enforcement automation is reportedly tied to its underlying unified employee/system data model, which is architecturally harder to replicate quickly than adding a chatbot or copilot layer on top of existing point systems. However, this campaign should validate that architectural claim with proof before leaning on it as a defensibility argument.",
@@ -45391,7 +45391,7 @@
       ],
       "product_comparability": {
         "competitor_product": "Deel Benefits (PPO/HMO plan selection for US distributed teams)",
-        "rippling_product": "Rippling Benefits Administration",
+        "focal_product": "Rippling Benefits Administration",
         "shared_buyer_job": "Administer health benefits plans that work for a geographically distributed/multi-state workforce",
         "shared_workflow": null,
         "overlapping_capabilities": [
@@ -45416,11 +45416,11 @@
         "Comparing PEO/EOR-adjacent benefits admin platforms during a competitive eval",
         "Evaluating network coverage and plan options for remote employees"
       ],
-      "rippling_product_focus": [
+      "focal_product_focus": [
         "Rippling Benefits Administration",
         "Rippling Workforce Analytics/Reporting (for distributed workforce visibility)"
       ],
-      "rippling_segment": "mid_market",
+      "focal_segment": "mid_market",
       "channels": [
         "Internal sales enablement portal (battlecard repository)",
         "Sales Slack channel / deal-desk alerts",
@@ -45433,9 +45433,9 @@
       "promised_transformation": "From: reps improvising or staying silent when Deel raises benefits-network breadth for remote teams \u2192 To: reps using a validated battlecard that reframes the conversation around what each platform actually administers/reports on for distributed workforce benefits, backed only by claims either company can substantiate.",
       "competitor_proof_strength": "none",
       "competitor_proof_gap": "quantified_customer_outcome, independent_validation, product_demonstration, named_customer_story",
-      "rippling_proof_ids": [],
-      "rippling_proof_status": "missing",
-      "rippling_current_usage": "net_new",
+      "focal_proof_ids": [],
+      "focal_proof_status": "missing",
+      "focal_current_usage": "net_new",
       "structural_defensibility": "low",
       "copyability": "medium",
       "why_competitor_cannot_easily_copy": "This is not a structural moat for either side: PPO vs. HMO network breadth is a function of insurance carriers and plan design, not proprietary platform technology, so neither Rippling nor Deel can claim durable exclusivity here. The defensibility of this action comes from being first to systematically arm reps with a neutralizing, evidence-seeking response rather than from an uncopyable product capability.",
