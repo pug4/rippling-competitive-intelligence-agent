@@ -91,3 +91,35 @@ Format: date · decision · rationale · reversibility.
     full raw text, so grounding is unaffected).
 21. **JSON deliverable drops full raw HTML** (keeps provenance + a 1500-char
     normalized excerpt): the reference package went 21MB → 294KB.
+22. **Retry reuses parent evidence via a `run_artifacts` junction table, never
+    by re-saving.** Artifacts are keyed by `artifact_id` with a single `run_id`
+    column, so the original implementation's `save_artifact(child, parent_art)`
+    silently REASSIGNED the parent's rows to the child (parent 14 → 0 artifacts
+    on retry — it destroyed the analysis being retried). Fix: a junction table
+    lets multiple runs reference one artifact; `list_artifacts` unions owned +
+    linked; a `reuse_evidence` graph action links (not copies) the parent's rows
+    and the planner proposes no new collection under `reuse_evidence_only`.
+    Regression test asserts the parent's artifact count is unchanged after a
+    retry.
+23. **Portfolio isolation is structural, verified after the fact — not assumed.**
+    Each company run already gets its own `run_id`/`DirectorState`/`GraphContext`
+    (fresh `scratch`)/trace/budget, and every read filters by `run_id`. Rather
+    than trust that, `assert_no_cross_company_leakage` checks every package
+    references only its own `company_id`; a leak is a hard error (non-zero exit).
+    Added `PRAGMA busy_timeout=5000` so concurrent company writes wait rather
+    than erroring under WAL.
+24. **Benchmark: objective layers stand; classification is provisional until
+    human adjudication.** The independent labeler is a from-scratch prompt on a
+    STRONGER tier (Sonnet) than the classifier under test (Haiku), and never
+    sees production output — but machine-vs-machine numbers are *agreement*, not
+    accuracy. The eval report leads with the objective layers (schema/excerpt
+    validity, grounding) and loudly marks Layer D provisional pending sign-off
+    per `evals/adjudication_guide.md`. Dataset built from REAL live/cached
+    artifacts only (fixtures are synthetic); dev/held-out split is a stable hash
+    of the artifact id, frozen before scoring.
+25. **Eval set pivoted from Workday/Deel/Gusto to the real Deel + Rippling
+    corpus** (179 live artifacts already collected) to avoid burning budget on
+    fresh collection for the benchmark; the composition still spans homepage /
+    product / pricing / comparison / proof / ads / news / reviews / historical
+    (wayback). The Workday/Gusto extension is a documented, uncommitted option,
+    not a silent omission.
