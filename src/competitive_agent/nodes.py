@@ -531,8 +531,18 @@ def _evidence_records(ctx: GraphContext, run_id: str) -> list:
 
 
 async def refresh_claims(state: DirectorState, ctx: GraphContext):
-    # Only rebuild when new evidence landed AND enough exists to say anything.
+    # Claims are EXPENSIVE (build + N judges). Build them once the corpus is
+    # substantially collected — not after every fetch batch — so a deep crawl
+    # doesn't spend its whole budget re-judging claims and starve Wayback +
+    # the mirror (temporal + comparison depth). Rebuild only when: gateway
+    # present, new evidence landed, and either coverage is already sufficient OR
+    # no more collection actions remain (i.e. we're near the stop).
     if not ctx.scratch.get("evidence_dirty") or ctx.gateway is None:
+        return state, "check_contradictions"
+    ok, _ = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
+    remaining = [a for a in planner.propose_actions(state, ctx) if a.action_type != "search_wayback"]
+    near_stop = ok or not remaining
+    if not near_stop:
         return state, "check_contradictions"
     evidence = _evidence_records(ctx, state.run_id)
     if len(evidence) < 3 or len(evidence) == ctx.scratch.get("claims_built_at_count"):
