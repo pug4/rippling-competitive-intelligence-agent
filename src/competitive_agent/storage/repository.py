@@ -488,6 +488,16 @@ class Repository:
         )
         return row_id
 
+    def delete_opportunities(self, run_id: str) -> int:
+        """Delete all opportunities + proof-gaps for a run (they share the table).
+
+        Used for REPLACE semantics when the loop regenerates against a fuller
+        corpus, so a run never accumulates duplicate gap/opportunity sets.
+        """
+        cur = self.conn.execute("DELETE FROM opportunities WHERE run_id = ?", (run_id,))
+        self.conn.commit()
+        return cur.rowcount
+
     def list_opportunities(
         self, run_id: str, *, critic_verdict: str | None = None
     ) -> list[BaseModel]:

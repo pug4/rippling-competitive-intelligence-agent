@@ -210,7 +210,7 @@ function ActionBoard({ pkg }) {
           </div>
           <div className="row"><b>Angle:</b> {o.message_angle}</div>
           <div className="row">
-            <b>Focal proof:</b> {o.rippling_proof_status} · <b>already-saying-it:</b> {o.rippling_current_usage} · <b>legal review:</b> {String(o.legal_review_required)}
+            <b>Focal proof:</b> {o.focal_proof_status} · <b>already-saying-it:</b> {o.focal_current_usage} · <b>legal review:</b> {String(o.legal_review_required)}
           </div>
           <div className="row"><b>Why it could backfire:</b> {o.why_this_could_backfire}</div>
           <div className="row"><b>Experiment:</b> {o.experiment_hypothesis}</div>

@@ -806,6 +806,11 @@ async def generate_opportunities(state: DirectorState, ctx: GraphContext):
     from .comparison import build_message_proof_gaps
     from .opportunity_engine import generate_from_gaps
 
+    # REPLACE, not append: regeneration against a fuller corpus must not
+    # accumulate duplicate gap/opportunity sets across breadth cycles.
+    ctx.repository.delete_opportunities(state.run_id)
+    state.opportunity_ids = []
+
     gaps = build_message_proof_gaps(
         state.run_id,
         ctx.scratch.get("focal_run_id"),

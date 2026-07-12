@@ -120,7 +120,11 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     # artifacts into this run once; afterwards propose nothing so the loop moves
     # straight to synthesis on the reused corpus.
     if state.reuse_evidence_only:
-        reuse_key = action_key("reuse_evidence", {})
+        # The dedup key MUST match the params the action carries, or execute's
+        # recorded key won't match and reuse would be re-proposed every iteration
+        # (re-classifying the same artifacts to the iteration cap).
+        reuse_params = {"parent_run_id": state.parent_run_id}
+        reuse_key = action_key("reuse_evidence", reuse_params)
         if reuse_key in state.executed_action_keys or not state.parent_run_id:
             return []
         return [
@@ -129,7 +133,7 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                 "reuse_evidence",
                 "reuse_evidence",
                 "current_website",
-                {"parent_run_id": state.parent_run_id},
+                reuse_params,
                 "Retry reuse mode: re-analyze the parent run's evidence without new collection.",
                 reliability=1.0,
                 cost=0.0,
