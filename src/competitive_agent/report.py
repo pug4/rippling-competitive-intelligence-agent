@@ -307,8 +307,18 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         for g in gaps
         if (g.get("attackability_detail") or {}).get("overall") in ("reframe", "concede")
     ]
-    if concede:
-        for g in concede[:2]:
+    # Dedup by theme label — the gap engine can emit several records for one
+    # theme; "don't attack consolidation" should be said once.
+    seen_labels: set[str] = set()
+    concede_unique = []
+    for g in concede:
+        label = str(g.get("short_label", ""))
+        if label in seen_labels:
+            continue
+        seen_labels.add(label)
+        concede_unique.append(g)
+    if concede_unique:
+        for g in concede_unique[:2]:
             add(f"- **{g.get('short_label')}** — {g['actionable_interpretation']}")
     else:
         add("- _No theme reached the 'reframe/concede' bar; none flagged as off-limits._")
