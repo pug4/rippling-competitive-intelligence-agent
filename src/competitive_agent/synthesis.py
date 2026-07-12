@@ -284,6 +284,112 @@ def proof_distribution(proof_type_lists: list[list[str]]) -> ProofDistribution:
     )
 
 
+def product_positioning(classifications: list[MarketingClassification]) -> list[dict[str, Any]]:
+    """Aggregate observed product positioning by product (feedback #18): which
+    themes, personas, and proof each named product carries in public pages.
+    Deterministic over the classified corpus — no new extraction."""
+    products: dict[str, dict[str, Any]] = {}
+    for c in classifications:
+        for p in c.products or []:
+            key = p.strip()
+            if not key:
+                continue
+            slot = products.setdefault(
+                key, {"product": key, "themes": Counter(), "personas": Counter(),
+                       "proof_types": Counter(), "ceps": Counter(), "pages": 0}
+            )
+            slot["pages"] += 1
+            if c.primary_theme:
+                slot["themes"][c.primary_theme] += 1
+            for x in c.personas or []:
+                slot["personas"][x] += 1
+            for x in c.proof_types or []:
+                slot["proof_types"][x] += 1
+            for x in c.category_entry_points or []:
+                slot["ceps"][x] += 1
+    out = []
+    for slot in sorted(products.values(), key=lambda s: -s["pages"]):
+        if slot["pages"] < 1:
+            continue
+        out.append(
+            {
+                "product": slot["product"],
+                "pages": slot["pages"],
+                "themes": [t for t, _ in slot["themes"].most_common(3)],
+                "personas": [t for t, _ in slot["personas"].most_common(3)],
+                "proof_types": [t for t, _ in slot["proof_types"].most_common(3)],
+                "category_entry_points": [t for t, _ in slot["ceps"].most_common(3)],
+            }
+        )
+    return out[:12]
+
+
+def category_entry_points(
+    competitor_cls: list[MarketingClassification],
+    focal_cls: list[MarketingClassification],
+) -> list[dict[str, Any]]:
+    """CEP ownership map: which buying triggers the competitor owns, the focal
+    company owns, both contest, or neither addresses (feedback #22)."""
+    comp: Counter[str] = Counter()
+    focal: Counter[str] = Counter()
+    for c in competitor_cls:
+        for cep in c.category_entry_points or []:
+            comp[cep] += 1
+    for c in focal_cls:
+        for cep in c.category_entry_points or []:
+            focal[cep] += 1
+    all_ceps = set(comp) | set(focal)
+    rows: list[dict[str, Any]] = []
+    for cep in all_ceps:
+        cn, fn = comp.get(cep, 0), focal.get(cep, 0)
+        if cn and fn:
+            ownership = "contested"
+        elif cn and not fn:
+            ownership = "competitor_advantage"
+        elif fn and not cn:
+            ownership = "focal_owns"
+        else:
+            ownership = "neither"
+        rows.append(
+            {"cep": cep, "competitor_pages": cn, "focal_pages": fn, "ownership": ownership}
+        )
+    rows.sort(key=lambda r: -(comp.get(str(r["cep"]), 0) + focal.get(str(r["cep"]), 0)))
+    return rows
+
+
+# Source type -> channel bucket for the persona×channel×funnel matrix.
+_CHANNEL_OF_SOURCE = {
+    "webpage": "website", "sitemap": "website", "wayback": "website (historical)",
+    "exa_web": "website/social", "news": "press", "comparison": "comparison pages",
+    "reviews": "review sites", "jobs": "jobs", "events": "events", "ooh": "ooh",
+    "google_ads": "paid search", "meta_ads": "meta/instagram", "linkedin_ads": "paid linkedin",
+    "similarweb": "traffic (estimated)",
+}
+
+
+def persona_channel_funnel(
+    classifications: list[MarketingClassification],
+    artifact_meta: dict[str, str],
+) -> dict[str, Any]:
+    """Persona × channel coverage matrix from the observed corpus (feedback #21).
+    Cells are observed-page counts; empty cells are 'not observed', NOT proof of
+    absence. ``artifact_meta`` maps artifact_id -> source_type."""
+    matrix: dict[str, Counter] = {}
+    personas_seen: set[str] = set()
+    channels_seen: set[str] = set()
+    for c in classifications:
+        channel = _CHANNEL_OF_SOURCE.get(artifact_meta.get(c.artifact_id, ""), "other")
+        channels_seen.add(channel)
+        for persona in c.personas or ["(unspecified)"]:
+            personas_seen.add(persona)
+            matrix.setdefault(persona, Counter())[channel] += 1
+    return {
+        "personas": sorted(personas_seen),
+        "channels": sorted(channels_seen),
+        "cells": {p: dict(counts) for p, counts in matrix.items()},
+    }
+
+
 def commercial_motion(classifications: list[MarketingClassification]) -> dict[str, Any]:
     """Deterministic commercial-motion read from observed CTAs, pricing
     disclosure, and segment signals (feedback #20). No fabricated economics —

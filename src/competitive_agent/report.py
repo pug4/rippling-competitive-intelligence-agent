@@ -70,6 +70,32 @@ def _load(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     return out
 
 
+def _focal_classifications(ctx: GraphContext, state: DirectorState):
+    """Load the focal company's merged classifications for CEP-ownership.
+    Finds the most recent completed run for the focal domain."""
+    if ctx.repository is None or state.focal_company is None:
+        return []
+    focal_run = None
+    try:
+        scratch = getattr(ctx, "scratch", None) or {}
+        focal_run = scratch.get("focal_run_id")
+        if not focal_run:
+            for row in ctx.repository.list_runs(company=state.focal_company.primary_domain):
+                focal_run = row["run_id"]
+                break
+    except Exception:
+        return []
+    if not focal_run:
+        return []
+    from .schemas.classification import MarketingClassification
+
+    return [
+        m
+        for m in ctx.repository.list_classifications(focal_run, family="merged")
+        if isinstance(m, MarketingClassification)
+    ]
+
+
 def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any]:
     from . import synthesis
 
@@ -84,6 +110,11 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         )
     ]
     motion = synthesis.commercial_motion(data["classification_models"])
+    positioning = synthesis.product_positioning(data["classification_models"])
+    artifact_source = {a["artifact_id"]: a["source_type"] for a in data["artifacts"]}
+    matrix = synthesis.persona_channel_funnel(data["classification_models"], artifact_source)
+    focal_cls_models = _focal_classifications(ctx, state)
+    ceps = synthesis.category_entry_points(data["classification_models"], focal_cls_models)
     classified_ids = {c.get("artifact_id") for c in data["classifications"]}
     unclassified = [
         {
@@ -130,6 +161,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "coverage": state.coverage,
         "coverage_detail": coverage_detail,
         "commercial_motion": motion,
+        "product_positioning": positioning,
+        "category_entry_points": ceps,
+        "persona_channel_matrix": matrix,
         "sources": [],
         "artifacts": data["artifacts"],
         "unclassified_artifacts": unclassified,
@@ -319,6 +353,39 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         if seg:
             add("- **Apparent segment focus (by mentions):** " + ", ".join(f"{k} ({v})" for k, v in seg.items()))
         add("- _Public-signal inference only — not CAC, conversion, or spend._")
+
+    # --- Product positioning (feedback #18) --------------------------------
+    positioning = pkg.get("product_positioning") or []
+    if positioning:
+        add("\n## Product positioning\n")
+        add("| Product | Pages | Themes | Personas | Proof |")
+        add("|---|---:|---|---|---|")
+        for p in positioning[:10]:
+            add(
+                f"| {p['product'][:28]} | {p['pages']} | {', '.join(p['themes'][:2]) or '—'} | "
+                f"{', '.join(p['personas'][:2]) or '—'} | {', '.join(p['proof_types'][:2]) or '—'} |"
+            )
+
+    # --- Category entry points (feedback #22) ------------------------------
+    ceps = pkg.get("category_entry_points") or []
+    if ceps:
+        add(f"\n## Category entry points ({company} vs {focal})\n")
+        add("| Buying trigger | Competitor | " + focal + " | Ownership |")
+        add("|---|---:|---:|---|")
+        for r in ceps[:10]:
+            add(f"| {r['cep']} | {r['competitor_pages']} | {r['focal_pages']} | {r['ownership']} |")
+
+    # --- Persona × channel matrix (feedback #21) ---------------------------
+    mtx = pkg.get("persona_channel_matrix") or {}
+    if mtx.get("personas") and mtx.get("channels"):
+        add("\n## Persona × channel coverage (observed)\n")
+        add("_Cells are observed-page counts; an empty cell is **not observed**, not proof of absence._\n")
+        channels = mtx["channels"][:6]
+        add("| Persona | " + " | ".join(channels) + " |")
+        add("|---|" + "|".join("---:" for _ in channels) + "|")
+        for persona in mtx["personas"][:8]:
+            cells = mtx["cells"].get(persona, {})
+            add(f"| {persona} | " + " | ".join(str(cells.get(ch, "")) for ch in channels) + " |")
 
     # --- Strategy over time (feedback #25) ---------------------------------
     add("\n## Strategy over time\n")

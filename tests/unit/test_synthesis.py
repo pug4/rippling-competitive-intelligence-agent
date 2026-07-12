@@ -20,7 +20,6 @@ from competitive_agent.synthesis import (
     proof_distribution,
 )
 
-
 # Realistic URL per surface, since authority is now URL-path-driven (reviewer R2).
 _URL_BY_CATEGORY = {
     "home": "https://x/",
@@ -137,3 +136,55 @@ def test_genericness_critic_rejects_vague_actions():
         product_comparability=ComparabilityDraft(comparability="partial"),
     )
     assert not _is_generic(specific)
+
+
+def test_product_positioning_groups_by_product():
+    from competitive_agent.synthesis import product_positioning
+
+    cls = [
+        _cls_full("a", ["Payroll"], theme="consolidation", personas=["hr_leader"]),
+        _cls_full("b", ["Payroll"], theme="compliance", personas=["finance_leader"]),
+        _cls_full("c", ["IT Cloud"], theme="automation", personas=["it_leader"]),
+    ]
+    pos = product_positioning(cls)
+    payroll = next(p for p in pos if p["product"] == "Payroll")
+    assert payroll["pages"] == 2
+    assert "consolidation" in payroll["themes"]
+
+
+def test_cep_ownership_classifies_contested_and_advantage():
+    from competitive_agent.synthesis import category_entry_points
+
+    comp = [_cls_full("a", [], ceps=["replacing_a_peo", "reducing_payroll_errors"])]
+    focal = [_cls_full("b", [], ceps=["replacing_a_peo"])]
+    rows = {r["cep"]: r["ownership"] for r in category_entry_points(comp, focal)}
+    assert rows["replacing_a_peo"] == "contested"
+    assert rows["reducing_payroll_errors"] == "competitor_advantage"
+
+
+def test_commercial_motion_infers_sales_led_from_demos_and_gating():
+    from competitive_agent.synthesis import commercial_motion
+
+    cls = [
+        _cls_full("a", [], cta="Book a demo", pricing="sales_gated"),
+        _cls_full("b", [], cta="Talk to sales", pricing="sales_gated"),
+        _cls_full("c", [], cta="Get a demo", pricing="sales_gated"),
+        _cls_full("d", [], cta="Contact sales", pricing="hidden"),
+    ]
+    m = commercial_motion(cls)
+    assert m["primary_motion"] in ("sales_led", "hybrid_sales_led")
+    assert m["pricing_disclosure"] in ("sales_gated", "hidden")
+
+
+def _cls_full(aid, products, theme=None, personas=None, ceps=None, cta=None, pricing=None):
+    return MarketingClassification(
+        classification_id="c-" + aid,
+        artifact_id=aid,
+        company_id="c1",
+        primary_theme=theme,
+        products=products or [],
+        personas=personas or [],
+        category_entry_points=ceps or [],
+        cta=cta,
+        pricing_disclosure_level=pricing or "unknown",
+    )
