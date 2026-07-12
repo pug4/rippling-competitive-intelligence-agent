@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T19:22:20.752693+00:00",
+    "generated_at": "2026-07-12T20:11:08.895761+00:00",
     "stop_reason": "runtime_exhausted",
     "iterations": 19,
     "tool_cost_usd": 0.12,
@@ -838,6 +838,47 @@
       ]
     },
     {
+      "cep": "replacing_traditional_cross_border_payment_rails",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "ownership": "focal_owns",
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_into_new_markets_with_remote_teams",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "ownership": "focal_owns",
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_into_complex_field_markets",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "expanding_service_offerings",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "ownership": "competitor_advantage",
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
       "cep": "consolidating_fragmented_regional_workforce_providers",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -848,6 +889,13 @@
       ]
     },
     {
+      "cep": "rapid_growth_scaling_employees",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "ownership": "focal_owns",
+      "top_verticals": []
+    },
+    {
       "cep": "paying_contractors_and_employees_globally",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -855,31 +903,16 @@
       "top_verticals": []
     },
     {
-      "cep": "expanding_to_new_countries",
+      "cep": "managing_global_device_fleet",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage",
       "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
+        "it_device_management"
       ]
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
-    },
-    {
-      "cep": "replacing_traditional_cross_border_payment_rails",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": []
-    },
-    {
-      "cep": "expanding_service_offerings",
+      "cep": "expanding_to_new_countries",
       "competitor_pages": 1,
       "focal_pages": 0,
       "ownership": "competitor_advantage",
@@ -895,39 +928,6 @@
       "ownership": "competitor_advantage",
       "top_verticals": [
         "benefits"
-      ]
-    },
-    {
-      "cep": "expanding_into_new_markets_with_remote_teams",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
-    },
-    {
-      "cep": "rapid_growth_scaling_employees",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "ownership": "focal_owns",
-      "top_verticals": []
-    },
-    {
-      "cep": "managing_global_device_fleet",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "it_device_management"
-      ]
-    },
-    {
-      "cep": "expanding_into_complex_field_markets",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "ownership": "competitor_advantage",
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
       ]
     }
   ],
@@ -66715,6 +66715,58 @@
       "all_in_one": 2
     }
   },
+  "temporal_baseline": {
+    "prior_window": {
+      "start": "2025-07-12",
+      "end": "2026-04-13",
+      "n_artifacts": 14,
+      "themes": {
+        "consolidation": 7,
+        "automation": 4,
+        "data_unification": 1,
+        "native_platform_breadth": 1,
+        "cross_system_workflow": 1
+      }
+    },
+    "current_window": {
+      "n_artifacts": 113,
+      "themes": {
+        "consolidation": 32,
+        "automation": 10,
+        "compliance": 10,
+        "integration_ecosystem": 8,
+        "global_hiring": 7,
+        "speed_to_value": 7,
+        "cost_reduction": 5,
+        "data_unification": 5,
+        "employee_experience": 4,
+        "security_and_control": 4
+      }
+    },
+    "stable_themes": [
+      "automation",
+      "consolidation",
+      "cross_system_workflow",
+      "data_unification",
+      "native_platform_breadth"
+    ],
+    "emerged_themes": [
+      "all_in_one",
+      "api_extensibility",
+      "category_creation",
+      "compliance",
+      "cost_reduction",
+      "employee_experience",
+      "global_hiring",
+      "integration_ecosystem",
+      "scalability",
+      "security_and_control",
+      "speed_to_value",
+      "workforce_visibility"
+    ],
+    "receded_themes": [],
+    "note": "Prior membership = real archive-capture/published date inside the comparison window. The prior sample is small \u2014 treat emergence/recession as signals."
+  },
   "classifications": [
     {
       "classification_id": "cls-4a8cff33414d",
@@ -80568,6 +80620,47 @@
           ]
         },
         {
+          "cep": "replacing_traditional_cross_border_payment_rails",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "ownership": "focal_owns",
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_into_new_markets_with_remote_teams",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "ownership": "focal_owns",
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_into_complex_field_markets",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "expanding_service_offerings",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "ownership": "competitor_advantage",
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
           "cep": "consolidating_fragmented_regional_workforce_providers",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -80578,6 +80671,13 @@
           ]
         },
         {
+          "cep": "rapid_growth_scaling_employees",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "ownership": "focal_owns",
+          "top_verticals": []
+        },
+        {
           "cep": "paying_contractors_and_employees_globally",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -80585,31 +80685,16 @@
           "top_verticals": []
         },
         {
-          "cep": "expanding_to_new_countries",
+          "cep": "managing_global_device_fleet",
           "competitor_pages": 1,
           "focal_pages": 0,
           "ownership": "competitor_advantage",
           "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
+            "it_device_management"
           ]
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
-        },
-        {
-          "cep": "replacing_traditional_cross_border_payment_rails",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": []
-        },
-        {
-          "cep": "expanding_service_offerings",
+          "cep": "expanding_to_new_countries",
           "competitor_pages": 1,
           "focal_pages": 0,
           "ownership": "competitor_advantage",
@@ -80625,39 +80710,6 @@
           "ownership": "competitor_advantage",
           "top_verticals": [
             "benefits"
-          ]
-        },
-        {
-          "cep": "expanding_into_new_markets_with_remote_teams",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
-        },
-        {
-          "cep": "rapid_growth_scaling_employees",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "ownership": "focal_owns",
-          "top_verticals": []
-        },
-        {
-          "cep": "managing_global_device_fleet",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "it_device_management"
-          ]
-        },
-        {
-          "cep": "expanding_into_complex_field_markets",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "ownership": "competitor_advantage",
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
           ]
         }
       ]

@@ -753,3 +753,56 @@ def message_channel_alignment(
         "employee_advocacy_alignment": _overlap(employee, website),
         "method": "theme distributions per channel from classified artifacts (deterministic)",
     }
+
+
+def temporal_baseline(
+    classifications: list[MarketingClassification],
+    artifacts: list[RawArtifact],
+    time_windows: list[Any],
+) -> dict[str, Any]:
+    """Prior-vs-current window THEME BASELINE (presentation fix: change events
+    only show emergences, so a reader concluded the prior window was empty when
+    it actually held 14 dated artifacts). Prior membership = archive capture or
+    published date inside the comparison window; undated live content counts as
+    current (it was retrieved now). Deterministic."""
+
+    prior_w = next((w for w in time_windows if getattr(w, "purpose", None) == "comparison"), None)
+    if prior_w is None:
+        return {}
+    ps, pe = prior_w.start_at, prior_w.end_at
+    by_id = _artifacts_by_id(artifacts)
+    prior_themes: Counter[str] = Counter()
+    current_themes: Counter[str] = Counter()
+    n_prior = n_current = 0
+    seen_prior_ids: set[str] = set()
+    for c in classifications:
+        art = by_id.get(c.artifact_id)
+        if art is None:
+            continue
+        dated = art.archive_capture_at or art.published_at
+        in_prior = bool(dated and ps <= dated <= pe)
+        if in_prior and art.artifact_id not in seen_prior_ids:
+            seen_prior_ids.add(art.artifact_id)
+            n_prior += 1
+        elif not in_prior:
+            n_current += 1
+        if not c.primary_theme:
+            continue
+        (prior_themes if in_prior else current_themes)[c.primary_theme] += 1
+    stable = sorted(set(prior_themes) & set(current_themes))
+    emerged = sorted(set(current_themes) - set(prior_themes))
+    receded = sorted(set(prior_themes) - set(current_themes))
+    return {
+        "prior_window": {
+            "start": ps.date().isoformat(),
+            "end": pe.date().isoformat(),
+            "n_artifacts": n_prior,
+            "themes": dict(prior_themes.most_common(10)),
+        },
+        "current_window": {"n_artifacts": n_current, "themes": dict(current_themes.most_common(10))},
+        "stable_themes": stable,
+        "emerged_themes": emerged,
+        "receded_themes": receded,
+        "note": "Prior membership = real archive-capture/published date inside the comparison "
+        "window. The prior sample is small — treat emergence/recession as signals.",
+    }

@@ -242,6 +242,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     channel_alignment = synthesis.message_channel_alignment(
         data["classification_models"], data["artifact_models"]
     )
+    temporal_baseline = synthesis.temporal_baseline(
+        data["classification_models"], data["artifact_models"], state.time_windows
+    )
     _cfg = getattr(ctx, "config", None)
     taxonomy = _cfg.taxonomy if _cfg else {}
     vertical_analysis = synthesis.product_vertical_analysis(
@@ -362,6 +365,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Paid-vs-organic + employee-advocacy theme alignment (deterministic).
         "channel_alignment": channel_alignment,
         "theme_comparison": theme_comparison,
+        "temporal_baseline": temporal_baseline,
         "classifications": data["classifications"],
         "claims": data["claims"],
         # product_portfolios/launches require the deep §38 product-entity loop
@@ -796,6 +800,21 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     # --- Strategy over time (feedback #25) ---------------------------------
     add("\n## Strategy over time\n")
+    tb = pkg.get("temporal_baseline") or {}
+    if tb.get("prior_window"):
+        pw, cw = tb["prior_window"], tb.get("current_window", {})
+        add(
+            f"**Prior window baseline ({pw['start']} → {pw['end']}, {pw['n_artifacts']} dated "
+            f"artifacts):** themes observed then — "
+            + (", ".join(f"{t} ({n})" for t, n in pw.get("themes", {}).items()) or "none classified")
+        )
+        if tb.get("stable_themes"):
+            add("- **Stable (both windows):** " + ", ".join(tb["stable_themes"]))
+        if tb.get("emerged_themes"):
+            add("- **Emerged (current only):** " + ", ".join(tb["emerged_themes"]))
+        if tb.get("receded_themes"):
+            add("- **Receded (prior only — possibly de-emphasized):** " + ", ".join(tb["receded_themes"]))
+        add(f"- _{tb.get('note')}_\n")
     if changes:
         for ch in changes[:4]:
             add(

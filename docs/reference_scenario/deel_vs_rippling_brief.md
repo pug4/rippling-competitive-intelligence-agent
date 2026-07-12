@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T19:22:20.752693+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T20:11:08.895761+00:00*
 
 ## Executive summary
 
@@ -185,6 +185,11 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
   - _Theme distributions per channel from classified artifacts — deterministic counting, not a model judgment. High alignment = disciplined narrative; divergence = where investment or advocacy runs ahead of the site._
 
 ## Strategy over time
+
+**Prior window baseline (2025-07-12 → 2026-04-13, 14 dated artifacts):** themes observed then — consolidation (7), automation (4), data_unification (1), native_platform_breadth (1), cross_system_workflow (1)
+- **Stable (both windows):** automation, consolidation, cross_system_workflow, data_unification, native_platform_breadth
+- **Emerged (current only):** all_in_one, api_extensibility, category_creation, compliance, cost_reduction, employee_experience, global_hiring, integration_ecosystem, scalability, security_and_control, speed_to_value, workforce_visibility
+- _Prior membership = real archive-capture/published date inside the comparison window. The prior sample is small — treat emergence/recession as signals._
 
 - **theme_emergence** (emerging, confidence low): ““cost_reduction” not observed in the prior-window sample” → ““cost_reduction” present in 24 current-window artifacts”
   - alternatives: this may be a collection/archive coverage asymmetry (current-window news collected without a comparable prior-window surface) rather than a real messaging change; The small prior-window sample (only 6 artifacts) may simply have lacked cost_reduction messaging by chance rather than it being truly absent from company communications at that time.

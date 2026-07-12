@@ -341,6 +341,50 @@ function LinkedInThemeBar({ pkg }) {
   );
 }
 
+// STRATEGY CHANGES — prior-vs-current window baseline (what WAS observed then).
+function TemporalBaseline({ pkg }) {
+  const tb = pkg.temporal_baseline || {};
+  const pw = tb.prior_window;
+  if (!pw) return null;
+  const cw = tb.current_window || {};
+  const themes = [...new Set([...Object.keys(pw.themes || {}), ...Object.keys(cw.themes || {})])]
+    .sort((a, b) => ((cw.themes?.[b] || 0) + (pw.themes?.[b] || 0)) - ((cw.themes?.[a] || 0) + (pw.themes?.[a] || 0)))
+    .slice(0, 9);
+  const max = Math.max(1, ...themes.map((t) => Math.max(pw.themes?.[t] || 0, cw.themes?.[t] || 0)));
+  return (
+    <>
+      <h2>Prior vs current window
+        <Info tip={`What WAS observed in the prior window (${pw.start} → ${pw.end}: ${pw.n_artifacts} artifacts with real archive/publish dates) vs the current window — not just the emergences. Stable themes persist across both; receded themes appeared prior but not now.`} />
+      </h2>
+      <div className="card">
+        <div className="ktlegend" style={{ marginBottom: 8 }}>
+          <span><span className="ktbar comp" style={{ width: 14, display: "inline-block", height: 8 }} /> prior ({pw.n_artifacts} artifacts, {pw.start} → {pw.end})</span>
+          <span><span className="ktbar focal" style={{ width: 14, display: "inline-block", height: 8 }} /> current ({cw.n_artifacts})</span>
+        </div>
+        {themes.map((t) => (
+          <div className="ktrow" key={t}>
+            <div className="ktlabel" title={t}>{t.replace(/_/g, " ")}</div>
+            <div className="ktbars">
+              <div className="ktbar comp" style={{ width: `${((pw.themes?.[t] || 0) / max) * 100}%` }} />
+              <span className="ktnum">{pw.themes?.[t] || 0}</span>
+            </div>
+            <div className="ktbars">
+              <div className="ktbar focal" style={{ width: `${((cw.themes?.[t] || 0) / max) * 100}%` }} />
+              <span className="ktnum">{cw.themes?.[t] || 0}</span>
+            </div>
+          </div>
+        ))}
+        <div className="row" style={{ marginTop: 8 }}>
+          {(tb.stable_themes || []).length > 0 && <span><b>Stable:</b> {tb.stable_themes.join(", ")} · </span>}
+          {(tb.emerged_themes || []).length > 0 && <span><b>Emerged:</b> {tb.emerged_themes.join(", ")} · </span>}
+          {(tb.receded_themes || []).length > 0 && <span><b>Receded:</b> {tb.receded_themes.join(", ")}</span>}
+        </div>
+        <p className="empty" style={{ fontSize: 11, marginBottom: 0 }}>{tb.note}</p>
+      </div>
+    </>
+  );
+}
+
 // STRATEGY CHANGES — visual timeline (prior → current evidence bars).
 function ChangesTimeline({ pkg }) {
   const changes = pkg.change_events || [];
@@ -840,6 +884,7 @@ export default function App() {
             )}
             {tab === "changes" && (
               <>
+                <TemporalBaseline pkg={pkg} />
                 <ChangesTimeline pkg={pkg} />
                 <StrategyOverTime pkg={pkg} srcIdx={srcIdx} />
               </>
