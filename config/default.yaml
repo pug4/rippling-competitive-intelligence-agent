@@ -49,9 +49,12 @@ windows:
 # product / solution / use-case pages are collected, and use Exa domain-scoped
 # discovery to catch pages the sitemap misses. Tune down for a fast demo.
 collection:
-  # Target ~50 artifacts total per company (user directive): ~42 first-party
-  # pages + wayback + news + comparison + discovery. Tune down for a fast demo.
-  max_fetched_pages: 42
-  fetch_score_threshold: 0.28
+  # ~30 high-authority first-party pages (homepage/platform/pricing/products/
+  # solutions/customers are always captured now that the map scores→sorts→
+  # truncates), + wayback + news + comparison + discovery + optional sources
+  # ≈ 45-55 artifacts, while leaving budget for the mirror (comparison) and
+  # temporal analysis. Tune up for maximum depth, down for a fast demo.
+  max_fetched_pages: 30
+  fetch_score_threshold: 0.3
   deep_crawl: true
-  exa_site_discovery_results: 12
+  exa_site_discovery_results: 10
