@@ -273,6 +273,17 @@ class ExaAgentTool(BaseTool):
                 purl = str(post.get("post_url") or "").strip()
                 if not ptext or not purl:
                     continue
+                # Provider often omits author — derive it from the post URL slug
+                # (linkedin.com/posts/<author-slug>_...), deterministic.
+                author = post.get("author")
+                if not author:
+                    import re as _re
+
+                    m = _re.search(r"linkedin\.com/posts/([a-z0-9-]+?)_", purl)
+                    if m:
+                        slug = _re.sub(r"-\d+$", "", m.group(1))
+                        author = " ".join(w.capitalize() for w in slug.split("-") if w) or None
+                post = {**post, "author": author}
                 artifacts.append(
                     self._artifact(
                         action,

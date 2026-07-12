@@ -128,6 +128,18 @@ def _focal_evidence(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     return out
 
 
+def _author_from_linkedin_url(url: str) -> str | None:
+    """Derive the poster's name from a LinkedIn post URL slug when the provider
+    didn't return an author field (linkedin.com/posts/<author-slug>_rest...)."""
+    import re as _re
+
+    m = _re.search(r"linkedin\.com/posts/([a-z0-9-]+?)_", str(url or ""))
+    if not m:
+        return None
+    slug = _re.sub(r"-\d+$", "", m.group(1))  # strip trailing numeric ids
+    return " ".join(w.capitalize() for w in slug.split("-") if w) or None
+
+
 def _linkedin_posts(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Join each LinkedIn post artifact with its merged classification so the
     brief/dashboard can showcase per-post: author, link, theme, stance, excerpt."""
@@ -141,7 +153,7 @@ def _linkedin_posts(data: dict[str, Any]) -> list[dict[str, Any]]:
         out.append(
             {
                 "artifact_id": a["artifact_id"],
-                "author": a.get("author"),
+                "author": a.get("author") or _author_from_linkedin_url(a.get("url", "")),
                 "author_role": meta.get("author_role"),
                 "post_url": a.get("url"),
                 "posted_at": a.get("published_at"),

@@ -215,7 +215,12 @@ class SimilarwebTool(BaseTool):
         # not on the plan (provider_unavailable), fall back to a public-web
         # traffic estimate (no partner) — user choice: degrade gracefully.
         result = await self._run(action, domain, query, api_key, effort, with_similarweb=True)
-        if result.status == "unsupported" and result.error_type == "provider_unavailable":
+        # Fall back to a public-web estimate when the Similarweb partner is
+        # unreachable OR returns an empty payload (partner not on the plan often
+        # completes with zero metric fields rather than erroring).
+        if (result.status == "unsupported" and result.error_type == "provider_unavailable") or (
+            result.status == "empty"
+        ):
             result = await self._run(action, domain, query, api_key, effort, with_similarweb=False)
         return result
 
