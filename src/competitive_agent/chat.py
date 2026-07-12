@@ -137,11 +137,38 @@ def _evidence_block(pkg: dict[str, Any], urls: dict[str, str], budget: int) -> t
     return "\n".join(lines) + note, used
 
 
-def build_context(pkg: dict[str, Any], cross: str = "", budget_chars: int = _CONTEXT_BUDGET_CHARS) -> str:
+def scope_to_vertical(pkg: dict[str, Any], vertical: str) -> dict[str, Any]:
+    """Shallow-copy the package filtered to one product vertical: only the
+    classifications/evidence/sources/posts whose artifact is tagged with that
+    vertical. Cross-cutting findings (gaps, opportunities, dominant message)
+    stay global — the chat notes they are corpus-wide."""
+    by_artifact = (pkg.get("product_vertical_analysis") or {}).get("by_artifact") or {}
+    allowed = {aid for aid, verts in by_artifact.items() if vertical in verts}
+    scoped = dict(pkg)
+    scoped["classifications"] = [
+        c for c in pkg.get("classifications", []) if c.get("artifact_id") in allowed
+    ]
+    scoped["evidence"] = [e for e in pkg.get("evidence", []) if e.get("artifact_id") in allowed]
+    scoped["sources"] = [s for s in pkg.get("sources", []) if s.get("artifact_id") in allowed]
+    scoped["artifacts"] = [a for a in pkg.get("artifacts", []) if a.get("artifact_id") in allowed]
+    scoped["linkedin_posts"] = [
+        p for p in pkg.get("linkedin_posts", []) if vertical in (p.get("verticals") or [])
+    ]
+    return scoped
+
+
+def build_context(
+    pkg: dict[str, Any],
+    cross: str = "",
+    budget_chars: int = _CONTEXT_BUDGET_CHARS,
+    vertical: str | None = None,
+) -> str:
     """FULL grounded context: all sources, evidence, classifications, claims (with
     justifications), gaps, opportunities, temporal, LinkedIn, traffic, focal mirror,
     and cross-competitor summaries. Structured findings always included; raw
     evidence excerpts fill the remaining budget and truncate last."""
+    if vertical:
+        pkg = scope_to_vertical(pkg, vertical)
     companies = pkg.get("companies", [])
     competitor = (companies[0].get("canonical_name") if companies else pkg.get("scope", {}).get("company_input")) or "the competitor"
     focal = companies[1].get("canonical_name") if len(companies) > 1 else "Rippling"
@@ -259,8 +286,11 @@ async def chat_about_run(
     question: str,
     history: list[dict[str, str]] | None = None,
     execution_mode: str = "live",
+    vertical: str | None = None,
 ) -> dict[str, Any]:
-    """Answer a follow-up question about a run, grounded in its findings."""
+    """Answer a follow-up question about a run, grounded in its findings.
+    ``vertical`` scopes the grounded data to one product vertical (payroll,
+    it_device_management, ...) so per-offering questions get per-offering data."""
     path = _package_path(run_id)
     if not path.exists():
         raise KeyError(f"run not found (no data.json): {run_id}")
@@ -268,7 +298,14 @@ async def chat_about_run(
     comps = pkg.get("companies", [])
     competitor_id = comps[0].get("company_id") if comps else None
     cross = cross_competitor_summaries(run_id, competitor_id)
-    context = build_context(pkg, cross=cross)
+    context = build_context(pkg, cross=cross, vertical=vertical)
+    if vertical:
+        context = (
+            f"FOCUS: the user has scoped this conversation to the '{vertical}' product "
+            "vertical — the sources/classifications/evidence/posts below are filtered to it. "
+            "Gaps/opportunities/dominant-message remain corpus-wide; say so if you cite them.\n\n"
+            + context
+        )
 
     from .config import get_config, get_settings
     from .model_gateway import build_gateway

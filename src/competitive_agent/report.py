@@ -193,6 +193,14 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     focal_evidence = _focal_evidence(ctx, state)
     linkedin_posts = _linkedin_posts(data)
     similarweb = _similarweb_summary(data)
+    _cfg = getattr(ctx, "config", None)
+    taxonomy = _cfg.taxonomy if _cfg else {}
+    vertical_analysis = synthesis.product_vertical_analysis(
+        data["classification_models"], data["artifact_models"], taxonomy
+    )
+    # Tag each LinkedIn post with its product verticals (per-offering view).
+    for lp in linkedin_posts:
+        lp["verticals"] = vertical_analysis["by_artifact"].get(lp["artifact_id"], [])
     # Source-URL registry (traceability chain): every collected source with its
     # provenance, so a claim's evidence id -> artifact id -> URL+timestamp is
     # resolvable from the JSON alone.
@@ -289,6 +297,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Competitor LinkedIn employee posts (one per post) + Similarweb traffic.
         "linkedin_posts": linkedin_posts,
         "similarweb": similarweb,
+        # Per-offering view: how the competitor positions in each product
+        # vertical (deterministic keyword mapping; method disclosed inside).
+        "product_vertical_analysis": vertical_analysis,
         "classifications": data["classifications"],
         "claims": data["claims"],
         # product_portfolios/launches require the deep §38 product-entity loop
@@ -529,6 +540,28 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 f"| {p['product'][:28]} | {p['pages']} | {', '.join(p['themes'][:2]) or '—'} | "
                 f"{', '.join(p['personas'][:2]) or '—'} | {', '.join(p['proof_types'][:2]) or '—'} |"
             )
+
+    # --- Positioning by product vertical -----------------------------------
+    pva = pkg.get("product_vertical_analysis") or {}
+    verts = pva.get("verticals") or []
+    add(f"\n## Positioning by product vertical ({company})\n")
+    if verts:
+        add(
+            "How the competitor positions in each product category it touches "
+            "(keyword-derived mapping — method in JSON `product_vertical_analysis.method`). "
+            f"{focal} competes across many of these; per-vertical reads prevent one "
+            "category's narrative from masking another's.\n"
+        )
+        add("| Vertical | Pages/posts | LinkedIn posts | Top themes | Stance mix | Personas |")
+        add("|---|---:|---:|---|---|---|")
+        for v in verts:
+            stance = ", ".join(f"{k}:{n}" for k, n in (v.get("stance_mix") or {}).items()) or "—"
+            add(
+                f"| {v['vertical'].replace('_', ' ')} | {v['n_artifacts']} | {v['n_linkedin_posts']} | "
+                f"{', '.join(v['top_themes']) or '—'} | {stance} | {', '.join(v['personas']) or '—'} |"
+            )
+    else:
+        add("_No product-vertical signals matched this corpus (see taxonomy.product_verticals)._")
 
     # --- Category entry points (feedback #22) ------------------------------
     ceps = pkg.get("category_entry_points") or []

@@ -18,6 +18,7 @@ def _build_registry():
     from .tools.ads import GoogleAdsTool, LinkedInAdsTool, MetaAdsTool
     from .tools.events import EventsTool
     from .tools.exa_agent import ExaAgentTool
+    from .tools.exa_contents import ExaContentsTool
     from .tools.exa_search import ExaSearchTool
     from .tools.jobs import JobsTool
     from .tools.ooh import OOHTool
@@ -36,6 +37,7 @@ def _build_registry():
         WaybackTool(),
         ExaSearchTool(),
         ExaAgentTool(),
+        ExaContentsTool(),
         SimilarwebTool(),
         ReviewsTool(),
         JobsTool(),

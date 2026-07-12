@@ -277,6 +277,24 @@ def _seo_cep(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     )
 
 
+def _verticals(pkg: dict[str, Any]) -> str:
+    verts = (pkg.get("product_vertical_analysis") or {}).get("verticals") or []
+    if not verts:
+        return "<p class='empty'>No product-vertical signals matched this corpus.</p>"
+    rows = ["<table class='vtable'><tr><th>Vertical</th><th>Pages</th><th>LinkedIn</th>"
+            "<th>Top themes</th><th>Personas</th></tr>"]
+    for v in verts:
+        rows.append(
+            f"<tr title='{_esc(v.get('sample_message') or '')}'>"
+            f"<td><b>{_esc(str(v['vertical']).replace('_', ' '))}</b></td>"
+            f"<td>{v['n_artifacts']}</td><td>{v['n_linkedin_posts']}</td>"
+            f"<td>{_esc(', '.join(v.get('top_themes') or []) or '—')}</td>"
+            f"<td>{_esc(', '.join(v.get('personas') or []) or '—')}</td></tr>"
+        )
+    rows.append("</table>")
+    return "".join(rows)
+
+
 def _linkedin_posts(pkg: dict[str, Any], competitor: str) -> str:
     posts = pkg.get("linkedin_posts") or []
     if not posts:
@@ -371,6 +389,9 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .hm-rl {{ font-size:11px; color:var(--muted); text-align:right; padding-right:6px; align-self:center; }}
 .hm-cell {{ height:26px; display:flex; align-items:center; justify-content:center; font-size:11px; border-radius:3px; border:1px solid var(--border); }}
 .empty {{ color:var(--muted); font-style:italic; font-size:13px; }}
+.vtable {{ width:100%; border-collapse:collapse; font-size:12px; }}
+.vtable th {{ text-align:left; color:var(--muted); font-size:11px; padding:4px 8px; border-bottom:1px solid var(--border); }}
+.vtable td {{ padding:5px 8px; border-bottom:1px solid var(--panel2); }}
 .forwho {{ font-size:11px; color:var(--muted); background:var(--panel2); border-radius:6px; padding:8px 10px; margin:6px 0 10px; }}
 .forwho b {{ color:var(--accent); }}
 /* timeline */
@@ -435,7 +456,11 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 <p class='sub'>Emerging themes between the two windows. Bars = current-window presence; the prior sample is small, so these are low-confidence signals with the coverage-asymmetry caveat, never asserted as fact.</p>
 <div class='card'>{_timeline(pkg)}</div>
 
-<h2>Product marketing — attack / defend matrix</h2>
+<h2 title="How the competitor positions in each product category it touches — keyword-derived, method disclosed in the JSON">Positioning by product vertical</h2>
+<div class='forwho'><b>IC:</b> pick the vertical you market and read its themes/personas. <b>Exec:</b> compare investment across verticals — where they are thin is where {_esc(focal)} can own the narrative.</div>
+<div class='card'>{_verticals(pkg)}</div>
+
+<h2 title="Each repeated competitor claim plotted by their proof strength vs the focal company's — quadrants say attack, differentiate, build proof, or defend">Product marketing — attack / defend matrix</h2>
 <div class='forwho'><b>IC:</b> pick a dot in ATTACK (build the comparison asset now) or BUILD-PROOF (commission the proof point). <b>Exec:</b> read the balance of the portfolio — too many dots bottom-right (AT RISK) is a strategic proof-debt problem to fund over the next quarters.</div>
 <div class='card'>{_pm_matrix(pkg, competitor, focal)}</div>
 

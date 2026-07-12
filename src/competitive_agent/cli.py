@@ -372,6 +372,7 @@ def ask(
     run_id: str = typer.Argument(...),
     question: str = typer.Argument(...),
     execution_mode: str = typer.Option("live", "--execution-mode", help="live|fixture (chat needs a model)"),
+    vertical: str = typer.Option(None, "--vertical", help="Scope to a product vertical (e.g. payroll)"),
 ) -> None:
     """Ask the grounded analysis chatbot a follow-up question about a run."""
     import asyncio
@@ -379,7 +380,9 @@ def ask(
     from .chat import chat_about_run
 
     try:
-        res = asyncio.run(chat_about_run(run_id, question, execution_mode=execution_mode))
+        res = asyncio.run(
+            chat_about_run(run_id, question, execution_mode=execution_mode, vertical=vertical)
+        )
     except KeyError as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(code=1) from exc

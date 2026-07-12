@@ -32,7 +32,7 @@ execution:
 
 budgets:
   research_budget_usd: 10.00
-  max_runtime_seconds: 2700
+  max_runtime_seconds: 3000
   max_iterations: 60
   max_tool_calls: 200
   max_retries_per_source: 2
@@ -56,10 +56,14 @@ collection:
   # truncates), + wayback + news + comparison + discovery + optional sources
   # ≈ 45-55 artifacts, while leaving budget for the mirror (comparison) and
   # temporal analysis. Tune up for maximum depth, down for a fast demo.
-  max_fetched_pages: 30
+  # Raised for product-offering breadth (user directive): with category
+  # round-robin + product-slug scoring, ~48 pages spans every product vertical
+  # (payroll/EOR/HRIS/benefits/IT/spend/...) so per-vertical analysis has real
+  # coverage instead of one category masking another.
+  max_fetched_pages: 48
   fetch_score_threshold: 0.3
   deep_crawl: true
-  exa_site_discovery_results: 10
+  exa_site_discovery_results: 12
   # Historical (Wayback) depth for longitudinal/comparative runs. More snapshots
   # spread across the prior window give finer temporal resolution (priority #2:
   # time-based accuracy); extra_pages archives more positioning surfaces so

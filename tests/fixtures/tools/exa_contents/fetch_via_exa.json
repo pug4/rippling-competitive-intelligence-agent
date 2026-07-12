@@ -1,0 +1,27 @@
+{
+ "action_id": "ACT-fixture-exacontents",
+ "tool_name": "exa_contents",
+ "status": "success",
+ "artifacts": [
+  {
+   "artifact_id": "ART-fxexacont1",
+   "company_id": "example-hr",
+   "source_type": "webpage",
+   "source_name": "exa_contents",
+   "url": "https://www.example-hr.com/products/spend",
+   "final_url": "https://www.example-hr.com/products/spend",
+   "title": "Spend management — Example HR",
+   "retrieved_at": "2026-07-11T00:00:00Z",
+   "time_window_ids": [],
+   "raw_text": "Example HR spend management gives finance leaders corporate cards, expense automation, and bill pay in the same platform that runs payroll and HR. Close the books faster with one source of truth for every employee dollar.",
+   "normalized_text": "Example HR spend management gives finance leaders corporate cards, expense automation, and bill pay in the same platform that runs payroll and HR. Close the books faster with one source of truth for every employee dollar.",
+   "content_hash": "fxexacont100000000000000000000000000000000000000000000000000001",
+   "metadata": {"collected_via": "exa_contents"},
+   "collection_method": "exa_contents",
+   "is_fixture": true
+  }
+ ],
+ "negative_observations": [],
+ "latency_ms": 0,
+ "cost_usd": 0.0
+}

@@ -26,6 +26,94 @@ themes:
   - native_platform_breadth     # many first-party modules under one platform
   - data_unification            # one shared employee/business data model
 
+# Product verticals for per-offering analysis (Rippling competes across many
+# categories; analysis must not flatten them). DETERMINISTIC keyword mapping:
+# a classification/artifact is tagged with a vertical when any keyword matches
+# its products, themes, messages, or URL path. Config-swappable per industry.
+product_verticals:
+  payroll:
+    - payroll
+    - "pay run"
+    - salary
+    - wages
+  global_eor_contractors:
+    - eor
+    - "employer of record"
+    - contractor
+    - "global hiring"
+    - "international employee"
+    - "hire abroad"
+    - misclassification
+  hris_core_hr:
+    - hris
+    - hcm
+    - "core hr"
+    - onboarding
+    - offboarding
+    - "employee records"
+    - "hr platform"
+  benefits:
+    - benefits
+    - insurance
+    - "health plan"
+    - 401k
+    - pension
+    - perks
+  talent_performance:
+    - performance
+    - recruiting
+    - ats
+    - talent
+    - "employee engagement"
+    - learning
+  time_attendance:
+    - "time tracking"
+    - attendance
+    - scheduling
+    - pto
+    - "time off"
+    - leave
+  spend_expense:
+    - spend
+    - expense
+    - "corporate card"
+    - invoice
+    - procurement
+    - "bill pay"
+  it_device_management:
+    - device
+    - mdm
+    - laptop
+    - "it management"
+    - provisioning
+    - "app management"
+  identity_security:
+    - identity
+    - sso
+    - "access management"
+    - iam
+    - password
+    - permissions
+  workforce_analytics:
+    - analytics
+    - reporting
+    - insights
+    - dashboards
+    - "workforce planning"
+    - headcount
+  compliance_legal:
+    - compliance
+    - legal
+    - regulatory
+    - gdpr
+    - soc2
+  immigration_mobility:
+    - immigration
+    - visa
+    - relocation
+    - mobility
+    - "work permit"
+
 personas:
   - hr_leader
   - finance_leader

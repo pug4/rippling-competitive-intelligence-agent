@@ -215,6 +215,11 @@ class ExaSearchTool(BaseTool):
         if category:
             payload["category"] = str(category)
             filters["category"] = str(category)
+        # Multi-angle sweep in ONE call (retrieval breadth, up to 10 variants).
+        additional = params.get("additional_queries")
+        if additional:
+            payload["additionalQueries"] = [str(q) for q in list(additional)[:10]]
+            filters["additionalQueries"] = payload["additionalQueries"]
         return payload, filters
 
     def _map_response(

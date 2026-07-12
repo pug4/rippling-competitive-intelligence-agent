@@ -309,7 +309,35 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                     )
                 )
 
-    # 4. News and launches.
+    # 3b. Exa-crawler fallback for priority pages whose DIRECT fetch failed with
+    # an HTTP error (anti-bot / JS pages). Robots-disallowed pages are excluded —
+    # we respect robots on competitor sites; this recovers fetch FAILURES.
+    failed_urls = []
+    for obs in state.negative_observations:
+        if company.primary_domain not in obs:
+            continue
+        if "robots disallowed" in obs:
+            continue
+        if ": HTTP " in obs or ": fetch failed" in obs:
+            url = obs.split(": ")[0].strip()
+            if url.startswith("http"):
+                failed_urls.append(url)
+    if failed_urls:
+        proposals.append(
+            _mk(
+                state,
+                "fetch_via_exa",
+                "exa_contents",
+                "current_website",
+                {"urls": sorted(set(failed_urls))[:8], "source_type": "webpage"},
+                "Exa-crawler fallback: recover priority pages whose direct fetch failed "
+                "(JS-rendered or anti-bot) — retrieval only, provenance labeled.",
+                reliability=0.6,
+            )
+        )
+
+    # 4. News and launches (Exa category=news sharpens retrieval; additional
+    # query variants widen the sweep in ONE call).
     if _needs(state, "news_and_launches"):
         proposals.append(
             _mk(
@@ -319,6 +347,11 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
                 "news_and_launches",
                 {
                     "query": f'"{company.canonical_name}" product launch OR announcement OR press release',
+                    "category": "news",
+                    "additional_queries": [
+                        f'"{company.canonical_name}" new product feature release',
+                        f'"{company.canonical_name}" funding OR acquisition OR partnership',
+                    ],
                     "num_results": 5,
                     "start_published_date": (
                         state.time_windows[-1].start_at.date().isoformat()

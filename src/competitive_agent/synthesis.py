@@ -9,6 +9,7 @@ the same rules apply everywhere.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from typing import Any
 
@@ -557,3 +558,122 @@ def coverage_details(
         )
     del by_id, classifications
     return details
+
+
+# ---------------------------------------------------------------------------
+# Product-vertical analysis (per-offering view; Rippling competes across many
+# categories, so analysis must not flatten them)
+# ---------------------------------------------------------------------------
+
+def _vertical_matchers(taxonomy: dict[str, Any]) -> dict[str, list[re.Pattern[str]]]:
+    """Compile the config keyword map. Single tokens get word boundaries so
+    short keywords ("eor", "pto") can't false-match inside other words;
+    multi-word phrases match as substrings."""
+    out: dict[str, list[re.Pattern[str]]] = {}
+    for vertical, keywords in (taxonomy.get("product_verticals") or {}).items():
+        pats: list[re.Pattern[str]] = []
+        for kw in keywords or []:
+            kw = str(kw).lower().strip()
+            if not kw:
+                continue
+            if " " in kw:
+                pats.append(re.compile(re.escape(kw)))
+            else:
+                pats.append(re.compile(rf"\b{re.escape(kw)}\b"))
+        if pats:
+            out[str(vertical)] = pats
+    return out
+
+
+def verticals_for_classification(
+    c: MarketingClassification, artifact: RawArtifact | None, matchers: dict[str, list[re.Pattern[str]]]
+) -> list[str]:
+    """Deterministic vertical tags for one classified artifact: keyword match
+    over its products, themes, messages, and URL path. Retroactive — needs no
+    reclassification, so it works on any stored run."""
+    hay_parts: list[str] = []
+    hay_parts.extend(c.products or [])
+    hay_parts.extend(c.supporting_themes or [])
+    if c.primary_theme:
+        hay_parts.append(c.primary_theme)
+    if c.primary_message:
+        hay_parts.append(c.primary_message)
+    hay_parts.extend(c.secondary_messages or [])
+    if artifact is not None:
+        hay_parts.append(_url_path(artifact.final_url or artifact.url))
+        if artifact.title:
+            hay_parts.append(artifact.title)
+    hay = " ".join(str(p) for p in hay_parts).lower().replace("_", " ").replace("-", " ")
+    hits = [v for v, pats in matchers.items() if any(p.search(hay) for p in pats)]
+    return hits
+
+
+def product_vertical_analysis(
+    classifications: list[MarketingClassification],
+    artifacts: list[RawArtifact],
+    taxonomy: dict[str, Any],
+) -> dict[str, Any]:
+    """Per-vertical positioning view: for each product vertical the competitor
+    touches — how many pages/posts, the themes and stances used there, personas
+    addressed, and example sources. Keyword-derived (disclosed), deterministic."""
+    matchers = _vertical_matchers(taxonomy)
+    if not matchers:
+        return {"verticals": [], "by_artifact": {}, "method": "no product_verticals in taxonomy"}
+    by_id = _artifacts_by_id(artifacts)
+    per: dict[str, dict[str, Any]] = {}
+    by_artifact: dict[str, list[str]] = {}
+    for c in classifications:
+        art = by_id.get(c.artifact_id)
+        hits = verticals_for_classification(c, art, matchers)
+        if hits:
+            by_artifact[c.artifact_id] = hits
+        for v in hits:
+            slot = per.setdefault(
+                v,
+                {
+                    "vertical": v,
+                    "n_artifacts": 0,
+                    "n_linkedin_posts": 0,
+                    "themes": Counter(),
+                    "stances": Counter(),
+                    "personas": Counter(),
+                    "example_urls": [],
+                    "sample_message": None,
+                },
+            )
+            slot["n_artifacts"] += 1
+            if art is not None and art.source_type == "linkedin_post":
+                slot["n_linkedin_posts"] += 1
+            if c.primary_theme:
+                slot["themes"][c.primary_theme] += 1
+            if c.competitive_stance:
+                slot["stances"][c.competitive_stance] += 1
+            for p in c.personas or []:
+                slot["personas"][p] += 1
+            if art is not None and len(slot["example_urls"]) < 3:
+                u = art.final_url or art.url
+                if u and u not in slot["example_urls"]:
+                    slot["example_urls"].append(u)
+            if slot["sample_message"] is None and c.primary_message:
+                slot["sample_message"] = c.primary_message[:160]
+
+    verticals = []
+    for v, s in sorted(per.items(), key=lambda kv: -kv[1]["n_artifacts"]):
+        verticals.append(
+            {
+                "vertical": v,
+                "n_artifacts": s["n_artifacts"],
+                "n_linkedin_posts": s["n_linkedin_posts"],
+                "top_themes": [t for t, _ in s["themes"].most_common(3)],
+                "stance_mix": dict(s["stances"]),
+                "personas": [p for p, _ in s["personas"].most_common(3)],
+                "example_urls": s["example_urls"],
+                "sample_message": s["sample_message"],
+            }
+        )
+    return {
+        "verticals": verticals,
+        "by_artifact": by_artifact,
+        "method": "deterministic keyword mapping over products/themes/messages/url "
+        "(config taxonomy.product_verticals); not a model judgment",
+    }

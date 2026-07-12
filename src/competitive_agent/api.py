@@ -148,6 +148,8 @@ class ChatRequest(BaseModel):
     question: str
     history: list[dict[str, str]] = []
     execution_mode: str = "live"
+    # Scope the grounded data to one product vertical (payroll, hris_core_hr, ...)
+    vertical: str | None = None
 
 
 @app.post("/api/runs/{run_id}/chat")
@@ -160,7 +162,11 @@ async def chat(run_id: str, req: ChatRequest) -> dict[str, Any]:
     if not (req.question or "").strip():
         raise HTTPException(status_code=400, detail="question is required")
     return await chat_about_run(
-        run_id, req.question.strip(), history=req.history, execution_mode=req.execution_mode
+        run_id,
+        req.question.strip(),
+        history=req.history,
+        execution_mode=req.execution_mode,
+        vertical=(req.vertical or None),
     )
 
 
