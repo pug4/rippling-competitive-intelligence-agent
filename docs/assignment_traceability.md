@@ -17,7 +17,7 @@ per phase). "✔" = implemented + tested; "◐" = implemented, depth continuing;
 | Recent launches / press / announcements | Exa news adapter + launch signals | news artifacts classified; launch validation | ◐ |
 | **Real agentic loop** (decide what to research, skip, move on) | `graph.py` + `planner.py` + coverage model | trace shows conditional `action_selected` w/ alternatives, skips, stop reason | ✔ |
 | Handle "not every source has data" | typed `ToolResult`, non-blocking failures, negative observations | forced-failure behavior tests; empty → negative observation | ✔ |
-| **Conversational** (clarifying Qs, follow-ups) | `conversation.py`, `await_followup`, CLI `ask`/`deepen`/`challenge`/`retry`/`feedback` | follow-up router answers from state; retry = child run + diff; behavior tests | ✔ |
+| **Conversational** (clarifying Qs, follow-ups) | `chat.py` (grounded per-run chatbot) + CLI `ask` + `POST /api/runs/{id}/chat` + React chat panel; `deepen`/`challenge`/`retry`/`feedback` | LLM chatbot answers follow-ups grounded ONLY in the run's findings, flags when it needs deeper research, and suggests specific next questions; clarifying Qs on ambiguous identity; behavior + API tests | ✔ |
 | Markdown brief: messaging angles & themes | `report.render_markdown`, message family | brief renders dominant message + villains + stance | ✔ |
 | Markdown brief: how they position products | product family + `synthesis.product_positioning` | product-positioning + CEP-ownership sections render | ✔ |
 | Markdown brief: what changed recently | temporal engine + change events | both-period change events; theme-emergence w/ caveats | ✔ |

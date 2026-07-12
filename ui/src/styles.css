@@ -104,3 +104,20 @@ summary { cursor: pointer; font-size: 13px; }
   .grid2 { grid-template-columns: 1fr; }
   .hbar-row { grid-template-columns: 96px 1fr 30px; }
 }
+
+/* ---- analysis chatbot ---- */
+.chat { border-color: var(--accent); }
+.chatlog { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow-y: auto; margin: 8px 0; }
+.chathint { color: var(--muted); font-size: 12px; font-style: italic; }
+.chatmsg { display: flex; flex-direction: column; gap: 4px; }
+.chatmsg.user { align-items: flex-end; }
+.chatbubble { font-size: 13px; padding: 8px 11px; border-radius: 10px; max-width: 88%; white-space: pre-wrap; line-height: 1.45; }
+.chatmsg.user .chatbubble { background: var(--accent); color: #0b1020; }
+.chatmsg.assistant .chatbubble { background: var(--panel2); border: 1px solid var(--border); }
+.chatnote { font-size: 11px; color: var(--warn); }
+.chipwrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.chip { font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--accent); border-radius: 999px; padding: 4px 10px; cursor: pointer; text-align: left; }
+.chip:hover { border-color: var(--accent); }
+.chip:disabled { opacity: .5; cursor: default; }
+.chatform { display: flex; gap: 6px; }
+.chatform .nr-in { flex: 1; }

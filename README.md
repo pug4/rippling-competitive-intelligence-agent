@@ -65,7 +65,9 @@ a difference report, and reuses the parent's evidence non-destructively (a
 `run_artifacts` junction lets runs share artifacts without reassigning rows):
 
 ```bash
-uv run competitive-agent ask RUN_ID "why do you believe this? show evidence"
+# Grounded analysis chatbot — answers follow-ups ONLY from the run's findings,
+# flags when it needs deeper research, and suggests next questions:
+uv run competitive-agent ask RUN_ID "what is their most attackable message-proof gap?"
 uv run competitive-agent deepen RUN_ID --focus pricing      # collect deeper evidence
 uv run competitive-agent challenge RUN_ID --claim CLAIM_ID   # adversarial re-read
 uv run competitive-agent retry RUN_ID --mode reanalyze_same_evidence

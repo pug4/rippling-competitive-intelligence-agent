@@ -144,6 +144,26 @@ def get_run(run_id: str) -> dict[str, Any]:
     return json.loads(data.read_text())
 
 
+class ChatRequest(BaseModel):
+    question: str
+    history: list[dict[str, str]] = []
+    execution_mode: str = "live"
+
+
+@app.post("/api/runs/{run_id}/chat")
+async def chat(run_id: str, req: ChatRequest) -> dict[str, Any]:
+    """Grounded analysis chatbot for a run — answers follow-ups from its findings."""
+    from .chat import chat_about_run
+
+    if not (_runs_dir() / run_id / "data.json").exists():
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    if not (req.question or "").strip():
+        raise HTTPException(status_code=400, detail="question is required")
+    return await chat_about_run(
+        run_id, req.question.strip(), history=req.history, execution_mode=req.execution_mode
+    )
+
+
 @app.get("/api/runs/{run_id}/brief", response_class=PlainTextResponse)
 def get_brief(run_id: str) -> str:
     brief = _runs_dir() / run_id / "brief.md"

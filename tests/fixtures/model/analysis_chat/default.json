@@ -1,0 +1,11 @@
+{
+  "answer": "Based on this run's findings, the competitor's dominant message is consolidation (one platform replacing fragmented HR/payroll/IT tools), and the strongest opening for the focal company is the message-proof gap where the competitor makes a claim it proves only weakly. I'm answering from the run's proof gaps and opportunities; ask a more specific question to drill in.",
+  "suggested_followups": [
+    "Which message-proof gap is most attackable, and how would you exploit it?",
+    "What are their employees emphasizing most on LinkedIn?",
+    "What changed in their positioning recently, and how confident is that signal?"
+  ],
+  "grounded_in": ["dominant_message", "proof_gaps", "opportunities"],
+  "needs_deeper_research": false,
+  "confidence": "medium"
+}

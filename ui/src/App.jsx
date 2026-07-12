@@ -61,6 +61,71 @@ function GapsVisual({ pkg }) {
   );
 }
 
+function ChatPanel({ runId, pkg }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const competitor = pkg.companies?.[0]?.canonical_name || "this competitor";
+
+  const send = async (q) => {
+    const question = (q || input).trim();
+    if (!question || busy) return;
+    setInput("");
+    const history = messages.map((m) => ({ role: m.role, content: m.content }));
+    setMessages((m) => [...m, { role: "user", content: question }]);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/runs/${runId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, history, execution_mode: "live" }),
+      });
+      const data = res.ok ? await res.json() : { answer: "Chat error: " + res.statusText, suggested_followups: [] };
+      setMessages((m) => [...m, { role: "assistant", ...data }]);
+    } catch (e) {
+      setMessages((m) => [...m, { role: "assistant", answer: "Could not reach the chat API.", suggested_followups: [] }]);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div className="chat card">
+      <div className="title">💬 Ask about {competitor}</div>
+      <p className="empty" style={{ fontSize: 12, marginTop: 0 }}>
+        Grounded in this run's findings. Ask follow-ups to drill into the insights you need.
+      </p>
+      <div className="chatlog">
+        {messages.length === 0 && (
+          <div className="chathint">
+            Try: “What's their most attackable gap?” · “What are employees posting on LinkedIn?” · “What changed recently?”
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`chatmsg ${m.role}`}>
+            <div className="chatbubble">{m.answer || m.content}</div>
+            {m.role === "assistant" && m.needs_deeper_research && (
+              <div className="chatnote">Needs deeper research — run a focused deep-dive.</div>
+            )}
+            {m.role === "assistant" && (m.suggested_followups || []).length > 0 && (
+              <div className="chipwrap">
+                {m.suggested_followups.map((f, j) => (
+                  <button key={j} className="chip" onClick={() => send(f)} disabled={busy}>{f}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        {busy && <div className="chatmsg assistant"><div className="chatbubble"><span className="spinner" /> thinking…</div></div>}
+      </div>
+      <form className="chatform" onSubmit={(e) => { e.preventDefault(); send(); }}>
+        <input className="nr-in" placeholder={`Ask about ${competitor}…`} value={input}
+               onChange={(e) => setInput(e.target.value)} />
+        <button className="nr-btn" disabled={busy || !input.trim()}>Ask</button>
+      </form>
+    </div>
+  );
+}
+
 function LinkedInPosts({ pkg }) {
   const posts = pkg.linkedin_posts || [];
   const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
@@ -448,6 +513,7 @@ export default function App() {
             {pkg.run?.execution_mode === "fixture" && (
               <p className="empty">Fixture mode — synthetic, deterministic data.</p>
             )}
+            <ChatPanel runId={selected} pkg={pkg} />
             <ActionBoard pkg={pkg} />
             <DataVisuals pkg={pkg} />
             <GapsVisual pkg={pkg} />

@@ -368,17 +368,29 @@ def portfolio(
 
 
 @app.command()
-def ask(run_id: str = typer.Argument(...), question: str = typer.Argument(...)) -> None:
-    """Answer a follow-up from stored state, or route to a focused action."""
-    import json as _json
+def ask(
+    run_id: str = typer.Argument(...),
+    question: str = typer.Argument(...),
+    execution_mode: str = typer.Option("live", "--execution-mode", help="live|fixture (chat needs a model)"),
+) -> None:
+    """Ask the grounded analysis chatbot a follow-up question about a run."""
+    import asyncio
 
-    from .conversation import answer_followup
+    from .chat import chat_about_run
 
     try:
-        typer.echo(_json.dumps(answer_followup(run_id, question), indent=2, default=str))
+        res = asyncio.run(chat_about_run(run_id, question, execution_mode=execution_mode))
     except KeyError as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(code=1) from exc
+    typer.echo(res["answer"])
+    if res.get("needs_deeper_research"):
+        typer.echo("\n(Needs deeper research — try: competitive-agent deepen "
+                   + run_id + " --focus <dimension>)")
+    if res.get("suggested_followups"):
+        typer.echo("\nYou could ask next:")
+        for f in res["suggested_followups"]:
+            typer.echo(f"  • {f}")
 
 
 if __name__ == "__main__":

@@ -30,6 +30,8 @@ routes:
   # tier1 classifiers under test, so the reference labels are not produced by
   # the same model being scored (anti-contamination).
   eval_labeling: tier2
+  # Per-run analysis chatbot: grounded follow-up Q&A over a run's findings.
+  analysis_chat: tier2
 
 max_output_tokens:
   tier1: 4096
