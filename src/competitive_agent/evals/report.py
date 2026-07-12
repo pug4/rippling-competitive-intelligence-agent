@@ -161,9 +161,7 @@ def _weak_spots(d: dict[str, Any], result: dict[str, Any]) -> str:
                 "signal here; prioritize for adjudication and error analysis."
             )
     freeform_zero = [
-        n
-        for n, a in d["single_field_agreement"].items()
-        if n not in _CLOSED_VOCAB and a < 0.2
+        n for n, a in d["single_field_agreement"].items() if n not in _CLOSED_VOCAB and a < 0.2
     ]
     if freeform_zero:
         weak.append(
