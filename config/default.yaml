@@ -47,7 +47,7 @@ execution:
   llm_in_the_loop: true
 
 budgets:
-  research_budget_usd: 3.00
+  research_budget_usd: 12.00
   max_runtime_seconds: 3600
   max_iterations: 90
   max_tool_calls: 200
