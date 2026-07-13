@@ -517,11 +517,37 @@ def list_jobs() -> list[dict[str, Any]]:
 
 
 @app.get("/api/runs")
-def list_runs() -> list[dict[str, Any]]:
+def list_runs(include_all: bool = False) -> list[dict[str, Any]]:
+    """Runs for the dashboard.
+
+    By default the list hides one internal category so the accurate runs are not
+    buried: focal-mirror snapshots — the internal Rippling sub-run that every
+    comparative run spawns to build its own side of the comparison. It is
+    surfaced *inside* its parent, never as a standalone row. Completed analyses
+    are ordered first; live runs lead, failures sink to the bottom.
+    Pass ``?include_all=true`` to see mirror sub-runs too (debugging / auditing).
+    """
     out: list[dict[str, Any]] = []
     # run_id -> its failed DB row; lets the disk block below flag a salvaged
     # report as failed. Populated only if the DB is reachable.
     failed_meta: dict[str, dict[str, Any]] = {}
+    # Every focal-mirror sub-run id (referenced as some run's focal_run_id), so
+    # the disk block can drop them from the default view. Populated from the DB
+    # if reachable; empty set is a safe no-op (nothing extra hidden).
+    mirror_ids: set[str] = set()
+    # Focal-company domains (every comparative run's compare_to). A standalone
+    # snapshot of one of these is an orphaned mirror — the focal company is never
+    # itself a competitor to analyze — so it is hidden even when its parent's
+    # state (and thus its focal_run_id) was never persisted.
+    focal_domains: set[str] = set()
+
+    def _norm_domain(v: Any) -> str:
+        s = str(v or "").strip().lower()
+        s = s.split("://", 1)[-1]
+        if s.startswith("www."):
+            s = s[4:]
+        return s.split("/", 1)[0]
+
     # 1) In-flight runs from the DATABASE — they survive page refreshes and
     #    server restarts even though no report exists yet. Mirror children of
     #    an in-flight parent are folded into the parent's live view.
@@ -530,6 +556,24 @@ def list_runs() -> list[dict[str, Any]]:
         rows = _inflight_rows(repo.conn)
         active = _active_and_children(rows)
         inflight_focal_ids = {r["focal_run_id"] for r in rows if r.get("focal_run_id")}
+        # ALL focal-mirror ids (not just in-flight) for the disk-block filter.
+        # focal_run_id lives inside each comparative run's serialized state
+        # (there is no dedicated column), so collect it from every state blob.
+        try:
+            for (blob,) in repo.conn.execute(
+                "SELECT state_json FROM runs WHERE state_json IS NOT NULL"
+            ).fetchall():
+                try:
+                    st = json.loads(blob)
+                except Exception:
+                    continue
+                fr = st.get("focal_run_id")
+                if fr:
+                    mirror_ids.add(fr)
+                if st.get("mode") == "comparative" and st.get("compare_to"):
+                    focal_domains.add(_norm_domain(st.get("compare_to")))
+        except Exception:
+            mirror_ids = set()
         for r in rows:
             if r["run_id"] in inflight_focal_ids:
                 continue  # internal mirror run — shown inside the parent
@@ -592,6 +636,18 @@ def list_runs() -> list[dict[str, Any]]:
         run = pkg.get("run", {})
         scope = pkg.get("scope", {})
         run_id = run.get("run_id", d.name)
+        if not include_all:
+            # Hide internal mirror sub-runs from the default dashboard so real
+            # analyses are not buried (see docstring). Fixture runs are NOT
+            # filtered here — they are a first-class run type the API contract
+            # surfaces; stale fixture *artifacts* are pruned from disk instead.
+            if run_id in mirror_ids or d.name in mirror_ids:
+                continue
+            # Orphaned mirror: a standalone snapshot of a focal company (one that
+            # some comparative run compares against) is never a real analysis.
+            if run.get("mode") == "snapshot" and not scope.get("compare_to"):
+                if _norm_domain(scope.get("company_input")) in focal_domains:
+                    continue
         entry = {
             "run_id": run_id,
             "company_input": scope.get("company_input"),
@@ -613,6 +669,25 @@ def list_runs() -> list[dict[str, Any]]:
             entry["failed"] = True
             entry["stop_reason"] = entry.get("stop_reason") or failed.get("stop_reason")
         out.append(entry)
+
+    # Present the cleanest thing first: live runs at the top (the user is
+    # watching them), then completed analyses, then failures — so a crashed
+    # artifact never heads the dashboard above a good run. Recency breaks ties
+    # within each tier. Honest, not hidden: failures still appear, just last.
+    def _tier(e: dict[str, Any]) -> int:
+        if e.get("failed") or e.get("live_status") == "failed":
+            return 2
+        if e.get("in_progress"):
+            return 0
+        return 1
+
+    def _recency(e: dict[str, Any]) -> str:
+        return str(e.get("generated_at") or e.get("updated_at") or "")
+
+    # Stable sort: recency (desc) first, then tier — so within a tier the newest
+    # run leads and the tiers stay ordered live -> completed -> failed.
+    out.sort(key=_recency, reverse=True)
+    out.sort(key=_tier)
     return out
 
 
