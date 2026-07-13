@@ -90,3 +90,44 @@ def test_unresolvable_company_asks_user(isolated_env: Path):
         "ambiguous identity must surface a question (§37.33 scenario 3)"
     )
     assert not state.is_complete
+
+
+def test_assignment_answers_ship_in_brief_and_json(isolated_env: Path):
+    """The assignment's four questions are answered in BOTH deliverables: the
+    brief carries the cited section between exec summary and Action Board, and
+    data.json ships the structured mirror with per-row citations."""
+    import re
+
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    out = isolated_env / "outputs" / "runs" / state.run_id
+
+    md = (out / "brief.md").read_text()
+    heading = "## The assignment deliverable — four questions, answered from the evidence"
+    assert md.index("## Executive summary") < md.index(heading) < md.index("\n## Action Board\n")
+    section = md[md.index(heading) : md.index("\n## Action Board\n")]
+    for sub in (
+        "### 1. What messaging angles and themes are they running?",
+        "### 2. How do they position their product(s)?",
+        "### 3. What's changed recently (new campaigns, new ICPs targeted, messaging pivots)?",
+        "### 4. What gaps does this surface for Rippling — and what we'd exploit",
+    ):
+        assert sub in section, f"missing subsection: {sub}"
+    citation_links = re.findall(r"\[[^\]]+\]\(https?://[^)]+\)", section)
+    assert len(citation_links) >= 10, f"only {len(citation_links)} citation links in the section"
+
+    aa = json.loads((out / "data.json").read_text())["assignment_answers"]
+    for key in (
+        "q1_messaging_themes",
+        "q2_product_positioning",
+        "q3_recent_changes",
+        "q4_gaps_and_opportunities",
+    ):
+        assert key in aa, f"assignment_answers missing {key}"
+    assert any(t["citations"] for t in aa["q1_messaging_themes"]["themes"])
+    assert aa["q2_product_positioning"]["dominant_message"]["citations"]
+    q4 = aa["q4_gaps_and_opportunities"]
+    assert any(r["citations"] for r in q4["message_proof_gaps"] + q4["campaign_plays"])

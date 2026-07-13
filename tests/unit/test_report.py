@@ -251,3 +251,334 @@ def test_similarweb_peers_rollup_exact_and_peer_skip_parity():
 def test_similarweb_peers_empty_when_no_peer_artifacts():
     pkg = build_json_package(_state(), _Ctx())
     assert pkg["similarweb_peers"] == []
+
+
+# ---------------------------------------------------------------------------
+# Assignment deliverable: the four questions, composed then rendered
+# ---------------------------------------------------------------------------
+
+ASSIGNMENT_HEADING = "## The assignment deliverable — four questions, answered from the evidence"
+
+
+def _assignment_pkg(s: DirectorState) -> dict:
+    """A crafted package: 6 classified pages across two dated windows, one
+    LinkedIn post, one verified change, one proof gap whose claim text embeds
+    pipe characters (untrusted competitor text), and one campaign play."""
+    from competitive_agent.report import build_assignment_answers
+
+    now = utcnow().isoformat()
+    pkg = build_json_package(s, _Ctx())
+    pkg["artifacts"] = [
+        {
+            "artifact_id": "ART-cur-0001",
+            "url": "https://deel.com/global-payroll",
+            "source_type": "webpage",
+            "retrieved_at": now,
+            "time_window_ids": ["TW-cur"],
+        },
+        {
+            "artifact_id": "ART-cur-0002",
+            "url": "https://deel.com/compliance",
+            "source_type": "webpage",
+            "retrieved_at": now,
+            "time_window_ids": ["TW-cur"],
+        },
+        {
+            "artifact_id": "ART-cur-0003",
+            "url": "https://deel.com/eor",
+            "source_type": "webpage",
+            "retrieved_at": now,
+            "time_window_ids": ["TW-cur"],
+        },
+        {
+            "artifact_id": "ART-pri-0001",
+            "url": "https://web.archive.org/web/2025/https://deel.com/",
+            "source_type": "wayback",
+            "archive_capture_at": "2025-06-01T00:00:00Z",
+            "time_window_ids": ["TW-pri"],
+        },
+        {
+            "artifact_id": "ART-pri-0002",
+            "url": "https://web.archive.org/web/2025/https://deel.com/pricing",
+            "source_type": "wayback",
+            "archive_capture_at": "2025-06-02T00:00:00Z",
+            "time_window_ids": ["TW-pri"],
+        },
+        {
+            "artifact_id": "ART-pri-0003",
+            "url": "https://web.archive.org/web/2025/https://deel.com/eor",
+            "source_type": "wayback",
+            "archive_capture_at": "2025-06-03T00:00:00Z",
+            "time_window_ids": ["TW-pri"],
+        },
+    ]
+    pkg["scope"]["time_windows"] = [
+        {"window_id": "TW-cur", "purpose": "current"},
+        {"window_id": "TW-pri", "purpose": "comparison"},
+    ]
+    pkg["classifications"] = [
+        {
+            "artifact_id": "ART-cur-0001",
+            "primary_theme": "global_payroll",
+            "primary_message": "Run payroll in 150 countries from one platform",
+            "message_salience": 0.9,
+            "personas": ["CFO"],
+            "products": ["Global Payroll"],
+            "villain_exact_wording": ["a patchwork of local providers"],
+        },
+        {
+            "artifact_id": "ART-cur-0002",
+            "primary_theme": "compliance",
+            "primary_message": "Compliance built-in | everywhere at once",  # untrusted pipe
+            "message_salience": 0.8,
+            "personas": ["CFO"],
+            "products": ["Global Payroll"],
+        },
+        {
+            "artifact_id": "ART-cur-0003",
+            "primary_theme": "global_payroll",
+            "primary_message": "Hire anywhere without an entity",
+            "message_salience": 0.5,
+            "personas": ["CFO"],
+            "products": ["EOR"],
+        },
+        {
+            "artifact_id": "ART-pri-0001",
+            "primary_theme": "compliance",
+            "primary_message": "Stay compliant",
+            "message_salience": 0.4,
+            "personas": ["HR leader"],
+        },
+        {
+            "artifact_id": "ART-pri-0002",
+            "primary_theme": "compliance",
+            "primary_message": "Compliance handled",
+            "message_salience": 0.4,
+            "personas": ["HR leader"],
+        },
+        {
+            "artifact_id": "ART-pri-0003",
+            "primary_theme": "compliance",
+            "primary_message": "Global compliance",
+            "message_salience": 0.4,
+            "personas": ["HR leader"],
+        },
+    ]
+    pkg["dominant_message"] = {
+        "theme": "global_payroll",
+        "label": "Global payroll, one platform",
+        "reason": "recurs across surfaces",
+        "is_company_level": True,
+        "surfaces": ["website"],
+        "source_classes": ["webpage"],
+    }
+    pkg["product_positioning"] = [
+        {
+            "product": "Global Payroll",
+            "pages": 2,
+            "themes": ["global_payroll", "compliance"],
+            "personas": ["CFO"],
+            "proof_types": ["quantified_outcome"],
+        }
+    ]
+    pkg["linkedin_posts"] = [
+        {
+            "theme": "global_payroll",
+            "excerpt": "we just launched payroll in 150 countries",
+            "url": "https://www.linkedin.com/posts/abc",
+            "post_url": "https://www.linkedin.com/posts/abc",
+            "published_at": "2026-06-01",
+            "author": "Jane",
+        }
+    ]
+    pkg["evidence"] = [
+        {
+            "evidence_id": "EV-1",
+            "artifact_id": "ART-cur-0002",
+            "exact_excerpt": "Compliance you can prove",
+        }
+    ]
+    pkg["claims"] = [{"claim_id": "CLM-1", "evidence_ids": ["EV-1"]}]
+    pkg["change_events"] = [
+        {
+            "dimension": "messaging_emphasis",
+            "theme": "compliance",
+            "prior_state": "compliance as a feature bullet",
+            "current_state": "compliance as the headline",
+            "apparent_change_at": "2026-05-01",
+            "confidence": "high",
+            "lifecycle": "expanding",
+            "current_evidence_ids": ["EV-1"],
+        }
+    ]
+    pkg["proof_gaps"] = [
+        {
+            "claim_id": "CLM-1",
+            "claim_text": "Compliance built-in | 150 countries | zero risk",  # pipes!
+            "short_label": "compliance",
+            "attackability": "high",
+            "proof_strength": "none",
+            "focal_proof_strength": "available",
+            "actionable_interpretation": "attack with certified proof",
+            "claim_specificity": "quantified",
+        }
+    ]
+    pkg["opportunities"] = [
+        {
+            "title": "Prove-it compliance campaign",
+            "deliverable_type": "landing_page",
+            "action_category": "attack",
+            "structural_defensibility": "durable",
+            "message_angle": "They claim it; we certify it",
+            "target_personas": ["CFO", "COO"],
+            "primary_metric": "demo requests",
+            "kill_rule": "kill if CTR < 0.5% after 2 weeks",
+            "focal_proof_status": "available",
+            "focal_current_usage": "partial",
+            "legal_review_required": False,
+            "why_this_could_backfire": "could invite scrutiny of our own claims",
+            "supporting_claim_ids": ["CLM-1"],
+            "competitor_pattern": "unproven compliance claims repeated on 2 pages",
+        }
+    ]
+    pkg["assignment_answers"] = build_assignment_answers(pkg)
+    return pkg
+
+
+def _assignment_section(md: str) -> str:
+    return md[md.index(ASSIGNMENT_HEADING) : md.index("\n## Action Board\n")]
+
+
+def test_assignment_section_order_and_headings():
+    s = _state()
+    md = render_markdown(s, _assignment_pkg(s))
+    positions = [
+        md.index("## Executive summary"),
+        md.index(ASSIGNMENT_HEADING),
+        md.index("### 1. What messaging angles and themes are they running?"),
+        md.index("### 2. How do they position their product(s)?"),
+        md.index(
+            "### 3. What's changed recently (new campaigns, new ICPs targeted, messaging pivots)?"
+        ),
+        md.index("### 4. What gaps does this surface for Rippling — and what we'd exploit"),
+        md.index("\n## Action Board\n"),
+    ]
+    assert positions == sorted(positions), "section must sit between exec summary and Action Board"
+    section = _assignment_section(md)
+    # the structured mirror + evidence appendix are both pointed to
+    assert "assignment_answers" in section and "Evidence appendix" in section
+
+
+def test_assignment_section_every_artifact_link_resolves():
+    import re
+
+    s = _state()
+    pkg = _assignment_pkg(s)
+    md = render_markdown(s, pkg)
+    section = _assignment_section(md)
+    links = re.findall(r"\[(ART-[^\]]+)\]\((https?://[^)]+)\)", section)
+    assert links, "the section must carry artifact citations"
+    by_url = {a["url"]: a["artifact_id"] for a in pkg["artifacts"]}
+    for label, url in links:
+        assert url in by_url, f"cited URL {url} not in the package artifact ledger"
+        assert by_url[url].startswith(label), f"label {label} does not match artifact for {url}"
+
+
+def test_assignment_section_bars_and_shares():
+    s = _state()
+    md = render_markdown(s, _assignment_pkg(s))
+    section = _assignment_section(md)
+    q1 = section[section.index("### 1.") : section.index("### 2.")]
+    q1_rows = [
+        ln
+        for ln in q1.splitlines()
+        if ln.startswith("| global_payroll") or ln.startswith("| compliance")
+    ]
+    # both nonzero-share themes carry a real bar glyph and a percent
+    assert len(q1_rows) == 2
+    for row in q1_rows:
+        assert "█" in row, f"nonzero share must render a bar: {row}"
+        assert "%" in row
+
+
+def test_assignment_section_pipes_in_competitor_text_do_not_break_tables():
+    s = _state()
+    md = render_markdown(s, _assignment_pkg(s))
+    section = _assignment_section(md)
+    # Q4 gaps table: header + separator + exactly ONE data row, 6 columns each
+    q4 = section[section.index("### 4.") :]
+    gap_table = [ln for ln in q4.splitlines() if ln.startswith("|")]
+    assert len(gap_table) == 3, f"pipe in claim text split the row: {gap_table}"
+    assert all(ln.count("|") == 7 for ln in gap_table)
+    assert "150 countries" in gap_table[2]  # the claim text survived, sans pipes
+    # Q1 row with the piped example message also stays one row / 6 columns
+    q1 = section[section.index("### 1.") : section.index("### 2.")]
+    q1_compliance = [ln for ln in q1.splitlines() if ln.startswith("| compliance")]
+    assert len(q1_compliance) == 1 and q1_compliance[0].count("|") == 7
+    assert "Compliance built-in" in q1_compliance[0]
+
+
+def test_assignment_section_icp_shift_and_linkedin_render():
+    s = _state()
+    md = render_markdown(s, _assignment_pkg(s))
+    section = _assignment_section(md)
+    # prior window is 3 HR-leader pages, current 3 CFO pages -> both deltas clear 15 pts
+    assert "**CFO**: 0% → 100% (+100 pts)" in section
+    assert "**HR leader**: 100% → 0% (-100 pts)" in section
+    assert "we just launched payroll in 150 countries" in section
+    assert "([post](https://www.linkedin.com/posts/abc))" in section
+
+
+def test_assignment_gap_and_play_citations_survive_humanized_theme_labels():
+    """Regression (flagship RUN-b256fab1c1dd): gap records whose claim_id is a
+    GAP- id (not in the claims ledger), with no strongest_proof_id and a
+    HUMANIZED short_label ('global payroll' for taxonomy theme
+    'global_payroll'), must still cite the theme's classified pages — and the
+    play that supports on that GAP id inherits those citations. Before the
+    theme-key normalization fix, both rendered 'Sources: —'."""
+    from competitive_agent.report import build_assignment_answers
+
+    s = _state()
+    pkg = _assignment_pkg(s)
+    pkg["proof_gaps"] = [
+        {
+            "claim_id": "GAP-deadbeef0001",  # NOT in pkg["claims"]
+            "claim_text": "One platform for global payroll everywhere",
+            "short_label": "global payroll",  # humanized: theme is global_payroll
+            "strongest_proof_id": None,
+            "attackability": "medium",
+            "proof_strength": "weak",
+            "focal_proof_strength": "strong",
+            "actionable_interpretation": "attack breadth with proof",
+        }
+    ]
+    pkg["opportunities"][0]["supporting_claim_ids"] = ["GAP-deadbeef0001"]
+    pkg["assignment_answers"] = build_assignment_answers(pkg)
+
+    q4 = pkg["assignment_answers"]["q4_gaps_and_opportunities"]
+    gap_cites = q4["message_proof_gaps"][0]["citations"]
+    play_cites = q4["campaign_plays"][0]["citations"]
+    assert gap_cites, "humanized short_label must still resolve to theme pages"
+    theme_artifact_ids = {"ART-cur-0001", "ART-cur-0003"}  # the global_payroll pages
+    assert all(c["artifact_id"] in theme_artifact_ids for c in gap_cites)
+    assert play_cites, "play must inherit the gap's citations via its GAP- id"
+    assert {c["artifact_id"] for c in play_cites} <= theme_artifact_ids
+
+    md = render_markdown(s, pkg)
+    section = _assignment_section(md)
+    q4_md = section[section.index("### 4.") :]
+    assert "Sources: —" not in q4_md, "no uncited gap/play rows in the rendered section"
+
+
+def test_assignment_section_empty_run_renders_honest_oneliners():
+    s = _state()
+    pkg = build_json_package(s, _Ctx())  # no artifacts, no classifications
+    md = render_markdown(s, pkg)
+    section = _assignment_section(md)
+    assert "Classified messaging themes: none observed on this run." in section
+    assert "LinkedIn amplification: none observed on this run." in section
+    assert "Verified change events: none observed on this run." in section
+    assert "Message–proof gaps: none observed on this run." in section
+    assert "Campaign plays: none survived the critics on this run." in section
+    # never an empty table: no table header without data rows
+    assert "| Theme |" not in section and "| Their claim |" not in section

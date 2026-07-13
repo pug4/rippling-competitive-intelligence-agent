@@ -197,6 +197,22 @@ summary { cursor: pointer; font-size: 14px; }
 .tltrack2 { display: flex; align-items: center; gap: 6px; }
 .tlbar2 { height: 12px; background: var(--good); opacity: .75; border-radius: 3px; min-width: 4px; }
 
+/* ---- deliverables bar (required outputs, downloadable at the top) ---- */
+.card.dlbar { border: 1px solid var(--accent); margin: 10px 0 14px; padding: 12px 16px;
+  box-shadow: 0 0 0 1px rgba(110, 168, 254, .28), 0 4px 20px rgba(110, 168, 254, .16); }
+.dlbar-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--accent); margin-bottom: 10px; }
+.dlbar-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.dlbtn { display: flex; flex-direction: column; gap: 3px; flex: 1 1 260px; min-width: 220px;
+  background: var(--panel2); border: 1px solid var(--accent); border-radius: 8px;
+  padding: 10px 14px; text-decoration: none; transition: box-shadow .15s, filter .15s; }
+.dlbtn:hover { box-shadow: 0 0 0 2px rgba(110, 168, 254, .35); filter: brightness(1.08); }
+.dlbtn-main { font-size: 14px; font-weight: 700; color: var(--accent); }
+.dlbtn-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.dlbtn.primary { background: var(--accent); border-color: var(--accent); }
+.dlbtn.primary .dlbtn-main { color: #0b1020; }
+.dlbtn.primary .dlbtn-sub { color: #0b1020; opacity: .78; }
+
 /* red-team remediation: banner, top-actions, experiment plan, claims, cep groups */
 .banner { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 10px 12px; font-size: 12px; margin: 10px 0; }
 .banner b { color: var(--warn); }

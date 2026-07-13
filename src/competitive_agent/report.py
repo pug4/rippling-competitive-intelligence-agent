@@ -21,7 +21,7 @@ from .state import DirectorState
 # 1.4.0: additive keys — buyer_voice rollup, keyword_provider/keyword_metrics/
 # opportunity_score in paid_search, ad-record artifact metadata.
 # 1.5.0: additive key — similarweb_peers (peer-domain Similarweb enrichments).
-JSON_SCHEMA_VERSION = "1.5.0"
+JSON_SCHEMA_VERSION = "1.6.0"
 
 
 def run_output_dir(state: DirectorState, ctx: GraphContext) -> Path:
@@ -838,7 +838,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
                 )
         return line
 
-    return {
+    pkg = {
         "schema_version": JSON_SCHEMA_VERSION,
         "bottom_line": _bottom_line(),
         "run": {
@@ -934,6 +934,10 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "trace_summary": {"tool_calls": state.tool_calls_made},
         "eval_summary": eval_summary,
     }
+    # The assignment's four questions, answered from the package itself —
+    # composed LAST so every ledger it cites is already assembled.
+    pkg["assignment_answers"] = build_assignment_answers(pkg)
+    return pkg
 
 
 # ---------------------------------------------------------------------------
@@ -1057,6 +1061,12 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 f"- **Theme momentum:** {_n_emerging} emerging · {_n_expanding} expanding · "
                 f"{_n_stable} stable → **counter the moving themes before they harden**"
             )
+
+    # --- The assignment deliverable: four questions, answered ---------------
+    # Rendered EXCLUSIVELY from pkg["assignment_answers"] (single source of
+    # truth, composed in build_json_package) so brief and data.json can never
+    # diverge.
+    L.extend(_assignment_section_lines(pkg))
 
     # --- Action Board — Rippling-first (feedback #28) -----------------------
     add("\n## Action Board\n")
@@ -1779,6 +1789,581 @@ def _theme_counts(cls: list[dict]) -> list[tuple[str, int]]:
         if x.get("primary_theme"):
             c[x["primary_theme"]] += 1
     return c.most_common()
+
+
+def _bar(share: float | None, width: int = 18) -> str:
+    """Text bar chart cell: share of corpus -> proportional block glyphs."""
+    if not share or share <= 0:
+        return ""
+    return "█" * max(1, round(min(1.0, share) * width))
+
+
+def _short_id(artifact_id: str) -> str:
+    return artifact_id[:10] if artifact_id else ""
+
+
+def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
+    """The assignment's four questions, answered from the run's own evidence.
+
+    Deterministic composition over the validated package — no model calls.
+    EVERY row carries ``citations``: the artifact(s) the statement rests on
+    (id, url, source type, retrieval/publish timestamp), so each claim is one
+    click from its source. The same structure renders the brief's markdown
+    section and ships in data.json (``assignment_answers``).
+    """
+    companies = pkg.get("companies") or []
+    competitor = companies[0].get("canonical_name") if companies else "the competitor"
+    focal = companies[1].get("canonical_name") if len(companies) > 1 else "the focal company"
+    arts = {a.get("artifact_id"): a for a in pkg.get("artifacts") or []}
+    evs = {e.get("evidence_id"): e for e in pkg.get("evidence") or []}
+    claims_by_id = {c.get("claim_id"): c for c in pkg.get("claims") or []}
+
+    def cite(artifact_id: str | None) -> dict[str, Any] | None:
+        a = arts.get(artifact_id or "")
+        if not a:
+            return None
+        return {
+            "artifact_id": a.get("artifact_id"),
+            "url": a.get("url"),
+            "source_type": a.get("source_type"),
+            "timestamp": a.get("published_at")
+            or a.get("archive_capture_at")
+            or a.get("retrieved_at"),
+        }
+
+    def cites_from_evidence(evidence_ids: list[str], limit: int = 2) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for eid in evidence_ids or []:
+            e = evs.get(eid)
+            if not e:
+                continue
+            c = cite(e.get("artifact_id"))
+            if c:
+                c = {**c, "evidence_id": eid, "exact_excerpt": e.get("exact_excerpt", "")[:200]}
+                out.append(c)
+            if len(out) >= limit:
+                break
+        return out
+
+    def cites_from_claims(claim_ids: list[str], limit: int = 2) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for cid in claim_ids or []:
+            claim = claims_by_id.get(cid)
+            if not claim:
+                continue
+            out.extend(cites_from_evidence(claim.get("evidence_ids") or [], limit=1))
+            if len(out) >= limit:
+                break
+        return out[:limit]
+
+    cls = pkg.get("classifications") or []
+    n_cls = max(1, len(cls))
+
+    def _theme_key(t: Any) -> str:
+        """Normalize a theme label for matching: gap short_labels are the
+        humanized form ('native platform breadth') of the snake_case taxonomy
+        theme ('native_platform_breadth') classifications carry."""
+        return "_".join(str(t or "").strip().casefold().replace("-", " ").split())
+
+    def cites_from_theme(theme: str | None, limit: int = 2) -> list[dict[str, Any]]:
+        """Highest-salience classified pages carrying the theme — the pages
+        the repeated message was actually observed on (distinct artifacts)."""
+        key = _theme_key(theme)
+        rows = sorted(
+            (c for c in cls if key and _theme_key(c.get("primary_theme")) == key),
+            key=lambda r: -(r.get("message_salience") or 0),
+        )
+        out: list[dict[str, Any]] = []
+        for r in rows:
+            c1 = cite(r.get("artifact_id"))
+            if c1 and c1 not in out:
+                out.append(c1)
+            if len(out) >= limit:
+                break
+        return out
+
+    # ---- Q1: messaging angles & themes they're running ----------------------
+    by_theme: dict[str, list[dict[str, Any]]] = {}
+    for c in cls:
+        theme = c.get("primary_theme")
+        if theme:
+            by_theme.setdefault(theme, []).append(c)
+    theme_rows: list[dict[str, Any]] = []
+    for theme, rows in sorted(by_theme.items(), key=lambda kv: -len(kv[1])):
+        best = max(rows, key=lambda r: r.get("message_salience") or 0)
+        theme_rows.append(
+            {
+                "theme": theme,
+                "pages": len(rows),
+                "share": round(len(rows) / n_cls, 4),
+                "example_message": (best.get("primary_message") or "")[:220],
+                "citations": cites_from_theme(theme),
+            }
+        )
+    posts = pkg.get("linkedin_posts") or []
+    li_by_theme: dict[str, list[dict[str, Any]]] = {}
+    for p in posts:
+        if p.get("theme"):
+            li_by_theme.setdefault(p["theme"], []).append(p)
+    linkedin_rows = [
+        {
+            "theme": theme,
+            "posts": len(rows),
+            "example_excerpt": (rows[0].get("excerpt") or "")[:180],
+            "citations": [
+                {
+                    "url": rows[0].get("url") or rows[0].get("post_url"),
+                    "source_type": "linkedin_post",
+                    "timestamp": rows[0].get("published_at") or rows[0].get("posted_at"),
+                }
+            ],
+        }
+        for theme, rows in sorted(li_by_theme.items(), key=lambda kv: -len(kv[1]))[:3]
+    ]
+    q1 = {
+        "question": "What messaging angles and themes are they running?",
+        "themes": theme_rows[:10],
+        "linkedin_amplification": linkedin_rows,
+        "method_note": (
+            "Each collected page/post was individually classified; a theme row "
+            "counts pages whose PRIMARY theme matched. Share is of the "
+            f"{len(cls)} classified {competitor} pages. The example message is "
+            "the classifier's summary of the highest-salience page for that "
+            "theme — the citation opens the page itself."
+        ),
+    }
+
+    # ---- Q2: how they position their product(s) -----------------------------
+    dom = pkg.get("dominant_message") or {}
+    dom_theme_rows = by_theme.get(dom.get("theme") or "", [])
+    dom_cites = [
+        c
+        for c in (
+            cite(r.get("artifact_id"))
+            for r in sorted(dom_theme_rows, key=lambda r: -(r.get("message_salience") or 0))[:2]
+        )
+        if c
+    ]
+    villain_rows: list[dict[str, Any]] = []
+    seen_villains: set[str] = set()
+    for c in cls:
+        for wording in c.get("villain_exact_wording") or []:
+            key = " ".join(wording.split()).casefold()
+            if key and key not in seen_villains:
+                seen_villains.add(key)
+                vc = cite(c.get("artifact_id"))
+                villain_rows.append({"verbatim": wording, "citations": [x for x in [vc] if x]})
+        if len(villain_rows) >= 6:
+            break
+    product_rows: list[dict[str, Any]] = []
+    for p in (pkg.get("product_positioning") or [])[:10]:
+        example = next(
+            (c for c in cls if p.get("product") in (c.get("products") or [])),
+            None,
+        )
+        pc = cite(example.get("artifact_id")) if example else None
+        product_rows.append(
+            {
+                "product": p.get("product"),
+                "pages": p.get("pages"),
+                "themes": (p.get("themes") or [])[:3],
+                "personas": (p.get("personas") or [])[:3],
+                "proof_types": (p.get("proof_types") or [])[:3],
+                "citations": [x for x in [pc] if x],
+            }
+        )
+    q2 = {
+        "question": "How do they position their product(s)?",
+        "dominant_message": {
+            "label": dom.get("label"),
+            "theme": dom.get("theme"),
+            "justification": dom.get("reason"),
+            "citations": dom_cites,
+        },
+        "villain_wording": villain_rows,
+        "products": product_rows,
+        "method_note": (
+            "Positioning is counted, not summarized: the dominant message must "
+            "recur across surfaces; villain wording is verbatim from the cited "
+            "pages; the product table maps every classified page to the "
+            "product(s) it sells."
+        ),
+    }
+
+    # ---- Q3: what's changed recently ----------------------------------------
+    rank = {"high": 3, "medium": 2, "low": 1}
+    events = sorted(
+        pkg.get("change_events") or [],
+        key=lambda e: (-rank.get(str(e.get("confidence")), 0), str(e.get("apparent_change_at"))),
+    )
+    change_rows = [
+        {
+            "what": e.get("theme") or e.get("dimension"),
+            "dimension": e.get("dimension"),
+            "prior_state": e.get("prior_state"),
+            "current_state": e.get("current_state"),
+            "apparent_change_at": e.get("apparent_change_at"),
+            "confidence": e.get("confidence"),
+            "lifecycle": e.get("lifecycle"),
+            "citations": cites_from_evidence(e.get("current_evidence_ids") or []),
+        }
+        for e in events[:8]
+    ]
+    # ICP read: persona mix in prior-window vs current-window artifacts.
+    windows = {
+        w.get("window_id"): w.get("purpose")
+        for w in (pkg.get("scope") or {}).get("time_windows") or []
+    }
+    persona_counts: dict[str, dict[str, int]] = {"prior": {}, "current": {}}
+    window_n = {"prior": 0, "current": 0}
+    for c in cls:
+        a = arts.get(c.get("artifact_id") or "")
+        if not a:
+            continue
+        purposes = {windows.get(tw) for tw in a.get("time_window_ids") or []}
+        bucket = (
+            "current" if "current" in purposes else ("prior" if "comparison" in purposes else None)
+        )
+        if not bucket:
+            continue
+        window_n[bucket] += 1
+        for persona in c.get("personas") or []:
+            persona_counts[bucket][persona] = persona_counts[bucket].get(persona, 0) + 1
+    icp_rows: list[dict[str, Any]] = []
+    if window_n["prior"] >= 3:
+        # Union of both windows: a persona they STOPPED targeting (present
+        # prior, absent current) is as much an ICP shift as a newly added one.
+        for persona in set(persona_counts["current"]) | set(persona_counts["prior"]):
+            cur_share = persona_counts["current"].get(persona, 0) / max(1, window_n["current"])
+            pri_share = persona_counts["prior"].get(persona, 0) / max(1, window_n["prior"])
+            delta = cur_share - pri_share
+            if abs(delta) >= 0.15:
+                icp_rows.append(
+                    {
+                        "persona": persona,
+                        "prior_share": round(pri_share, 3),
+                        "current_share": round(cur_share, 3),
+                        "delta": round(delta, 3),
+                    }
+                )
+        icp_rows = sorted(icp_rows, key=lambda r: -abs(r["delta"]))[:4]
+    q3 = {
+        "question": "What's changed recently (new campaigns, new ICPs targeted, messaging pivots)?",
+        "verified_changes": change_rows,
+        "icp_shift_signals": icp_rows,
+        "icp_note": (
+            f"Persona mix compared across dated windows (prior n={window_n['prior']}, "
+            f"current n={window_n['current']} classified pages). "
+            + (
+                "Prior-window sample is too thin for ICP deltas — not asserted."
+                if window_n["prior"] < 3
+                else "Deltas under 15 points are not reported; archive coverage "
+                "is sparser than the live site, so treat these as signals."
+            )
+        ),
+        "method_note": (
+            "Every change event needed evidence in BOTH windows or is labeled "
+            "by its lifecycle (emerging/expanding); events were re-reconciled "
+            "against the final corpus. Citations open the current-window "
+            "evidence behind each change."
+        ),
+    }
+
+    # ---- Q4: gaps & what we'd exploit ----------------------------------------
+    gap_rows: list[dict[str, Any]] = []
+    gap_cites_by_id: dict[str, list[dict[str, Any]]] = {}
+    for g in (pkg.get("proof_gaps") or [])[:6]:
+        # Citation chain: the claims ledger, then the gap's strongest proof
+        # evidence, then the highest-salience pages of the theme the repeated
+        # claim was counted on — always the run's own evidence, never invented.
+        g_cites = cites_from_claims([g["claim_id"]] if g.get("claim_id") else [])
+        if not g_cites and g.get("strongest_proof_id"):
+            g_cites = cites_from_evidence([g["strongest_proof_id"]])
+        if not g_cites:
+            g_cites = cites_from_theme(g.get("theme") or g.get("short_label"))
+        if g.get("claim_id"):
+            gap_cites_by_id[str(g["claim_id"])] = g_cites
+        gap_rows.append(
+            {
+                "their_claim": (g.get("claim_text") or "")[:180],
+                "attackability": g.get("attackability"),
+                "their_proof": g.get("proof_strength"),
+                f"{focal.lower()}_proof": g.get("focal_proof_strength"),
+                "justification": (
+                    (g.get("attackability_detail") or {}).get("rationale")
+                    or g.get("actionable_interpretation")
+                    or ""
+                )[:220],
+                "citations": g_cites,
+            }
+        )
+    plays: list[dict[str, Any]] = []
+    for o in (pkg.get("opportunities") or [])[:5]:
+        support = [str(cid) for cid in o.get("supporting_claim_ids") or []]
+        o_cites = cites_from_claims(support)
+        if not o_cites:
+            # supporting ids may reference gap records rather than raw claims —
+            # inherit the cited pages of the gap the play attacks.
+            seen_urls: set[str] = set()
+            for cid in support:
+                for c1 in gap_cites_by_id.get(cid, []):
+                    u = str(c1.get("url") or "")
+                    if u and u not in seen_urls:
+                        seen_urls.add(u)
+                        o_cites.append(c1)
+            o_cites = o_cites[:2]
+        plays.append(
+            {
+                "play": o.get("title"),
+                "message_angle": o.get("message_angle"),
+                "target_personas": (o.get("target_personas") or [])[:3],
+                "primary_metric": o.get("primary_metric"),
+                "kill_rule": o.get("kill_rule"),
+                "justification": (
+                    o.get("competitor_pattern") or o.get("experiment_hypothesis") or ""
+                )[:240],
+                "citations": o_cites,
+            }
+        )
+    q4 = {
+        "question": (
+            f"What positioning gaps or opportunities does this surface for {focal}'s "
+            "marketing — and what would we exploit writing campaigns against them?"
+        ),
+        "message_proof_gaps": gap_rows,
+        "campaign_plays": plays,
+        "method_note": (
+            "Gaps score every repeated competitor claim against observed proof "
+            "on BOTH sides (share-normalized for corpus size; thin themes are "
+            "flagged, never inflated). Each play ships with its metric and a "
+            "kill rule — a campaign board, not a book report."
+        ),
+    }
+
+    return {
+        "note": (
+            "The assignment's four questions answered from this run's collected "
+            "evidence. Every row carries citations (artifact id, URL, source "
+            "type, timestamp); confidence levels and the full source/claim "
+            "ledgers live alongside in this file."
+        ),
+        "competitor": competitor,
+        "focal_company": focal,
+        "generated_at": pkg.get("run", {}).get("generated_at"),
+        "q1_messaging_themes": q1,
+        "q2_product_positioning": q2,
+        "q3_recent_changes": q3,
+        "q4_gaps_and_opportunities": q4,
+    }
+
+
+def _md_url(url: str) -> str:
+    """Percent-encode the characters that would break a markdown link or a
+    table cell (competitor URLs are untrusted input, not layout)."""
+    return (
+        url.replace("|", "%7C")
+        .replace("(", "%28")
+        .replace(")", "%29")
+        .replace("\n", "%0A")
+        .replace(" ", "%20")
+    )
+
+
+def _md_cites(citations: list[dict[str, Any]]) -> str:
+    """Render citation dicts as markdown source links."""
+    links = [
+        f"[{_safe_cell(_short_id(str(c.get('artifact_id') or 'src')))}]({_md_url(str(c['url']))})"
+        for c in citations or []
+        if c.get("url")
+    ]
+    return " ".join(links) if links else "—"
+
+
+def _safe_cell(text: Any, limit: int = 0) -> str:
+    """Markdown-table-safe cell from an untrusted package string: pipes and
+    newlines are stripped (a `|` inside a competitor claim must never break
+    the table), whitespace collapsed, optionally truncated with an ellipsis."""
+    s = " ".join(str(text if text is not None else "").replace("|", " ").split())
+    if limit and len(s) > limit:
+        s = s[: limit - 1].rstrip() + "…"
+    return s or "—"
+
+
+def _pct(share: Any) -> str:
+    """Honest percent cell: small nonzero shares keep one decimal so a 0.4%
+    theme never renders as '0%'."""
+    v = float(share or 0)
+    return f"{v:.1%}" if 0 < v < 0.10 else f"{v:.0%}"
+
+
+def _assignment_section_lines(pkg: dict[str, Any]) -> list[str]:
+    """The brief's four-question deliverable section, rendered EXCLUSIVELY from
+    ``pkg['assignment_answers']`` (the composer is the single source of truth —
+    nothing here recomputes from raw package fields). Every cell of untrusted
+    competitor text passes through ``_safe_cell``; empty lists render honest
+    one-liners, never empty tables."""
+    aa = pkg["assignment_answers"]
+    competitor = aa.get("competitor") or "the competitor"
+    focal = aa.get("focal_company") or "the focal company"
+    L: list[str] = []
+    add = L.append
+
+    add("\n## The assignment deliverable — four questions, answered from the evidence\n")
+    add(
+        f"The assignment's four questions, answered directly from the evidence this run "
+        f"collected on {competitor}. Every claim below carries its source citations — each "
+        f"`[ART-…](link)` is an artifact id resolving to the cited URL — and the same answers "
+        f"ship structured in `data.json` under `assignment_answers`. The Evidence appendix at "
+        f"the end of this brief holds the full source ledger (every artifact with its retrieval "
+        f"timestamp)."
+    )
+
+    # --- Q1: messaging angles & themes --------------------------------------
+    q1 = aa.get("q1_messaging_themes") or {}
+    add("\n### 1. What messaging angles and themes are they running?\n")
+    themes = q1.get("themes") or []
+    if themes:
+        add("| Theme | Pages | Share | Investment | Example message (from their page) | Sources |")
+        add("|---|---:|---:|---|---|---|")
+        for t in themes:
+            share = float(t.get("share") or 0)
+            add(
+                f"| {_safe_cell(t.get('theme'))} | {int(t.get('pages') or 0)} | {_pct(share)} | "
+                f"{_bar(share)} | {_safe_cell(t.get('example_message'), 160)} | "
+                f"{_md_cites(t.get('citations') or [])} |"
+            )
+    else:
+        add("- Classified messaging themes: none observed on this run.")
+    li = q1.get("linkedin_amplification") or []
+    if li:
+        add("\n**LinkedIn amplification (employee posts echoing the themes):**\n")
+        for row in li:
+            first = (row.get("citations") or [{}])[0]
+            link = f" ([post]({_md_url(str(first['url']))}))" if first.get("url") else ""
+            add(
+                f"- **{_safe_cell(row.get('theme'))}** — {int(row.get('posts') or 0)} post(s): "
+                f"“{_safe_cell(row.get('example_excerpt'), 180)}”{link}"
+            )
+    else:
+        add("\n- LinkedIn amplification: none observed on this run.")
+    if q1.get("method_note"):
+        add(f"\n_{q1['method_note']}_")
+
+    # --- Q2: product positioning ---------------------------------------------
+    q2 = aa.get("q2_product_positioning") or {}
+    add("\n### 2. How do they position their product(s)?\n")
+    dm = q2.get("dominant_message") or {}
+    if dm.get("label"):
+        just = f" — _{_safe_cell(dm.get('justification'))}_" if dm.get("justification") else ""
+        add(
+            f"- **Dominant message:** {_safe_cell(dm.get('label'))}{just} · "
+            f"Sources: {_md_cites(dm.get('citations') or [])}"
+        )
+    else:
+        add("- Dominant message: none observed on this run.")
+    villains = q2.get("villain_wording") or []
+    if villains:
+        add("- **Villain / status-quo wording (verbatim from their pages):**")
+        for v in villains:
+            add(f"  - “{_safe_cell(v.get('verbatim'))}” — {_md_cites(v.get('citations') or [])}")
+    else:
+        add("- Villain / status-quo wording: none observed on this run.")
+    products = q2.get("products") or []
+    if products:
+        add("")
+        add("| Product | Pages | Themes | Personas | Proof | Sources |")
+        add("|---|---:|---|---|---|---|")
+        for p in products:
+            add(
+                f"| {_safe_cell(p.get('product'), 32)} | {int(p.get('pages') or 0)} | "
+                f"{_safe_cell(', '.join(p.get('themes') or []))} | "
+                f"{_safe_cell(', '.join(p.get('personas') or []))} | "
+                f"{_safe_cell(', '.join(p.get('proof_types') or []))} | "
+                f"{_md_cites(p.get('citations') or [])} |"
+            )
+    else:
+        add("- Product-level positioning rows: none observed on this run.")
+    if q2.get("method_note"):
+        add(f"\n_{q2['method_note']}_")
+
+    # --- Q3: recent changes ---------------------------------------------------
+    q3 = aa.get("q3_recent_changes") or {}
+    add("\n### 3. What's changed recently (new campaigns, new ICPs targeted, messaging pivots)?\n")
+    changes = q3.get("verified_changes") or []
+    if changes:
+        add("| What moved | Prior → Current | When | Confidence | Lifecycle | Sources |")
+        add("|---|---|---|---|---|---|")
+        for e in changes:
+            transition = (
+                f"{_safe_cell(e.get('prior_state'), 70)} → {_safe_cell(e.get('current_state'), 70)}"
+            )
+            add(
+                f"| {_safe_cell(e.get('what'))} | {transition} | "
+                f"{_safe_cell(str(e.get('apparent_change_at') or '')[:10])} | "
+                f"{_safe_cell(e.get('confidence'))} | {_safe_cell(e.get('lifecycle'))} | "
+                f"{_md_cites(e.get('citations') or [])} |"
+            )
+    else:
+        add("- Verified change events: none observed on this run.")
+    icp = q3.get("icp_shift_signals") or []
+    if icp:
+        add(
+            "\n**ICP-shift signals (persona share of classified pages, prior → current window):**\n"
+        )
+        for r in icp:
+            delta_pts = float(r.get("delta") or 0) * 100
+            add(
+                f"- **{_safe_cell(r.get('persona'))}**: {_pct(r.get('prior_share'))} → "
+                f"{_pct(r.get('current_share'))} ({delta_pts:+.0f} pts)"
+            )
+        if q3.get("icp_note"):
+            add(f"\n_{q3['icp_note']}_")
+    elif q3.get("icp_note"):
+        add(f"- ICP-shift signals: none cleared the reporting bar. {q3['icp_note']}")
+    if q3.get("method_note"):
+        add(f"\n_{q3['method_note']}_")
+
+    # --- Q4: gaps & campaign plays ---------------------------------------------
+    q4 = aa.get("q4_gaps_and_opportunities") or {}
+    add(f"\n### 4. What gaps does this surface for {focal} — and what we'd exploit\n")
+    gaps = q4.get("message_proof_gaps") or []
+    focal_proof_key = f"{focal.lower()}_proof"
+    if gaps:
+        add(
+            f"| Their claim | Attackability | Their proof | {focal} proof | "
+            f"Why it's open | Sources |"
+        )
+        add("|---|---|---|---|---|---|")
+        for g in gaps:
+            add(
+                f"| {_safe_cell(g.get('their_claim'), 90)} | {_safe_cell(g.get('attackability'))} | "
+                f"{_safe_cell(g.get('their_proof'))} | {_safe_cell(g.get(focal_proof_key))} | "
+                f"{_safe_cell(g.get('justification'), 140)} | {_md_cites(g.get('citations') or [])} |"
+            )
+    else:
+        add("- Message–proof gaps: none observed on this run.")
+    plays = q4.get("campaign_plays") or []
+    add("\n**What we'd run against them**\n")
+    if plays:
+        for p in plays:
+            personas = ", ".join(p.get("target_personas") or [])
+            add(
+                f"- **{_safe_cell(p.get('play'))}** — {_safe_cell(p.get('message_angle'))} · "
+                f"target: {_safe_cell(personas)} · metric: {_safe_cell(p.get('primary_metric'))} · "
+                f"kill rule: {_safe_cell(p.get('kill_rule'))}"
+            )
+            just = f"_{_safe_cell(p.get('justification'))}_ · " if p.get("justification") else ""
+            add(f"  - {just}Sources: {_md_cites(p.get('citations') or [])}")
+    else:
+        add("- Campaign plays: none survived the critics on this run.")
+    if q4.get("method_note"):
+        add(f"\n_{q4['method_note']}_")
+    add(
+        "\n_Full staged campaign plans (audiences, channels, proceed/stop gates) are in the "
+        "Action Board section below; the structured mirror of this whole section is "
+        "`assignment_answers` in `data.json`._"
+    )
+    return L
 
 
 def _positioning_oneliner(cls: list[dict], company: str) -> str:

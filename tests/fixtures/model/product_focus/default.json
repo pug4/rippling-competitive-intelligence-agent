@@ -1,0 +1,62 @@
+{
+  "category_narrative": {
+    "text": "In this category the competitor leads with a consolidation story: one platform replacing point tools, sold on breadth rather than category depth.",
+    "supporting_quote": "all-in-one workforce platform",
+    "basis": "verbatim in-category message with the highest observed salience in the competitor block"
+  },
+  "their_target_buyer": {
+    "text": "The in-category pages address the HR leader as the primary buyer; no category-specialist persona was observed.",
+    "supporting_quote": null,
+    "basis": "personas observed in the competitor's in-category block; absence of other personas stated as absence"
+  },
+  "how_focal_should_counter": {
+    "text": "Position the focal product as the category specialist inside the platform: lead with in-category proof instead of matching the breadth pitch.",
+    "supporting_quote": null,
+    "basis": "inference from the theme mix and proof comparison supplied; no market-outcome claim is made"
+  },
+  "messaging_gaps": [
+    {
+      "said_by": "competitor",
+      "gap": "The competitor anchors this category on tool consolidation; the focal in-category pages do not lead with a consolidation message here.",
+      "supporting_quote": "all-in-one workforce platform",
+      "basis": "competitor verbatim message present in-category; no matching focal in-category message observed"
+    }
+  ],
+  "detailed_opportunities": [
+    {
+      "title": "Category proof page",
+      "angle": "Meet the consolidation pitch with named in-category proof the competitor's pages do not show.",
+      "proof_required": "At least one named customer story specific to this category (observed proof types only — do not promise proof we do not have).",
+      "funnel_placement": "consideration",
+      "first_asset_to_ship": "A category landing-page section citing the observed proof, with sources.",
+      "supporting_quote": "all-in-one workforce platform",
+      "basis": "grounded in the competitor's verbatim in-category message and the proof comparison"
+    },
+    {
+      "title": "Buying-trigger comparison asset",
+      "angle": "Own the category buying trigger the ownership rows mark as contested.",
+      "proof_required": "Focal pages that actually address the trigger; build the landing page first if missing.",
+      "funnel_placement": "decision",
+      "first_asset_to_ship": "A one-page comparison keyed to the trigger, citing only observed evidence.",
+      "supporting_quote": "the competitor guarantees a 99% win rate in every enterprise deal",
+      "basis": "decision-stage trigger from the CEP ownership block"
+    },
+    {
+      "title": "Persona-specific nurture",
+      "angle": "Speak to the observed in-category persona in their own terms.",
+      "proof_required": "Persona-relevant proof from the focal in-category corpus.",
+      "funnel_placement": "awareness",
+      "first_asset_to_ship": "A short persona-targeted post grounded in the observed theme mix.",
+      "supporting_quote": null,
+      "basis": "inferred from the persona and theme counts supplied; no verbatim quote required"
+    }
+  ],
+  "what_not_to_claim": [
+    {
+      "claim": "Market leadership or share in this category.",
+      "reason": "Market share, revenue, and win rates are not observable in public marketing evidence; asserting them would fabricate a metric.",
+      "supporting_quote": null,
+      "basis": "honesty rule — absence of outcome data stated as absence"
+    }
+  ]
+}

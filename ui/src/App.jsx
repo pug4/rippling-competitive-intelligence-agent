@@ -708,6 +708,41 @@ function TopActions({ pkg, onOpenBoard }) {
   );
 }
 
+// DELIVERABLES BAR — the assignment's required output surface, clearly
+// highlighted at the top of every completed run: the cited markdown brief and
+// the full JSON package, downloadable in one click. Plain same-origin anchors
+// (the vite proxy forwards /api) with a `download` filename — no blob logic.
+function DeliverablesBar({ runId }) {
+  return (
+    <div className="card dlbar" role="region" aria-label="Required deliverables — download">
+      <div className="dlbar-title">
+        Required deliverables — download
+        <Info tip="The run's two required outputs, generated from this run's collected evidence — every claim in them carries citations back to the sources below." />
+      </div>
+      <div className="dlbar-btns">
+        <a
+          className="dlbtn primary"
+          href={`/api/runs/${runId}/brief`}
+          download={`${runId}-brief.md`}
+          data-tip="Markdown brief: answers the four assignment questions — the competitor's messaging themes, their positioning, recent changes, and the gaps/plays for the focal company — every claim cited to a collected source."
+        >
+          <span className="dlbtn-main">📄 Markdown brief</span>
+          <span className="dlbtn-sub">the four assignment answers + full cited analysis</span>
+        </a>
+        <a
+          className="dlbtn"
+          href={`/api/runs/${runId}`}
+          download={`${runId}-data.json`}
+          data-tip="JSON data: the full structured package — assignment_answers (the four answers with citations), the claims ledger, every artifact with retrieval timestamps, and all classifications."
+        >
+          <span className="dlbtn-main">🧾 JSON data</span>
+          <span className="dlbtn-sub">sources · extracted claims · confidence levels · timestamps</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // Corpus-size asymmetry disclosure — rendered only when the package says so
 // (one shared rule for UI, dashboard, and brief; §40.6: UI adds no analytics).
 function AsymmetryBanner({ pkg }) {
@@ -2978,6 +3013,7 @@ export default function App() {
                 </span>
               )}
             </h1>
+            <DeliverablesBar runId={selected} />
             {pkg.run?.execution_mode === "fixture" && (
               <p className="empty">Fixture mode — synthetic, deterministic data.</p>
             )}

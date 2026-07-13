@@ -36,6 +36,7 @@ routes:
   analysis_chat: tier2
   # On-demand paid-search keyword targeting draft (strategy -> tier2).
   paid_search_targeting: tier2
+  product_focus: tier2
   # Per-ad structured extraction from ad-library pages (ADS contract).
   ad_intelligence: tier2
 

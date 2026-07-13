@@ -678,3 +678,83 @@ def test_live_snapshot_passes_through_pending_decision(isolated_env: Path):
         "choice": "use_web",
         "via": "user",
     }
+
+
+def test_product_focus_endpoints(isolated_env: Path):
+    """Product-focus lens over the API (user req: scope to the ONE product
+    the competitor competes with — a category read, not whole-company noise).
+
+    GET lists deterministic candidates (ranked by the competitor's mapped
+    page count) + cached reports; POST auto-resolves the top vertical, runs
+    the guarded fixture draft, and caches it; unknown run 404s, an unknown
+    vertical 400s with the candidate list, a bad execution_mode 400s.
+    """
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    client = TestClient(app)
+
+    # GET before generation: ranked candidates, nothing cached yet.
+    got = client.get(f"/api/runs/{state.run_id}/product-focus")
+    assert got.status_code == 200
+    body = got.json()
+    assert body["cached"] == []
+    candidates = body["candidates"]
+    assert candidates, "fixture runs map product verticals"
+    top = candidates[0]
+    assert top["competitor_pages"] == max(c["competitor_pages"] for c in candidates)
+    assert {
+        "vertical",
+        "competitor_pages",
+        "competitor_share",
+        "focal_pages",
+        "focal_products",
+    } <= (set(top))
+    assert client.get("/api/runs/RUN-nope/product-focus").status_code == 404
+
+    # POST with no vertical: auto-resolves to the top candidate; the guarded
+    # report ships with quote_verified on every item.
+    post = client.post(
+        f"/api/runs/{state.run_id}/product-focus", json={"execution_mode": "fixture"}
+    )
+    assert post.status_code == 200
+    env = post.json()
+    assert env["generated"] is True
+    assert env["resolved_automatically"] is True
+    assert env["vertical"] == top["vertical"]
+    assert env["report"]["category_narrative"]["quote_verified"] is True
+    assert "not a whole-company comparison" in env["method_note"]
+
+    # The cache is now visible on GET; a repeat POST serves it (same envelope).
+    body2 = client.get(f"/api/runs/{state.run_id}/product-focus").json()
+    assert body2["cached"] == [{"vertical": env["vertical"], "generated_at": env["generated_at"]}]
+    repeat = client.post(
+        f"/api/runs/{state.run_id}/product-focus", json={"execution_mode": "fixture"}
+    )
+    assert repeat.json()["generated_at"] == env["generated_at"]  # cache hit, not regenerated
+
+    # Guard paths: unknown run 404; unknown vertical 400 listing candidates;
+    # bad execution_mode 400.
+    assert (
+        client.post(
+            "/api/runs/RUN-nope/product-focus", json={"execution_mode": "fixture"}
+        ).status_code
+        == 404
+    )
+    bad_vertical = client.post(
+        f"/api/runs/{state.run_id}/product-focus",
+        json={"execution_mode": "fixture", "vertical": "not-a-vertical"},
+    )
+    assert bad_vertical.status_code == 400
+    assert top["vertical"] in bad_vertical.json()["detail"]
+    assert (
+        client.post(
+            f"/api/runs/{state.run_id}/product-focus", json={"execution_mode": "bogus"}
+        ).status_code
+        == 400
+    )

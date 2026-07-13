@@ -951,6 +951,63 @@ async def draft_paid_search(run_id: str, req: PaidSearchRequest) -> dict[str, An
     return {"generated": True, **result}
 
 
+class ProductFocusRequest(BaseModel):
+    vertical: str | None = None
+    execution_mode: str = "live"
+    force: bool = False
+
+
+@app.get("/api/runs/{run_id}/product-focus")
+def get_product_focus(run_id: str) -> dict[str, Any]:
+    """Focus candidates (deterministic vertical ranking) + cached reports."""
+    from .product_focus import resolve_focus_candidates
+
+    run_dir = _runs_dir() / run_id
+    data = run_dir / "data.json"
+    if not data.exists():
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    pkg = json.loads(data.read_text())
+    cached = []
+    for path in sorted(run_dir.glob("product_focus_*.json")):
+        try:
+            envelope = json.loads(path.read_text())
+        except Exception:
+            continue
+        cached.append(
+            {"vertical": envelope.get("vertical"), "generated_at": envelope.get("generated_at")}
+        )
+    return {"candidates": resolve_focus_candidates(pkg), "cached": cached}
+
+
+@app.post("/api/runs/{run_id}/product-focus")
+async def draft_product_focus(run_id: str, req: ProductFocusRequest) -> dict[str, Any]:
+    """Product-focus report scoped to ONE product category of a completed run.
+
+    Vertical omitted -> the top candidate by the competitor's mapped page
+    count (the "Vanta -> compliance" auto-resolution). One bounded model call
+    over deterministic in-category evidence; quotes are containment-verified
+    and unverifiable items flagged. Cached — repeats are free unless force.
+    """
+    from .product_focus import generate_product_focus
+
+    if req.execution_mode not in _ALLOWED_EXEC:
+        raise HTTPException(
+            status_code=400, detail=f"execution_mode must be one of {sorted(_ALLOWED_EXEC)}"
+        )
+    try:
+        result = await generate_product_focus(
+            run_id,
+            vertical=req.vertical,
+            execution_mode=req.execution_mode,
+            force=req.force,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    return {"generated": True, **result}
+
+
 @app.get("/api/runs/{run_id}/brief", response_class=PlainTextResponse)
 def get_brief(run_id: str) -> str:
     brief = _runs_dir() / run_id / "brief.md"
