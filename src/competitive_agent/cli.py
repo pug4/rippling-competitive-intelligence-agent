@@ -117,16 +117,33 @@ def demo_check(mode: str = typer.Option("fixture", "--mode", help="fixture|cache
     if mode not in ("fixture", "cached"):
         typer.echo("error: demo-check supports fixture|cached", err=True)
         raise typer.Exit(code=2)
-    state = run_analysis("deel.com", mode="comparative", execution_mode=mode, compare_to=None)
-    problems = []
-    if not state.is_complete and not state.pending_user_question:
-        problems.append("run did not complete")
+    import shutil
+    import tempfile
+    from pathlib import Path
+
     from .config import get_settings
 
-    out = get_settings().outputs_dir / "runs" / state.run_id
-    for required in ("brief.md", "data.json", "trace.jsonl"):
-        if not (out / required).exists():
-            problems.append(f"missing output: {required}")
+    # Run in an ISOLATED outputs dir + DB. This is a CI smoke-check of the
+    # pipeline (initialize -> persist -> trace -> render), not a real analysis —
+    # it must not leave a throwaway fixture run in the user's outputs/runs, which
+    # would head the dashboard above the real analyses after every `make quality`.
+    settings = get_settings()
+    orig_out, orig_db = settings.outputs_dir, settings.db_path
+    tmp = Path(tempfile.mkdtemp(prefix="demo-check-"))
+    settings.outputs_dir = tmp / "outputs"
+    settings.db_path = tmp / "agent.db"
+    try:
+        state = run_analysis("deel.com", mode="comparative", execution_mode=mode, compare_to=None)
+        problems = []
+        if not state.is_complete and not state.pending_user_question:
+            problems.append("run did not complete")
+        out = settings.outputs_dir / "runs" / state.run_id
+        for required in ("brief.md", "data.json", "trace.jsonl"):
+            if not (out / required).exists():
+                problems.append(f"missing output: {required}")
+    finally:
+        settings.outputs_dir, settings.db_path = orig_out, orig_db
+        shutil.rmtree(tmp, ignore_errors=True)
     if problems:
         typer.echo("DEMO CHECK FAILED: " + "; ".join(problems), err=True)
         raise typer.Exit(code=1)
