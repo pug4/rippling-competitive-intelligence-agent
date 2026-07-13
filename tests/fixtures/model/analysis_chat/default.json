@@ -7,5 +7,6 @@
   ],
   "grounded_in": ["dominant_message", "proof_gaps", "opportunities"],
   "needs_deeper_research": false,
+  "research_request": null,
   "confidence": "medium"
 }

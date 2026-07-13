@@ -77,8 +77,9 @@ _ACTION_COVERAGE = {
 # these 8 action types collected real data — 30 LinkedIn posts, ads, events —
 # while their dimensions stayed "not_attempted"). Attempted-but-empty must NOT
 # raise; render-time floors + negative observations handle honest absences.
-# paid_media stays "low": ad-transparency artifacts are discovery pointers
-# without extractable creative text.
+# paid_media starts "low": ad-transparency DISCOVERY pointers carry no creative
+# text; update_coverage upgrades to medium only when real ad records (with
+# extractable text) land.
 _ACTION_COVERAGE_EVIDENCED = {
     "search_linkedin_posts": [("public_linkedin", "medium")],
     "research_linkedin": [("public_linkedin", "medium")],
@@ -90,6 +91,23 @@ _ACTION_COVERAGE_EVIDENCED = {
     "search_reviews": [("customer_proof", "medium")],
     "search_jobs": [("personas_and_jobs", "medium")],
     "enrich_similarweb": [("commercial_motion", "low")],
+    # News hits are date-bounded to the current window, so collected launch
+    # evidence also establishes launches_current (was permanently
+    # not_attempted in the loop despite collected news artifacts).
+    "search_news_launches": [("launches_current", "low")],
+}
+
+_ADS_ACTION_TYPES = ("search_google_ads", "search_meta_ads", "search_linkedin_ads")
+
+# Action type -> tool source, for pending_decision fallback options.
+_ACTION_SOURCE_NAMES = {
+    "map_current_website": "website_map",
+    "fetch_webpage": "webpage_fetch",
+    "fetch_via_exa": "exa_contents",
+    "search_wayback": "wayback",
+    "search_news_launches": "exa_search",
+    "search_comparison_pages": "exa_search",
+    "search_exa_web": "exa_search",
 }
 
 _PAGE_CATEGORY_COVERAGE = {
@@ -110,19 +128,9 @@ _MAX_CLASSIFY_CHARS = 12000
 _MAX_CLAIMS_JUDGED = 10
 
 # Level-B optional breadth actions (user priority #3): they must never delay the
-# focal mirror (comparison, priority #2) or opportunity generation.
-_OPTIONAL_ACTION_TYPES = {
-    "search_reviews",
-    "search_jobs",
-    "search_events",
-    "search_ooh",
-    "enrich_similarweb",
-    "research_linkedin",
-    "search_linkedin_posts",
-    "search_google_ads",
-    "search_meta_ads",
-    "search_linkedin_ads",
-}
+# focal mirror (comparison, priority #2) or opportunity generation. Single
+# source of truth is the planner's Level-B map.
+_OPTIONAL_ACTION_TYPES = frozenset(planner.LEVEL_B_ACTION_DIMENSIONS)
 
 # Family model class name -> classifications.family column value.
 _FAMILY_TABLE = {
@@ -381,14 +389,65 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
         state.record_failure(
             action.source_name or result.tool_name, action.action_type, result.error_type
         )
-        if action.fallback_action_types and ctx.trace:
-            ctx.trace.append(
-                "fallback_selected",
+        if action.fallback_action_types:
+            if ctx.trace:
+                ctx.trace.append(
+                    "fallback_selected",
+                    {
+                        "failed": action.action_type,
+                        "fallbacks_available": action.fallback_action_types,
+                        "note": "fallback actions become eligible on the next planning cycle",
+                    },
+                )
+            source_label = action.source_name or result.tool_name
+            question = (
+                f"Source '{source_label}' failed for '{action.action_type}'. "
+                "Use a fallback source or skip?"
+            )
+            if getattr(state, "interactive", False):
+                # Interactive run: pause for a user decision instead of the
+                # auto-fallback (the /answer endpoint + resume machinery drive
+                # the run onward once the user chooses).
+                state.pending_decision = {
+                    "question": question,
+                    "context": result.error_message
+                    or (
+                        result.negative_observations[0]
+                        if result.negative_observations
+                        else f"'{action.action_type}' returned status '{result.status}'."
+                    ),
+                    "options": [
+                        *(
+                            {
+                                "id": fb,
+                                "label": f"Fall back to {fb.replace('_', ' ')}",
+                                "source": _ACTION_SOURCE_NAMES.get(fb),
+                            }
+                            for fb in action.fallback_action_types
+                        ),
+                        {"id": "skip", "label": "Skip this source", "source": None},
+                    ],
+                }
+                if ctx.trace:
+                    ctx.trace.append(
+                        "question_identified",
+                        {
+                            "question": question,
+                            "options": [o["id"] for o in state.pending_decision["options"]],
+                        },
+                    )
+                for observation in result.negative_observations:
+                    if observation not in state.negative_observations:
+                        state.negative_observations.append(observation)
+                return state, "awaiting_user"
+            # Non-interactive: keep the existing auto-fallback behavior and
+            # log the decision so the trace and the UI can show it was auto.
+            state.decision_log.append(
                 {
-                    "failed": action.action_type,
-                    "fallbacks_available": action.fallback_action_types,
-                    "note": "fallback actions become eligible on the next planning cycle",
-                },
+                    "question": question,
+                    "choice": action.fallback_action_types[0],
+                    "via": "auto",
+                }
             )
     for observation in result.negative_observations:
         if observation not in state.negative_observations:
@@ -467,10 +526,20 @@ async def normalize_and_deduplicate(state: DirectorState, ctx: GraphContext):
     # Reused evidence (retry): link the parent's rows to this run instead of
     # re-saving them, so the parent run's artifacts are never reassigned.
     reused = bool(action and action.action_type == "reuse_evidence")
+    # Peer Similarweb enrichment (params carry peer=true): stamp the artifacts
+    # BEFORE persistence so downstream views can separate peer context from
+    # the researched company's own demand data.
+    peer_enrichment = bool(
+        action
+        and action.action_type == "enrich_similarweb"
+        and (action.parameters or {}).get("peer")
+    )
     if result and state.company:
         fetched_key = f"fetched_urls:{state.company.company_id}"
         fetched: list[str] = ctx.scratch.setdefault(fetched_key, [])
         for artifact in result.artifacts:
+            if peer_enrichment:
+                artifact.metadata["peer"] = True
             if artifact.url:
                 fetched.append(artifact.url)
             existing = ctx.repository.find_artifact_by_hash(artifact.content_hash)
@@ -516,7 +585,25 @@ async def extract_and_classify(state: DirectorState, ctx: GraphContext):
         if a.source_type not in _NON_CLASSIFIABLE_SOURCES
         and len(a.normalized_text) >= _MIN_CLASSIFIABLE_CHARS
     ]
-    if not classifiable or ctx.gateway is None:
+    # Buyer-voice mining (REVIEWS contract): review artifacts are short
+    # third-party snippets, so they get their own (lower) text floor and their
+    # own tier1 prompt (reviews_mining) instead of only the marketing-page
+    # classifiers; results persist as classification family "buyer_voice".
+    from .processing.buyer_voice import (
+        BUYER_VOICE_FAMILY,
+        MIN_REVIEW_TEXT_CHARS,
+        REVIEWS_SOURCE_TYPE,
+        mine_review_artifact,
+        render_competitor_claims,
+    )
+
+    review_artifacts = [
+        a
+        for a in new_artifacts
+        if a.source_type == REVIEWS_SOURCE_TYPE
+        and len(a.normalized_text or a.raw_text) >= MIN_REVIEW_TEXT_CHARS
+    ]
+    if (not classifiable and not review_artifacts) or ctx.gateway is None:
         return state, "validate_evidence"
 
     from .processing.classify import classify_artifact
@@ -596,6 +683,53 @@ async def extract_and_classify(state: DirectorState, ctx: GraphContext):
             )
     if ctx.trace and stored_evidence:
         ctx.trace.append("evidence_extracted", {"evidence_items": stored_evidence})
+
+    if review_artifacts:
+        competitor = state.company.canonical_name if state.company else state.company_input
+        # The competitor's own observed marketing claims feed the prompt's
+        # message–reality section (deterministic compose from stored records).
+        claims_text = render_competitor_claims(
+            ctx.repository.list_classifications(state.run_id, family="merged")
+        )
+
+        async def mine(artifact):
+            if len(artifact.normalized_text) > _MAX_CLASSIFY_CHARS:
+                artifact = artifact.model_copy(
+                    update={"normalized_text": artifact.normalized_text[:_MAX_CLASSIFY_CHARS]}
+                )
+            async with sem:
+                return await mine_review_artifact(
+                    artifact,
+                    ctx.gateway,
+                    prompts,
+                    competitor_name=competitor,
+                    competitor_claims=claims_text,
+                )
+
+        mined = await asyncio.gather(*(mine(a) for a in review_artifacts), return_exceptions=True)
+        for artifact, item in zip(review_artifacts, mined, strict=True):
+            if isinstance(item, BaseException):
+                state.limitations.append(f"buyer-voice mining failed: {type(item).__name__}")
+                if ctx.trace:
+                    ctx.trace.append(
+                        "tool_failed", {"stage": "mine_reviews", "error": str(item)[:300]}
+                    )
+                continue
+            if item is None:
+                continue  # typed honest degrade: nothing persisted, nothing counted
+            ctx.repository.save_classification(
+                state.run_id, BUYER_VOICE_FAMILY, item, prompt_version="1.0.0", model_id="tier1"
+            )
+            if ctx.trace:
+                ctx.trace.append(
+                    "classification_completed",
+                    {
+                        "artifact_id": artifact.artifact_id,
+                        "url": artifact.url,
+                        "family": BUYER_VOICE_FAMILY,
+                    },
+                )
+
     ctx.scratch["evidence_dirty"] = ctx.scratch.get("evidence_dirty", False) or stored_evidence > 0
     return state, "validate_evidence"
 
@@ -642,6 +776,14 @@ async def update_coverage(state: DirectorState, ctx: GraphContext):
         if result.artifacts:
             for dimension, level in _ACTION_COVERAGE_EVIDENCED.get(action.action_type, []):
                 cov.raise_coverage(state.coverage, dimension, level)
+            # Real ad-creative records (extractable text, not transparency-
+            # center discovery pointers) justify medium paid_media coverage;
+            # discovery-pointer-only results stay capped at low.
+            if action.action_type in _ADS_ACTION_TYPES and any(
+                a.normalized_text and not a.metadata.get("is_discovery_pointer")
+                for a in result.artifacts
+            ):
+                cov.raise_coverage(state.coverage, "paid_media", "medium")
         for artifact in result.artifacts:
             category = str(artifact.metadata.get("page_category", "")).lower()
             for key, (dimension, level) in _PAGE_CATEGORY_COVERAGE.items():
@@ -662,7 +804,17 @@ async def update_coverage(state: DirectorState, ctx: GraphContext):
         key = f"{action.source_name}:{action.action_type}"
         rec = state.failed_actions.get(key)
         if rec and rec.attempts >= cap:
-            dims = [d for d, _ in _ACTION_COVERAGE.get(action.action_type, [])]
+            # Consult BOTH coverage maps: Level-B dims (reviews/ads/...) live
+            # only in the evidenced map, and their exhausted failures used to
+            # leave the dimension "not_attempted" — a mislabel after genuine
+            # attempts. mark_unavailable never overwrites an earned level.
+            dims = [
+                d
+                for d, _ in (
+                    _ACTION_COVERAGE.get(action.action_type, [])
+                    + _ACTION_COVERAGE_EVIDENCED.get(action.action_type, [])
+                )
+            ]
             for dimension in dims:
                 cov.mark_unavailable(state.coverage, dimension)
             limitation = (

@@ -21,6 +21,7 @@ def _build_registry():
     from .tools.exa_contents import ExaContentsTool
     from .tools.exa_search import ExaSearchTool
     from .tools.jobs import JobsTool
+    from .tools.keywords import KeywordsTool
     from .tools.ooh import OOHTool
     from .tools.registry import ToolRegistry
     from .tools.reviews import ReviewsTool
@@ -46,6 +47,7 @@ def _build_registry():
         GoogleAdsTool(),
         MetaAdsTool(),
         LinkedInAdsTool(),
+        KeywordsTool(),
     ):
         registry.register(tool)
     return registry
@@ -150,7 +152,21 @@ def resume_run(run_id: str) -> DirectorState:
     execution_mode = row["execution_mode"] or "fixture"
     ctx = _build_context(run_id, execution_mode=execution_mode)
     state = load_state(ctx.repository, run_id)
+    # A mirror that already ran is reused, never re-spawned: the fresh context
+    # must see the persisted mirror id (the scratch guard died with the thread).
+    if state.focal_run_id:
+        ctx.scratch["focal_run_id"] = state.focal_run_id
     state.pending_user_question = None
+    # Resuming WITHOUT answering an open mid-run decision means "continue
+    # without a replacement source" — log that as an auto skip and clear it.
+    # Leaving it set would keep surfacing an actionable (but stale) decision
+    # on /live after the run moves on or completes.
+    stale_decision = getattr(state, "pending_decision", None)
+    if stale_decision:
+        state.decision_log.append(
+            {"question": stale_decision.get("question"), "choice": "skip", "via": "auto"}
+        )
+        state.pending_decision = None
     if state.current_node in ("awaiting_user", "stopped"):
         # A run paused before company resolution must re-resolve, not jump
         # into coverage with company=None (it re-asks if still ambiguous).

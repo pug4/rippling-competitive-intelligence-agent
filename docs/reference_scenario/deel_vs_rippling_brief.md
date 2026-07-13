@@ -1,48 +1,48 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T05:07:04.778468+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T08:07:56.068996+00:00*
 
 ## Executive summary
 
-> **The bottom line:** Deel owns 3 of 23 buying intents to Rippling's 3 (5 contested intents); 2 new themes appeared in their messaging; 0 of 6 repeated claims are clean attack openings — build proof before attacking. Start with “The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure” (metric: Sales-assisted win rate in active Deel-competitive opportunities where the demo/asset was used).
+> **The bottom line:** Deel owns 3 of 23 buying intents to Rippling's 3 (5 contested intents); 5 new themes appeared in their messaging; 0 of 6 repeated claims are clean attack openings — build proof before attacking. Start with “Show, Don't Tell: A Live Workflow-Builder Demo Comparing Rippling's No-Code App Builder to Deel's 7 New Point Products” (metric: Demo-to-sales-qualified-meeting conversion rate on the workflow builder asset).
 
 - **Dominant company message:** Deel is an all-in-one global people platform that enables companies to expand internationally with unified payroll, HR, compliance, and workforce management across 150 countries. (repeated across ≥2 source classes and present on a top-level surface).
 - **Product-positioning read:** Deel's public pages cluster around consolidation, automation, compliance
 - **Emerging signal (low confidence, needs a prior-window baseline):** theme_emergence — “cost_reduction” not observed in any of the 14 dated prior-window artifacts → “cost_reduction” present in 30 current-window artifacts.
-- **Top-ranked Rippling opening:** The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure.
+- **Top-ranked Rippling opening:** Show, Don't Tell: A Live Workflow-Builder Demo Comparing Rippling's No-Code App Builder to Deel's 7 New Point Products.
 - **Largest uncertainty:** coverage is thin on paid_media.
 
 ### Scorecard
 
 - **Search intents (23):** 3 Deel-owned · 5 contested · 3 Rippling-owned · 12 too thin to call → **target the contested set; defend what Rippling owns**
 - **Attack surface (6 repeated claims):** 0 ATTACK · 3 INVESTIGATE · 3 AVOID/REFRAME → **no clean attack this run — build proof on the INVESTIGATE list first**
-- **Theme momentum:** 2 emerging · 3 expanding · 13 stable → **counter the moving themes before they harden**
+- **Theme momentum:** 5 emerging · 16 expanding · 13 stable → **counter the moving themes before they harden**
 
 ## Action Board
 
 ### What Rippling should do
-- **The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure** `product_marketing_proof` [medium]
-  - Why now: Deel is marketing breadth — 7 new integrated products announced to cover global hiring, payroll, compliance, and workforce management. But announcing more products is not the same as giving customers the ability to shape any one of them to their actual workflow. Rippling's proof point on this theme is a strong, demonstrable capability: build custom internal apps without code to automate workflow-specific processes. The action is to make that capability tangible and comparable — show, in a live demo, a specific global HR/payroll edge case (e.g., a multi-country approval exception or compliance escalation) being solved via a no-code custom app, and let the buyer judge configurability vs. product-count.
-  - Product comparability: **weak** (Deel's 7 newly launched integrated products (global hiring, payroll, compliance, workforce management) vs Rippling custom internal app builder (no-code) applied to global HR/payroll workflows)
+- **Show, Don't Tell: A Live Workflow-Builder Demo Comparing Rippling's No-Code App Builder to Deel's 7 New Point Products** `product_marketing_proof` [medium]
+  - Why now: While Deel announces breadth via 7 new integrated products (evidenced mostly by feature assertions, not demonstrated depth), Rippling can prove depth-of-platform by showing a prospect building a real, custom workflow-specific automation without code, live, in minutes—turning 'more products' into 'does it actually flex to your process' as the buying question.
+  - Product comparability: **weak** (Deel's 7 newly launched integrated products (global hiring, payroll, compliance, workforce management) vs Rippling's no-code custom internal app / workflow builder)
   - Rippling proof: available · already-saying-it: underweighted · legal review: required
-  - Risk (backfire): Deel could respond by showcasing its own configurability features (if any exist but weren't in this evidence set), reframing the comparison as apples-to-apples and neutralizing the differentiation. Additionally, because comparability is weak (product breadth vs. configurability are different value axes), a buyer or analyst could call out the comparison as a deflection rather than a direct rebuttal to Deel's breadth claim — Rippling must be careful to position this as "a different lens on complexity" rather than implying its custom app builder makes Deel's 7 products redundant.
+  - Risk (backfire): Deel could respond by showcasing its own configurability/automation features (if any exist) or by reframing that customers want more out-of-the-box products, not more DIY building — turning 'no-code flexibility' into a liability ('you have to build it yourself') rather than an advantage. Additionally, since comparability is weak, a side-by-side framing risks looking like an apples-to-oranges attack, inviting a credibility counterattack.
   - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
-  - Kill rule: If validate_proof stage surfaces credible evidence that Deel has an equivalent no-code configurability capability, or if legal review cannot clear the asset without diluting it into a non-differentiated statement, kill the campaign-launch stage and revert to internal enablement only
-- **"Certified, Not Just Claimed": IT Security Demand-Gen Push Targeting Deel Endpoint-Security Claims** `demand_gen_campaign` [medium]
-  - Why now: Deel IT's endpoint protection claims are backed mostly by feature assertions and a single customer story, not third-party certification. Rippling can lead with its documented industry certifications and regular audits as the evidence-backed reason security-conscious IT buyers should scrutinize vendor security claims before trusting device-lifecycle security to a payroll-first HR platform.
-  - Product comparability: **weak** (Deel IT (endpoint protection / device fleet management) vs Rippling IT (device management + security/compliance program))
+  - Kill rule: If after minimum sample no measurable lift in demo-to-meeting conversion and sales reports the asset is not being used in competitive situations, retire the asset and revert to existing product marketing baseline.
+- **"Security Claims vs. Certifications" demand-gen push targeting IT/security buyers evaluating Deel IT** `demand_gen_campaign` [medium]
+  - Why now: When choosing a device/endpoint security partner for global teams, don't just take feature claims at face value — ask for the certifications and audit trail behind them. Rippling backs its security posture with industry certifications and regular third-party audits.
+  - Product comparability: **weak** (Deel IT (endpoint protection / device fleet management) vs Rippling IT (device management with security certifications and audits))
   - Rippling proof: partial · already-saying-it: underweighted · legal review: required
-  - Risk (backfire): Deel may already hold relevant certifications not captured in the supplied evidence (the gap reflects observed proof distribution, not an audited absence of certification) — if Deel publishes or already has equivalent certification claims, Rippling's implicit "more substantiated" framing could look either redundant or, worse, factually wrong, inviting a direct rebuttal. The campaign must avoid stating or implying Deel is uncertified.
-  - Campaign: audience IT and security decision-makers at mid-market companies (200-2000 employees) currently evaluating or renewing global HR/IT/EOR platforms, Security-conscious buyers in industries with compliance sensitivity (fintech, healthcare-adjacent, regulated services); channels LinkedIn ABM ads targeting IT/security titles, Search ads on security-certification and vendor-comparison keywords, Retargeting ads to visitors of security/compliance content; metric Marketing-qualified leads (MQLs) from IT/security persona segment attributable to campaign
+  - Risk (backfire): If Rippling's certifications are general (company-wide) rather than specific to device/endpoint management, IT/security buyers may see the comparison as a bait-and-switch — inviting scrutiny that exposes Rippling's own device-security proof isn't more granular than Deel's, undermining the credibility play.
+  - Campaign: audience IT/Security decision-makers at mid-market companies (200-2000 employees) evaluating global device management or EOR+IT bundled vendors, Existing Rippling HR/EOR customers not yet using Rippling IT, who may be evaluating add-on device management, In-market accounts researching 'Deel IT' or 'Deel vs Rippling' comparison content; channels LinkedIn ads (title + company size targeting), Search ads on comparison and category terms, Retargeting of site visitors who viewed IT/security pages; metric Qualified landing page conversions (form fills / sales conversation requests) from targeted IT/security audience
   - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
-  - Kill rule: Kill or fully reframe the campaign if legal/compliance identifies claim risk during the pilot, if cost-per-qualified-lead exceeds benchmark by more than 50% after two optimization cycles, or if Deel publicly demonstrates equivalent/superior certification evidence that undermines the campaign's premise.
-- **Deel Goals/Engage Objection-Handling Battlecard + Discovery Guide for Workforce Visibility Deals** `competitive_enablement` [low]
-  - Why now: When Deel reps lead with "Goals in Engage gives you built-in goal-setting and alignment tracking across the org, without manual effort," Rippling's field team needs a structured way to probe the actual evidence behind that claim (which today is thin: two feature assertions, one customer story, one quantified outcome, one unsupported assertion) rather than concede the ground or overclaim Rippling's own unified position. The angle is not "Rippling is better at goals tracking" — Rippling has no comparable proof point on this theme yet — but rather "let's test whether Deel's alignment claim holds up under the customer's actual multi-level, multi-country reporting workflow," using discovery questions that surface gaps distributors of HR software commonly find in point/expansion modules bolted onto payroll-and-EOR cores.
-  - Product comparability: **weak** (Deel Engage (Goals module) vs Rippling workforce management / HRIS)
+  - Kill rule: If conversion rate falls below 0.75x benchmark after minimum sample is reached, or guardrail metrics show material negative movement (e.g., sales reports repeated credibility pushback), kill the campaign and reassess messaging.
+- **Deel Engage Goals Objection-Handling Battlecard & Rebuttal Kit for Sales** `competitive_enablement` [medium]
+  - Why now: Deel's "Goals in Engage" claim rests on weak, thin proof (mostly feature assertions plus a single customer story and one quantified outcome, with an unsupported claim mixed in). Rippling does not currently have an equivalent goal-setting/tracking proof point to counter-claim superiority. The defensible move is not to out-claim Deel, but to arm sales/CS with a rigorous, fact-based battlecard that (a) accurately characterizes what Deel has actually substantiated versus asserted, (b) reframes the conversation around Rippling's core unified HR/IT/Finance data model as the buyer's real question ("does goal tracking sit on top of fragmented systems or one employee record?"), and (c) equips reps to ask diagnostic questions that expose whether Deel's alignment claims hold up operationally, without Rippling asserting capabilities it hasn't proven.
+  - Product comparability: **weak** (Deel Engage (Goals module) vs Rippling HR / Workforce Management)
   - Rippling proof: missing · already-saying-it: underweighted · legal review: required
-  - Risk (backfire): If reps use the battlecard to imply Rippling has superior or equivalent goal-tracking capability without any shipped proof, prospects or Deel could call out the bluff, and it could surface publicly as an unsubstantiated claim, damaging trust. There is also risk that probing Deel's "weak proof" comes across as deflection if Rippling cannot show its own roadmap or capability in this area when directly asked.
+  - Risk (backfire): If the battlecard is perceived internally or externally (via leaks) as attacking Deel's proof without Rippling having its own comparable goal-tracking capability, it could look defensive or like deflection, and could invite scrutiny of Rippling's own gap in this area. There's also risk reps push claims beyond what the battlecard authorizes ("weaponizing" imprecise language into overclaims), creating the same legal exposure this asset is meant to prevent.
   - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
-  - Kill rule: If fewer than 25% of piloted deals show improved objection handling, or if legal/compliance identifies unresolvable risk in the claims framing, retire the asset and default reps to a neutral 'we don't have a comparable proof point yet' response
+  - Kill rule: Discontinue or substantially rework the battlecard if legal identifies unresolvable risk in characterizing Deel's proof, or if two consecutive pilot cohorts show no improvement in rep confidence or deal outcomes
 
 ### Strongest message–proof gaps (competitor vs Rippling)
 | Gap | Competitor proof | Rippling proof | Weakest vertical | Stance | Specificity |
@@ -251,6 +251,38 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
   - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; A rebranding of an existing HR-related theme (e.g., 'workplace culture' or 'talent experience') under a new label could create a false signal of an emerging theme.
 - **theme_emergence** (expanding, confidence low): ““cross_system_workflow” present but rare in the prior window (4 of 14 dated artifacts, incl. supporting-theme mentions)” → ““cross_system_workflow” present in 10 current-window artifacts”
   - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The apparent emergence could reflect a renamed or rebranded product/feature now labeled 'cross_system_workflow' rather than a genuinely new theme.
+- **theme_emergence** (emerging, confidence low): ““cost_reduction” not observed in any of the 14 dated prior-window artifacts” → ““cost_reduction” present in 30 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change; The theme could be a segment-specific or campaign-specific push (e.g., targeting a particular product line or customer segment) rather than a company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““compliance” present but rare in the prior window (9 of 14 dated artifacts, incl. supporting-theme mentions)” → ““compliance” present in 72 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; A segment-specific campaign (e.g., a product line or regulatory push) targeting compliance-sensitive buyers could account for the concentration rather than company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““global_hiring” present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)” → ““global_hiring” present in 33 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; A related or rebranded theme (e.g., 'remote work' or 'international expansion') could have been folded into 'global_hiring' terminology, creating a naming-driven rather than substantive shift
+- **theme_emergence** (expanding, confidence low): ““consolidation” present but rare in the prior window (7 of 14 dated artifacts, incl. supporting-theme mentions)” → ““consolidation” present in 36 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The theme may be driven by a specific segment or campaign (e.g., a product line or M&A-related messaging) rather than reflecting company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““scalability” present but rare in the prior window (6 of 14 dated artifacts, incl. supporting-theme mentions)” → ““scalability” present in 42 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; Some current-window mentions may stem from a specific product launch or campaign emphasizing scalability rather than a company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““automation” present but rare in the prior window (11 of 14 dated artifacts, incl. supporting-theme mentions)” → ““automation” present in 53 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; Some current-window artifacts may reuse or repurpose prior campaign language under a renamed product line, inflating the count without genuine new emphasis
+- **theme_emergence** (emerging, confidence low): ““data_accuracy” not observed in any of the 14 dated prior-window artifacts” → ““data_accuracy” present in 13 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change; The theme may reflect a segment-specific or product-specific campaign rather than a company-wide repositioning
+- **theme_emergence** (expanding, confidence low): ““employee_experience” present but rare in the prior window (3 of 14 dated artifacts, incl. supporting-theme mentions)” → ““employee_experience” present in 22 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; Some current-window artifacts may reuse or repurpose prior content under a renamed campaign or product line, inflating the count without new messaging intent.
+- **theme_emergence** (expanding, confidence low): ““data_unification” present but rare in the prior window (5 of 14 dated artifacts, incl. supporting-theme mentions)” → ““data_unification” present in 16 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; Some current-window mentions may be supporting or secondary references rather than a core theme, similar to the prior window's mix
+- **theme_emergence** (expanding, confidence low): ““speed_to_value” present but rare in the prior window (8 of 14 dated artifacts, incl. supporting-theme mentions)” → ““speed_to_value” present in 43 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; A broader marketing campaign or product launch during the current window could be driving increased mentions across many artifacts simultaneously, making this a segment/campaign-driven spike rather than permanent repositioning
+- **theme_emergence** (expanding, confidence low): ““security_and_control” present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)” → ““security_and_control” present in 22 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The current increase could partly reflect a segment-specific campaign (e.g., a product launch or vertical push) rather than company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““integration_ecosystem” present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)” → ““integration_ecosystem” present in 18 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The theme could be tied to a specific product launch or partnership campaign rather than a durable company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““native_platform_breadth” present but rare in the prior window (6 of 14 dated artifacts, incl. supporting-theme mentions)” → ““native_platform_breadth” present in 13 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; A rebranding or renaming of related product/platform terminology could be inflating matches for 'native_platform_breadth' without a true strategic shift.
+- **theme_emergence** (expanding, confidence low): ““workforce_visibility” present but rare in the prior window (2 of 14 dated artifacts, incl. supporting-theme mentions)” → ““workforce_visibility” present in 12 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The theme may be tied to a specific product launch, campaign, or segment-focused initiative rather than a company-wide repositioning.
+- **theme_emergence** (expanding, confidence low): ““cross_system_workflow” present but rare in the prior window (4 of 14 dated artifacts, incl. supporting-theme mentions)” → ““cross_system_workflow” present in 10 current-window artifacts”
+  - alternatives: prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift; The increase could be driven by a single campaign or product launch that temporarily boosted mentions of cross_system_workflow rather than a durable strategic repositioning
+- **theme_emergence** (emerging, confidence low): ““api_extensibility” not observed in any of the 14 dated prior-window artifacts” → ““api_extensibility” present in 2 current-window artifacts”
+  - alternatives: this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change; The theme could be tied to a single recent product launch or event rather than a sustained strategic shift.
 
 ## Research scope and coverage
 
@@ -315,7 +347,7 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 
 ## Limitations and missing data
 
-- Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 3 dimensions remain unattempted: historical_pricing, historical_product, out_of_home
+- 3 dimensions not attempted this run: historical_pricing, historical_product, out_of_home
 
 **Sources attempted with no usable data (negative observations):**
 
@@ -323,6 +355,11 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 - Exa contents returned nothing.
 - Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized. (superseded: a later Similarweb call succeeded — see Traffic & channel mix)
 - meta_ads: live collection is not configured (US commercial active ads are exposed only through the public Meta Ad Library UI; the API covers worldwide political/social-issue ads and UK/EU commercial windows only — no general commercial-ad API exists (§39.7). Use a recorded fixture or compliant UI capture.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage.
+- 4 result(s)/record(s) dropped by strict advertiser scoping for 'Deel' (deel.com): not attributable to the competitor.
+- 4 Google Ads Transparency Center result(s) dropped as non-advertiser pages (FAQ/blank/other-advertiser) for 'Deel'.
+- No Google Ads Transparency Center pages attributable to 'Deel' were found (queries: ['Deel ads']) — a coverage gap, not evidence of no advertising.
+- no META_ADS_ACCESS_TOKEN — using public-web path
+- linkedin_ads: live collection is not configured (LinkedIn's public ad interface has no stable API; collection is best-effort (public pages, compliant browser automation, Exa discovery, or recorded fixtures) and is never report-critical (§39.7). No live route is configured.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage.
 - 4 google_ads discovery artifacts excluded at render (FAQ/blank/other-advertiser transparency pages); retained /advertiser pages are unverified discovery pointers
 - Not publicly knowable (excluded): actual ad performance/ROAS, exact spend, negotiated pricing, complete OOH/employee-post coverage, internal intent.
 
@@ -582,4 +619,4 @@ All 126 competitor (Deel) sources below; all 115 focal (Rippling) mirror sources
 | ART-b86745883a | events | 2025-02-06 | https://www.rippling.com/ontheroad |
 
 ---
-*Stop reason: budget-bounded (hit the research-time cap) (raw: `runtime_exhausted`) · iterations 19 · tool calls 19*
+*Stop reason: completed (required coverage reached) (raw: `required_coverage_reached`) · iterations 22 · tool calls 22*

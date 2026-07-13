@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     exa_api_key: str = ""
     perplexity_api_key: str = ""
+    # Optional provider seams (each degrades typed when absent).
+    gemini_api_key: str = ""
+    gemini_model: str = ""
+    semrush_api_key: str = ""
+    meta_ads_access_token: str = ""
 
     playwright_enabled: bool = False
 
@@ -97,3 +102,18 @@ def get_config() -> AppConfig:
 def reset_config_cache() -> None:
     get_settings.cache_clear()
     get_config.cache_clear()
+
+
+def secret_from_env_or_settings(name: str) -> str:
+    """Provider-secret lookup for seams keyed by environment variable name.
+
+    The process environment wins WHEN THE VARIABLE IS PRESENT — including
+    present-but-empty, which tests use to force the keyless path. Otherwise
+    the .env-backed Settings field of the same lowercase name supplies it
+    (pydantic-settings loads .env into the Settings object, never os.environ).
+    """
+    import os
+
+    if name in os.environ:
+        return os.environ[name].strip()
+    return str(getattr(get_settings(), name.lower(), "") or "").strip()

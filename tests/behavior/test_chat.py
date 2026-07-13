@@ -12,6 +12,11 @@ import pytest
 def isolated_env(tmp_path, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "")
     monkeypatch.setenv("EXA_API_KEY", "")
+    # Keyword enrichment must stay off in tests even when the developer's
+    # shell exports a real key (no live provider calls from tests — the REAL
+    # Gemini key lives in .env and must never be reachable here).
+    monkeypatch.setenv("SEMRUSH_API_KEY", "")
+    monkeypatch.setenv("GEMINI_API_KEY", "")
     from competitive_agent import config as config_mod
 
     config_mod.reset_config_cache()
@@ -300,13 +305,12 @@ def test_paid_search_targeting_guards_and_cache(isolated_env: Path):
     got = client.get(f"/api/runs/{state.run_id}/paid-search").json()
     assert got["generated"] is True and len(got["clusters"]) == 2
     assert client.get("/api/runs/RUN-nope/paid-search").json() == {"generated": False}
-    post = client.post(
-        f"/api/runs/{state.run_id}/paid-search", json={"execution_mode": "fixture"}
-    )
+    post = client.post(f"/api/runs/{state.run_id}/paid-search", json={"execution_mode": "fixture"})
     assert post.status_code == 200 and post.json()["generated"] is True
     assert (
-        client.post("/api/runs/RUN-nope/paid-search", json={"execution_mode": "fixture"})
-        .status_code
+        client.post(
+            "/api/runs/RUN-nope/paid-search", json={"execution_mode": "fixture"}
+        ).status_code
         == 404
     )
 
@@ -315,3 +319,289 @@ def get_settings_outputs():
     from competitive_agent.config import get_settings
 
     return get_settings().outputs_dir
+
+
+# ---------------------------------------------------------------------------
+# Chat-agentic backend (contract: briefing, research_request, in-place research)
+# ---------------------------------------------------------------------------
+
+
+def test_expand_sources_canonical_mapping():
+    from competitive_agent.conversation import expand_sources
+
+    assert expand_sources(["web"]) == [
+        "exa_search",
+        "webpage_fetch",
+        "website_map",
+        "exa_contents",
+    ]
+    assert expand_sources(["ads"]) == ["google_ads", "meta_ads", "linkedin_ads"]
+    # Overlapping names are de-duplicated, order-preserving.
+    assert expand_sources(["linkedin", "news"]) == ["exa_agent", "exa_search"]
+    assert expand_sources([" Wayback "]) == ["wayback"]
+    assert expand_sources(["keywords"]) == ["keywords"]
+    with pytest.raises(ValueError):
+        expand_sources(["twitter"])
+
+
+def test_chat_research_request_roundtrips(isolated_env: Path, monkeypatch):
+    """research_request survives ChatResponse validation, the stored fixture
+    (without it) still validates, and the chat surface returns it alongside
+    needs_deeper_research (backward compat)."""
+    import json as _json
+
+    from competitive_agent import chat as chat_mod
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.config import get_settings
+    from competitive_agent.runner import run_analysis
+
+    resp = ChatResponse.model_validate(
+        {
+            "answer": "This run collected no review data, so I can't answer from stored findings.",
+            "needs_deeper_research": True,
+            "research_request": {
+                "focus": "What do buyers say about onboarding pain in reviews?",
+                "sources": ["reviews", "web"],
+                "reason": "no review artifacts were collected in this run",
+            },
+        }
+    )
+    again = ChatResponse.model_validate_json(resp.model_dump_json())
+    assert again.research_request is not None
+    assert again.research_request.sources == ["reviews", "web"]
+    assert again.needs_deeper_research is True
+
+    # The stored fixture must still validate — the field is optional.
+    fixture_path = Path(get_settings().fixtures_dir) / "model" / "analysis_chat" / "default.json"
+    assert (
+        ChatResponse.model_validate(_json.loads(fixture_path.read_text())).research_request is None
+    )
+
+    # Through the chat surface with a monkeypatched gateway (no live calls).
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+
+    class _FakeResult:
+        output = resp
+
+    class _FakeGateway:
+        async def generate_structured(self, task, system, user, output_model, **kw):
+            # The system prompt must teach the emit-only-when-needed rule and
+            # the canonical source names.
+            assert "research_request" in system
+            assert "ONLY" in system and "wayback" in system and "keywords" in system
+            return _FakeResult()
+
+    from competitive_agent import model_gateway as gw_mod
+
+    monkeypatch.setattr(gw_mod, "build_gateway", lambda *a, **k: _FakeGateway())
+    out = asyncio.run(
+        chat_mod.chat_about_run(state.run_id, "what do reviews say?", execution_mode="fixture")
+    )
+    assert out["research_request"] == {
+        "focus": "What do buyers say about onboarding pain in reviews?",
+        "sources": ["reviews", "web"],
+        "reason": "no review artifacts were collected in this run",
+    }
+    assert out["needs_deeper_research"] is True
+
+
+def test_briefing_composes_deterministically_from_stored_data(isolated_env: Path):
+    """GET /briefing is a pure compose over data.json: bottom line verbatim,
+    a top action, and honest coverage caveats — bold + '- ' bullets only."""
+    import json as _json
+
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.chat import build_briefing
+    from competitive_agent.config import get_settings
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    pkg = _json.loads(
+        (Path(get_settings().outputs_dir) / "runs" / state.run_id / "data.json").read_text()
+    )
+    briefing = build_briefing(pkg)
+
+    # 1. The bottom line, verbatim (never paraphrased by a model).
+    assert pkg["bottom_line"] in briefing
+    # 2. A top action: the first opportunity's title.
+    assert pkg["opportunities"][0]["title"] in briefing
+    # 8. Honest coverage caveats: corpus sizes + dimensions never attempted.
+    assert "Coverage caveats" in briefing
+    assert f"{pkg['eval_summary']['n_artifacts']} sources" in briefing
+    assert "not attempted" in briefing  # fixture runs leave historical_product et al. unattempted
+    # 9. Research-on-demand closer.
+    assert "deeper research" in briefing
+    # Format contract: **bold** + "- " bullets only (renderRich).
+    assert "**" in briefing and "\n- " in briefing
+    assert not any(line.lstrip().startswith("#") for line in briefing.splitlines())
+
+    client = TestClient(app)
+    r = client.get(f"/api/runs/{state.run_id}/briefing")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["briefing"] == briefing  # deterministic: same package -> same text
+    assert body["generated_at"]
+    assert client.get("/api/runs/RUN-nope/briefing").status_code == 404
+
+
+def test_research_endpoint_appends_to_same_run(isolated_env: Path):
+    """POST /research re-drives the SAME run scoped by sources: the job reaches
+    done, artifacts append to the same run_id (count grows), the report is
+    rewritten in place (data.json mtime changes), and NO child run appears."""
+    import time
+
+    from fastapi.testclient import TestClient
+
+    from competitive_agent import api as api_mod
+    from competitive_agent.api import app
+    from competitive_agent.config import get_settings
+    from competitive_agent.runner import run_analysis
+    from competitive_agent.storage.repository import Repository
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    client = TestClient(app)
+
+    # Guards: unknown run 404; bad bodies 400.
+    assert (
+        client.post(
+            "/api/runs/RUN-nope/research", json={"focus": "x", "sources": ["web"]}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            f"/api/runs/{state.run_id}/research", json={"focus": "", "sources": ["web"]}
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            f"/api/runs/{state.run_id}/research",
+            json={"focus": "x", "sources": ["not-a-source"]},
+        ).status_code
+        == 400
+    )
+
+    runs_dir = Path(get_settings().outputs_dir) / "runs"
+    data = runs_dir / state.run_id / "data.json"
+    repo = Repository.open(get_settings().db_path)
+    n_before = repo.conn.execute(
+        "SELECT COUNT(*) FROM artifacts WHERE run_id=?", (state.run_id,)
+    ).fetchone()[0]
+    mtime_before = data.stat().st_mtime
+    runs_before = {p.name for p in runs_dir.iterdir() if p.is_dir()}
+
+    time.sleep(0.05)  # make an mtime change measurable on coarse filesystems
+    res = client.post(
+        f"/api/runs/{state.run_id}/research",
+        json={"focus": "How do they position against competitors?", "sources": ["web"]},
+    )
+    assert res.status_code == 200
+    job = res.json()
+    assert job["run_id"] == state.run_id and job["kind"] == "research"
+    # While the job drives the run, a second research call must 409.
+    second = client.post(
+        f"/api/runs/{state.run_id}/research", json={"focus": "y", "sources": ["web"]}
+    )
+    assert second.status_code in (409, 200)  # 200 only if the job already finished
+
+    # Poll the in-process job dict (same idiom as the resume test).
+    for _ in range(300):  # fixture passes finish in seconds
+        with api_mod._JOBS_LOCK:
+            status = api_mod._JOBS[job["job_id"]]["status"]
+        if status in ("done", "error"):
+            break
+        time.sleep(0.1)
+    with api_mod._JOBS_LOCK:
+        entry = dict(api_mod._JOBS[job["job_id"]])
+    assert entry["status"] == "done", entry.get("error")
+
+    fresh = Repository.open(get_settings().db_path)
+    n_after = fresh.conn.execute(
+        "SELECT COUNT(*) FROM artifacts WHERE run_id=?", (state.run_id,)
+    ).fetchone()[0]
+    assert n_after > n_before  # new sources folded into the SAME run
+    assert data.stat().st_mtime > mtime_before  # report rewritten in place
+    runs_after = {p.name for p in runs_dir.iterdir() if p.is_dir()}
+    assert runs_after == runs_before  # NO child run was created
+    # The pass is recorded on the same run's state: scoped allowlist + focus.
+    from competitive_agent.graph import load_state
+
+    st = load_state(fresh, state.run_id)
+    assert st.user_focus == ["How do they position against competitors?"]
+    assert st.source_allowlist == ["exa_search", "webpage_fetch", "website_map", "exa_contents"]
+
+
+def test_answer_endpoint_guards(isolated_env: Path):
+    """/answer 404s on unknown runs and 409s when there is no pending decision."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.runner import run_analysis
+
+    client = TestClient(app)
+    assert client.post("/api/runs/RUN-nope/answer", json={"choice": "x"}).status_code == 404
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    assert client.post(f"/api/runs/{state.run_id}/answer", json={"choice": "x"}).status_code == 409
+
+
+def test_live_snapshot_passes_through_pending_decision(isolated_env: Path):
+    """/live surfaces state.pending_decision (parsed JSON) for the option UI."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.config import get_settings
+    from competitive_agent.graph import load_state
+    from competitive_agent.runner import run_analysis
+    from competitive_agent.storage.repository import Repository
+
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    client = TestClient(app)
+    snap = client.get(f"/api/runs/{state.run_id}/live").json()
+    assert snap["pending_decision"] is None
+
+    repo = Repository.open(get_settings().db_path)
+    st = load_state(repo, state.run_id)
+    st.pending_decision = {
+        "question": "Reviews source failed — how should I proceed?",
+        "context": "search_reviews returned an error",
+        "options": [
+            {"id": "use_web", "label": "Search the public web instead", "source": "exa_search"},
+            {"id": "skip", "label": "Skip reviews", "source": None},
+        ],
+    }
+    repo.update_run_state(state.run_id, state=st)
+    snap = client.get(f"/api/runs/{state.run_id}/live").json()
+    assert snap["pending_decision"]["question"].startswith("Reviews source failed")
+    assert [o["id"] for o in snap["pending_decision"]["options"]] == ["use_web", "skip"]
+
+    # Now /answer applies the choice, logs it, and resumes in a job.
+    res = client.post(f"/api/runs/{state.run_id}/answer", json={"choice": "use_web"})
+    assert res.status_code == 200
+    job = res.json()
+    assert job["run_id"] == state.run_id and job["kind"] == "answer"
+    import time
+
+    from competitive_agent import api as api_mod
+
+    for _ in range(300):
+        with api_mod._JOBS_LOCK:
+            status = api_mod._JOBS[job["job_id"]]["status"]
+        if status in ("done", "error"):
+            break
+        time.sleep(0.1)
+    assert status == "done"
+    fresh = Repository.open(get_settings().db_path)
+    st2 = load_state(fresh, state.run_id)
+    assert st2.pending_decision is None
+    assert st2.decision_log[-1] == {
+        "question": "Reviews source failed — how should I proceed?",
+        "choice": "use_web",
+        "via": "user",
+    }

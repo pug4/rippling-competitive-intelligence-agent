@@ -146,13 +146,52 @@ def _run_job(job_id: str, req: NewRunRequest) -> None:
                 _ACTIVE_RUNS.discard(run_id)
 
 
+def _supersede_paused_jobs(run_id: str) -> None:
+    """Mark stale 'paused' jobs for this run as superseded (caller holds
+    _JOBS_LOCK). A new job now owns the run's outcome; without this the UI
+    would treat the run as paused forever."""
+    for job in _JOBS.values():
+        if job.get("run_id") == run_id and job.get("status") == "paused":
+            job["status"] = "superseded"
+
+
+def _job_end_status(state: Any) -> str:
+    """Honest terminal job status: a run that stopped to ask the user a
+    mid-run decision did NOT finish — reporting "done" would make the UI
+    claim research finished (and drop its decision affordance) while the run
+    is actually paused in awaiting_user."""
+    if getattr(state, "pending_decision", None):
+        return "paused"
+    return "done"
+
+
 def _resume_job(job_id: str, run_id: str) -> None:
     from .runner import resume_run
 
     try:
         state = resume_run(run_id)
         with _JOBS_LOCK:
-            _JOBS[job_id].update(status="done", stop_reason=state.stop_reason)
+            _JOBS[job_id].update(status=_job_end_status(state), stop_reason=state.stop_reason)
+    except Exception as exc:  # surfaced to the UI, never crashes the server
+        with _JOBS_LOCK:
+            _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
+    finally:
+        with _JOBS_LOCK:
+            _ACTIVE_RUNS.discard(run_id)
+
+
+def _research_job(
+    job_id: str, run_id: str, focus: str, sources: list[str], execution_mode: str | None
+) -> None:
+    """Drive an in-place research pass on the SAME run in a background thread."""
+    from .conversation import research_in_place
+
+    try:
+        state = research_in_place(
+            run_id, focus=focus, sources=sources, execution_mode=execution_mode
+        )
+        with _JOBS_LOCK:
+            _JOBS[job_id].update(status=_job_end_status(state), stop_reason=state.stop_reason)
     except Exception as exc:  # surfaced to the UI, never crashes the server
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
@@ -438,6 +477,16 @@ def _humanize_trace_tail(run_id: str, limit: int = 8) -> list[dict[str, str]]:
     return out
 
 
+def _maybe_json(value: Any) -> Any:
+    """json_extract returns objects as JSON text — parse them for the UI."""
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except ValueError:
+            return None
+    return value
+
+
 def _live_snapshot(repo, run_id: str, *, include_mirror: bool = True) -> dict[str, Any]:
     row = repo.get_run(run_id)
     if row is None:
@@ -449,6 +498,7 @@ def _live_snapshot(repo, run_id: str, *, include_mirror: bool = True) -> dict[st
                json_extract(state_json, '$.compare_to')            AS compare_to,
                json_extract(state_json, '$.focal_run_id')          AS focal_run_id,
                json_extract(state_json, '$.pending_user_question') AS pending_user_question,
+               json_extract(state_json, '$.pending_decision')      AS pending_decision,
                json_extract(state_json, '$.spent_usd')             AS spent_usd,
                json_extract(state_json, '$.model_cost_usd')        AS model_cost_usd,
                json_extract(state_json, '$.budget_usd')            AS budget_usd,
@@ -514,6 +564,7 @@ def _live_snapshot(repo, run_id: str, *, include_mirror: bool = True) -> dict[st
         "updated_at": row["updated_at"],
         "created_at": row["created_at"],
         "pending_question": st.get("pending_user_question"),
+        "pending_decision": _maybe_json(st.get("pending_decision")),
         "spend": {
             "tool_usd": st.get("spent_usd"),
             "model_usd": st.get("model_cost_usd"),
@@ -577,6 +628,156 @@ def resume_run_endpoint(run_id: str) -> dict[str, Any]:
         snapshot = dict(_JOBS[job_id])
     threading.Thread(target=_resume_job, args=(job_id, run_id), daemon=True).start()
     return snapshot
+
+
+class ResearchBody(BaseModel):
+    # What to find out (becomes the run's user_focus for the pass).
+    focus: str
+    # Canonical user-facing source names (conversation.SOURCE_NAME_MAP):
+    # web, wayback, ads, reviews, similarweb, linkedin, news, keywords.
+    sources: list[str]
+    execution_mode: str | None = None
+
+
+@app.post("/api/runs/{run_id}/research")
+def research_endpoint(run_id: str, req: ResearchBody) -> dict[str, Any]:
+    """Deeper research on demand INSIDE an existing run (no child run).
+
+    Re-drives the same run_id scoped to the requested sources in a background
+    job; new artifacts append to the run and its report is rewritten in place.
+    The existing jobs poller + /live endpoint stream progress to the UI.
+    """
+    from .conversation import expand_sources
+
+    if not (req.focus or "").strip():
+        raise HTTPException(status_code=400, detail="focus is required")
+    if not req.sources:
+        raise HTTPException(status_code=400, detail="sources is required (canonical names)")
+    if req.execution_mode is not None and req.execution_mode not in _ALLOWED_EXEC:
+        raise HTTPException(
+            status_code=400, detail=f"execution_mode must be one of {sorted(_ALLOWED_EXEC)}"
+        )
+    try:
+        expand_sources(req.sources)  # validate names up front: 400, not a failed job
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    repo = _open_repo()
+    row = repo.get_run(run_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    focus = req.focus.strip()
+    with _JOBS_LOCK:
+        if run_id in _ACTIVE_RUNS:
+            raise HTTPException(status_code=409, detail="run is already being driven")
+        _supersede_paused_jobs(run_id)
+        job_id = "job-" + uuid.uuid4().hex[:12]
+        _JOBS[job_id] = {
+            "job_id": job_id,
+            "kind": "research",
+            "company": row["company"],
+            "compare_to": None,
+            "mode": row["mode"],
+            "execution_mode": req.execution_mode or row["execution_mode"],
+            "status": "running",
+            "run_id": run_id,
+            "focus": focus,
+            "sources": list(req.sources),
+            "started_at": utcnow().isoformat(),
+        }
+        _ACTIVE_RUNS.add(run_id)
+        snapshot = dict(_JOBS[job_id])
+    threading.Thread(
+        target=_research_job,
+        args=(job_id, run_id, focus, list(req.sources), req.execution_mode),
+        daemon=True,
+    ).start()
+    return snapshot
+
+
+class AnswerBody(BaseModel):
+    choice: str  # option id from state.pending_decision["options"]
+
+
+@app.post("/api/runs/{run_id}/answer")
+def answer_decision(run_id: str, req: AnswerBody) -> dict[str, Any]:
+    """Apply the user's choice to a paused run's pending decision, then resume.
+
+    Appends to decision_log, extends source_allowlist / clears the failure
+    block when the chosen option names a source, clears pending_decision,
+    saves, and resumes the run in a background job (same shape as /resume).
+    """
+    from .graph import load_state
+
+    repo = _open_repo()
+    row = repo.get_run(run_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    with _JOBS_LOCK:
+        if run_id in _ACTIVE_RUNS:
+            raise HTTPException(status_code=409, detail="run is already being driven")
+    state = load_state(repo, run_id)
+    pending = getattr(state, "pending_decision", None)
+    if not pending:
+        raise HTTPException(status_code=409, detail="run has no pending decision")
+    choice = (req.choice or "").strip()
+    options = {str(o.get("id")): o for o in (pending.get("options") or [])}
+    if options and choice not in options:
+        raise HTTPException(status_code=400, detail=f"choice must be one of {sorted(options)}")
+    state.decision_log = [
+        *state.decision_log,
+        {"question": pending.get("question"), "choice": choice, "via": "user"},
+    ]
+    source = (options.get(choice) or {}).get("source")
+    if source:
+        # The user opted into this source: allow it and clear its failure block.
+        if state.source_allowlist is not None and source not in state.source_allowlist:
+            state.source_allowlist = [*state.source_allowlist, source]
+        state.failed_actions = {
+            key: rec for key, rec in state.failed_actions.items() if key.split(":", 1)[0] != source
+        }
+    state.pending_decision = None
+    with _JOBS_LOCK:
+        if run_id in _ACTIVE_RUNS:  # re-check: another thread may have started
+            raise HTTPException(status_code=409, detail="run is already being driven")
+        # Save INSIDE the lock: saving before the re-check left a window where
+        # the decision was recorded but a concurrent driver's checkpoints
+        # clobbered it (and this request 409'd after mutating state).
+        repo.update_run_state(run_id, current_node=state.current_node, state=state)
+        _supersede_paused_jobs(run_id)
+        job_id = "job-" + uuid.uuid4().hex[:12]
+        _JOBS[job_id] = {
+            "job_id": job_id,
+            "kind": "answer",
+            "company": row["company"],
+            "compare_to": None,
+            "mode": row["mode"],
+            "execution_mode": row["execution_mode"],
+            "status": "running",
+            "run_id": run_id,
+            "choice": choice,
+            "resumed": True,
+            "started_at": utcnow().isoformat(),
+        }
+        _ACTIVE_RUNS.add(run_id)
+        snapshot = dict(_JOBS[job_id])
+    threading.Thread(target=_resume_job, args=(job_id, run_id), daemon=True).start()
+    return snapshot
+
+
+@app.get("/api/runs/{run_id}/briefing")
+def get_briefing(run_id: str) -> dict[str, Any]:
+    """Deterministic run briefing for the chat panel — pure compose, no model.
+
+    Every figure is read verbatim from the stored data.json; absences are
+    stated honestly ("none collected"), never filled in.
+    """
+    from .chat import build_briefing
+
+    data = _runs_dir() / run_id / "data.json"
+    if not data.exists():
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    pkg = json.loads(data.read_text())
+    return {"briefing": build_briefing(pkg), "generated_at": utcnow().isoformat()}
 
 
 @app.post("/api/runs/{run_id}/dismiss")

@@ -20,7 +20,10 @@ the flagship run (RUN-b256fab1c1dd) and the RemoFirst run (RUN-aa58e6d812da).
    posts, news, ads-transparency, traffic estimates — classifies every page
    individually, mirrors the same analysis for Rippling, and produces one
    dashboard: current positioning, changes over time, where they're vulnerable,
-   and ranked plays with kill rules.
+   and ranked plays with kill rules. A chat agent fronts every run: it briefs
+   you on open, answers from the run's evidence, and when the data can't
+   answer, it proposes and runs deeper scoped research that grows the same
+   run live.
 2. **How it works (three layers):**
    - **An agentic research loop** — a typed state machine that assesses
      coverage, proposes scored actions, executes tools, and stops for an
@@ -170,14 +173,42 @@ messaging popup means no claim is more than one hover from its evidence.
 Because they're not publicly knowable, and we refuse to fake them. Ad
 transparency libraries prove WHICH creatives a competitor is running — never
 the keyword buy, the spend, or the auction (Meta discloses spend only for
-political ads). Similarweb's keyword product isn't exposed through Exa's
-provider (verified by live probe — it returns visits, rank, and audience-
-affinity competitors, which we DO use). So the paid-search view drafts
-keyword clusters as explicit hypotheses grounded in observed evidence — CEPs,
-verbatim villain wording, live creatives — with validate-before-spend forced
-on every cluster and legal review auto-flagged on brand conquesting. A GTM
-engineer plugs the clusters into Keyword Planner; the system never pretends
-to know the economics.
+political ads). So the paid-search view drafts keyword clusters as explicit
+hypotheses grounded in observed evidence — CEPs, verbatim villain wording,
+observed ads — with validate-before-spend forced on every cluster and legal
+review auto-flagged on brand conquesting. For keyword intelligence we use
+**Gemini with Google Search grounding**: it reads the LIVE results page and
+returns the actual People-Also-Ask questions, related searches, ranking
+formats, and SERP features — real, current, cited observations (anything the
+model returns WITHOUT grounding sources is discarded). Volumes/CPC this
+provider doesn't return, so the section points to the free Keyword Planner —
+the system never pretends to know the economics.
+
+**Q13b. "What can you actually get out of the ad libraries?"**
+Both paths exist and both are honest about their reach. The Meta Ad Library
+official API (token seam, env-gated) returns creative bodies, platforms,
+delivery dates, active status, and EU impression BUCKETS; Exa cannot reach
+facebook.com at all (verified live — recorded as a typed limitation, not an
+auth error). Google's Transparency Center is a JavaScript app whose pages
+return only an app shell to public fetchers (verified live, ~600 chars, no
+creatives) — so without a browser path the system records exactly that
+reality instead of scraping around it, and the strict advertiser scoping we
+added rejected all four junk results live (the old Costco/Electoral-
+Commission class). Fixture mode demonstrates the full extraction pipeline —
+per-ad records, containment-verified creatives, campaign-theme rollups.
+
+**Q14a. "Is the chat just RAG over the report, or can it actually DO things?"**
+It acts. The chat is grounded in the run's stored evidence, and when a
+question exceeds that data it emits a structured research request — focus
+plus the exact sources it wants. One click launches a scoped research pass ON
+THE SAME RUN: the same agentic loop re-plans restricted to those sources
+(a source allow-list on the planner), new evidence appends to the same run,
+the full verification pipeline re-runs (classification, quote containment,
+claims, temporal reconciliation), and the report re-renders — the tabs you're
+looking at grow in place. Mid-run it can pause and ask a real question
+("couldn't get Meta ads — try LinkedIn instead?") with decision buttons in
+the live strip; batch runs auto-fall-back and disclose the choice. And every
+run opens with an auto-briefing composed only from verified numbers.
 
 **Q14. "What happens if a run dies halfway — or I close the tab?"**
 Nothing is lost. Every node transition checkpoints the full typed state to

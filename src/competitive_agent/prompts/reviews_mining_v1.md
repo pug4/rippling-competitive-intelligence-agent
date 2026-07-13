@@ -58,6 +58,17 @@ RULES
 - confidence per signal — high: three or more independent reviewer quotes on this
   page say it; medium: two; low: one. State the count in the reason.
 
+OUTPUT FIELDS (structured tool)
+- objections / praise: theme (lowercase snake_case) + quote + confidence + reason.
+- alternatives: alternative (the exact product name from the text) + direction
+  (evaluated | switched_from | switched_to | unclear) + quote.
+- buyer_contexts: reviewer_role / segment / industry / job_to_be_done (keep
+  not_observed unless the text states it) + the quote stating it.
+- message_reality_signals: claim_theme + relation (contradicts | confirms |
+  unclear) + quote.
+- Leave artifact_id, company_id, source_url, and unclassified_signals empty —
+  the pipeline stamps provenance itself.
+
 ARTIFACT METADATA
 {{ source_metadata }}
 

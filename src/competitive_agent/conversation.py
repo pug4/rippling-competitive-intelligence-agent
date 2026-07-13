@@ -1,10 +1,13 @@
-"""Conversational behavior: feedback, retry lineage, challenge, deep-dive, and a
-follow-up router (blueprint §25, §37.27, §39.11).
+"""Conversational behavior: feedback, retry lineage, challenge, deep-dive, a
+follow-up router (blueprint §25, §37.27, §39.11), and in-place research.
 
 Retries never overwrite the parent: a child run is created with a
 parent→child relationship, driven under its retry mode, and a difference
 report is produced so the user can compare. Follow-ups answer from stored
 state first and only collect new evidence when the corpus is insufficient.
+``research_in_place`` is different from retries: it re-drives the SAME run,
+scoped to the sources the user asked about, so new artifacts append to the
+existing run and its report is rewritten in place (no child run).
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from typing import Any
 from .graph import load_state
 from .runner import _build_context, create_run, drive
 from .schemas.common import utcnow
+from .state import DirectorState
 
 RETRY_MODES = {
     "reanalyze_same_evidence",
@@ -27,6 +31,158 @@ RETRY_MODES = {
     "expand_time_horizon",
     "compare_another_company",
 }
+
+# Canonical user-facing source names -> tool source names (contract table).
+# Used by chat's research_request, POST /research, and the planner allowlist.
+SOURCE_NAME_MAP: dict[str, list[str]] = {
+    "web": ["exa_search", "webpage_fetch", "website_map", "exa_contents"],
+    "wayback": ["wayback"],
+    "ads": ["google_ads", "meta_ads", "linkedin_ads"],
+    "reviews": ["reviews"],
+    "similarweb": ["similarweb"],
+    "linkedin": ["exa_agent", "exa_search"],
+    "news": ["exa_search"],
+    "keywords": ["keywords"],
+}
+
+# Tool source -> the action types the planner proposes against it. Used to
+# RE-OPEN exactly the requested sources for an in-place research pass: their
+# executed-action dedup keys and failure records are cleared, and the coverage
+# dimensions those actions serve drop back to "low" so the planner proposes
+# collection again. Coverage self-corrects upward as re-collection succeeds,
+# so the final report's coverage remains a record of what was actually
+# collected — never a fabricated level.
+_SOURCE_ACTION_TYPES: dict[str, tuple[str, ...]] = {
+    "website_map": ("map_current_website",),
+    "webpage_fetch": ("fetch_webpage",),
+    "wayback": ("search_wayback",),
+    "exa_search": (
+        "search_exa_web",
+        "search_news_launches",
+        "search_comparison_pages",
+        "search_linkedin_posts",
+    ),
+    "exa_contents": ("fetch_via_exa",),
+    "exa_agent": ("research_linkedin",),
+    "similarweb": ("enrich_similarweb",),
+    "reviews": ("search_reviews",),
+    "google_ads": ("search_google_ads",),
+    "meta_ads": ("search_meta_ads",),
+    "linkedin_ads": ("search_linkedin_ads",),
+    "keywords": ("enrich_keywords",),
+}
+
+
+def expand_sources(names: list[str]) -> list[str]:
+    """Expand canonical user-facing source names to tool source names.
+
+    Order-preserving and de-duplicated; unknown names raise ``ValueError`` so
+    a bad request fails loudly instead of silently researching nothing.
+    """
+    out: list[str] = []
+    unknown: list[str] = []
+    for name in names:
+        tools = SOURCE_NAME_MAP.get(str(name).strip().lower())
+        if tools is None:
+            unknown.append(str(name))
+            continue
+        for tool in tools:
+            if tool not in out:
+                out.append(tool)
+    if unknown:
+        raise ValueError(
+            f"unknown source name(s): {', '.join(sorted(set(unknown)))}; "
+            f"expected any of: {', '.join(sorted(SOURCE_NAME_MAP))}"
+        )
+    return out
+
+
+def _reopen_sources(state: DirectorState, allowlist: list[str]) -> None:
+    """Make the allowlisted sources proposable again on a re-drive.
+
+    The loop dedupes executed actions (``executed_action_keys``) and gates
+    most proposals on thin coverage; a completed run would therefore re-drive
+    to an immediate stop. Re-opening clears the dedup keys + failure records
+    for EXACTLY the requested sources and drops their coverage dimensions to
+    "low" (never "not_attempted" — the prior collection did happen), so the
+    planner proposes those sources again and coverage is re-raised by what the
+    pass actually collects.
+    """
+    from .nodes import _ACTION_COVERAGE, _ACTION_COVERAGE_EVIDENCED
+
+    action_types = {t for source in allowlist for t in _SOURCE_ACTION_TYPES.get(source, ())}
+    state.executed_action_keys = [
+        key for key in state.executed_action_keys if key.split(":", 1)[0] not in action_types
+    ]
+    # failed_actions keys are "source:action_type".
+    state.failed_actions = {
+        key: rec
+        for key, rec in state.failed_actions.items()
+        if key.split(":", 1)[0] not in allowlist
+    }
+    dims = {
+        dim
+        for action_type in action_types
+        for dim, _level in (
+            list(_ACTION_COVERAGE.get(action_type, []))
+            + list(_ACTION_COVERAGE_EVIDENCED.get(action_type, []))
+        )
+    }
+    for dim in dims:
+        if state.coverage.get(dim) in ("medium", "high", "unavailable"):
+            state.coverage[dim] = "low"
+
+
+def research_in_place(
+    run_id: str,
+    *,
+    focus: str,
+    sources: list[str],
+    budget_delta_usd: float = 1.5,
+    extra_iterations: int = 8,
+    execution_mode: str | None = None,
+) -> DirectorState:
+    """Deeper research INSIDE an existing run — no child run.
+
+    Re-drives the SAME ``run_id`` from ``assess_coverage`` with the planner
+    scoped by ``source_allowlist``: new artifacts append to the run and
+    ``render_outputs`` rewrites its ``data.json`` at the end. Budgets are
+    topped up (never reset) so total spend accounting stays truthful.
+    """
+    row = _load_parent(run_id)  # raises KeyError for unknown runs
+    ctx = _build_context(
+        run_id, execution_mode=execution_mode or row["execution_mode"] or "fixture"
+    )
+    state = load_state(ctx.repository, run_id)
+    # The focal mirror already ran for this run: seed the fresh context with the
+    # persisted mirror id so the pass REUSES it instead of spawning a new
+    # mirror sub-run (contract: NO child runs for in-place research).
+    if state.focal_run_id:
+        ctx.scratch["focal_run_id"] = state.focal_run_id
+    allowlist = expand_sources(sources)
+    # A new research pass supersedes an unanswered mid-run decision: log it as
+    # an auto skip and clear it, otherwise /live keeps showing a stale (and
+    # unanswerable — the run is being driven again) decision, possibly forever.
+    stale_decision = getattr(state, "pending_decision", None)
+    if stale_decision:
+        state.decision_log.append(
+            {"question": stale_decision.get("question"), "choice": "skip", "via": "auto"}
+        )
+        state.pending_decision = None
+    state.user_focus = [focus]
+    state.source_allowlist = allowlist
+    state.interactive = True
+    state.is_complete = False
+    state.stop_reason = None
+    state.current_node = "assess_coverage"
+    state.budget_usd += budget_delta_usd
+    state.max_iterations += extra_iterations
+    state.max_runtime_seconds += 240
+    # The runtime cap is measured from started_at; without a clock restart any
+    # run older than its cap would stop instantly as "runtime_exhausted".
+    state.started_at = utcnow()
+    _reopen_sources(state, allowlist)
+    return asyncio.run(drive(state, ctx))
 
 
 def record_feedback(

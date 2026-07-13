@@ -15,6 +15,44 @@ from .schemas.common import new_id
 from .schemas.source import ResearchAction
 from .state import DirectorState
 
+# Level-B optional (breadth) action types -> the coverage dimension each one
+# primarily serves. Single source of truth: nodes.py derives its optional set
+# from this map, and score_and_select uses it for the starvation floor.
+LEVEL_B_ACTION_DIMENSIONS: dict[str, str] = {
+    "search_reviews": "customer_proof",
+    "search_jobs": "personas_and_jobs",
+    "search_events": "events",
+    "search_ooh": "out_of_home",
+    "enrich_similarweb": "commercial_motion",
+    "research_linkedin": "public_linkedin",
+    "search_linkedin_posts": "public_linkedin",
+    "search_google_ads": "paid_media",
+    "search_meta_ads": "paid_media",
+    "search_linkedin_ads": "paid_media",
+}
+
+# Synthetic/analysis sources that a source_allowlist never filters out.
+_INTERNAL_SOURCES = frozenset({"reuse_evidence"})
+
+# Starvation floor for never-attempted Level-B sources (reference live trace:
+# search_reviews proposed 2x / selected 0, search_linkedin_ads proposed 19x /
+# selected 0, while search_wayback was re-proposed 62x). Static utilities rank
+# breadth sources at the bottom of a ~30-action queue, so a budget-bounded run
+# dies before they get a turn. The floor RAMPS with iteration: Level-A
+# collection keeps its early priority, but a never-attempted breadth source
+# whose dimension is still thin cannot be starved past mid-run.
+_STARVATION_FLOOR_BASE = 1.7
+_STARVATION_FLOOR_RAMP = 0.08
+_STARVATION_FLOOR_CAP = 2.4
+
+# Peer Similarweb enrichment is bounded to the top-affinity digital
+# competitors of the researched company.
+_MAX_SIMILARWEB_PEERS = 3
+
+# Seed phrases for a focused keyword-intelligence pass (chat: research
+# "keywords"): up to 8 humanized CEP labels, else name + user-focus fallback.
+_MAX_KEYWORD_SEEDS = 8
+
 # Strategic importance per coverage dimension the action primarily serves.
 _IMPORTANCE = {
     "current_website": 1.0,
@@ -90,6 +128,97 @@ def _needs(state: DirectorState, dimension: str, minimum: str = "medium") -> boo
 def _too_many_failures(state: DirectorState, source: str, action_type: str, cap: int) -> bool:
     rec = state.failed_actions.get(f"{source}:{action_type}")
     return bool(rec and rec.attempts >= cap)
+
+
+def _attempted_action_types(state: DirectorState) -> set[str]:
+    """Action types executed at least once (keys are '<action_type>:<hash>')."""
+    return {k.split(":", 1)[0] for k in state.executed_action_keys}
+
+
+def _similarweb_peer_domains(state: DirectorState, ctx: Any) -> list[str]:
+    """Top-affinity peer domains from this run's own Similarweb artifact.
+
+    Reads the stored (non-peer) similarweb artifact's capability-checked
+    ``metrics.digital_competitors`` — never synthesizes peers. Cached in
+    ``ctx.scratch`` once found; the repository fallback keeps resumed runs
+    (fresh scratch) working."""
+    if state.company is None:
+        return []
+    scratch = getattr(ctx, "scratch", None)
+    key = f"similarweb_peers:{state.company.company_id}"
+    if scratch is not None and key in scratch:
+        return list(scratch[key])
+    repo = getattr(ctx, "repository", None)
+    if repo is None:
+        return []
+    try:
+        artifacts = repo.list_artifacts(run_id=state.run_id)
+    except Exception:  # storage hiccups must never break planning
+        return []
+    own = state.company.primary_domain.lower().removeprefix("www.")
+    ranked: list[tuple[float, str]] = []
+    for artifact in artifacts:
+        meta = getattr(artifact, "metadata", None) or {}
+        if getattr(artifact, "source_type", "") != "similarweb" or meta.get("peer"):
+            continue
+        competitors = ((meta.get("metrics") or {}).get("digital_competitors") or {}).get("value")
+        for item in competitors or []:
+            if isinstance(item, str):
+                domain, affinity = item, 0.0
+            elif isinstance(item, dict):
+                domain = str(item.get("domain") or "")
+                try:
+                    affinity = float(item.get("affinity") or 0.0)
+                except (TypeError, ValueError):
+                    affinity = 0.0
+            else:
+                continue
+            domain = domain.strip().lower().removeprefix("www.")
+            if domain and domain != own:
+                ranked.append((affinity, domain))
+    ranked.sort(key=lambda t: (-t[0], t[1]))
+    peers: list[str] = []
+    for _, domain in ranked:
+        if domain not in peers:
+            peers.append(domain)
+    peers = peers[:_MAX_SIMILARWEB_PEERS]
+    if peers and scratch is not None:
+        scratch[key] = peers
+    return peers
+
+
+def _keyword_seed_phrases(state: DirectorState, ctx: Any) -> list[str]:
+    """Seed phrases for a focused enrich_keywords pass (bounded, real).
+
+    Prefers up to :data:`_MAX_KEYWORD_SEEDS` humanized category-entry-point
+    labels from this run's stored classifications (observed buying triggers —
+    the phrases worth looking up); falls back to the competitor's name plus
+    the user's focus terms so the pass always has something real to research.
+    Never synthesizes phrases.
+    """
+    phrases: list[str] = []
+    seen: set[str] = set()
+
+    def _add(raw: Any) -> None:
+        text = " ".join(str(raw or "").replace("_", " ").split())
+        key = text.casefold()
+        if text and key not in seen and len(phrases) < _MAX_KEYWORD_SEEDS:
+            seen.add(key)
+            phrases.append(text)
+
+    repo = getattr(ctx, "repository", None)
+    if repo is not None:
+        try:
+            for model in repo.list_classifications(state.run_id):
+                for cep in getattr(model, "category_entry_points", None) or []:
+                    _add(cep)
+        except Exception:  # storage hiccups must never break planning
+            pass
+    if not phrases and state.company is not None:
+        _add(state.company.canonical_name)
+        for term in getattr(state, "user_focus", None) or []:
+            _add(term)
+    return phrases
 
 
 def _diversify_pending(pending: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -423,13 +552,18 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     flags = cfg.sources if cfg else {}
     name = company.canonical_name
 
-    def _optional(flag, source, action, dim, params, rationale, rel=0.5, require_dim=True):
-        # Optional sources are attempted once each (allowed() filters executed
-        # keys). require_dim=False runs the source once regardless of coverage.
-        # A per-run opt-out (e.g. the UI's LinkedIn toggle) beats the global flag.
+    def _optional(flag, source, action, dim, params, rationale, rel=0.5):
+        # Optional sources are attempted once each: allowed() filters executed
+        # keys, so an enabled source is proposed until its single attempt runs.
+        # Deliberately NOT gated on the dimension's coverage level (starvation
+        # audit: a fetched /customers page raised customer_proof to medium and
+        # search_reviews stopped being proposed after 2 iterations — dedicated
+        # buyer-voice/ads sources must not be starved by INCIDENTAL coverage
+        # from another source). A per-run opt-out (e.g. the UI's LinkedIn
+        # toggle) beats the global flag.
         if flag in (getattr(state, "disabled_sources", None) or []):
             return
-        if flags.get(flag) and (not require_dim or _needs(state, dim)):
+        if flags.get(flag):
             proposals.append(_mk(state, action, source, dim, params, rationale, reliability=rel))
 
     _optional(
@@ -439,7 +573,6 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         "commercial_motion",
         {"domain": company.primary_domain},
         "Similarweb (estimated) traffic and channel mix add a demand-side view.",
-        require_dim=False,
     )
     # LinkedIn / social presence via the Exa Agent (agentic research). The plain
     # search never reaches LinkedIn; this surfaces how the company + its
@@ -458,7 +591,6 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             "num_posts": _num_posts,
         },
         "Exa Agent researches the competitor's LinkedIn: per-post employee content + synthesis.",
-        require_dim=False,
     )
     # Complementary discovery: LinkedIn-scoped Exa search (one artifact per post).
     _optional(
@@ -474,7 +606,6 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             "num_results": _num_posts,
         },
         "LinkedIn-scoped Exa search surfaces individual employee/company posts as their own artifacts.",
-        require_dim=False,
     )
     _optional(
         "reviews",
@@ -538,7 +669,69 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         "LinkedIn Ad Library attempt: API is political/EU-only; typed skip when unreachable.",
     )
 
-    return [p for p in proposals if allowed(p)]
+    # 7b. Per-competitor Similarweb peers: once this run's own similarweb
+    # artifact reports digital_competitors, enrich up to the top-3 affinity
+    # peer domains (params carry peer=true; the resulting artifacts are stamped
+    # metadata.peer=true downstream so the report's competitor view is
+    # untouched). allowed() dedupes executed peers; each runs once.
+    if flags.get("similarweb") and "similarweb" not in (
+        getattr(state, "disabled_sources", None) or []
+    ):
+        for peer_domain in _similarweb_peer_domains(state, ctx):
+            proposals.append(
+                _mk(
+                    state,
+                    "enrich_similarweb",
+                    "similarweb",
+                    "commercial_motion",
+                    {"domain": peer_domain, "peer": True},
+                    f"Similarweb peer enrichment: {peer_domain} is a top-affinity digital "
+                    "competitor — estimated demand context for the audience-overlap set.",
+                )
+            )
+
+    # 7c. Keyword intelligence (source "keywords") — proposed ONLY when a
+    # focused research pass explicitly allowlists it (chat: research
+    # "keywords"). Default batch runs (allowlist None) NEVER propose it: the
+    # paid-search draft owns default-run enrichment, and an unfocused pass
+    # would burn bounded provider calls on guesses. Proposed once per pass:
+    # keyword artifacts are themselves classifiable, so seed drift could
+    # otherwise re-propose (and re-spend) every iteration; a new "keywords"
+    # research pass clears the executed keys (conversation._reopen_sources)
+    # and re-arms it.
+    keywords_allowlist = getattr(state, "source_allowlist", None)
+    if (
+        keywords_allowlist is not None
+        and "keywords" in keywords_allowlist
+        and flags.get("keywords")
+        and not any(k.split(":", 1)[0] == "enrich_keywords" for k in state.executed_action_keys)
+    ):
+        seeds = _keyword_seed_phrases(state, ctx)
+        if seeds:
+            proposals.append(
+                _mk(
+                    state,
+                    "enrich_keywords",
+                    "keywords",
+                    "commercial_motion",
+                    {"keywords": seeds},
+                    "Focused keyword research: enrich the observed buying triggers with "
+                    "live SERP intelligence / provider keyword metrics.",
+                    reliability=0.6,
+                )
+            )
+
+    out = [p for p in proposals if allowed(p)]
+
+    # Source allowlist (CONTRACTS.md): when set (e.g. focused in-place research),
+    # ONLY actions from allowlisted sources are proposed. This is an additional
+    # filter over the FULL proposal list; internal/analysis actions (e.g.
+    # reuse_evidence) always stay allowed.
+    allowlist = getattr(state, "source_allowlist", None)
+    if allowlist is not None:
+        permitted = set(allowlist) | set(_INTERNAL_SOURCES)
+        out = [p for p in out if (p.source_name or "") in permitted]
+    return out
 
 
 # Required dimensions whose fallbacks must be exhausted before a low-value stop.
@@ -562,9 +755,21 @@ def required_dims_needing_exhaustion(state: DirectorState) -> list[str]:
 def score_and_select(
     state: DirectorState, proposals: list[ResearchAction]
 ) -> tuple[ResearchAction | None, list[dict[str, Any]]]:
-    """Utility ordering (§37.16) with a natural-language selection trace."""
+    """Utility ordering (§37.16) with a natural-language selection trace.
+
+    Never-attempted Level-B sources whose coverage dimension is still thin get
+    an iteration-ramped utility floor: early cycles keep the Level-A ordering,
+    but a breadth source cannot sit at the bottom of the queue until the
+    budget dies (starvation rebalance — see _STARVATION_FLOOR_* above)."""
     if not proposals:
         return None, []
+    from .coverage import level_at_least
+
+    attempted = _attempted_action_types(state)
+    floor = min(
+        _STARVATION_FLOOR_BASE + _STARVATION_FLOOR_RAMP * state.iteration,
+        _STARVATION_FLOOR_CAP,
+    )
     scored = []
     for a in proposals:
         utility = (
@@ -573,6 +778,17 @@ def score_and_select(
             - min(a.estimated_cost_usd / 0.05, 1.0) * 0.2
             - min(a.estimated_latency_seconds / 30.0, 1.0) * 0.2
         )
+        dim = LEVEL_B_ACTION_DIMENSIONS.get(a.action_type)
+        if (
+            dim is not None
+            and a.action_type not in attempted
+            and state.coverage.get(dim) != "unavailable"
+            # "thin" is below HIGH: incidental coverage from another source
+            # (e.g. a /customers page raising customer_proof to medium) must
+            # not permanently starve the never-attempted dedicated source.
+            and not level_at_least(state.coverage, dim, "high")
+        ):
+            utility = max(utility, floor)
         scored.append((utility, a))
     scored.sort(key=lambda t: t[0], reverse=True)
     best = scored[0][1]

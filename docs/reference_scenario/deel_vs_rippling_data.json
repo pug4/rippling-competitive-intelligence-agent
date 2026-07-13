@@ -1,24 +1,26 @@
 {
-  "schema_version": "1.3.0",
-  "bottom_line": "Deel owns 3 of 23 buying intents to Rippling's 3 (5 contested intents); 2 new themes appeared in their messaging; 0 of 6 repeated claims are clean attack openings \u2014 build proof before attacking. Start with \u201cThe Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure\u201d (metric: Sales-assisted win rate in active Deel-competitive opportunities where the demo/asset was used).",
+  "schema_version": "1.4.0",
+  "bottom_line": "Deel owns 3 of 23 buying intents to Rippling's 3 (5 contested intents); 5 new themes appeared in their messaging; 0 of 6 repeated claims are clean attack openings \u2014 build proof before attacking. Start with \u201cShow, Don't Tell: A Live Workflow-Builder Demo Comparing Rippling's No-Code App Builder to Deel's 7 New Point Products\u201d (metric: Demo-to-sales-qualified-meeting conversion rate on the workflow builder asset).",
   "run": {
     "run_id": "RUN-b256fab1c1dd",
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-13T05:07:04.778468+00:00",
-    "stop_reason": "runtime_exhausted",
-    "stop_reason_label": "budget-bounded (hit the research-time cap)",
-    "iterations": 19,
-    "tool_cost_usd": 0.12,
-    "model_cost_usd": 6.5722,
-    "total_spend_usd": 6.6922
+    "generated_at": "2026-07-13T08:07:56.068996+00:00",
+    "stop_reason": "required_coverage_reached",
+    "stop_reason_label": "completed (required coverage reached)",
+    "iterations": 22,
+    "tool_cost_usd": 0.127,
+    "model_cost_usd": 0.7432,
+    "total_spend_usd": 0.8702
   },
   "scope": {
     "company_input": "deel.com",
     "compare_to": "rippling.com",
     "lookback_days": 365,
-    "user_focus": [],
+    "user_focus": [
+      "paid media and ad creatives"
+    ],
     "time_windows": [
       {
         "window_id": "TW-f65588e851cb",
@@ -1227,22 +1229,6 @@
       ]
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "competitor_share": 0.0,
-      "focal_share": 0.0088,
-      "share_ratio": null,
-      "share_delta": -0.0088,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [],
-      "focal_example_artifact_ids": [
-        "ART-9e8697e401cd"
-      ],
-      "top_verticals": []
-    },
-    {
       "cep": "rapid_growth_scaling_employees",
       "competitor_pages": 0,
       "focal_pages": 1,
@@ -1275,7 +1261,23 @@
       "top_verticals": []
     },
     {
-      "cep": "expanding_service_offerings",
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-9e8697e401cd"
+      ],
+      "top_verticals": []
+    },
+    {
+      "cep": "managing_global_device_fleet",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -1285,13 +1287,47 @@
       "ownership": "insufficient_sample",
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
-        "ART-22cb144808e1"
+        "ART-4d052e00f8e5"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "it_device_management"
+      ]
+    },
+    {
+      "cep": "consolidating_fragmented_regional_workforce_providers",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
       ]
+    },
+    {
+      "cep": "replacing_traditional_cross_border_payment_rails",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
     },
     {
       "cep": "paying_contractors_and_employees_globally",
@@ -1310,7 +1346,7 @@
       "top_verticals": []
     },
     {
-      "cep": "expanding_to_new_countries",
+      "cep": "expanding_service_offerings",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -1320,30 +1356,12 @@
       "ownership": "insufficient_sample",
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
-        "ART-ceb5d6ab049f"
+        "ART-22cb144808e1"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "managing_global_device_fleet",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4d052e00f8e5"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "it_device_management"
       ]
     },
     {
@@ -1384,7 +1402,7 @@
       ]
     },
     {
-      "cep": "replacing_traditional_cross_border_payment_rails",
+      "cep": "expanding_to_new_countries",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -1394,23 +1412,7 @@
       "ownership": "insufficient_sample",
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": []
-    },
-    {
-      "cep": "consolidating_fragmented_regional_workforce_providers",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-39db3bdefb26"
+        "ART-ceb5d6ab049f"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
@@ -65964,6 +65966,14 @@
     },
     "url": "https://www.similarweb.com/website/deel.com/"
   },
+  "buyer_voice": {
+    "n_reviews": 0,
+    "themes": [],
+    "switching_triggers": [],
+    "objections": [],
+    "message_reality": [],
+    "note": "Selection-biased sample of public reviews (G2/Capterra/TrustRadius): buyer language and direction only \u2014 never representative sentiment, satisfaction rates, or market share. n = signal occurrences across the mined pages."
+  },
   "product_vertical_analysis": {
     "verticals": [
       {
@@ -68380,60 +68390,60 @@
   },
   "theme_comparison": {
     "competitor_themes": {
+      "automation": 14,
       "cost_reduction": 5,
-      "all_in_one": 1,
-      "native_platform_breadth": 5,
-      "employee_experience": 4,
-      "status": 0,
+      "consolidation": 39,
       "global_hiring": 7,
       "compliance": 10,
+      "native_platform_breadth": 5,
+      "employee_experience": 4,
+      "integration_ecosystem": 8,
       "data_unification": 6,
-      "automation": 14,
-      "consolidation": 39,
-      "speed_to_value": 7,
-      "integration_ecosystem": 8
+      "all_in_one": 1,
+      "status": 0,
+      "speed_to_value": 7
     },
     "focal_themes": {
+      "automation": 15,
       "cost_reduction": 1,
-      "all_in_one": 2,
-      "native_platform_breadth": 3,
-      "employee_experience": 2,
-      "status": 4,
+      "consolidation": 28,
       "global_hiring": 2,
       "compliance": 3,
+      "native_platform_breadth": 3,
+      "employee_experience": 2,
+      "integration_ecosystem": 4,
       "data_unification": 35,
-      "automation": 15,
-      "consolidation": 28,
-      "speed_to_value": 2,
-      "integration_ecosystem": 4
+      "all_in_one": 2,
+      "status": 4,
+      "speed_to_value": 2
     },
     "competitor_shares": {
+      "automation": 0.1138,
       "cost_reduction": 0.0407,
-      "all_in_one": 0.0081,
-      "native_platform_breadth": 0.0407,
-      "employee_experience": 0.0325,
-      "status": 0.0,
+      "consolidation": 0.3171,
       "global_hiring": 0.0569,
       "compliance": 0.0813,
+      "native_platform_breadth": 0.0407,
+      "employee_experience": 0.0325,
+      "integration_ecosystem": 0.065,
       "data_unification": 0.0488,
-      "automation": 0.1138,
-      "consolidation": 0.3171,
-      "speed_to_value": 0.0569,
-      "integration_ecosystem": 0.065
+      "all_in_one": 0.0081,
+      "status": 0.0,
+      "speed_to_value": 0.0569
     },
     "focal_shares": {
+      "automation": 0.1316,
       "cost_reduction": 0.0088,
-      "all_in_one": 0.0175,
-      "native_platform_breadth": 0.0263,
-      "employee_experience": 0.0175,
-      "status": 0.0351,
+      "consolidation": 0.2456,
       "global_hiring": 0.0175,
       "compliance": 0.0263,
+      "native_platform_breadth": 0.0263,
+      "employee_experience": 0.0175,
+      "integration_ecosystem": 0.0351,
       "data_unification": 0.307,
-      "automation": 0.1316,
-      "consolidation": 0.2456,
-      "speed_to_value": 0.0175,
-      "integration_ecosystem": 0.0351
+      "all_in_one": 0.0175,
+      "status": 0.0351,
+      "speed_to_value": 0.0175
     },
     "competitor_n_classified": 123,
     "focal_n_classified": 114,
@@ -82026,6 +82036,918 @@
       "current_theme_count": 10,
       "prior_window_n": 14,
       "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-4b0ca7ed13d6",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201ccost_reduction\u201d not observed in any of the 14 dated prior-window artifacts",
+      "current_state": "\u201ccost_reduction\u201d present in 30 current-window artifacts",
+      "lifecycle": "emerging",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-d120ca51f7fe",
+        "ART-9827090a1088"
+      ],
+      "current_evidence_ids": [
+        "ART-4504605bc1ea",
+        "ART-90e7f10fb8e0",
+        "ART-79313fc4282b",
+        "ART-8b2f98998852",
+        "ART-0c8e67a2a452",
+        "ART-44bcb7f07dd1",
+        "ART-aceb618b7008",
+        "ART-f7eab11e8bb0",
+        "ART-42b584e61797",
+        "ART-4906b6be0e07",
+        "ART-9d6e8ff530f2",
+        "ART-be2efed5377d",
+        "ART-ceb5d6ab049f",
+        "ART-06215ed93038",
+        "ART-0e665529aaf9",
+        "ART-fbf6dd519726",
+        "ART-5b3ed68d95a8",
+        "ART-23536ba4b988",
+        "ART-dd23c6933df4",
+        "ART-636fe63c55e0",
+        "ART-194e939f5a16",
+        "ART-60e8422e0410",
+        "ART-e22e14f14145",
+        "ART-265b19917189",
+        "ART-56e6b2c7622f",
+        "ART-fed2d6a7ba75",
+        "ART-cc203bee0f73",
+        "ART-4c5c195d76a3",
+        "ART-f69954e6a63c",
+        "ART-ef47109e67a0"
+      ],
+      "first_detected_at": "2026-07-13T08:01:07.723608Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change",
+        "The theme could be a segment-specific or campaign-specific push (e.g., targeting a particular product line or customer segment) rather than a company-wide repositioning.",
+        "Seasonal or macroeconomic factors (e.g., a period of budget-conscious purchasing) could be temporarily boosting cost-related messaging without representing a durable strategic shift."
+      ],
+      "theme": "cost_reduction",
+      "prior_theme_count": 0,
+      "current_theme_count": 30,
+      "prior_window_n": 14,
+      "prior_evidence_role": "window_sample"
+    },
+    {
+      "change_id": "CHG-f016f78ce0a2",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201ccompliance\u201d present but rare in the prior window (9 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201ccompliance\u201d present in 72 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-d120ca51f7fe",
+        "ART-9827090a1088"
+      ],
+      "current_evidence_ids": [
+        "ART-4504605bc1ea",
+        "ART-f07ca7d52b9b",
+        "ART-2125e9fe86f8",
+        "ART-3b7689ec0af8",
+        "ART-90e7f10fb8e0",
+        "ART-79313fc4282b",
+        "ART-a4f8fcbafed2",
+        "ART-7585503a7a25",
+        "ART-8b2f98998852",
+        "ART-45147107c4b1",
+        "ART-d378770b11eb",
+        "ART-84fffc657b92",
+        "ART-02773cc9b819",
+        "ART-22cb144808e1",
+        "ART-debb4bbaadc2",
+        "ART-7c878936dd5e",
+        "ART-f8f40282be1a",
+        "ART-44bcb7f07dd1",
+        "ART-defc1c9283f6",
+        "ART-4a4f82d82d6a",
+        "ART-694b294e53b9",
+        "ART-aceb618b7008",
+        "ART-f1ed3021d6c3",
+        "ART-838f572d1257",
+        "ART-d16c8cb77425",
+        "ART-f7eab11e8bb0",
+        "ART-42b584e61797",
+        "ART-61b4b5953459",
+        "ART-4906b6be0e07",
+        "ART-9d6e8ff530f2",
+        "ART-68700816fe0d",
+        "ART-a94f1b3be070",
+        "ART-be2efed5377d",
+        "ART-2cb3203cc7f8",
+        "ART-ad4bf60407c7",
+        "ART-a5534ea669de",
+        "ART-8e1d60c4f216",
+        "ART-ceb5d6ab049f",
+        "ART-06215ed93038",
+        "ART-f728f3c75dc3",
+        "ART-fbf6dd519726",
+        "ART-c78d652c9036",
+        "ART-5b3ed68d95a8",
+        "ART-23536ba4b988",
+        "ART-dd23c6933df4",
+        "ART-636fe63c55e0",
+        "ART-194e939f5a16",
+        "ART-60e8422e0410",
+        "ART-4d052e00f8e5",
+        "ART-e22e14f14145",
+        "ART-ad817077bf73",
+        "ART-265b19917189",
+        "ART-39db3bdefb26",
+        "ART-fed2d6a7ba75",
+        "ART-1d3e3bc13183",
+        "ART-6ff0e4619a22",
+        "ART-f9a2ea90fbf7",
+        "ART-8d2513c0b021",
+        "ART-75866c9644fb",
+        "ART-af4db07db244",
+        "ART-1e8a75b15192",
+        "ART-ddac0943e2f5",
+        "ART-d4f63f581342",
+        "ART-cc203bee0f73",
+        "ART-60be8b235bb8",
+        "ART-9ffa71a65509",
+        "ART-8885274b6a30",
+        "ART-7114703efa09",
+        "ART-a2c32ca8ae58",
+        "ART-d5987cb133b6",
+        "ART-64cf532eb703",
+        "ART-b017b9a88a12"
+      ],
+      "first_detected_at": "2026-07-13T08:01:12.500910Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "A segment-specific campaign (e.g., a product line or regulatory push) targeting compliance-sensitive buyers could account for the concentration rather than company-wide repositioning.",
+        "Seasonal or regulatory-driven content cycles (e.g., annual compliance reporting season) could temporarily inflate mentions without reflecting a lasting strategic shift."
+      ],
+      "theme": "compliance",
+      "prior_theme_count": 9,
+      "current_theme_count": 72,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-eb280294f5f4",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cglobal_hiring\u201d present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cglobal_hiring\u201d present in 33 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-c249ddcbccea"
+      ],
+      "current_evidence_ids": [
+        "ART-4504605bc1ea",
+        "ART-3b7689ec0af8",
+        "ART-8b2f98998852",
+        "ART-45147107c4b1",
+        "ART-0c8e67a2a452",
+        "ART-84fffc657b92",
+        "ART-c94a1fc45a45",
+        "ART-debb4bbaadc2",
+        "ART-defc1c9283f6",
+        "ART-694b294e53b9",
+        "ART-aceb618b7008",
+        "ART-61b4b5953459",
+        "ART-a94f1b3be070",
+        "ART-2cb3203cc7f8",
+        "ART-ad4bf60407c7",
+        "ART-a5534ea669de",
+        "ART-06215ed93038",
+        "ART-f728f3c75dc3",
+        "ART-636fe63c55e0",
+        "ART-60e8422e0410",
+        "ART-e22e14f14145",
+        "ART-39db3bdefb26",
+        "ART-fed2d6a7ba75",
+        "ART-1d3e3bc13183",
+        "ART-6ff0e4619a22",
+        "ART-560a667497d0",
+        "ART-af4db07db244",
+        "ART-ddac0943e2f5",
+        "ART-60be8b235bb8",
+        "ART-f3fb5eee299d",
+        "ART-36e6de3460f2",
+        "ART-d5987cb133b6",
+        "ART-b017b9a88a12"
+      ],
+      "first_detected_at": "2026-07-13T08:01:17.823171Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "A related or rebranded theme (e.g., 'remote work' or 'international expansion') could have been folded into 'global_hiring' terminology, creating a naming-driven rather than substantive shift",
+        "The theme could be tied to a specific seasonal hiring campaign or event-driven push rather than a durable strategic repositioning"
+      ],
+      "theme": "global_hiring",
+      "prior_theme_count": 1,
+      "current_theme_count": 33,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-b99104fdf4de",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cconsolidation\u201d present but rare in the prior window (7 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cconsolidation\u201d present in 36 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-d120ca51f7fe",
+        "ART-9827090a1088"
+      ],
+      "current_evidence_ids": [
+        "ART-4504605bc1ea",
+        "ART-2125e9fe86f8",
+        "ART-3b7689ec0af8",
+        "ART-90e7f10fb8e0",
+        "ART-79313fc4282b",
+        "ART-a4f8fcbafed2",
+        "ART-d378770b11eb",
+        "ART-84fffc657b92",
+        "ART-02773cc9b819",
+        "ART-7c878936dd5e",
+        "ART-2e55cf5af6d8",
+        "ART-defc1c9283f6",
+        "ART-f1ed3021d6c3",
+        "ART-838f572d1257",
+        "ART-42b584e61797",
+        "ART-4906b6be0e07",
+        "ART-9d6e8ff530f2",
+        "ART-68700816fe0d",
+        "ART-2cb3203cc7f8",
+        "ART-8e1d60c4f216",
+        "ART-c78d652c9036",
+        "ART-5b3ed68d95a8",
+        "ART-9f8f51f507b2",
+        "ART-194e939f5a16",
+        "ART-1ab89064dacd",
+        "ART-fed2d6a7ba75",
+        "ART-1d3e3bc13183",
+        "ART-6ff0e4619a22",
+        "ART-8d2513c0b021",
+        "ART-560a667497d0",
+        "ART-75866c9644fb",
+        "ART-af4db07db244",
+        "ART-ddac0943e2f5",
+        "ART-d5987cb133b6",
+        "ART-64cf532eb703",
+        "ART-b017b9a88a12"
+      ],
+      "first_detected_at": "2026-07-13T08:01:22.533314Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "The theme may be driven by a specific segment or campaign (e.g., a product line or M&A-related messaging) rather than reflecting company-wide repositioning.",
+        "Some current-period mentions could be incidental or supporting references rather than a core marketing theme, similar to the prior period's mixed usage."
+      ],
+      "theme": "consolidation",
+      "prior_theme_count": 7,
+      "current_theme_count": 36,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-dd67e25103d5",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cscalability\u201d present but rare in the prior window (6 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cscalability\u201d present in 42 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-d120ca51f7fe",
+        "ART-9827090a1088"
+      ],
+      "current_evidence_ids": [
+        "ART-4504605bc1ea",
+        "ART-2125e9fe86f8",
+        "ART-90e7f10fb8e0",
+        "ART-79313fc4282b",
+        "ART-a4f8fcbafed2",
+        "ART-45147107c4b1",
+        "ART-0c8e67a2a452",
+        "ART-02773cc9b819",
+        "ART-22cb144808e1",
+        "ART-70e902dab561",
+        "ART-debb4bbaadc2",
+        "ART-7c878936dd5e",
+        "ART-f8f40282be1a",
+        "ART-44bcb7f07dd1",
+        "ART-defc1c9283f6",
+        "ART-f1ed3021d6c3",
+        "ART-838f572d1257",
+        "ART-f7eab11e8bb0",
+        "ART-4906b6be0e07",
+        "ART-68700816fe0d",
+        "ART-2cb3203cc7f8",
+        "ART-ceb5d6ab049f",
+        "ART-0e665529aaf9",
+        "ART-9f8f51f507b2",
+        "ART-194e939f5a16",
+        "ART-4d052e00f8e5",
+        "ART-1ab89064dacd",
+        "ART-57d4d22859e8",
+        "ART-265b19917189",
+        "ART-e253009c71ce",
+        "ART-39db3bdefb26",
+        "ART-fed2d6a7ba75",
+        "ART-1d3e3bc13183",
+        "ART-f9a2ea90fbf7",
+        "ART-560a667497d0",
+        "ART-1e8a75b15192",
+        "ART-ddac0943e2f5",
+        "ART-aecda7d79561",
+        "ART-167995f39a19",
+        "ART-2e3f071147d3",
+        "ART-f3fb5eee299d",
+        "ART-15d6875298ca"
+      ],
+      "first_detected_at": "2026-07-13T08:01:28.304201Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "Some current-window mentions may stem from a specific product launch or campaign emphasizing scalability rather than a company-wide repositioning.",
+        "Renamed or rebranded product lines could cause 'scalability' to appear in new contexts that are not truly a new thematic emphasis."
+      ],
+      "theme": "scalability",
+      "prior_theme_count": 6,
+      "current_theme_count": 42,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-7044a12e0c14",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cautomation\u201d present but rare in the prior window (11 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cautomation\u201d present in 53 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-9827090a1088",
+        "ART-c249ddcbccea",
+        "ART-70733a8c82e5"
+      ],
+      "current_evidence_ids": [
+        "ART-f07ca7d52b9b",
+        "ART-2125e9fe86f8",
+        "ART-79313fc4282b",
+        "ART-a4f8fcbafed2",
+        "ART-7585503a7a25",
+        "ART-8b2f98998852",
+        "ART-84fffc657b92",
+        "ART-70e902dab561",
+        "ART-7c878936dd5e",
+        "ART-f8f40282be1a",
+        "ART-44bcb7f07dd1",
+        "ART-4a4f82d82d6a",
+        "ART-aceb618b7008",
+        "ART-838f572d1257",
+        "ART-d16c8cb77425",
+        "ART-61b4b5953459",
+        "ART-4906b6be0e07",
+        "ART-be2efed5377d",
+        "ART-a5534ea669de",
+        "ART-ceb5d6ab049f",
+        "ART-dc25b25badd2",
+        "ART-06215ed93038",
+        "ART-ef2e15843dd7",
+        "ART-c78d652c9036",
+        "ART-5b3ed68d95a8",
+        "ART-23536ba4b988",
+        "ART-dd23c6933df4",
+        "ART-9f8f51f507b2",
+        "ART-e6ecf0c79357",
+        "ART-1ab89064dacd",
+        "ART-57d4d22859e8",
+        "ART-265b19917189",
+        "ART-e253009c71ce",
+        "ART-8d2513c0b021",
+        "ART-560a667497d0",
+        "ART-af4db07db244",
+        "ART-1e8a75b15192",
+        "ART-ddac0943e2f5",
+        "ART-d4f63f581342",
+        "ART-cc203bee0f73",
+        "ART-b0219a4eb1d1",
+        "ART-3bf787a66393",
+        "ART-6b1e89e27ff1",
+        "ART-6cfc2b94ab3d",
+        "ART-751cf06aec54",
+        "ART-167995f39a19",
+        "ART-8885274b6a30",
+        "ART-2e3f071147d3",
+        "ART-ef47109e67a0",
+        "ART-15d6875298ca",
+        "ART-a2c32ca8ae58",
+        "ART-64cf532eb703",
+        "ART-b017b9a88a12"
+      ],
+      "first_detected_at": "2026-07-13T08:01:33.504217Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "Some current-window artifacts may reuse or repurpose prior campaign language under a renamed product line, inflating the count without genuine new emphasis",
+        "A seasonal product launch or event cycle emphasizing automation could account for a temporary spike rather than sustained repositioning"
+      ],
+      "theme": "automation",
+      "prior_theme_count": 11,
+      "current_theme_count": 53,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-badf4ef9c033",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cdata_accuracy\u201d not observed in any of the 14 dated prior-window artifacts",
+      "current_state": "\u201cdata_accuracy\u201d present in 13 current-window artifacts",
+      "lifecycle": "emerging",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-d120ca51f7fe",
+        "ART-9827090a1088"
+      ],
+      "current_evidence_ids": [
+        "ART-f07ca7d52b9b",
+        "ART-3b7689ec0af8",
+        "ART-4a4f82d82d6a",
+        "ART-d16c8cb77425",
+        "ART-ef2e15843dd7",
+        "ART-23536ba4b988",
+        "ART-194e939f5a16",
+        "ART-57d4d22859e8",
+        "ART-ad817077bf73",
+        "ART-8d2513c0b021",
+        "ART-d4f63f581342",
+        "ART-167995f39a19",
+        "ART-9ffa71a65509"
+      ],
+      "first_detected_at": "2026-07-13T08:01:37.605953Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change",
+        "The theme may reflect a segment-specific or product-specific campaign rather than a company-wide repositioning",
+        "A recent product launch or feature release focused on data quality could explain a temporary spike rather than a sustained strategic shift"
+      ],
+      "theme": "data_accuracy",
+      "prior_theme_count": 0,
+      "current_theme_count": 13,
+      "prior_window_n": 14,
+      "prior_evidence_role": "window_sample"
+    },
+    {
+      "change_id": "CHG-981917ff13f3",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cemployee_experience\u201d present but rare in the prior window (3 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cemployee_experience\u201d present in 22 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-70733a8c82e5",
+        "ART-6e6a875afe49",
+        "ART-c198644f32c9"
+      ],
+      "current_evidence_ids": [
+        "ART-f07ca7d52b9b",
+        "ART-90e7f10fb8e0",
+        "ART-a4f8fcbafed2",
+        "ART-8b2f98998852",
+        "ART-70e902dab561",
+        "ART-2e55cf5af6d8",
+        "ART-defc1c9283f6",
+        "ART-f1ed3021d6c3",
+        "ART-4906b6be0e07",
+        "ART-dc25b25badd2",
+        "ART-0e665529aaf9",
+        "ART-5b3ed68d95a8",
+        "ART-636fe63c55e0",
+        "ART-e6ecf0c79357",
+        "ART-60be8b235bb8",
+        "ART-7225d47d794d",
+        "ART-751cf06aec54",
+        "ART-aecda7d79561",
+        "ART-4c5c195d76a3",
+        "ART-f69954e6a63c",
+        "ART-d2aeea280856",
+        "ART-64cf532eb703"
+      ],
+      "first_detected_at": "2026-07-13T08:01:42.053300Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "Some current-window artifacts may reuse or repurpose prior content under a renamed campaign or product line, inflating the count without new messaging intent.",
+        "Seasonal or event-driven communications (e.g., HR/recruiting campaigns) could temporarily boost employee_experience mentions without reflecting a sustained strategic shift."
+      ],
+      "theme": "employee_experience",
+      "prior_theme_count": 3,
+      "current_theme_count": 22,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-7ec7103a6c1b",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cdata_unification\u201d present but rare in the prior window (5 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cdata_unification\u201d present in 16 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-9827090a1088",
+        "ART-c249ddcbccea",
+        "ART-adfc7a8286fc"
+      ],
+      "current_evidence_ids": [
+        "ART-2125e9fe86f8",
+        "ART-84fffc657b92",
+        "ART-f8f40282be1a",
+        "ART-694b294e53b9",
+        "ART-61b4b5953459",
+        "ART-68700816fe0d",
+        "ART-be2efed5377d",
+        "ART-2cb3203cc7f8",
+        "ART-1ab89064dacd",
+        "ART-56e6b2c7622f",
+        "ART-f9a2ea90fbf7",
+        "ART-1e8a75b15192",
+        "ART-b0219a4eb1d1",
+        "ART-4532245c2433",
+        "ART-f69954e6a63c",
+        "ART-a2c32ca8ae58"
+      ],
+      "first_detected_at": "2026-07-13T08:01:49.259942Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "Some current-window mentions may be supporting or secondary references rather than a core theme, similar to the prior window's mix",
+        "The increase could reflect a broader company-wide messaging expansion rather than a targeted push specifically for data_unification"
+      ],
+      "theme": "data_unification",
+      "prior_theme_count": 5,
+      "current_theme_count": 16,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-b437f1a3d1d2",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cspeed_to_value\u201d present but rare in the prior window (8 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cspeed_to_value\u201d present in 43 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-d120ca51f7fe",
+        "ART-0498833da65b",
+        "ART-70733a8c82e5",
+        "ART-8f85f2d6f99f",
+        "ART-edf178c1cd08"
+      ],
+      "current_evidence_ids": [
+        "ART-3b7689ec0af8",
+        "ART-d378770b11eb",
+        "ART-0c8e67a2a452",
+        "ART-c94a1fc45a45",
+        "ART-debb4bbaadc2",
+        "ART-44bcb7f07dd1",
+        "ART-4a4f82d82d6a",
+        "ART-aceb618b7008",
+        "ART-838f572d1257",
+        "ART-9d6e8ff530f2",
+        "ART-68700816fe0d",
+        "ART-a94f1b3be070",
+        "ART-ad4bf60407c7",
+        "ART-a5534ea669de",
+        "ART-8e1d60c4f216",
+        "ART-dc25b25badd2",
+        "ART-ef2e15843dd7",
+        "ART-f728f3c75dc3",
+        "ART-fbf6dd519726",
+        "ART-c78d652c9036",
+        "ART-60e8422e0410",
+        "ART-e22e14f14145",
+        "ART-ad817077bf73",
+        "ART-265b19917189",
+        "ART-56e6b2c7622f",
+        "ART-1d3e3bc13183",
+        "ART-6ff0e4619a22",
+        "ART-8d2513c0b021",
+        "ART-af4db07db244",
+        "ART-ddac0943e2f5",
+        "ART-b0219a4eb1d1",
+        "ART-3e2cced81ed8",
+        "ART-6b1e89e27ff1",
+        "ART-4532245c2433",
+        "ART-6cfc2b94ab3d",
+        "ART-7225d47d794d",
+        "ART-751cf06aec54",
+        "ART-167995f39a19",
+        "ART-9ffa71a65509",
+        "ART-4c5c195d76a3",
+        "ART-f69954e6a63c",
+        "ART-2e3f071147d3",
+        "ART-ef47109e67a0"
+      ],
+      "first_detected_at": "2026-07-13T08:01:55.306963Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "A broader marketing campaign or product launch during the current window could be driving increased mentions across many artifacts simultaneously, making this a segment/campaign-driven spike rather than permanent repositioning"
+      ],
+      "theme": "speed_to_value",
+      "prior_theme_count": 8,
+      "current_theme_count": 43,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-0fed3f2829dd",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201csecurity_and_control\u201d present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201csecurity_and_control\u201d present in 22 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-d120ca51f7fe"
+      ],
+      "current_evidence_ids": [
+        "ART-90e7f10fb8e0",
+        "ART-7585503a7a25",
+        "ART-d378770b11eb",
+        "ART-84fffc657b92",
+        "ART-02773cc9b819",
+        "ART-debb4bbaadc2",
+        "ART-defc1c9283f6",
+        "ART-694b294e53b9",
+        "ART-f1ed3021d6c3",
+        "ART-42b584e61797",
+        "ART-be2efed5377d",
+        "ART-2cb3203cc7f8",
+        "ART-ef2e15843dd7",
+        "ART-9f8f51f507b2",
+        "ART-4d052e00f8e5",
+        "ART-57d4d22859e8",
+        "ART-f9a2ea90fbf7",
+        "ART-8d2513c0b021",
+        "ART-75866c9644fb",
+        "ART-d4f63f581342",
+        "ART-cc203bee0f73",
+        "ART-7114703efa09"
+      ],
+      "first_detected_at": "2026-07-13T08:02:00.394454Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "The current increase could partly reflect a segment-specific campaign (e.g., a product launch or vertical push) rather than company-wide repositioning.",
+        "The rise could be seasonally tied to a specific event (e.g., a security incident response or compliance deadline) rather than a sustained strategic shift."
+      ],
+      "theme": "security_and_control",
+      "prior_theme_count": 1,
+      "current_theme_count": 22,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-d884892bb01e",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cintegration_ecosystem\u201d present but rare in the prior window (1 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cintegration_ecosystem\u201d present in 18 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89"
+      ],
+      "current_evidence_ids": [
+        "ART-a4f8fcbafed2",
+        "ART-7585503a7a25",
+        "ART-02773cc9b819",
+        "ART-22cb144808e1",
+        "ART-c94a1fc45a45",
+        "ART-44bcb7f07dd1",
+        "ART-defc1c9283f6",
+        "ART-f7eab11e8bb0",
+        "ART-42b584e61797",
+        "ART-68700816fe0d",
+        "ART-23536ba4b988",
+        "ART-56e6b2c7622f",
+        "ART-75866c9644fb",
+        "ART-d4f63f581342",
+        "ART-60be8b235bb8",
+        "ART-9ffa71a65509",
+        "ART-f3fb5eee299d",
+        "ART-36e6de3460f2"
+      ],
+      "first_detected_at": "2026-07-13T08:02:06.275773Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "The theme could be tied to a specific product launch or partnership campaign rather than a durable company-wide repositioning."
+      ],
+      "theme": "integration_ecosystem",
+      "prior_theme_count": 1,
+      "current_theme_count": 18,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-b0e47cbf61a5",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cnative_platform_breadth\u201d present but rare in the prior window (6 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cnative_platform_breadth\u201d present in 13 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-1d530850a0c7",
+        "ART-0498833da65b",
+        "ART-c249ddcbccea",
+        "ART-8f85f2d6f99f",
+        "ART-edf178c1cd08"
+      ],
+      "current_evidence_ids": [
+        "ART-22cb144808e1",
+        "ART-70e902dab561",
+        "ART-debb4bbaadc2",
+        "ART-42b584e61797",
+        "ART-e6ecf0c79357",
+        "ART-4d052e00f8e5",
+        "ART-b0219a4eb1d1",
+        "ART-3bf787a66393",
+        "ART-6b1e89e27ff1",
+        "ART-7225d47d794d",
+        "ART-aecda7d79561",
+        "ART-8885274b6a30",
+        "ART-15d6875298ca"
+      ],
+      "first_detected_at": "2026-07-13T08:02:10.866309Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "A rebranding or renaming of related product/platform terminology could be inflating matches for 'native_platform_breadth' without a true strategic shift.",
+        "The theme's growth could be tied to a specific segment or campaign push rather than a company-wide repositioning."
+      ],
+      "theme": "native_platform_breadth",
+      "prior_theme_count": 6,
+      "current_theme_count": 13,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-86b6e1dbabed",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201cworkforce_visibility\u201d present but rare in the prior window (2 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201cworkforce_visibility\u201d present in 12 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-668cae58be22"
+      ],
+      "current_evidence_ids": [
+        "ART-c94a1fc45a45",
+        "ART-7c878936dd5e",
+        "ART-2e55cf5af6d8",
+        "ART-d16c8cb77425",
+        "ART-dc25b25badd2",
+        "ART-06215ed93038",
+        "ART-f728f3c75dc3",
+        "ART-e6ecf0c79357",
+        "ART-39db3bdefb26",
+        "ART-3bf787a66393",
+        "ART-6b1e89e27ff1",
+        "ART-4532245c2433"
+      ],
+      "first_detected_at": "2026-07-13T08:02:17.215579Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "The theme may be tied to a specific product launch, campaign, or segment-focused initiative rather than a company-wide repositioning."
+      ],
+      "theme": "workforce_visibility",
+      "prior_theme_count": 2,
+      "current_theme_count": 12,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-8d03716c5996",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201ccross_system_workflow\u201d present but rare in the prior window (4 of 14 dated artifacts, incl. supporting-theme mentions)",
+      "current_state": "\u201ccross_system_workflow\u201d present in 10 current-window artifacts",
+      "lifecycle": "expanding",
+      "prior_evidence_ids": [
+        "ART-c249ddcbccea",
+        "ART-edf178c1cd08",
+        "ART-adfc7a8286fc",
+        "ART-668cae58be22"
+      ],
+      "current_evidence_ids": [
+        "ART-f8f40282be1a",
+        "ART-defc1c9283f6",
+        "ART-ad4bf60407c7",
+        "ART-23536ba4b988",
+        "ART-ad817077bf73",
+        "ART-e253009c71ce",
+        "ART-75866c9644fb",
+        "ART-1e8a75b15192",
+        "ART-6cfc2b94ab3d",
+        "ART-36e6de3460f2"
+      ],
+      "first_detected_at": "2026-07-13T08:02:22.865001Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "prior-window sample is small (14 dated artifacts vs 108 current); the growth ratio may reflect collection depth rather than a real shift",
+        "The increase could be driven by a single campaign or product launch that temporarily boosted mentions of cross_system_workflow rather than a durable strategic repositioning",
+        "Some 'supporting-theme mentions' in the prior window may have been undercounted due to medium historical source coverage, understating the true prior baseline"
+      ],
+      "theme": "cross_system_workflow",
+      "prior_theme_count": 4,
+      "current_theme_count": 10,
+      "prior_window_n": 14,
+      "prior_evidence_role": "theme_occurrences"
+    },
+    {
+      "change_id": "CHG-4ef6f24eb148",
+      "company_id": "CO-0cf92b8592a5",
+      "dimension": "theme_emergence",
+      "prior_state": "\u201capi_extensibility\u201d not observed in any of the 14 dated prior-window artifacts",
+      "current_state": "\u201capi_extensibility\u201d present in 2 current-window artifacts",
+      "lifecycle": "emerging",
+      "prior_evidence_ids": [
+        "ART-111af4ae1e89",
+        "ART-1d530850a0c7",
+        "ART-b29021325778",
+        "ART-d120ca51f7fe",
+        "ART-9827090a1088"
+      ],
+      "current_evidence_ids": [
+        "ART-61b4b5953459",
+        "ART-1e8a75b15192"
+      ],
+      "first_detected_at": "2026-07-13T08:02:26.905145Z",
+      "apparent_change_at": null,
+      "confidence": "low",
+      "coverage": "medium",
+      "alternative_explanations": [
+        "this may be a collection/archive coverage asymmetry (14 dated prior-window artifacts vs 108 current) rather than a real messaging change",
+        "The theme could be tied to a single recent product launch or event rather than a sustained strategic shift.",
+        "Terminology overlap with a renamed or rebranded feature could create a false-positive emergence signal."
+      ],
+      "theme": "api_extensibility",
+      "prior_theme_count": 0,
+      "current_theme_count": 2,
+      "prior_window_n": 14,
+      "prior_evidence_role": "window_sample"
     }
   ],
   "change_event_reconciliation": [
@@ -82449,22 +83371,6 @@
           ]
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "competitor_share": 0.0,
-          "focal_share": 0.0088,
-          "share_ratio": null,
-          "share_delta": -0.0088,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [],
-          "focal_example_artifact_ids": [
-            "ART-9e8697e401cd"
-          ],
-          "top_verticals": []
-        },
-        {
           "cep": "rapid_growth_scaling_employees",
           "competitor_pages": 0,
           "focal_pages": 1,
@@ -82497,7 +83403,23 @@
           "top_verticals": []
         },
         {
-          "cep": "expanding_service_offerings",
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-9e8697e401cd"
+          ],
+          "top_verticals": []
+        },
+        {
+          "cep": "managing_global_device_fleet",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82507,13 +83429,47 @@
           "ownership": "insufficient_sample",
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
-            "ART-22cb144808e1"
+            "ART-4d052e00f8e5"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "it_device_management"
+          ]
+        },
+        {
+          "cep": "consolidating_fragmented_regional_workforce_providers",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
           ]
+        },
+        {
+          "cep": "replacing_traditional_cross_border_payment_rails",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
         },
         {
           "cep": "paying_contractors_and_employees_globally",
@@ -82532,7 +83488,7 @@
           "top_verticals": []
         },
         {
-          "cep": "expanding_to_new_countries",
+          "cep": "expanding_service_offerings",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82542,30 +83498,12 @@
           "ownership": "insufficient_sample",
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
-            "ART-ceb5d6ab049f"
+            "ART-22cb144808e1"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "managing_global_device_fleet",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4d052e00f8e5"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "it_device_management"
           ]
         },
         {
@@ -82606,7 +83544,7 @@
           ]
         },
         {
-          "cep": "replacing_traditional_cross_border_payment_rails",
+          "cep": "expanding_to_new_countries",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82616,23 +83554,7 @@
           "ownership": "insufficient_sample",
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": []
-        },
-        {
-          "cep": "consolidating_fragmented_regional_workforce_providers",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-39db3bdefb26"
+            "ART-ceb5d6ab049f"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
@@ -82645,7 +83567,7 @@
   ],
   "proof_gaps": [
     {
-      "claim_id": "GAP-d78c4553167b",
+      "claim_id": "GAP-cfda8a347b71",
       "claim_text": "Deel has launched 7 new integrated products to solve the complexity of global hiring, payroll, compliance, and workforce management.",
       "short_label": "native platform breadth",
       "claim_type": "category",
@@ -82687,11 +83609,11 @@
         "cls-c8628905def3"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": 0.0407,
+      "competitor_theme_share": 0.0394,
       "focal_theme_share": 0.0263,
       "sample_sufficiency": "ok",
       "product_comparability": null,
-      "actionable_interpretation": "\u201cnative_platform_breadth\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
+      "actionable_interpretation": "\u201cnative_platform_breadth\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read needs verification: at least one of their 5 pages already carries strong proof \u2014 the weak modal read may under-sample. Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "vertical_strengths": {
         "talent_performance": {
           "n_pages": 2,
@@ -82717,7 +83639,7 @@
       "theme_page_count": 5
     },
     {
-      "claim_id": "GAP-b44596421614",
+      "claim_id": "GAP-42d3a6087934",
       "claim_text": "Deel IT automatically applies comprehensive endpoint protection across your device fleet with minimal manual effort, maintaining consistent security policies from device shipment through retirement.",
       "short_label": "security and control",
       "claim_type": "capability",
@@ -82757,11 +83679,11 @@
         "cls-27e6f08f5472"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": 0.0325,
+      "competitor_theme_share": 0.0315,
       "focal_theme_share": 0.0088,
       "sample_sufficiency": "ok",
       "product_comparability": null,
-      "actionable_interpretation": "\u201csecurity_and_control\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read is thin (one page already carries strong proof). Fetch Deel's own product page for this theme before committing to a comparative attack.",
+      "actionable_interpretation": "\u201csecurity_and_control\u201d LOOKS attackable (Deel weak vs Rippling strong), but the read needs verification: only 4 page(s) \u2014 below the \u22655-page / \u226515%-of-corpus floor for a full ATTACK verdict. Fetch Deel's own product page for this theme before committing to a comparative attack.",
       "vertical_strengths": {},
       "weakest_vertical": null,
       "attackability": "medium",
@@ -82778,7 +83700,7 @@
       "theme_page_count": 4
     },
     {
-      "claim_id": "GAP-bafc223ed328",
+      "claim_id": "GAP-1b6e123ba6df",
       "claim_text": "Goals in Engage provides built-in goal-setting and tracking across multiple organizational levels to create alignment, clarity, and measurable progress without manual effort.",
       "short_label": "workforce visibility",
       "claim_type": "capability",
@@ -82818,7 +83740,7 @@
         "cls-144df9c975b6"
       ],
       "focal_proof_strength": "none",
-      "competitor_theme_share": 0.0163,
+      "competitor_theme_share": 0.0157,
       "focal_theme_share": 0.0088,
       "sample_sufficiency": "ok",
       "product_comparability": null,
@@ -82839,7 +83761,7 @@
       "theme_page_count": 2
     },
     {
-      "claim_id": "GAP-fa3fdc497e55",
+      "claim_id": "GAP-fd550dfc1a98",
       "claim_text": "Deel HR enables companies to manage global HR operations end-to-end across 150+ countries from a single, unified system.",
       "short_label": "consolidation",
       "claim_type": "category",
@@ -82859,13 +83781,13 @@
       ],
       "proof_distribution": {
         "counts": {
-          "independent_validation": 9,
-          "feature_assertion": 27,
-          "quantified_customer_outcome": 31,
           "certification_or_compliance_record": 10,
+          "independent_validation": 9,
           "customer_logo": 6,
-          "customer_quotation": 12,
+          "quantified_customer_outcome": 31,
+          "feature_assertion": 27,
           "named_customer_story": 11,
+          "customer_quotation": 12,
           "unsupported_assertion": 2,
           "product_demonstration": 1
         },
@@ -82890,7 +83812,7 @@
         "cls-ce2d9825b693"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": 0.3171,
+      "competitor_theme_share": 0.3071,
       "focal_theme_share": 0.2456,
       "sample_sufficiency": "ok",
       "product_comparability": null,
@@ -82956,7 +83878,7 @@
       "theme_page_count": 39
     },
     {
-      "claim_id": "GAP-f7bbbe635fb4",
+      "claim_id": "GAP-184feaeddf96",
       "claim_text": "Build and run custom HR workflow automations in minutes without coding to save hours on onboarding, offboarding, and compliance tasks.",
       "short_label": "automation",
       "claim_type": "capability",
@@ -82977,8 +83899,8 @@
         "counts": {
           "feature_assertion": 11,
           "quantified_customer_outcome": 5,
-          "customer_quotation": 2,
           "named_customer_story": 4,
+          "customer_quotation": 2,
           "customer_logo": 2,
           "certification_or_compliance_record": 1,
           "unsupported_assertion": 2,
@@ -83007,7 +83929,7 @@
         "cls-921a5abe4240"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": 0.1138,
+      "competitor_theme_share": 0.1102,
       "focal_theme_share": 0.1316,
       "sample_sufficiency": "ok",
       "product_comparability": null,
@@ -83053,7 +83975,7 @@
       "theme_page_count": 14
     },
     {
-      "claim_id": "GAP-9bf1d1f99fb1",
+      "claim_id": "GAP-7f22baf7cd57",
       "claim_text": "Compliance rules apply automatically within HR and payroll workflows, flagging risks continuously before mistakes occur.",
       "short_label": "compliance",
       "claim_type": "capability",
@@ -83072,8 +83994,8 @@
       ],
       "proof_distribution": {
         "counts": {
-          "customer_quotation": 5,
           "named_customer_story": 6,
+          "customer_quotation": 5,
           "feature_assertion": 5,
           "customer_logo": 1,
           "quantified_customer_outcome": 7,
@@ -83100,7 +84022,7 @@
         "cls-6d26903eebd8"
       ],
       "focal_proof_strength": "strong",
-      "competitor_theme_share": 0.0813,
+      "competitor_theme_share": 0.0787,
       "focal_theme_share": 0.0263,
       "sample_sufficiency": "ok",
       "product_comparability": null,
@@ -83148,99 +84070,100 @@
   ],
   "opportunities": [
     {
-      "opportunity_id": "OPP-058573266a26",
-      "title": "The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure",
+      "opportunity_id": "OPP-6406e14941fc",
+      "title": "Show, Don't Tell: A Live Workflow-Builder Demo Comparing Rippling's No-Code App Builder to Deel's 7 New Point Products",
       "opportunity_type": "proof",
       "action_category": "product_marketing_proof",
       "competitor_pattern": "Deel repeats \u201cDeel has launched 7 new integrated products to solve the complexity of global hiring, payroll, compliance, and workforce management.\u201d with weak observed public proof.",
       "change_over_time": "see change events; message\u2013proof gap is current-state unless a change event is linked",
       "supporting_claim_ids": [
-        "GAP-d78c4553167b"
+        "GAP-cfda8a347b71"
       ],
       "campaign_plan": null,
       "staged_plan": [
         {
           "stage": "build_proof",
-          "objective": "Produce a demo-grade workflow page and video showing a real (or realistic composite) customer using Rippling's no-code app builder to solve a specific global hiring/payroll exception (e.g., country-specific approval routing, compliance escalation).",
+          "objective": "Produce a workflow-builder demo asset and at least one named customer story showing a real custom automation built without code, addressing a global hiring/payroll/compliance use case comparable to what Deel's new products target.",
           "proceed_if": [
-            "A customer or sales-engineering example exists that can be shown end-to-end without fabrication",
-            "Legal/comparative-claims review confirms no direct superiority language is used",
-            "The demo clearly maps to a job Deel's 7-product announcement claims to solve"
+            "At least one existing Rippling customer can be referenced (with permission) building a non-trivial custom workflow via the app builder",
+            "Demo can be recorded/live-run in under 10 minutes showing tangible time-to-value"
           ],
           "stop_or_reframe_if": [
-            "No real customer or credible composite workflow can be found to demo",
-            "Legal flags the framing as an implied superiority claim that can't be substantiated"
+            "No customer willing to go on record",
+            "Demo requires >10 min or engineering support to execute, undermining the 'no-code' claim"
           ]
         },
         {
           "stage": "validate_proof",
-          "objective": "Test the demo/page with a small set of target buyers (analysts, existing customers in eval cycles, sales calls) to see if the configurability angle resonates and holds up against Deel comparison questions.",
+          "objective": "Test the demo/story with a small set of sales calls and a gated landing page to see if the message resonates and shifts consideration.",
           "proceed_if": [
-            "Buyers in live sales cycles reference the demo positively as a differentiator",
-            "No material factual pushback from prospects who have evaluated Deel's new products directly"
+            "Prospects in live AE demos ask follow-up questions indicating differentiation registered (qualitative signal)",
+            "Landing page demo view-to-meeting-request rate meets or exceeds existing product page benchmark"
           ],
           "stop_or_reframe_if": [
-            "Prospects report Deel has comparable configurability not reflected in our evidence",
-            "Sales reports the angle causes confusion rather than clarity about Rippling's value"
+            "Prospects conflate this with generic 'automation' claims already made by multiple competitors, showing no differentiation lift",
+            "Sales reports the demo is not resonating or is too technical for target personas"
           ]
         },
         {
           "stage": "launch_campaign",
-          "objective": "Publish the workflow/demo page broadly and equip sales with the asset for competitive deals against Deel in active evaluations.",
+          "objective": "Scale the validated demo/story into broader consideration-stage content (webinar, LinkedIn series, sales enablement rollout).",
           "proceed_if": [
-            "Validate_proof stage shows positive buyer reaction and no factual contradiction",
-            "Sales engineering confirms the demo is repeatable across multiple prospect conversations"
+            "Validation stage shows statistically meaningful lift in meeting-request or demo-to-opportunity conversion versus baseline",
+            "Sales team adopts the asset unprompted in competitive Deel deals"
           ],
           "stop_or_reframe_if": [
-            "Deel publicly launches a comparable no-code/configurability capability that undermines the differentiation",
-            "Win-rate or deal-cycle data shows no measurable impact after a full sales cycle of use"
+            "No measurable lift in target metric after minimum sample is reached",
+            "Legal/compliance flags the comparative framing as high risk despite weak-comparability caveats"
           ]
         }
       ],
       "product_comparability": {
         "competitor_product": "Deel's 7 newly launched integrated products (global hiring, payroll, compliance, workforce management)",
-        "focal_product": "Rippling custom internal app builder (no-code) applied to global HR/payroll workflows",
-        "shared_buyer_job": "Solve global hiring, payroll, and compliance complexity within a single platform",
+        "focal_product": "Rippling's no-code custom internal app / workflow builder",
+        "shared_buyer_job": "Solve organizational complexity in global hiring, payroll, compliance, and workforce management without heavy engineering lift",
         "shared_workflow": null,
         "overlapping_capabilities": [
-          "Native product breadth across HR/payroll/compliance/workforce management"
+          "Both claim to address complexity in global workforce operations",
+          "Both are platform expansions intended to reduce reliance on third-party point solutions"
         ],
         "materially_different_capabilities": [
-          "Rippling's no-code custom app/workflow builder has strong observed proof; no equivalent no-code configurability capability is evidenced in Deel's supplied proof (which is feature assertions, one customer story, one demo, and one unsupported assertion)"
+          "Deel's claim centers on adding discrete new products (breadth); Rippling's claim centers on user-configurable no-code automation (flexibility/depth)",
+          "No evidence Deel offers an equivalent no-code custom app/workflow builder"
         ],
         "comparability": "weak",
-        "rationale": "Deel's claim is about the number and breadth of native products; Rippling's strongest proof is about configurability/extensibility within its platform. These are not the same axis of comparison \u2014 one is about product count, the other about workflow flexibility \u2014 so a direct head-to-head equivalence claim would overreach. The action should frame this as a different, complementary axis of value (configurability) rather than claim Rippling's breadth is superior to Deel's 7 products."
+        "rationale": "Deel's gap is about launching multiple new integrated products (a breadth/roadmap claim, weakly proven), while Rippling's proof is about a single differentiated capability (no-code workflow building, strongly proven). These are not apples-to-apples product claims, so the action should frame a shared narrative (adapting to real-world complexity) rather than a direct feature-for-feature comparison."
       },
-      "category_entry_point": "\"When our global hiring/payroll process has an exception the vendor's standard product doesn't handle\"",
+      "category_entry_point": "\"When our HR/payroll workflow doesn't fit any vendor's standard product, and we don't want to file an IT ticket to customize it\"",
       "commercial_motion_context": "derived from observed pricing/CTA signals",
       "target_segment": "mid_market",
       "target_personas": [
-        "Head of People Ops / HRIS Owner",
-        "VP HR / CHRO at multi-country employer",
-        "IT/Systems Admin supporting HR tooling",
-        "Global Payroll Manager"
+        "Head of People/HR Ops",
+        "VP HR Systems",
+        "IT/HRIS Administrator",
+        "COO evaluating global workforce platforms"
       ],
       "target_jobs": [
-        "Automate a workflow-specific HR/payroll exception without engineering help",
-        "Evaluate platform flexibility before consolidating HR systems",
-        "Reduce reliance on IT/dev tickets for HR process changes"
+        "Automate a company-specific HR/payroll workflow without engineering resources",
+        "Consolidate point solutions into one system of record",
+        "Evaluate whether a global workforce platform can adapt to unique internal processes"
       ],
       "focal_product_focus": [
-        "Rippling App Shop / Custom Apps (no-code workflow builder)",
-        "Rippling Global Payroll",
-        "Rippling Workforce Management"
+        "Rippling App Builder / Custom Workflow Automation",
+        "Rippling Unity/Platform layer"
       ],
       "focal_segment": "mid_market",
       "channels": [
         "Rippling website workflow/product page",
-        "Sales engineering demo library",
-        "Analyst/press briefing",
-        "LinkedIn organic from product marketing"
+        "Sales enablement (live demo in AE-led calls)",
+        "Webinar",
+        "Customer story video",
+        "LinkedIn organic/thought leadership"
       ],
       "funnel_insertion_point": "consideration",
-      "message_angle": "Deel is marketing breadth \u2014 7 new integrated products announced to cover global hiring, payroll, compliance, and workforce management. But announcing more products is not the same as giving customers the ability to shape any one of them to their actual workflow. Rippling's proof point on this theme is a strong, demonstrable capability: build custom internal apps without code to automate workflow-specific processes. The action is to make that capability tangible and comparable \u2014 show, in a live demo, a specific global HR/payroll edge case (e.g., a multi-country approval exception or compliance escalation) being solved via a no-code custom app, and let the buyer judge configurability vs. product-count.",
-      "villain_or_status_quo": "The status quo narrative in the category is \"more native products = more solved complexity.\" Buyers are being sold product count as a proxy for capability, without evidence that any single product flexes to their specific process.",
-      "promised_transformation": "From: evaluating vendors by counting how many native modules they've shipped \u2192 To: evaluating vendors by whether the platform can be configured, without engineering resources, to fit the buyer's actual workflow exceptions.",
+      "message_angle": "While Deel announces breadth via 7 new integrated products (evidenced mostly by feature assertions, not demonstrated depth), Rippling can prove depth-of-platform by showing a prospect building a real, custom workflow-specific automation without code, live, in minutes\u2014turning 'more products' into 'does it actually flex to your process' as the buying question.",
+      "villain_or_status_quo": "Status quo: vendors announce product breadth (new modules/products) as a proxy for solving complexity, leaving buyers to assume integration and flexibility rather than see it.",
+      "promised_transformation": "From: evaluating HR/payroll platforms by counting announced products and taking integration claims on faith \u2192 To: evaluating platforms by watching a live, custom workflow get built and automated in real time, with no engineering ticket required.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "quantified_customer_outcome, independent_validation",
       "focal_proof_ids": [
@@ -83252,135 +84175,139 @@
       "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
-      "why_competitor_cannot_easily_copy": "Deel's current public proof on this theme is concentrated in feature assertions and a single customer story/demo \u2014 there is no evidence in the supplied material of an equivalent no-code custom-app framework. Building genuine no-code extensibility across newly-launched, still-maturing products would require platform-level investment, not a marketing update, and Rippling's proof here is already described as strong, giving a real (if not unlimited) head start.",
-      "why_this_could_backfire": "Deel could respond by showcasing its own configurability features (if any exist but weren't in this evidence set), reframing the comparison as apples-to-apples and neutralizing the differentiation. Additionally, because comparability is weak (product breadth vs. configurability are different value axes), a buyer or analyst could call out the comparison as a deflection rather than a direct rebuttal to Deel's breadth claim \u2014 Rippling must be careful to position this as \"a different lens on complexity\" rather than implying its custom app builder makes Deel's 7 products redundant.",
+      "why_competitor_cannot_easily_copy": "A no-code internal app/workflow builder requires deep platform-level architecture (unified data model, permissions, triggers across HR/IT/Finance objects) built over time; announcing new discrete products is a faster go-to-market motion than retrofitting a flexible builder layer, so Deel replicating this quickly is not supported by current evidence one way or the other \u2014 the defensibility claim rests on architecture, not on a confirmed absence of Deel roadmap plans.",
+      "why_this_could_backfire": "Deel could respond by showcasing its own configurability/automation features (if any exist) or by reframing that customers want more out-of-the-box products, not more DIY building \u2014 turning 'no-code flexibility' into a liability ('you have to build it yourself') rather than an advantage. Additionally, since comparability is weak, a side-by-side framing risks looking like an apples-to-oranges attack, inviting a credibility counterattack.",
       "comparative_claim_risk": "medium",
       "legal_review_required": true,
       "deliverable_type": "product_marketing",
-      "experiment_hypothesis": "If Rippling publishes a concrete, demoable proof of its no-code custom app builder solving a global hiring/payroll workflow exception, then prospects evaluating Deel's newly launched 7 products will perceive Rippling as offering a more configurable (not just broader) platform, increasing consideration-stage engagement and sales-assisted win rate in competitive deals against Deel.",
-      "primary_metric": "Sales-assisted win rate in active Deel-competitive opportunities where the demo/asset was used",
+      "experiment_hypothesis": "If Rippling shows (rather than claims) a live, no-code custom workflow build in a demo/customer story targeted at complexity-driven buyers evaluating Deel's new product breadth, then consideration-stage engagement (demo requests, sales-cited competitive wins) will increase, because it converts an abstract 'more products' claim into a concrete, provable capability gap.",
+      "primary_metric": "Demo-to-sales-qualified-meeting conversion rate on the workflow builder asset",
       "guardrail_metrics": [
-        "Deal cycle length in Deel-competitive opportunities",
-        "Prospect-reported confusion or pushback flagged by sales",
-        "Legal/compliance flags on comparative claims post-launch"
+        "Sales cycle length in competitive Deel deals",
+        "Customer reference satisfaction/willingness to be re-used",
+        "Legal/compliance flag rate on comparative messaging"
       ],
-      "minimum_sample_rule": "At least 15 sales-assisted opportunities where the demo/asset was used against Deel before evaluating win-rate impact",
-      "scale_rule": "If win rate in Deel-competitive deals improves by a meaningful margin (e.g., double-digit percentage point lift) with no legal/compliance issues after the minimum sample, expand distribution to broader campaign channels and analyst briefings",
-      "iterate_rule": "If buyer feedback indicates the workflow example chosen doesn't map to their most pressing pain point, iterate the demo with alternate workflow scenarios (e.g., compliance escalation vs. approval routing) before re-testing",
-      "kill_rule": "If validate_proof stage surfaces credible evidence that Deel has an equivalent no-code configurability capability, or if legal review cannot clear the asset without diluting it into a non-differentiated statement, kill the campaign-launch stage and revert to internal enablement only"
+      "minimum_sample_rule": "At least 30 sales-assisted demo instances or 200 landing-page sessions before evaluating conversion lift",
+      "scale_rule": "If validated conversion lift exceeds baseline product-page benchmark by \u226520% relative and sales adoption is voluntary in \u22653 competitive deals, scale to webinar and paid distribution.",
+      "iterate_rule": "If engagement is directionally positive but below threshold, revise demo script/customer story angle (e.g., shorten, add second industry vertical) and re-test with next 30 instances before scaling.",
+      "kill_rule": "If after minimum sample no measurable lift in demo-to-meeting conversion and sales reports the asset is not being used in competitive situations, retire the asset and revert to existing product marketing baseline."
     },
     {
-      "opportunity_id": "OPP-342c3e123c96",
-      "title": "\"Certified, Not Just Claimed\": IT Security Demand-Gen Push Targeting Deel Endpoint-Security Claims",
+      "opportunity_id": "OPP-3a87aa9cca6f",
+      "title": "\"Security Claims vs. Certifications\" demand-gen push targeting IT/security buyers evaluating Deel IT",
       "opportunity_type": "competitive_response",
       "action_category": "demand_gen_campaign",
       "competitor_pattern": "Deel repeats \u201cDeel IT automatically applies comprehensive endpoint protection across your device fleet with minimal manual effort, maintaining consistent security policies from device shipment through retirement.\u201d with weak observed public proof.",
       "change_over_time": "see change events; message\u2013proof gap is current-state unless a change event is linked",
       "supporting_claim_ids": [
-        "GAP-b44596421614"
+        "GAP-42d3a6087934"
       ],
       "campaign_plan": {
         "audience": [
-          "IT and security decision-makers at mid-market companies (200-2000 employees) currently evaluating or renewing global HR/IT/EOR platforms",
-          "Security-conscious buyers in industries with compliance sensitivity (fintech, healthcare-adjacent, regulated services)"
+          "IT/Security decision-makers at mid-market companies (200-2000 employees) evaluating global device management or EOR+IT bundled vendors",
+          "Existing Rippling HR/EOR customers not yet using Rippling IT, who may be evaluating add-on device management",
+          "In-market accounts researching 'Deel IT' or 'Deel vs Rippling' comparison content"
         ],
-        "category_entry_point": "When evaluating global HR/IT platforms for device security compliance during vendor security review or audit season",
+        "category_entry_point": "When evaluating a device management vendor's security claims before a compliance audit or security review",
         "message": [
-          "Don't just take a vendor's word on endpoint security \u2014 ask what's actually certified and audited.",
-          "Rippling backs its device security claims with industry certifications and regular independent audits.",
-          "Evaluating a global HR/IT platform? Ask for the certification, not just the claim."
+          "Don't just take endpoint security claims at face value \u2014 ask for the certification behind them.",
+          "Rippling backs its security posture with industry certifications and regular audits.",
+          "Before you sign a device management vendor, know what's actually been verified."
         ],
         "channels": [
-          "LinkedIn ABM ads targeting IT/security titles",
-          "Search ads on security-certification and vendor-comparison keywords",
-          "Retargeting ads to visitors of security/compliance content",
-          "Email nurture sequence to IT segment in existing CRM pipeline"
+          "LinkedIn ads (title + company size targeting)",
+          "Search ads on comparison and category terms",
+          "Retargeting of site visitors who viewed IT/security pages",
+          "Sponsored placements in IT/security-focused newsletters"
         ],
-        "creative_or_asset": "Short-form ad set (LinkedIn + display) featuring a 'claim vs. certification' visual checklist prompting buyers to ask vendors for specific certification names and audit dates; links to a landing page, not a head-to-head comparison page.",
-        "landing_experience": "Landing page titled 'What to Ask Before You Trust a Vendor's Security Claims' \u2014 features Rippling's specific certifications and audit cadence, a short buyer checklist of questions to ask any HR/IT vendor about device security, and a CTA to talk to a security specialist. Avoids direct Deel naming or comparison table.",
-        "primary_metric": "Marketing-qualified leads (MQLs) from IT/security persona segment attributable to campaign"
+        "creative_or_asset": "Short-form ad creative posing a direct question ('What's actually been verified?') paired with a checklist-style landing asset comparing what buyers should ask any device-security vendor \u2014 framed as an educational buyer's checklist, not a head-to-head feature comparison.",
+        "landing_experience": "Landing page hosting a 'Questions to Ask Any Device Security Vendor' checklist, with Rippling's certification/audit information presented as an example of how to answer those questions; includes CTA to talk to sales or view compliance documentation.",
+        "primary_metric": "Qualified landing page conversions (form fills / sales conversation requests) from targeted IT/security audience"
       },
       "staged_plan": [
         {
           "stage": "build_proof",
-          "objective": "Confirm and document Rippling's specific certifications, audit cadence, and device-lifecycle security policy evidence in a form usable in ad claims and landing page copy.",
+          "objective": "Confirm and, if possible, tighten the connection between Rippling's cited certifications/audits and device/endpoint management specifically (not just general company security).",
           "proceed_if": [
-            "Rippling has named, verifiable certifications (e.g., SOC 2, ISO 27001) with current audit dates available for public reference",
-            "Legal/compliance confirms specific claims are substantiated and safe for comparative-adjacent framing"
+            "Rippling can point to at least one certification or audit that explicitly covers device/endpoint management scope",
+            "Legal/compliance confirms the certification claims are current and public"
           ],
           "stop_or_reframe_if": [
-            "Certifications are outdated, in-progress, or cannot be publicly cited",
-            "Legal flags that current proof cannot support even non-comparative security claims"
+            "Certifications are strictly company-wide/data-center scope with no device management linkage",
+            "Legal flags the certification claims as expired or under renewal"
           ]
         },
         {
           "stage": "validate_proof",
-          "objective": "Test message resonance and claim clarity with a small paid pilot before scaling spend.",
+          "objective": "Test messaging on a small paid audience to see if 'ask for the certification behind the claim' resonates with IT/security buyers before full launch.",
           "proceed_if": [
-            "CTR and landing page engagement on security-certification messaging meet or exceed account benchmark for IT/security campaigns",
-            "No legal or customer pushback on claim framing during pilot window"
+            "CTR and landing page engagement from IT/security segment meet or beat account benchmark for consideration-stage campaigns",
+            "Qualitative feedback (sales/SDR) indicates the angle prompts credible follow-up questions, not skepticism about Rippling's own specificity"
           ],
           "stop_or_reframe_if": [
-            "Engagement is materially below benchmark, indicating the angle doesn't resonate",
-            "Prospects or reviewers challenge the accuracy or fairness of the comparative framing"
+            "Landing page bounce rate is significantly higher than baseline",
+            "Prospect/sales feedback indicates the message invites direct 'prove it' pushback Rippling cannot answer"
           ]
         },
         {
           "stage": "launch_campaign",
-          "objective": "Scale the validated campaign across full channel mix to IT/security personas in mid-market segment.",
+          "objective": "Scale the validated campaign across full IT/security segment to drive consideration-stage pipeline.",
           "proceed_if": [
-            "Pilot cost-per-qualified-lead is at or below existing paid demand-gen benchmarks",
-            "Sales reports leads are qualified and referencing the security/certification message positively"
+            "Validation stage primary metric (qualified landing page conversions) hits target threshold",
+            "Guardrail metrics remain within acceptable bounds"
           ],
           "stop_or_reframe_if": [
-            "Cost-per-qualified-lead exceeds benchmark by a significant margin after full ramp",
-            "Sales feedback indicates leads are low-intent or message causes confusion about product scope"
+            "Primary metric underperforms threshold after minimum sample reached",
+            "Guardrail metrics (e.g., brand sentiment, unsubscribe rate) degrade materially"
           ]
         }
       ],
       "product_comparability": {
         "competitor_product": "Deel IT (endpoint protection / device fleet management)",
-        "focal_product": "Rippling IT (device management + security/compliance program)",
-        "shared_buyer_job": "Ensure company-issued devices remain secure and compliant from shipment through retirement",
+        "focal_product": "Rippling IT (device management with security certifications and audits)",
+        "shared_buyer_job": "Secure and manage a distributed device fleet with consistent policy enforcement from onboarding to offboarding",
         "shared_workflow": null,
         "overlapping_capabilities": [
-          "Device fleet management",
+          "Device management across a distributed workforce",
           "Security policy enforcement claims",
           "Compliance/certification positioning"
         ],
-        "materially_different_capabilities": [],
+        "materially_different_capabilities": [
+          "Deel's specific endpoint protection mechanisms are not independently verified in the evidence supplied (feature assertions dominate over certification proof)",
+          "Rippling's certification and audit claims are general security/compliance statements, not yet mapped explicitly to endpoint/device fleet management specifically"
+        ],
         "comparability": "weak",
-        "rationale": "Both vendors claim endpoint security and lifecycle policy enforcement, but the evidence base differs sharply: Deel's claim is supported mostly by feature assertions with limited independent verification, while Rippling's claim is supported by named certifications and audit processes. This is a proof-strength gap, not a demonstrated capability gap \u2014 Rippling should not claim Deel lacks the capability, only that its own claim is more substantiated on this specific theme."
+        "rationale": "Deel's claim is specific to endpoint protection across a device fleet; Rippling's observed claim is a general enterprise security/compliance statement not yet tied explicitly to device management. The campaign should frame the shared narrative (verify vendor security claims) rather than assert direct product-for-product equivalence."
       },
-      "category_entry_point": "\"When evaluating global HR/IT platforms for device security compliance during vendor security review or audit season\"",
+      "category_entry_point": "\"When evaluating a device management vendor's security claims before a compliance audit or security review\"",
       "commercial_motion_context": "derived from observed pricing/CTA signals",
       "target_segment": "mid_market",
       "target_personas": [
         "Head of IT",
         "IT Security Manager",
         "CISO / Security Lead",
-        "VP People/HR Ops evaluating IT+HR consolidation"
+        "VP People/IT Ops evaluating device management"
       ],
       "target_jobs": [
-        "Vet device/endpoint security posture during HRIS/IT platform evaluation",
-        "Confirm compliance and audit readiness before consolidating IT + workforce systems",
-        "Reduce vendor risk exposure tied to distributed/remote device fleets"
+        "Evaluate device management/endpoint security vendors for a global workforce",
+        "Prepare for a security/compliance audit involving device fleet management",
+        "Consolidate IT and HR systems while maintaining security compliance"
       ],
       "focal_product_focus": [
-        "Rippling IT (Device Management)",
+        "Rippling IT / Device Management",
         "Rippling Security & Compliance"
       ],
       "focal_segment": "mid_market",
       "channels": [
-        "LinkedIn ABM ads",
-        "Search (competitor-comparison and security-certification keywords)",
-        "Retargeting to security/IT content visitors",
-        "Email nurture to IT security segment in existing pipeline"
+        "LinkedIn ads targeting IT/security titles",
+        "Search ads on category + competitor comparison terms",
+        "Retargeting of website visitors to IT/security pages",
+        "Sponsored content in IT/security newsletters"
       ],
       "funnel_insertion_point": "consideration",
-      "message_angle": "Deel IT's endpoint protection claims are backed mostly by feature assertions and a single customer story, not third-party certification. Rippling can lead with its documented industry certifications and regular audits as the evidence-backed reason security-conscious IT buyers should scrutinize vendor security claims before trusting device-lifecycle security to a payroll-first HR platform.",
-      "villain_or_status_quo": "IT and security leaders take vendor security marketing claims at face value during vendor selection, without asking for the certification and audit evidence behind \"automatic\" endpoint protection promises.",
-      "promised_transformation": "From: evaluating device-security claims based on vendor marketing assertions \u2192 To: evaluating device-security claims based on demonstrable certifications and audit records.",
+      "message_angle": "When choosing a device/endpoint security partner for global teams, don't just take feature claims at face value \u2014 ask for the certifications and audit trail behind them. Rippling backs its security posture with industry certifications and regular third-party audits.",
+      "villain_or_status_quo": "IT/security buyers accept vendor feature assertions about \"comprehensive endpoint protection\" without asking for independent verification, then discover gaps during a security review or audit.",
+      "promised_transformation": "From taking device-security marketing claims on faith \u2192 to selecting a device/IT management vendor whose security posture is backed by verifiable certifications and regular audits.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation, product_demonstration",
       "focal_proof_ids": [
@@ -83390,113 +84317,117 @@
       "focal_current_usage": "underweighted",
       "structural_defensibility": "medium",
       "copyability": "medium",
-      "why_competitor_cannot_easily_copy": "Certifications and audit records require sustained compliance investment and cannot be marketed credibly overnight; Deel would need to complete and disclose equivalent third-party audits/certifications to close this proof gap, which is a longer-cycle structural commitment, not a messaging change.",
-      "why_this_could_backfire": "Deel may already hold relevant certifications not captured in the supplied evidence (the gap reflects observed proof distribution, not an audited absence of certification) \u2014 if Deel publishes or already has equivalent certification claims, Rippling's implicit \"more substantiated\" framing could look either redundant or, worse, factually wrong, inviting a direct rebuttal. The campaign must avoid stating or implying Deel is uncertified.",
+      "why_competitor_cannot_easily_copy": "Deel's current proof mix leans heavily on feature assertions (4x) with only one certification/compliance record cited, so shifting to a certification-led narrative would require Deel to publish more independently verifiable audit evidence \u2014 a slower, harder-to-fake credibility build than a messaging change.",
+      "why_this_could_backfire": "If Rippling's certifications are general (company-wide) rather than specific to device/endpoint management, IT/security buyers may see the comparison as a bait-and-switch \u2014 inviting scrutiny that exposes Rippling's own device-security proof isn't more granular than Deel's, undermining the credibility play.",
       "comparative_claim_risk": "medium",
       "legal_review_required": true,
       "deliverable_type": "product_marketing",
-      "experiment_hypothesis": "If Rippling promotes its certified, audited security posture as a buyer-education angle (rather than a direct competitive claim), IT/security personas evaluating global HR/IT platforms will engage at a higher rate and convert to qualified pipeline more efficiently than generic security messaging, because the underweighted proof point is genuinely differentiated on evidence strength.",
-      "primary_metric": "Marketing-qualified leads (MQLs) from IT/security persona segment",
+      "experiment_hypothesis": "If Rippling runs a demand-gen campaign urging IT/security buyers to verify vendor security claims via certifications (rather than take feature assertions at face value), then qualified consideration-stage engagement from IT/security personas will increase relative to baseline, because Deel's current proof for this claim is weak (mostly feature assertions) while Rippling has stronger certification/audit backing.",
+      "primary_metric": "Qualified landing page conversions (form fills / sales conversation requests) from targeted IT/security audience",
       "guardrail_metrics": [
-        "Cost per qualified lead vs. existing demand-gen benchmark",
+        "Brand sentiment / negative comment rate on ad creative",
         "Landing page bounce rate",
-        "Sales-reported lead quality/intent score",
-        "Legal/compliance complaint or challenge rate"
+        "Sales team feedback on prospect pushback/skepticism",
+        "Unsubscribe/opt-out rate on retargeting"
       ],
-      "minimum_sample_rule": "Pilot must reach at least 5,000 ad impressions and 50 landing page sessions per channel before evaluating engagement metrics for statistical reliability.",
-      "scale_rule": "Scale spend and expand to additional channels only if pilot cost-per-qualified-lead is at or below existing IT/security demand-gen benchmark and sales confirms lead quality over a 2-week minimum follow-up window.",
-      "iterate_rule": "If engagement is moderate but conversion to qualified lead is weak, revise landing page checklist and CTA copy, and retest with the same audience before altering channel mix.",
-      "kill_rule": "Kill or fully reframe the campaign if legal/compliance identifies claim risk during the pilot, if cost-per-qualified-lead exceeds benchmark by more than 50% after two optimization cycles, or if Deel publicly demonstrates equivalent/superior certification evidence that undermines the campaign's premise."
+      "minimum_sample_rule": "Do not evaluate results until at least 3,000 targeted impressions and 150 landing page visits are reached, or 2 weeks of flight time, whichever is later.",
+      "scale_rule": "If qualified conversion rate meets or exceeds 1.5x the account's consideration-stage campaign benchmark and guardrail metrics remain stable, expand budget and extend to additional IT/security lookalike segments.",
+      "iterate_rule": "If conversion rate is within 0.75x-1.5x of benchmark, test alternate creative angles (e.g., audit-specific vs. general certification framing) before scaling further.",
+      "kill_rule": "If conversion rate falls below 0.75x benchmark after minimum sample is reached, or guardrail metrics show material negative movement (e.g., sales reports repeated credibility pushback), kill the campaign and reassess messaging."
     },
     {
-      "opportunity_id": "OPP-c37b867095ae",
-      "title": "Deel Goals/Engage Objection-Handling Battlecard + Discovery Guide for Workforce Visibility Deals",
+      "opportunity_id": "OPP-f9489d4a3a81",
+      "title": "Deel Engage Goals Objection-Handling Battlecard & Rebuttal Kit for Sales",
       "opportunity_type": "competitive_response",
       "action_category": "competitive_enablement",
       "competitor_pattern": "Deel repeats \u201cGoals in Engage provides built-in goal-setting and tracking across multiple organizational levels to create alignment, clarity, and measurable progress without manual effort.\u201d with weak observed public proof.",
       "change_over_time": "see change events; message\u2013proof gap is current-state unless a change event is linked",
       "supporting_claim_ids": [
-        "GAP-bafc223ed328"
+        "GAP-1b6e123ba6df"
       ],
       "campaign_plan": null,
       "staged_plan": [
         {
           "stage": "build_proof",
-          "objective": "Interview 5-8 AEs/SEs who have faced the Deel Goals/Engage objection in live deals; compile actual prospect questions and Deel's stated capability language into a discovery-question battlecard draft, and confirm with Rippling product team what (if anything) exists today for goal-tracking/alignment features.",
+          "objective": "Compile and legally vet an accurate battlecard: document Deel's exact public claims and proof types (feature assertions, the named customer story, the quantified outcome, and the unsupported assertion), draft diagnostic discovery questions, and draft neutral, non-superiority language for reps to use.",
           "proceed_if": [
-            "At least 3 independent deal instances confirm the objection is recurring and costing momentum in deals",
-            "Product team confirms current state (missing/partial/available) of any comparable Rippling capability so reps are not left exposed"
+            "Legal/competitive-intel confirms all Deel claim characterizations are sourced and accurate",
+            "At least 3 field sales reps validate the diagnostic questions surface useful buyer signal in mock calls"
           ],
           "stop_or_reframe_if": [
-            "Fewer than 2 reps report ever encountering this objection in the last quarter, suggesting low deal relevance",
-            "Product team reveals a roadmap commitment that would make a full feature-comparison asset more appropriate than a discovery-only battlecard"
+            "Legal flags any characterization of Deel's proof as unverifiable or risky",
+            "Sales reps report the questions don't differentiate Rippling in practice"
           ]
         },
         {
           "stage": "validate_proof",
-          "objective": "Pilot the battlecard/discovery guide with a small group of AEs (5-10) on live deals where the Deel goals objection surfaces; track whether the discovery questions help reps advance or neutralize the objection without making unsupported claims.",
+          "objective": "Pilot the battlecard in a small set of live competitive deals and CS conversations to see if it changes objection-handling outcomes and rep confidence.",
           "proceed_if": [
-            "Pilot reps report the discovery questions successfully shift the conversation away from feature-parity claims toward the prospect's actual requirements in at least half of tracked deals",
-            "No legal/compliance flags raised on the language used"
+            "Reps report increased confidence/consistency handling the Deel goals objection in at least 60% of pilot deals",
+            "No legal or compliance issues surface from pilot usage"
           ],
           "stop_or_reframe_if": [
-            "Reps report prospects push back hard when Rippling cannot answer 'what do you offer instead,' damaging credibility",
-            "Legal flags any claim in the asset as unsupported or risky"
+            "Reps report the battlecard doesn't hold up under buyer pushback or fact-checking",
+            "Buyers or Deel reps publicly dispute the claim characterizations, creating reputational risk"
           ]
         },
         {
           "stage": "launch_campaign",
-          "objective": "Roll out the finalized battlecard and discovery guide org-wide via enablement platform and SKO training, with a feedback loop for reps to flag new Deel claims or proof points as they emerge.",
+          "objective": "Roll out the finalized battlecard org-wide via enablement training and embed prompts in CRM at the relevant deal stage.",
           "proceed_if": [
-            "Validation stage shows measurable improvement in deal progression rate or objection-handling confidence scores",
-            "Enablement leadership signs off on broad distribution"
+            "Pilot shows measurable improvement in deal progression or win-rate signal on Deel competitive deals",
+            "Enablement team confirms training completion and comprehension in a sample of reps"
           ],
           "stop_or_reframe_if": [
-            "Deel materially strengthens its proof (e.g., adds multiple named case studies or third-party validation) such that the battlecard's premise of 'weak proof' becomes outdated",
-            "Sales feedback indicates the asset is rarely used or not moving deals"
+            "Deel materially updates its proof (e.g., adds strong quantified evidence) making current battlecard framing stale",
+            "Win-rate or deal-progression signal shows no improvement after full rollout, indicating low value"
           ]
         }
       ],
       "product_comparability": {
         "competitor_product": "Deel Engage (Goals module)",
-        "focal_product": "Rippling workforce management / HRIS",
-        "shared_buyer_job": "Set and track goals/alignment across organizational levels for a distributed workforce",
+        "focal_product": "Rippling HR / Workforce Management",
+        "shared_buyer_job": "Give managers and leadership visibility into goal alignment and progress across the organization",
         "shared_workflow": null,
         "overlapping_capabilities": [
-          "Goal-setting workflows referenced in Deel's marketing claim"
+          "Goal-setting workflows (asserted by Deel, not yet built/proven by Rippling)"
         ],
-        "materially_different_capabilities": [],
+        "materially_different_capabilities": [
+          "Rippling's unified employment data model spanning HR/IT/Finance (not yet evidenced specifically for goal-tracking use case)",
+          "Deel's specific goal-cascade and tracking UI (as claimed, not independently verified)"
+        ],
         "comparability": "weak",
-        "rationale": "Deel's claim is specifically about a named 'Goals in Engage' feature with its own (weak) proof distribution. Rippling has no observed proof point or confirmed shipped capability on this exact theme -- only a job posting signal for hourly-worker workforce management design leads, which is not evidence of a goal-tracking feature. Treating this as apples-to-apples would overstate Rippling's position; the action must be framed as competitive discovery/objection-handling, not feature-for-feature comparison."
+        "rationale": "Deel's claim is a named feature within its Engage product with limited, weak public proof; Rippling has no shipped or announced equivalent feature on this theme, only a hiring signal for workforce management design roles. Treating these as apples-to-apples would overstate Rippling's current position, so the action must focus on objection-handling and honest scoping rather than a direct feature comparison."
       },
-      "category_entry_point": "Prospect mentions Deel's Goals/Engage feature or asks how Rippling handles goal-setting and cross-org alignment during an active deal cycle",
+      "category_entry_point": "Sales rep encounters a Deel competitive deal where the buyer raises \"Goals in Engage\" or workforce alignment/visibility features during evaluation",
       "commercial_motion_context": "derived from observed pricing/CTA signals",
       "target_segment": "mid_market",
       "target_personas": [
         "Account Executives",
         "Sales Engineers",
-        "Competitive Intelligence / Enablement leads",
-        "Channel/Partner sales"
+        "Customer Success Managers",
+        "Deal Desk / Competitive Intelligence"
       ],
       "target_jobs": [
-        "Win competitive deals against Deel where goals/alignment is raised",
-        "Qualify whether a prospect's org-structure needs are actually served by Deel's Goals/Engage feature",
-        "Avoid unsubstantiated competitive claims that create legal or credibility risk"
+        "Handle competitive objections in active Deel deals",
+        "Qualify whether goal-tracking/workforce visibility is a must-have vs nice-to-have for the buyer",
+        "Position Rippling's unified employee data model in HR tech evaluations"
       ],
       "focal_product_focus": [
-        "Rippling core HRIS / workforce management (goal-tracking capability status to be confirmed with product)"
+        "Rippling Unified Employee Data Platform",
+        "Rippling HR/Workforce Management (in development for hourly workers)"
       ],
       "focal_segment": "mid_market",
       "channels": [
         "Internal sales enablement portal",
-        "Deal-desk / competitive intelligence Slack channel",
-        "Sales kickoff / enablement training session",
-        "CRM battlecard embed (e.g., Highspot/Seismic)"
+        "Sales Slack/competitive-intel channel",
+        "Live battlecard training session",
+        "CRM opportunity-stage prompts"
       ],
       "funnel_insertion_point": "consideration",
-      "message_angle": "When Deel reps lead with \"Goals in Engage gives you built-in goal-setting and alignment tracking across the org, without manual effort,\" Rippling's field team needs a structured way to probe the actual evidence behind that claim (which today is thin: two feature assertions, one customer story, one quantified outcome, one unsupported assertion) rather than concede the ground or overclaim Rippling's own unified position. The angle is not \"Rippling is better at goals tracking\" \u2014 Rippling has no comparable proof point on this theme yet \u2014 but rather \"let's test whether Deel's alignment claim holds up under the customer's actual multi-level, multi-country reporting workflow,\" using discovery questions that surface gaps distributors of HR software commonly find in point/expansion modules bolted onto payroll-and-EOR cores.",
-      "villain_or_status_quo": "Sales reps currently have no structured response when prospects raise Deel's Goals/Engage alignment pitch; the default is either silence or an unsupported counter-claim about Rippling being \"more unified,\" which risks credibility if challenged.",
-      "promised_transformation": "From: Rippling AEs improvising or overclaiming when Deel's goals-alignment pitch comes up in-deal \u2192 To: Rippling AEs running a consistent, evidence-based discovery sequence that tests the depth of Deel's goal-tracking claim against the prospect's real org-structure and reporting needs, without Rippling asserting capabilities or superiority it hasn't proven.",
+      "message_angle": "Deel's \"Goals in Engage\" claim rests on weak, thin proof (mostly feature assertions plus a single customer story and one quantified outcome, with an unsupported claim mixed in). Rippling does not currently have an equivalent goal-setting/tracking proof point to counter-claim superiority. The defensible move is not to out-claim Deel, but to arm sales/CS with a rigorous, fact-based battlecard that (a) accurately characterizes what Deel has actually substantiated versus asserted, (b) reframes the conversation around Rippling's core unified HR/IT/Finance data model as the buyer's real question (\"does goal tracking sit on top of fragmented systems or one employee record?\"), and (c) equips reps to ask diagnostic questions that expose whether Deel's alignment claims hold up operationally, without Rippling asserting capabilities it hasn't proven.",
+      "villain_or_status_quo": "Status quo: sales reps facing a Deel \"Goals in Engage\" pitch either concede the point or make unsupported counter-claims about Rippling's own goal-tracking strength, creating legal/brand risk and losing credibility with sophisticated buyers who fact-check vendor claims.",
+      "promised_transformation": "From: reps improvising or overclaiming when Deel raises goal-setting/alignment features \u2192 To: reps using a validated, evidence-grounded battlecard that asks sharp diagnostic questions, accurately scopes Deel's proof strength, and redirects the deal to Rippling's actual system-of-record strengths.",
       "competitor_proof_strength": "weak",
       "competitor_proof_gap": "independent_validation, product_demonstration",
       "focal_proof_ids": [
@@ -83504,35 +84435,40 @@
       ],
       "focal_proof_status": "missing",
       "focal_current_usage": "underweighted",
-      "structural_defensibility": "low",
+      "structural_defensibility": "medium",
       "copyability": "medium",
-      "why_competitor_cannot_easily_copy": "This is not about a moat Deel can't copy -- it's an internal enablement asset. The defensibility comes from Rippling's sales org building a repeatable discovery methodology (questions that expose whether Deel's alignment claim generalizes to complex org structures) faster and more rigorously than ad hoc rep talking points, which is an execution advantage, not a structural one.",
-      "why_this_could_backfire": "If reps use the battlecard to imply Rippling has superior or equivalent goal-tracking capability without any shipped proof, prospects or Deel could call out the bluff, and it could surface publicly as an unsubstantiated claim, damaging trust. There is also risk that probing Deel's \"weak proof\" comes across as deflection if Rippling cannot show its own roadmap or capability in this area when directly asked.",
+      "why_competitor_cannot_easily_copy": "This action isn't about a product moat Deel can't copy \u2014 it's an internal enablement asset. Its defensibility comes from Rippling's discipline in accurately characterizing proof strength (which builds long-term rep credibility and buyer trust) rather than a copyable product feature.",
+      "why_this_could_backfire": "If the battlecard is perceived internally or externally (via leaks) as attacking Deel's proof without Rippling having its own comparable goal-tracking capability, it could look defensive or like deflection, and could invite scrutiny of Rippling's own gap in this area. There's also risk reps push claims beyond what the battlecard authorizes (\"weaponizing\" imprecise language into overclaims), creating the same legal exposure this asset is meant to prevent.",
       "comparative_claim_risk": "medium",
       "legal_review_required": true,
       "deliverable_type": "product_marketing",
-      "experiment_hypothesis": "If Rippling AEs are equipped with a structured discovery-question battlecard targeting the specific weak points in Deel's Goals/Engage proof (feature assertions without depth, one customer story, one quantified outcome, one unsupported assertion), then reps will more effectively neutralize the objection in live deals without resorting to unsupported competitive claims, improving deal confidence and progression on workforce-visibility-themed opportunities.",
-      "primary_metric": "Rep-reported objection-handling success rate (deal advanced / objection neutralized) on deals where Deel Goals/Engage is raised",
+      "experiment_hypothesis": "If sales reps use an evidence-accurate battlecard that precisely characterizes Deel's weak proof on goal-setting/tracking and redirects to diagnostic questioning rather than counter-claims, then rep confidence and deal progression in Deel-competitive opportunities will improve without introducing legal/brand risk from overclaiming.",
+      "primary_metric": "Win rate or stage-progression rate on opportunities where Deel is the named competitor and goal-tracking/workforce visibility is raised",
       "guardrail_metrics": [
-        "Number of legal/compliance flags on battlecard language",
-        "Rep confidence score (post-training survey)",
-        "Deal cycle length for affected opportunities (should not increase)"
+        "Number of legal/compliance flags raised on rep usage of battlecard language",
+        "Rep-reported confidence score in post-training survey",
+        "Any recorded instances of reps overclaiming beyond approved language"
       ],
-      "minimum_sample_rule": "At least 15 tracked deal instances where the Deel Goals/Engage objection is raised and the battlecard is used, before evaluating success rate",
-      "scale_rule": "If pilot shows >=50% improvement in objection neutralization rate and zero unresolved legal flags across the minimum sample, roll out to full sales org via SKO and CRM embed",
-      "iterate_rule": "If success rate is between 25-50% or reps request different framing/questions, revise discovery questions and re-pilot with a fresh set of deals for one more cycle before deciding to scale or kill",
-      "kill_rule": "If fewer than 25% of piloted deals show improved objection handling, or if legal/compliance identifies unresolvable risk in the claims framing, retire the asset and default reps to a neutral 'we don't have a comparable proof point yet' response"
+      "minimum_sample_rule": "At least 15 competitive deals where Deel's goals/alignment feature is raised, tracked across the pilot period, before evaluating stage-progression impact",
+      "scale_rule": "Roll out org-wide only after the pilot shows a positive directional shift in deal progression across the minimum sample with zero unresolved legal flags",
+      "iterate_rule": "Update battlecard language quarterly or immediately upon any material change in Deel's public claims/proof, and incorporate new rep-sourced objection patterns from the field",
+      "kill_rule": "Discontinue or substantially rework the battlecard if legal identifies unresolvable risk in characterizing Deel's proof, or if two consecutive pilot cohorts show no improvement in rep confidence or deal outcomes"
     }
   ],
   "opportunities_rejected": [],
   "limitations": [
-    "Run ended budget-bounded (hit the research-time cap) after 19 iterations covering 9 source classes; 3 dimensions remain unattempted: historical_pricing, historical_product, out_of_home"
+    "3 dimensions not attempted this run: historical_pricing, historical_product, out_of_home"
   ],
   "negative_observations": [
     "https://www.deel.com/customers: HTTP 404",
     "Exa contents returned nothing.",
     "Similarweb-via-Exa returned a payload for 'deel.com' but no requested metric fields were present; nothing synthesized. (superseded: a later Similarweb call succeeded \u2014 see Traffic & channel mix)",
     "meta_ads: live collection is not configured (US commercial active ads are exposed only through the public Meta Ad Library UI; the API covers worldwide political/social-issue ads and UK/EU commercial windows only \u2014 no general commercial-ad API exists (\u00a739.7). Use a recorded fixture or compliant UI capture.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage.",
+    "4 result(s)/record(s) dropped by strict advertiser scoping for 'Deel' (deel.com): not attributable to the competitor.",
+    "4 Google Ads Transparency Center result(s) dropped as non-advertiser pages (FAQ/blank/other-advertiser) for 'Deel'.",
+    "No Google Ads Transparency Center pages attributable to 'Deel' were found (queries: ['Deel ads']) \u2014 a coverage gap, not evidence of no advertising.",
+    "no META_ADS_ACCESS_TOKEN \u2014 using public-web path",
+    "linkedin_ads: live collection is not configured (LinkedIn's public ad interface has no stable API; collection is best-effort (public pages, compliant browser automation, Exa discovery, or recorded fixtures) and is never report-critical (\u00a739.7). No live route is configured.); no creatives were fabricated. Provide a recorded fixture or compliant capture for coverage.",
     "4 google_ads discovery artifacts excluded at render (FAQ/blank/other-advertiser transparency pages); retained /advertiser pages are unverified discovery pointers"
   ],
   "tool_failures": [
@@ -83553,13 +84489,20 @@
     {
       "source_name": "meta_ads",
       "action_type": "search_meta_ads",
+      "error_type": "provider_auth",
+      "attempts": 1,
+      "last_failed_at": "2026-07-13T08:04:13.798600Z"
+    },
+    {
+      "source_name": "linkedin_ads",
+      "action_type": "search_linkedin_ads",
       "error_type": "interface_only",
       "attempts": 1,
-      "last_failed_at": "2026-07-12T16:38:57.464190Z"
+      "last_failed_at": "2026-07-13T08:06:07.488888Z"
     }
   ],
   "trace_summary": {
-    "tool_calls": 19
+    "tool_calls": 22
   },
   "eval_summary": {
     "n_artifacts": 126,
@@ -83567,7 +84510,7 @@
     "n_claims": 20,
     "n_opportunities": 3,
     "n_proof_gaps": 6,
-    "n_change_events": 5,
+    "n_change_events": 21,
     "material_claims_total": 20,
     "material_claims_cited": 20,
     "corpus_skew_warnings": 0,

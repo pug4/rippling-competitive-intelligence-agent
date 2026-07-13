@@ -18,7 +18,9 @@ from .graph import GraphContext
 from .schemas.common import utcnow
 from .state import DirectorState
 
-JSON_SCHEMA_VERSION = "1.3.0"
+# 1.4.0: additive keys — buyer_voice rollup, keyword_provider/keyword_metrics/
+# opportunity_score in paid_search, ad-record artifact metadata.
+JSON_SCHEMA_VERSION = "1.4.0"
 
 
 def run_output_dir(state: DirectorState, ctx: GraphContext) -> Path:
@@ -41,6 +43,7 @@ def _load(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
         "change_events": [],
         "opportunities": [],
         "proof_gaps": [],
+        "buyer_voice": [],
     }
     if repo is None:
         return out
@@ -57,6 +60,9 @@ def _load(ctx: GraphContext, state: DirectorState) -> dict[str, Any]:
     for m in repo.list_classifications(state.run_id, family="evidence"):
         if m.__class__.__name__ == "EvidenceItem":
             out["evidence"].append(json.loads(m.model_dump_json()))
+    for m in repo.list_classifications(state.run_id, family="buyer_voice"):
+        if m.__class__.__name__ == "BuyerVoiceSignals":
+            out["buyer_voice"].append(json.loads(m.model_dump_json()))
     for m in repo.list_claims(run_id=state.run_id):
         payload = json.loads(m.model_dump_json())
         (out["change_events"] if m.__class__.__name__ == "ChangeEvent" else out["claims"]).append(
@@ -322,6 +328,10 @@ def _similarweb_summary(data: dict[str, Any]) -> dict[str, Any]:
     for a in data["artifacts"]:
         if a.get("source_type") == "similarweb":
             meta = a.get("metadata", {}) or {}
+            if meta.get("peer"):
+                # Peer-domain enrichment (audience-overlap context): its
+                # traffic must never be reported as the researched company's.
+                continue
             return {
                 "domain": meta.get("domain"),
                 "data_source": meta.get("data_source", "similarweb"),
@@ -331,6 +341,79 @@ def _similarweb_summary(data: dict[str, Any]) -> dict[str, Any]:
                 "url": a.get("url"),
             }
     return {}
+
+
+_BUYER_VOICE_NOTE = (
+    "Selection-biased sample of public reviews (G2/Capterra/TrustRadius): buyer "
+    "language and direction only — never representative sentiment, satisfaction "
+    "rates, or market share. n = signal occurrences across the mined pages."
+)
+
+
+def buyer_voice_rollup(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Deterministic rollup of stored family="buyer_voice" classifications.
+
+    Pure counting over persisted records — no model call at render (§40.6).
+    Empty input returns the honest empty shape (``n_reviews: 0``), never a
+    fabricated section.
+    """
+
+    def _row_key(row: dict[str, Any]) -> tuple[int, str]:
+        return (-int(row["n"]), str(row["theme"]))
+
+    Entry = tuple[str, dict[str, Any], dict[str, Any], str]  # theme, extra, signal, url
+
+    def _group(entries: list[Entry]) -> list[dict[str, Any]]:
+        """Group (theme, extra fields, signal, source url) into counted rows.
+
+        The grouping key includes the extra fields, so e.g. the same
+        alternative seen as both switched_from and switched_to stays two rows.
+        """
+        rows: dict[tuple[str, ...], dict[str, Any]] = {}
+        for theme, extra, signal, url in entries:
+            key = (theme, *(str(v) for v in extra.values()))
+            row = rows.get(key)
+            if row is None:
+                rows[key] = {
+                    "theme": theme,
+                    **extra,
+                    "n": 1,
+                    "example_quote": signal.get("quote", ""),
+                    "source_url": url,
+                }
+            else:
+                row["n"] += 1
+        return sorted(rows.values(), key=_row_key)
+
+    objection_entries: list[Entry] = []
+    praise_entries: list[Entry] = []
+    switching_entries: list[Entry] = []
+    reality_entries: list[Entry] = []
+    for record in records:
+        url = record.get("source_url", "")
+        for s in record.get("objections") or []:
+            if s.get("theme"):
+                objection_entries.append((s["theme"], {"sentiment": "negative"}, s, url))
+        for s in record.get("praise") or []:
+            if s.get("theme"):
+                praise_entries.append((s["theme"], {"sentiment": "positive"}, s, url))
+        for s in record.get("alternatives") or []:
+            if s.get("alternative") and s.get("direction") in ("switched_from", "switched_to"):
+                switching_entries.append((s["alternative"], {"direction": s["direction"]}, s, url))
+        for s in record.get("message_reality_signals") or []:
+            if s.get("claim_theme") and s.get("relation") in ("contradicts", "confirms"):
+                reality_entries.append((s["claim_theme"], {"relation": s["relation"]}, s, url))
+
+    objections = _group(objection_entries)
+    return {
+        # Review pages actually mined (one stored record per review artifact).
+        "n_reviews": len(records),
+        "themes": sorted(_group(praise_entries) + objections, key=_row_key),
+        "switching_triggers": _group(switching_entries),
+        "objections": objections,
+        "message_reality": _group(reality_entries),
+        "note": _BUYER_VOICE_NOTE,
+    }
 
 
 def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any]:
@@ -738,6 +821,10 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Competitor LinkedIn employee posts (one per post) + Similarweb traffic.
         "linkedin_posts": linkedin_posts,
         "similarweb": similarweb,
+        # Buyer voice: deterministic rollup of stored family="buyer_voice"
+        # classifications (review pages mined in-loop). Selection-biased
+        # sample — language/direction only, never representative sentiment.
+        "buyer_voice": buyer_voice_rollup(data["buyer_voice"]),
         # Per-offering view: how the competitor positions in each product
         # vertical (deterministic keyword mapping; method disclosed inside).
         "product_vertical_analysis": vertical_analysis,
@@ -1334,6 +1421,31 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 else:
                     text = str(val)
                 add(f"- **{key.replace('_', ' ')}:** {text} _(estimated)_")
+
+    # --- Buyer voice (reviews mining, REVIEWS contract; max 5 lines) -------
+    bv = pkg.get("buyer_voice") or {}
+    if bv.get("n_reviews"):
+        add(f"\n## Buyer voice — review pages mined ({bv['n_reviews']})\n")
+        if bv.get("objections"):
+            add(
+                "- **Objections (this sample):** "
+                + ", ".join(f"{r['theme']} ({r['n']})" for r in bv["objections"][:4])
+            )
+        praise_rows = [r for r in bv.get("themes", []) if r.get("sentiment") == "positive"]
+        if praise_rows:
+            add(
+                "- **Praise (their real strengths — don't attack these):** "
+                + ", ".join(f"{r['theme']} ({r['n']})" for r in praise_rows[:4])
+            )
+        if bv.get("switching_triggers"):
+            add(
+                "- **Switching:** "
+                + ", ".join(
+                    f"{r['direction'].replace('_', ' ')} {r['theme']} ({r['n']})"
+                    for r in bv["switching_triggers"][:3]
+                )
+            )
+        add(f"  - _{bv.get('note', '')}_")
 
     # --- Channel alignment: paid vs organic vs employee advocacy -----------
     ca = pkg.get("channel_alignment") or {}

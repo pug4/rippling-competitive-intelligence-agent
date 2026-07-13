@@ -275,8 +275,10 @@ function SourceDrawer({ sources, label }) {
 
 /* ------------------------------ chat ---------------------------------- */
 
-function ChatPanel({ runId, pkg }) {
-  const [messages, setMessages] = useState([]);
+// Persistent, collapsible chat dock rendered above the tabs. Messages live in
+// App (per-run map) so they survive tab switches AND run switches; this
+// component is presentation + send only.
+function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearch, researchActive }) {
   const artIdx = artifactIndex(pkg);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -288,8 +290,12 @@ function ChatPanel({ runId, pkg }) {
     const question = (q || input).trim();
     if (!question || busy) return;
     setInput("");
-    const history = messages.map((m) => ({ role: m.role, content: m.content || m.answer || "" }));
-    setMessages((m) => [...m, { role: "user", content: question }]);
+    // Local system lines (research started/finished) are UI narration, not
+    // conversation turns — keep them out of the model's history.
+    const history = messages
+      .filter((m) => !m.system_note)
+      .map((m) => ({ role: m.role, content: m.content || m.answer || "" }));
+    onMessages((ms) => [...ms, { role: "user", content: question }]);
     setBusy(true);
     try {
       const res = await fetch(`/api/runs/${runId}/chat`, {
@@ -304,19 +310,25 @@ function ChatPanel({ runId, pkg }) {
         }),
       });
       const data = res.ok ? await res.json() : { answer: "Chat error: " + res.statusText, suggested_followups: [] };
-      setMessages((m) => [...m, { role: "assistant", ...data }]);
+      onMessages((ms) => [...ms, { role: "assistant", ...data }]);
     } catch (e) {
-      setMessages((m) => [...m, { role: "assistant", answer: "Could not reach the chat API.", suggested_followups: [] }]);
+      onMessages((ms) => [...ms, { role: "assistant", answer: "Could not reach the chat API.", suggested_followups: [] }]);
     }
     setBusy(false);
   };
 
+  const headClick = (e) => { if (e.target.closest?.(".info")) return; onToggle && onToggle(); };
   return (
-    <div className="chat card">
-      <div className="title">
+    <div className="chat card chatdock">
+      <div className="title chathead" onClick={headClick}
+           data-tip={open ? "Click to collapse the chat — the conversation is kept" : "Click to reopen the chat — the conversation is kept per run"}>
+        <span className="chattoggle" aria-expanded={open}>{open ? "▾" : "▸"}</span>
         💬 Ask about {competitor}
-        <Info tip="Grounded analysis chatbot: answers ONLY from this run's collected data (every source, excerpt, claim + justification). Cites sources, asks a clarifying question back when your question is ambiguous, and flags when it needs deeper research." />
+        <Info tip="Grounded analysis chatbot: answers ONLY from this run's collected data (every source, excerpt, claim + justification). Cites sources, asks a clarifying question back when your question is ambiguous, and can launch deeper research on this same run when the stored data can't answer." />
+        {!open && messages.length > 0 && <span className="chatcount">{messages.length} message{messages.length === 1 ? "" : "s"}</span>}
       </div>
+      {open && (
+      <>
       <div className="chatscope">
         <label className="chatscope-label" data-tip="Scope the chat's grounded data to one product vertical — per-offering questions get per-offering answers">
           Focus:
@@ -336,7 +348,13 @@ function ChatPanel({ runId, pkg }) {
         )}
         {messages.map((m, i) => (
           <div key={i} className={`chatmsg ${m.role}`}>
-            <div className="chatbubble">
+            {m.auto_briefing && (
+              <span className="autobrief"
+                    data-tip="Composed automatically from this run's saved report the first time you open it — deterministic numbers, no model prose. Ask anything below to go deeper.">
+                auto-briefing
+              </span>
+            )}
+            <div className={`chatbubble${m.system_note ? " sysnote" : ""}`}>
               {m.role === "assistant" ? renderRich(m.answer || m.content) : (m.answer || m.content)}
             </div>
             {m.role === "assistant" && (m.grounded_in || []).length > 0 && (
@@ -353,7 +371,27 @@ function ChatPanel({ runId, pkg }) {
             {m.role === "assistant" && m.clarifying_question && (
               <div className="clarify">❓ {m.clarifying_question} <span className="clarifyhint">(reply below to refine)</span></div>
             )}
-            {m.role === "assistant" && m.needs_deeper_research && (
+            {m.role === "assistant" && m.research_request && (
+              <div className="rescard"
+                   data-tip="The chat found the stored data can't answer this — it proposes a focused deep-dive ON THIS RUN. New evidence appends to the same run and every tab refreshes when it lands.">
+                <div className="resreason"><b>Deeper research suggested:</b> {m.research_request.reason}</div>
+                <div className="chipwrap">
+                  <span className="clarifyhint" style={{ fontSize: 11 }}>focus: {m.research_request.focus}</span>
+                  {(m.research_request.sources || []).map((s) => (
+                    <span key={s} className="chip" style={{ cursor: "default" }}
+                          data-tip={`source the deep-dive would use: ${s}`}>{s}</span>
+                  ))}
+                </div>
+                <button type="button" className="nr-btn resbtn" disabled={researchActive}
+                        onClick={() => onResearch && onResearch(m.research_request)}
+                        data-tip={researchActive
+                          ? "Research is already running on this run — watch the live strip above; one deep-dive at a time"
+                          : "Launch the deep-dive: adds budget + iterations to this run, collects from the listed sources, then refreshes every tab with the new evidence"}>
+                  {researchActive ? "Research running…" : "Run deeper research"}
+                </button>
+              </div>
+            )}
+            {m.role === "assistant" && m.needs_deeper_research && !m.research_request && (
               <div className="chatnote">Needs deeper research — run a focused deep-dive.</div>
             )}
             {m.role === "assistant" && (m.suggested_followups || []).length > 0 && (
@@ -372,6 +410,100 @@ function ChatPanel({ runId, pkg }) {
                value={input} onChange={(e) => setInput(e.target.value)} />
         <button className="nr-btn" disabled={busy || !input.trim()}>Ask</button>
       </form>
+      </>
+      )}
+    </div>
+  );
+}
+
+// Mid-run clarifying question (state.pending_decision via /live): the agent
+// paused because a source failed and a fallback exists — the user picks the
+// path. Shared by the live strip and the full LiveRunView.
+function PendingDecision({ runId, decision, onAnswered }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  if (!decision) return null;
+  const answer = async (choice) => {
+    setBusy(true); setErr(null);
+    try {
+      const res = await fetch(`/api/runs/${runId}/answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ choice }),
+      });
+      if (res.ok) {
+        const job = await res.json().catch(() => null);
+        onAnswered && onAnswered(job);
+      } else {
+        const e = await res.json().catch(() => ({}));
+        setErr(e.detail || res.statusText);
+      }
+    } catch { setErr("could not reach the API — is `make api` running?"); }
+    setBusy(false);
+  };
+  return (
+    <div className="decision" role="note">
+      <div className="decq">❓ {decision.question}</div>
+      {decision.context && <div className="decctx">{decision.context}</div>}
+      <div className="chipwrap">
+        {(decision.options || []).map((o) => (
+          <button key={o.id} type="button" className="decbtn" disabled={busy} onClick={() => answer(o.id)}
+                  data-tip={o.source
+                    ? `answer "${o.label}" — the run resumes and is allowed to use the "${o.source}" source`
+                    : `answer "${o.label}" — the run resumes without a replacement source (the miss is disclosed, never papered over)`}>
+            {busy ? "…" : o.label}
+          </button>
+        ))}
+      </div>
+      {err && <div className="nr-warn">could not send the answer: {err}</div>}
+    </div>
+  );
+}
+
+// Compact live strip between the chat and the tabs while in-place research
+// runs on the selected (already-reported) run. The dashboard stays mounted —
+// this only narrates progress from the cheap /live snapshot (4s poll).
+function LiveStrip({ runId, onJobStarted }) {
+  const [live, setLive] = useState(null);
+  useEffect(() => {
+    let stop = false;
+    setLive(null);
+    const load = () =>
+      fetch(`/api/runs/${runId}/live`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
+        .then((d) => { if (!stop) setLive(d); })
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 4000);
+    return () => { stop = true; clearInterval(t); };
+  }, [runId]);
+  const c = (live || {}).counts || {};
+  return (
+    <div className="livestrip" role="status">
+      <div className="lsrow"
+           data-tip="Deeper research on this run — new sources append to the same evidence base, and every tab refreshes automatically when it finishes. Numbers are checkpoint-fresh, not final.">
+        <span className="livedot running" />
+        <b>{live
+          ? ((live.phase || "researching") + (live.pending_decision ? " — paused, waiting on your decision" : ""))
+          : "connecting to the run…"}</b>
+        {live && (
+          <span className="lsmeta">
+            {c.artifacts ?? 0} sources collected · {c.classified ?? 0} classified
+          </span>
+        )}
+      </div>
+      {(live?.recent_activity || []).slice(0, 3).map((ev, i) => (
+        <div className="lsact" key={i} data-tip="the agent's own decision trace, humanized — newest first">
+          <span className="lvts">{String(ev.ts).slice(11, 19)}</span> {ev.text}
+        </div>
+      ))}
+      {live?.pending_decision && (
+        <PendingDecision runId={runId} decision={live.pending_decision}
+          onAnswered={(job) => {
+            if (job && job.job_id) onJobStarted && onJobStarted(job);
+            setLive((l) => (l ? { ...l, pending_decision: null } : l));
+          }} />
+      )}
     </div>
   );
 }
@@ -1648,7 +1780,9 @@ const TIER_ORDER = { high: 0, medium: 1, low: 2 };
 // On-demand paid-search targeting: one model call over this run's OBSERVED
 // evidence, drafted server-side with hard guards (validate-before-spend
 // forced, conquesting flagged for legal, quotes containment-verified).
-// Volumes/CPCs are never shown — they are not publicly knowable.
+// Live SERP blocks (gemini_serp) are observed from the real results page;
+// volume/CPC chips appear only when a volume API returned them. Nothing is
+// ever estimated client-side.
 function PaidSearchTargets({ pkg, runId }) {
   const [draft, setDraft] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -1677,14 +1811,22 @@ function PaidSearchTargets({ pkg, runId }) {
     setBusy(false);
   };
   const focal = pkg.companies?.[1]?.canonical_name || "the focal company";
-  const clusters = (draft?.clusters || []).slice().sort(
-    (a, b) => (TIER_ORDER[a.priority_tier] ?? 3) - (TIER_ORDER[b.priority_tier] ?? 3)
+  // With a keyword provider configured, clusters carry an opportunity_score
+  // (real volumes weighted by focal proof) — rank by it. Otherwise keep the
+  // model's priority tiers. Never compute scores client-side.
+  const hasScores = (draft?.clusters || []).some((cl) => cl.opportunity_score != null);
+  const clusters = (draft?.clusters || []).slice().sort(hasScores
+    ? (a, b) => (b.opportunity_score ?? -1) - (a.opportunity_score ?? -1)
+    : (a, b) => (TIER_ORDER[a.priority_tier] ?? 3) - (TIER_ORDER[b.priority_tier] ?? 3)
   );
+  const fmtVol = (v) => (v == null ? "—" : Number(v).toLocaleString());
+  const fmtCpc = (v) => (v == null ? "$—" : `$${Number(v).toFixed(2)}`);
+  const fmtCmp = (v) => (v == null ? "—" : Number(v).toFixed(2));
   return (
     <>
       <Sec n={4} title={`Paid-search targets for ${focal} (draft)`}
-           why="Keyword clusters worth testing, grounded only in what this run observed — their buying triggers, their verbatim messaging, their live ad creatives, and your proof. Volumes and CPCs are NOT publicly knowable, so every cluster is a hypothesis to validate in Keyword Planner before spend."
-           tip="Generated on demand by one bounded model call over this run's stored evidence, then hard-guarded in code: validate-before-spend is forced on every cluster, competitor-brand bidding is flagged for legal review, and any supporting quote that isn't verbatim in the observed evidence demotes its cluster to 'inferred'." />
+           why="Keyword clusters worth testing, grounded only in what this run observed — their buying triggers, their verbatim messaging, their live ad creatives, and your proof. With GEMINI_API_KEY, each cluster carries a Live SERP block observed from the real Google results page: the People-Also-Ask questions are real questions buyers ask — use them as ad copy angles and landing-page H2s. With a volume API the chips carry real volume/CPC/competition numbers. Without a provider, no number is shown — every cluster is a hypothesis to validate in Keyword Planner before spend."
+           tip="Generated on demand by one bounded model call over this run's stored evidence, then hard-guarded in code: validate-before-spend is forced on every cluster, competitor-brand bidding is flagged for legal review, and any supporting quote that isn't verbatim in the observed evidence demotes its cluster to 'inferred'. Live SERP blocks come from Gemini search grounding (observed, with source links); volume/CPC chips appear only when a real keyword provider returned them — never estimated." />
       {!draft && (
         <div className="card">
           <div className="row">
@@ -1699,10 +1841,34 @@ function PaidSearchTargets({ pkg, runId }) {
       {draft && (
         <>
           <div className="banner" role="note">{draft.disclaimer}</div>
-          {clusters.map((c, i) => (
+          {draft.keyword_provider == null && (
+            <p className="empty kwhint"
+               data-tip="Without a keyword provider the clusters stay evidence-grounded hypotheses — no numbers, no SERP data. GEMINI_API_KEY enables Live SERP blocks pulled from the real Google results page at draft time (never estimated); volumes/CPC still validate free in Keyword Planner.">
+              Add GEMINI_API_KEY (free — Google AI Studio) for live SERP intelligence: People-Also-Ask questions, related searches, and what formats rank.
+            </p>
+          )}
+          {clusters.map((c, i) => {
+            const metricByKw = {};
+            (c.keyword_metrics || []).forEach((k) => { if (k && k.keyword) metricByKw[k.keyword] = k; });
+            const extraMetrics = (c.keyword_metrics || []).filter((k) => k && k.keyword && !(c.seed_keywords || []).includes(k.keyword));
+            const kwChip = (kw, m) => m ? (
+              <span className="chip kwchip" key={kw}
+                    data-tip={`Real ${m.source || "keyword API"} metrics${m.retrieved_at ? ` (retrieved ${String(m.retrieved_at).slice(0, 10)})` : ""}: monthly search volume ${m.volume != null ? Number(m.volume).toLocaleString() : "unknown"} · avg CPC ${m.cpc_usd != null ? `$${Number(m.cpc_usd).toFixed(2)}` : "unknown"} · competition index ${m.competition != null ? Number(m.competition).toFixed(2) : "unknown"} (0–1). Provider data, not an estimate — still validate final bids in the live auction.`}>
+                {kw} · {fmtVol(m.volume)} · {fmtCpc(m.cpc_usd)} · {fmtCmp(m.competition)}
+              </span>
+            ) : (
+              <span className="chip" key={kw} data-tip={`Seed query for this intent (${c.search_intent}, ${c.funnel_stage} stage) — expand and validate in Keyword Planner`}>{kw}</span>
+            );
+            return (
             <div className="card pscluster" key={i}>
               <div className="title">
                 {c.cluster_label}
+                {c.opportunity_score != null && (
+                  <span className="atag oppscore" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
+                        data-tip={`opportunity score ranks clusters: sum of the KNOWN real search volumes, weighted by your proof status (available 1.0 / partial 0.6 / missing 0.3). A ranking aid, not a spend forecast.${draft.method_note ? ` Method: ${draft.method_note}` : ""}`}>
+                    opp {Number(c.opportunity_score).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                )}
                 <span className={`pill ${c.priority_tier}`} data-tip={c.priority_reason || "priority reasoning not stated"}>{c.priority_tier}</span>
                 <span className="atag" data-tip="category_intent: win the buying situation · competitor_conquesting: bid on their brand (legal review) · brand_defense: protect your own SERP · whitespace: intent neither side serves yet">{String(c.cluster_type).replace(/_/g, " ")}</span>
                 {c.legal_review_required && (
@@ -1710,10 +1876,67 @@ function PaidSearchTargets({ pkg, runId }) {
                 )}
               </div>
               <div className="pskws">
-                {(c.seed_keywords || []).map((k) => (
-                  <span className="chip" key={k} data-tip={`Seed query for this intent (${c.search_intent}, ${c.funnel_stage} stage) — expand and validate in Keyword Planner`}>{k}</span>
-                ))}
+                {(c.seed_keywords || []).map((kw) => kwChip(kw, metricByKw[kw]))}
+                {extraMetrics.map((m) => kwChip(m.keyword, m))}
               </div>
+              {Array.isArray(c.serp_intel) && c.serp_intel.length > 0 && (
+                <div className="row serpintel"
+                     data-tip="Pulled from the LIVE Google results page via Gemini search grounding at draft time — real questions people ask, not model recall. Volumes/CPC: validate free in Keyword Planner.">
+                  <b>Live SERP</b>
+                  {c.serp_intel.map((si, j) => {
+                    const paa = si.paa_questions || [];
+                    const extraPaa = paa.slice(4);
+                    const related = si.related_searches || [];
+                    const formats = (si.ranking_formats || []).join(", ");
+                    const features = (si.serp_features || []).join(", ");
+                    const sources = si.sources || [];
+                    return (
+                      <div key={j} style={{ marginTop: 4 }}>
+                        <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                          “{si.keyword}”{si.intent_note ? ` — ${si.intent_note}` : ""}
+                        </div>
+                        {paa.length > 0 && (
+                          <ul style={{ margin: "4px 0 4px 18px", padding: 0 }}>
+                            {paa.slice(0, 4).map((q, k) => <li key={k}>{q}</li>)}
+                            {extraPaa.length > 0 && (
+                              <li style={{ listStyle: "none", marginLeft: -18, color: "var(--muted)" }}
+                                  data-tip={`Also asked on the live results page: ${extraPaa.join(" · ")}`}>
+                                +{extraPaa.length} more question{extraPaa.length > 1 ? "s" : ""}
+                              </li>
+                            )}
+                          </ul>
+                        )}
+                        {related.length > 0 && (
+                          <div className="pskws">
+                            {related.map((r, k) => (
+                              <span className="chip" key={k}
+                                    data-tip="Related search observed on the live Google results page — a real adjacent query to test">{r}</span>
+                            ))}
+                          </div>
+                        )}
+                        {(formats || features) && (
+                          <div style={{ color: "var(--muted)", fontSize: 12 }}>
+                            ranking: {formats || "—"} · features: {features || "—"}
+                          </div>
+                        )}
+                        {sources.length > 0 && (
+                          <div style={{ fontSize: 12 }}>
+                            {sources.map((u, k) => {
+                              let host = u;
+                              try { host = new URL(u).hostname; } catch { /* keep raw */ }
+                              return (
+                                <a key={k} href={u} target="_blank" rel="noreferrer"
+                                   style={{ marginRight: 10 }}
+                                   data-tip="Grounding source Google surfaced for this SERP observation">{host}</a>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="row"><b>Angle for {focal}:</b> {c.focal_angle || "—"}</div>
               <div className="row psmeta">
                 <span data-tip={c.quote_verified
@@ -1733,7 +1956,8 @@ function PaidSearchTargets({ pkg, runId }) {
                 <div className="row" style={{ color: "var(--warn)" }}>{c.risk_note}</div>
               )}
             </div>
-          ))}
+            );
+          })}
           <p className="empty" style={{ fontSize: 12 }}>
             {draft.method_note ? `${draft.method_note} · ` : ""}Drafted {String(draft.generated_at).slice(0, 10)} from this run's stored evidence.{" "}
             <button className="lvbtn ghost" disabled={busy} onClick={() => generate(true)}>{busy ? "…" : "Re-draft"}</button>
@@ -1801,6 +2025,77 @@ function CommercialMotion({ pkg }) {
         {cm.segment_focus && <div className="row"><b>Segment focus:</b> {Object.entries(cm.segment_focus).map(([k, v]) => `${k} (${v})`).join(" · ")}</div>}
         <div className="row" style={{ color: "var(--muted)", fontSize: 12 }}>{cm.basis}</div>
       </div>
+    </>
+  );
+}
+
+// DEMAND — buyer voice mined from collected review artifacts. Deterministic
+// rollup from stored buyer_voice classifications; every quote was
+// containment-verified against the review text at extraction. Honest empty
+// state when no reviews were collected.
+const BV_SENT_COLOR = { positive: "--good", negative: "--bad", mixed: "--warn", neutral: "--muted" };
+function BuyerVoice({ pkg }) {
+  const bv = pkg.buyer_voice;
+  if (!bv) return null;
+  const competitor = pkg.companies?.[0]?.canonical_name || "the competitor";
+  const themes = bv.themes || [];
+  const lists = [
+    ["Switching triggers", bv.switching_triggers || [], `what pushed reviewers to switch TO or FROM ${competitor} — the strongest conquesting angles come from here`],
+    ["Objections", bv.objections || [], "what reviewers complain about or push back on — landing pages that pre-empt these convert the deal-stage searches above"],
+  ];
+  return (
+    <>
+      <Sec n={7} title={`Buyer voice — what ${competitor} reviewers actually say`}
+           why="Verbatim buyer language from collected review sources: the themes buyers praise or complain about, what makes them switch, and the objections your campaigns must pre-empt. Use their words, not ours, in ad copy."
+           tip="Deterministic rollup over per-review classifications; every quote is verbatim and was containment-verified against the stored review text — a quote that can't be found verbatim is dropped, never paraphrased." />
+      {bv.n_reviews === 0 ? (
+        <p className="empty">
+          No review artifacts collected this run — buyer-voice mining has nothing to read.
+          Ask the chat to “run deeper research on reviews” (or re-run with review sources enabled) to fill this section.
+        </p>
+      ) : (
+        <div className="card">
+          <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}
+               data-tip="how many review artifacts this rollup is counted over — small n means treat themes as leads, not verdicts">
+            mined from {bv.n_reviews} review artifact{bv.n_reviews === 1 ? "" : "s"}
+          </div>
+          {themes.length === 0 && <p className="empty">Reviews were collected but no theme met the evidence bar.</p>}
+          {themes.map((t) => (
+            <div className="bvrow" key={t.theme}>
+              <div className="bvhead">
+                <span className="bvsent"
+                      style={{ color: `var(${BV_SENT_COLOR[t.sentiment] || "--muted"})`, borderColor: `var(${BV_SENT_COLOR[t.sentiment] || "--border"})` }}
+                      data-tip={`reviewer sentiment on this theme across ${t.n} review${t.n === 1 ? "" : "s"}`}>
+                  {t.sentiment || "unrated"}
+                </span>
+                <b data-tip={t.example_quote
+                  ? `verbatim reviewer quote (containment-verified): “${t.example_quote}”`
+                  : "no verbatim quote survived verification for this theme"}>
+                  {String(t.theme || "").replace(/_/g, " ")}
+                </b>
+                <span className="ktnum" data-tip="number of reviews carrying this theme">n={t.n}</span>
+              </div>
+              {t.example_quote && (
+                <div className="srcex">
+                  “{String(t.example_quote).slice(0, 240)}”{" "}
+                  {t.source_url && <a href={t.source_url} target="_blank" rel="noreferrer">source ↗</a>}
+                </div>
+              )}
+            </div>
+          ))}
+          {lists.map(([label, items, tip]) => items.length > 0 && (
+            <div className="row" key={label} style={{ fontSize: 12, marginTop: 8 }}>
+              <b data-tip={tip}>{label}:</b>{" "}
+              {items.map((x, i) => (
+                <span key={i} className="atag" style={{ color: "var(--text)", borderColor: "var(--border)", fontWeight: 400, letterSpacing: 0 }}
+                      data-tip={tip}>
+                  {typeof x === "string" ? x : (x.label || x.theme || JSON.stringify(x))}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
@@ -2208,6 +2503,17 @@ function LiveRunView({ runId, onReady, onJobStarted, onDismissed }) {
           </span>
         </div>
       )}
+      {live.pending_decision && (
+        <div className="banner warn" role="note"
+             data-tip="A source failed mid-run and a fallback exists — the run is paused until you choose. Your choice is recorded in the run's decision log.">
+          <b>The agent needs a decision to continue.</b>
+          <PendingDecision runId={runId} decision={live.pending_decision}
+            onAnswered={(job) => {
+              if (job && job.job_id) onJobStarted && onJobStarted(job);
+              setLive((l) => (l ? { ...l, pending_decision: null, status: "running" } : l));
+            }} />
+        </div>
+      )}
 
       <div className="card liveview">
         <div className="title">
@@ -2289,7 +2595,7 @@ function LiveRunView({ runId, onReady, onJobStarted, onDismissed }) {
 /* --------------------------------- app --------------------------------- */
 
 const TABS = [
-  { id: "overview", label: "Overview — start here", tip: "The scorecard, the top plays, and a chat grounded in this run's evidence" },
+  { id: "overview", label: "Overview — start here", tip: "The scorecard, the top plays, and the bottom line — the chat above stays with you on every tab" },
   { id: "product", label: "Where to win", tip: "Their claims vs their proof — the attack/defend map, the gaps, and the runnable plays" },
   { id: "linkedin", label: "LinkedIn signals", tip: "What their people amplify in the feed — often before the website catches up" },
   { id: "changes", label: "Changes over time", tip: "Did their strategy actually move? Reconciled changes with customizable windows" },
@@ -2311,11 +2617,39 @@ export default function App() {
   // Custom-window overlay for the Changes-over-time tab (exploratory; the
   // saved report always keeps the run's original windows).
   const [winOverlay, setWinOverlay] = useState(null);
+  // Chat state lives HERE, per run — it survives tab switches and switching
+  // runs back and forth. chatOpen mirrors it for the collapse toggle.
+  const [chats, setChats] = useState({});
+  const [chatOpen, setChatOpen] = useState({});
+  const appendChat = (runId, msg) =>
+    setChats((prev) => ({ ...prev, [runId]: [...(prev[runId] || []), msg] }));
 
   useEffect(() => {
     if (runs && runs.length && !selected) setSelected(runs[0].run_id);
   }, [runs, selected]);
   useEffect(() => { setTab("overview"); setWinOverlay(null); }, [selected]);
+
+  // Briefing seed: first time a reported run is opened with an empty chat,
+  // fetch the deterministic briefing and plant it as the opening assistant
+  // message. One attempt per run — a missing endpoint degrades to no message.
+  const briefingTried = React.useRef({});
+  useEffect(() => {
+    if (!pkg || !selected) return;
+    if ((chats[selected] || []).length > 0) return;
+    if (briefingTried.current[selected]) return;
+    briefingTried.current[selected] = true;
+    const runId = selected;
+    fetch(`/api/runs/${runId}/briefing`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d || !d.briefing) return;
+        setChats((prev) => {
+          if ((prev[runId] || []).length > 0) return prev; // user beat us to it
+          return { ...prev, [runId]: [{ role: "assistant", answer: d.briefing, auto_briefing: true, suggested_followups: [] }] };
+        });
+      })
+      .catch(() => {});
+  }, [pkg, selected, chats]);
 
   // Seed jobs on mount — without this, a page refresh mid-run showed nothing
   // until the user started ANOTHER run (the poller only armed on submit).
@@ -2339,6 +2673,84 @@ export default function App() {
     }, 3000);
     return () => clearInterval(t);
   }, [jobs, runs]);
+
+  // In-place research jobs: watch for running/pending -> done/paused
+  // transitions. On completion: refresh the package (tabs re-render with the
+  // appended evidence) and drop a system-style line into that run's chat log.
+  // "paused" (the agent stopped mid-pass to ask a decision) is NOT finished:
+  // the tabs are unchanged and the decision buttons stay in the strip.
+  // stripRuns tracks runs whose live strip was shown (covers /answer-resume
+  // jobs that may not carry kind:"research").
+  const stripRuns = React.useRef(new Set());
+  const prevJobStatus = React.useRef(null);
+  useEffect(() => {
+    const prev = prevJobStatus.current;
+    prevJobStatus.current = Object.fromEntries(jobs.map((j) => [j.job_id, j.status]));
+    if (!prev) return; // first snapshot — nothing to compare against
+    jobs.forEach((j) => {
+      const was = prev[j.job_id];
+      if (!(was === "running" || was === "pending") || !j.run_id) return;
+      // Only in-place research jobs and answered-decision resumes that were
+      // watched in the strip count — a plain full-analysis job that finishes
+      // just after its report lands must NOT inject a line (it would block
+      // the briefing seed).
+      const watched = j.kind === "research" || (j.resumed && stripRuns.current.has(j.run_id));
+      if (!watched) return;
+      if (j.status === "done") {
+        stripRuns.current.delete(j.run_id);
+        setPkgRefresh((n) => n + 1);
+        appendChat(j.run_id, {
+          role: "assistant",
+          system_note: true,
+          answer: "Research finished — tabs updated with the new evidence.",
+        });
+      } else if (j.status === "paused") {
+        // Honest state: nothing landed yet; the run is waiting on the user.
+        appendChat(j.run_id, {
+          role: "assistant",
+          system_note: true,
+          answer:
+            "Research paused — a source failed and the agent needs your decision (pick an option in the strip below). Tabs keep the previous evidence until the run finishes.",
+        });
+      }
+    });
+  }, [jobs]);
+
+  // Chat-initiated deep-dive on the SAME run: more budget + iterations, a
+  // source allowlist, artifacts append in place. The jobs poller + live strip
+  // stream it; the watcher above lands it.
+  const startResearch = async (rr) => {
+    const runId = selected;
+    if (!runId || !rr) return;
+    try {
+      const res = await fetch(`/api/runs/${runId}/research`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ focus: rr.focus, sources: rr.sources || [] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setJobs((prevJobs) => [data, ...prevJobs]);
+        appendChat(runId, {
+          role: "assistant",
+          system_note: true,
+          answer: `Deeper research started — focus: ${rr.focus}. Progress streams in the strip below; the tabs refresh automatically when it lands.`,
+        });
+      } else {
+        appendChat(runId, {
+          role: "assistant",
+          system_note: true,
+          answer: `Could not start research: ${data.detail || res.statusText}`,
+        });
+      }
+    } catch {
+      appendChat(runId, {
+        role: "assistant",
+        system_note: true,
+        answer: "Could not start research — is `make api` running?",
+      });
+    }
+  };
 
   // After submitting a run, jump to its live view as soon as the run_id
   // lands in the job (one poll tick) — the user watches it start immediately.
@@ -2378,6 +2790,14 @@ export default function App() {
   const msgIdx = pkg ? buildMessagingIndexes(pkg) : {};
   const selEntry = (runs || []).find((r) => r.run_id === selected);
   const showLive = !pkg && selEntry?.in_progress;
+  // In-place research on the selected, already-reported run: the dashboard
+  // stays mounted and a compact live strip narrates progress above the tabs.
+  // "paused" keeps the strip mounted too — the run is waiting on the user's
+  // decision (rendered by the strip), not finished.
+  const researchActive =
+    !!pkg && jobs.some((j) => j.run_id === selected &&
+      (j.status === "running" || j.status === "pending" || j.status === "paused"));
+  if (researchActive && selected) stripRuns.current.add(selected);
 
   return (
     <div className={`app ${menuOpen ? "menu-open" : ""}`}>
@@ -2459,6 +2879,27 @@ export default function App() {
               <p className="empty">Fixture mode — synthetic, deterministic data.</p>
             )}
             <AsymmetryBanner pkg={pkg} />
+            <ChatPanel
+              key={selected}
+              runId={selected}
+              pkg={pkg}
+              messages={chats[selected] || []}
+              onMessages={(updater) =>
+                setChats((prev) => ({
+                  ...prev,
+                  [selected]: typeof updater === "function" ? updater(prev[selected] || []) : updater,
+                }))}
+              open={chatOpen[selected] !== false}
+              onToggle={() => setChatOpen((prev) => ({ ...prev, [selected]: !(prev[selected] !== false) }))}
+              onResearch={startResearch}
+              researchActive={researchActive}
+            />
+            {researchActive && (
+              <LiveStrip
+                runId={selected}
+                onJobStarted={(job) => { setJobs((prevJobs) => [job, ...prevJobs]); setRefresh((n) => n + 1); }}
+              />
+            )}
             <div className="tabs" role="tablist">
               {TABS.map((t) => (
                 <button
@@ -2477,7 +2918,7 @@ export default function App() {
             {tab === "overview" && (
               <>
                 <TabIntro q="What did we find, and what should Rippling do about it?"
-                          why="Start with the scorecard (the whole analysis as actions), take the top plays, then ask the chat anything — it answers only from this run's collected evidence and cites its sources." />
+                          why="Start with the scorecard (the whole analysis as actions), take the top plays, then ask the chat above anything — it answers only from this run's collected evidence, cites its sources, and can run deeper research on demand." />
                 {pkg.bottom_line && (
                   <div className="card" style={{ borderLeft: "3px solid var(--good)" }}>
                     <div className="title">The bottom line <Info tip="Composed only from this run's verified numbers — the top-ranked play, the ownership split, and what's moving. No model prose; every clause traces to a chart below." /></div>
@@ -2494,7 +2935,6 @@ export default function App() {
                     Basis: {pkg.run?.execution_mode} run, {pkg.run?.stop_reason_label || ""} · {pkg.corpus_normalization.competitor?.n_classified} vs {pkg.corpus_normalization.focal?.n_classified} classified pages · {Object.values(pkg.coverage || {}).filter((v) => v === "not_attempted").length} dimensions not attempted — see Evidence & trust.
                   </p>
                 )}
-                <ChatPanel key={selected} runId={selected} pkg={pkg} />
               </>
             )}
             {tab === "product" && (
@@ -2556,7 +2996,7 @@ export default function App() {
             {tab === "performance" && (
               <>
                 <TabIntro q="Which buying moments do they own — and where is the demand?"
-                          why="Work top to bottom: who owns each buying intent (1), whether that ownership is backed by proof or just page volume (2), which comparison SERPs are undefended (3), the paid-search keywords those add up to (4), then the traffic and sales-motion context behind it all (5–6)." />
+                          why="Work top to bottom: who owns each buying intent (1), whether that ownership is backed by proof or just page volume (2), which comparison SERPs are undefended (3), the paid-search keywords those add up to (4), the traffic and sales-motion context behind it all (5–6), and what buyers say in their own words (7)." />
                 <CepOwnership pkg={pkg} msgIdx={msgIdx} />
                 <ProofVsVoice pkg={pkg} msgIdx={msgIdx} />
                 {(pkg.insight_graphics || {}).affinity_defense
@@ -2565,6 +3005,7 @@ export default function App() {
                 <PaidSearchTargets pkg={pkg} runId={selected} />
                 <Similarweb pkg={pkg} />
                 <CommercialMotion pkg={pkg} />
+                <BuyerVoice pkg={pkg} />
               </>
             )}
             {tab === "sources" && (

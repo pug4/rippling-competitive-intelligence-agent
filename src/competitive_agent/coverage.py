@@ -47,7 +47,7 @@ DIMENSION_SOURCES: dict[str, list[str]] = {
     "current_website": ["webpage", "sitemap"],
     "current_product": ["webpage"],
     "pricing_and_packaging": ["webpage"],
-    "customer_proof": ["webpage", "exa_web"],
+    "customer_proof": ["webpage", "exa_web", "reviews"],
     "paid_media": ["google_ads", "meta_ads", "linkedin_ads"],
     "public_linkedin": ["linkedin", "linkedin_post"],
     "news_and_launches": ["exa_web", "news"],

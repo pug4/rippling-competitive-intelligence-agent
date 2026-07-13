@@ -15,6 +15,8 @@ routes:
   classify_audience: tier1
   classify_product: tier1
   classify_competitive: tier1
+  # Per-review-artifact buyer-voice mining (bounded structured extraction).
+  mine_reviews: tier1
   resolve_company: tier1
   plan_research: tier2
   build_claims: tier2
@@ -34,6 +36,8 @@ routes:
   analysis_chat: tier2
   # On-demand paid-search keyword targeting draft (strategy -> tier2).
   paid_search_targeting: tier2
+  # Per-ad structured extraction from ad-library pages (ADS contract).
+  ad_intelligence: tier2
 
 max_output_tokens:
   tier1: 4096

@@ -306,3 +306,46 @@ summary { cursor: pointer; font-size: 14px; }
 .pskws { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .psmeta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 12.5px; }
 .atag.legal { color: var(--bad); border-color: var(--bad); font-weight: 700; }
+.chip.kwchip { font-variant-numeric: tabular-nums; color: var(--text); cursor: default; }
+.atag.oppscore { font-variant-numeric: tabular-nums; }
+.kwhint { font-size: 12px; margin: 4px 0 10px; }
+
+/* ---- persistent chat dock (above the tabs) ---- */
+.chatdock { margin: 12px 0 0; }
+.chathead { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin-bottom: 0; flex-wrap: wrap; }
+.chattoggle { color: var(--accent); font-size: 12px; width: 14px; flex: none; }
+.chatcount { color: var(--muted); font-size: 11px; font-weight: 400; margin-left: auto; }
+.autobrief { font-size: 9px; color: var(--muted); border: 1px solid var(--border); border-radius: 4px;
+  padding: 1px 6px; width: max-content; letter-spacing: .06em; text-transform: uppercase; cursor: help; }
+.chatbubble.sysnote { font-style: italic; color: var(--muted); background: none; border: 1px dashed var(--border); }
+
+/* research-request affordance card under an assistant bubble */
+.rescard { border: 1px dashed var(--accent); background: rgba(110,168,254,.06); border-radius: 8px;
+  padding: 8px 10px; max-width: 88%; display: flex; flex-direction: column; gap: 6px; }
+.resreason { font-size: 12px; color: var(--text); line-height: 1.45; }
+.resreason b { color: var(--accent); }
+.resbtn { width: max-content; padding: 6px 12px; font-size: 12px; }
+
+/* compact live research strip between chat and tabs */
+.livestrip { display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--accent);
+  background: var(--panel); border-radius: 10px; padding: 8px 12px; margin: 10px 0 0; font-size: 13px; }
+.lsrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lsmeta { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.lsact { color: var(--muted); font-size: 12px; padding-left: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* mid-run decision (pending_decision) — strip + LiveRunView */
+.decision { border-top: 1px dashed var(--border); margin-top: 6px; padding-top: 6px; }
+.decq { font-size: 13px; color: var(--warn); font-weight: 600; }
+.decctx { font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
+.decbtn { background: var(--panel2); border: 1px solid var(--accent); color: var(--accent);
+  border-radius: 6px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
+.decbtn:hover { background: var(--bg); }
+.decbtn:disabled { opacity: .5; cursor: default; }
+
+/* buyer voice (Demand & channels section 7) */
+.bvrow { padding: 6px 0; border-bottom: 1px solid var(--panel2); }
+.bvrow:last-of-type { border-bottom: none; }
+.bvhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bvhead b { font-size: 13px; cursor: help; border-bottom: 1px dotted var(--border); }
+.bvsent { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; cursor: help; }

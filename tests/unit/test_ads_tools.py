@@ -99,18 +99,20 @@ def _assert_no_performance_fields(metadata: dict[str, Any]) -> None:
     assert not leaked, f"performance/spend fields leaked into ad metadata: {leaked}"
 
 
-# ---- Meta / LinkedIn: interface-only live path -> unsupported ----------------
+# ---- Meta / LinkedIn: keyless live paths degrade typed ------------------------
 
 
-async def test_meta_live_is_unsupported_ui_only() -> None:
+async def test_meta_live_without_any_key_degrades_typed(monkeypatch: Any) -> None:
+    """Dual-path Meta (ADS contract): no META_ADS_ACCESS_TOKEN and no Exa key
+    -> a typed unsupported result recording the exact honest skip reason."""
+    monkeypatch.setenv("META_ADS_ACCESS_TOKEN", "")
     result = await MetaAdsTool().execute(
         make_action("search_meta_ads", advertiser="Example HR"), make_context()
     )
     assert result.status == "unsupported"
     assert result.artifacts == []
-    assert result.error_type == "interface_only"
-    # The message names the actual coverage reality (US commercial = UI only).
-    assert "UI" in (result.error_message or "")
+    assert result.error_type == "provider_not_configured"
+    assert "no META_ADS_ACCESS_TOKEN — using public-web path" in result.negative_observations
     assert result.negative_observations  # coverage gap disclosed, not a silent drop
 
 
@@ -150,7 +152,7 @@ async def test_google_fixture_returns_observed_creatives_no_performance() -> Non
     assert result.status == "success"
     assert result.tool_name == "google_ads"
     assert result.action_id == "ACT-test-search_google_ads"
-    assert len(result.artifacts) == 2
+    assert len(result.artifacts) == 3
     for artifact in result.artifacts:
         assert artifact.is_fixture is True
         assert artifact.company_id == "example-hr"
@@ -171,7 +173,7 @@ async def test_meta_fixture_returns_platform_labels_no_spend() -> None:
     )
     assert result.status == "success"
     assert result.tool_name == "meta_ads"
-    assert len(result.artifacts) == 2
+    assert len(result.artifacts) == 3
     for artifact in result.artifacts:
         assert artifact.is_fixture is True
         assert artifact.source_type == "meta_ads"
@@ -199,7 +201,9 @@ def test_google_capabilities_disclose_repository_reality() -> None:
 def test_meta_capabilities_disclose_ui_only_reality() -> None:
     caps = MetaAdsTool().capabilities()
     assert caps.returns_estimates is False
-    assert caps.live_available is False
+    # Dual path (ADS contract): live is available via ads_archive (token) or
+    # advertiser-scoped public-web discovery — but the coverage limits stay.
+    assert caps.live_available is True
     joined = " ".join(caps.known_limitations).lower()
     assert "political" in joined and ("ui" in joined or "interface" in joined)
     assert "not spend" in joined or "not spend or delivery" in joined

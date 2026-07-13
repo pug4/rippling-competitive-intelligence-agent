@@ -1,0 +1,53 @@
+{
+  "ads": [
+    {
+      "advertiser": "Deel",
+      "platform": "google",
+      "creative_text": "Run global payroll in minutes, not weeks. Deel handles compliance, taxes, and payments in 150+ countries.",
+      "headline": "Global payroll without the headache",
+      "cta": "Book a demo",
+      "format": "responsive_search_ad",
+      "regions": [
+        "US"
+      ],
+      "first_seen": "2026-04-10",
+      "last_seen": "2026-07-01",
+      "active": true,
+      "impression_bucket": null,
+      "landing_url": "https://www.deel.com/payroll",
+      "source_url": "https://adstransparency.google.com/advertiser/AR13975028471928374650/creative/CR10293847561029384756",
+      "extraction_confidence": "high"
+    },
+    {
+      "advertiser": "Deel",
+      "platform": "google",
+      "creative_text": "Hire anyone, anywhere. Deel's EOR hires your international team compliantly - no local entity required.",
+      "headline": "Hire in 150 countries",
+      "cta": "Get started",
+      "format": "text_ad",
+      "regions": [
+        "US",
+        "GB"
+      ],
+      "first_seen": "2026-05-02",
+      "last_seen": "2026-07-08",
+      "active": true,
+      "impression_bucket": null,
+      "landing_url": "https://www.deel.com/eor",
+      "source_url": "https://adstransparency.google.com/advertiser/AR13975028471928374650/creative/CR20293847561029384757",
+      "extraction_confidence": "high"
+    }
+  ],
+  "campaign_themes": [
+    "global payroll speed and compliance",
+    "international hiring without local entities"
+  ],
+  "implied_search_intents": [
+    "global payroll software",
+    "employer of record 150 countries"
+  ],
+  "next_queries": [
+    "Deel advertiser page adstransparency.google.com creatives"
+  ],
+  "notes": "Synthetic fixture: two Deel creatives extracted from the supplied transparency page text. Impression buckets not shown on this page."
+}

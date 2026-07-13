@@ -17,6 +17,8 @@ sources:
   meta_ads: true
   linkedin_ads: true
   reviews: true
+  # Keyword metric enrichment (Semrush provider seam); keyless -> typed unsupported.
+  keywords: true
   jobs: true
   events: true
   ooh: true
@@ -40,7 +42,10 @@ budgets:
 portfolio:
   max_concurrent_company_runs: 2
   max_competitors_per_demo: 3
-  max_exa_agent_runs: 2
+  # Raised 2 -> 6: per-competitor Similarweb peer enrichment adds up to 3
+  # bounded Exa Agent runs on top of the company's own similarweb + LinkedIn
+  # research runs (kept in sync with exa_agent.max_exa_agent_runs below).
+  max_exa_agent_runs: 6
 
 windows:
   lookback_days: 365
@@ -82,3 +87,6 @@ exa_agent:
   effort: auto
   data_sources: []
   linkedin_num_posts: 30
+  # Cap on Exa Agent runs per company pipeline (2 -> 6: company similarweb +
+  # LinkedIn research + up to 3 top-affinity peer-domain enrichments).
+  max_exa_agent_runs: 6

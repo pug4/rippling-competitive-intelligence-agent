@@ -1,0 +1,114 @@
+{
+  "action_id": "ACT-fixture-keywords",
+  "tool_name": "keywords",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxkeywords01",
+      "company_id": "example-hr",
+      "source_type": "keywords",
+      "source_name": "keywords",
+      "url": "https://www.semrush.com/analytics/keywordoverview/",
+      "final_url": "https://www.semrush.com/analytics/keywordoverview/",
+      "title": "Keyword metrics (semrush) — 3 keyword(s)",
+      "published_at": null,
+      "first_observed_at": null,
+      "last_observed_at": null,
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Keyword metrics from semrush (provider-reported estimates; missing fields are unknown, never zero).\n- \"hr software consolidation\": volume 1300/mo, CPC $12.40, competition 0.78\n- \"all in one hr platform\": volume 2900/mo, CPC $18.10, competition 0.85\n- \"replace multiple hr tools\": volume 210/mo, CPC $9.75, competition 0.52",
+      "normalized_text": "Keyword metrics from semrush (provider-reported estimates; missing fields are unknown, never zero). - \"hr software consolidation\": volume 1300/mo, CPC $12.40, competition 0.78 - \"all in one hr platform\": volume 2900/mo, CPC $18.10, competition 0.85 - \"replace multiple hr tools\": volume 210/mo, CPC $9.75, competition 0.52",
+      "content_hash": "fixture-keywords-enrich-01",
+      "metadata": {
+        "provider": "semrush",
+        "estimated": true,
+        "unit": "searches/month",
+        "retrieval_timestamp": "2026-07-11T00:00:00+00:00",
+        "keywords_requested": [
+          "hr software consolidation",
+          "all in one hr platform",
+          "replace multiple hr tools"
+        ],
+        "metrics": [
+          {
+            "keyword": "hr software consolidation",
+            "volume": 1300,
+            "cpc_usd": 12.4,
+            "competition": 0.78,
+            "source": "semrush",
+            "retrieved_at": "2026-07-11T00:00:00+00:00"
+          },
+          {
+            "keyword": "all in one hr platform",
+            "volume": 2900,
+            "cpc_usd": 18.1,
+            "competition": 0.85,
+            "source": "semrush",
+            "retrieved_at": "2026-07-11T00:00:00+00:00"
+          },
+          {
+            "keyword": "replace multiple hr tools",
+            "volume": 210,
+            "cpc_usd": 9.75,
+            "competition": 0.52,
+            "source": "semrush",
+            "retrieved_at": "2026-07-11T00:00:00+00:00"
+          }
+        ]
+      },
+      "collection_method": "semrush_api",
+      "is_partial": false,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxkeywords02",
+      "company_id": "example-hr",
+      "source_type": "keywords",
+      "source_name": "keywords",
+      "url": "https://www.google.com/search?q=hr+software+consolidation",
+      "final_url": "https://www.google.com/search?q=hr+software+consolidation",
+      "title": "Live SERP intelligence (gemini_serp) — \"hr software consolidation\"",
+      "published_at": null,
+      "first_observed_at": null,
+      "last_observed_at": null,
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Live Google SERP observations for \"hr software consolidation\" (Gemini search grounding; observed on the results page at retrieval time, not model recall).\nPeople also ask:\n- What does it mean to consolidate HR systems?\n- How do I combine multiple HR tools into one platform?\n- What is the best all-in-one HR software?\nRelated searches: hr tech stack consolidation; all in one hr platform; hr software comparison\nRanking formats (top organic results): listicle, comparison, how-to\nSERP features present: people_also_ask, ai_overview, ads_top\nDominant intent: Commercial investigation — buyers comparing consolidation platforms before a purchase.\nGrounding sources:\n- https://example.com/hr-consolidation-guide\n- https://example.com/best-hr-platforms",
+      "normalized_text": "Live Google SERP observations for \"hr software consolidation\" (Gemini search grounding; observed on the results page at retrieval time, not model recall). People also ask: - What does it mean to consolidate HR systems? - How do I combine multiple HR tools into one platform? - What is the best all-in-one HR software? Related searches: hr tech stack consolidation; all in one hr platform; hr software comparison Ranking formats (top organic results): listicle, comparison, how-to SERP features present: people_also_ask, ai_overview, ads_top Dominant intent: Commercial investigation — buyers comparing consolidation platforms before a purchase. Grounding sources: - https://example.com/hr-consolidation-guide - https://example.com/best-hr-platforms",
+      "content_hash": "fixture-keywords-serp-01",
+      "metadata": {
+        "provider": "gemini_serp",
+        "observed": true,
+        "retrieval_timestamp": "2026-07-11T00:00:00+00:00",
+        "serp_intel": {
+          "keyword": "hr software consolidation",
+          "paa_questions": [
+            "What does it mean to consolidate HR systems?",
+            "How do I combine multiple HR tools into one platform?",
+            "What is the best all-in-one HR software?"
+          ],
+          "related_searches": [
+            "hr tech stack consolidation",
+            "all in one hr platform",
+            "hr software comparison"
+          ],
+          "ranking_formats": ["listicle", "comparison", "how-to"],
+          "serp_features": ["people_also_ask", "ai_overview", "ads_top"],
+          "intent_note": "Commercial investigation — buyers comparing consolidation platforms before a purchase.",
+          "sources": [
+            "https://example.com/hr-consolidation-guide",
+            "https://example.com/best-hr-platforms"
+          ],
+          "retrieved_at": "2026-07-11T00:00:00+00:00"
+        },
+        "sources": [
+          "https://example.com/hr-consolidation-guide",
+          "https://example.com/best-hr-platforms"
+        ]
+      },
+      "collection_method": "gemini_google_search_grounding",
+      "is_partial": false,
+      "is_fixture": true
+    }
+  ]
+}

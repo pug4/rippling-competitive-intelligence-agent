@@ -24,7 +24,7 @@ a file to open instead.
 - Open `outputs/runs/RUN-b256fab1c1dd/trace.jsonl`. Scroll the `event_type`
   stream: `coverage_assessed` → `actions_proposed` → `action_selected`.
   *"It assesses what it knows, proposes actions, scores them, and records the
-  rationale AND the alternatives it didn't pick — 19 of these cycles."*
+  rationale AND the alternatives it didn't pick — 22 of these cycles."*
 - `grep tool_failed` and `grep source_skipped`: *"A provider failure or an
   empty source is a typed result, not a crash — it's recorded and the loop
   keeps going."* (Do NOT grep `fallback_selected` — it does not occur in this
@@ -59,6 +59,27 @@ a file to open instead.
   render, and it says so. Absence is a finding, never hidden."*
 - *"ROAS, CAC, spend — banned. We never estimate what isn't public."*
 
+## 2b. THE CHAT IS THE INTERFACE — agentic, front and center (90s — headline beat)
+
+- The chat dock sits ABOVE the tabs on every run and opens with an
+  **auto-briefing**: *"the moment you open a run, the agent briefs you —
+  bottom line, the top plays with their metrics, who owns the buying intents,
+  what changed, the demand estimates, what ads it found and didn't, and the
+  coverage caveats. Every number is composed from the run's verified data —
+  no model prose."*
+- Ask it something the stored data CAN answer → grounded rich-text answer
+  with source chips.
+- Then the money shot — ask something it CAN'T answer from stored data:
+  *"the agent doesn't bluff. It says what's missing and offers to go get it —
+  a scoped research request with the exact sources it wants to use. Click
+  'Run deeper research' and watch: the SAME agentic loop re-plans scoped to
+  those sources, the live strip streams what it's collecting, and when it
+  lands, the tabs update in place — same run, no reload, evidence appended
+  and re-verified end to end."*
+- If a source fails mid-run it can PAUSE and ask — *"couldn't get Meta ads,
+  want me to try LinkedIn instead? — decision buttons right in the strip;
+  batch runs auto-fall-back and disclose the choice instead."*
+
 ## 3. Depth: bottom line, scorecard, messaging popups, LinkedIn, demand (100s)
 
 - **Overview — start here**: read **"The bottom line"** aloud — *"this sentence
@@ -91,17 +112,22 @@ a file to open instead.
   traffic estimates (labeled estimated).
 - **Paid-search targets** (same tab, section 4): *"It goes from analysis to
   media plan: keyword clusters drafted ONLY from observed evidence — their
-  buying triggers, their verbatim villain wording, their live ad creatives.
-  Volumes and CPCs aren't publicly knowable, so it never invents them: every
+  buying triggers, their verbatim villain wording, their observed ads. Every
   cluster ships 'validate before spend', competitor-brand bidding is
   auto-flagged for legal review, and any quote the model can't prove verbatim
   demotes its cluster to 'inferred'. On this run: 9 of 10 clusters
-  quote-verified."*
-- Ask the grounded chat one question on camera (bottom of Overview — e.g.
-  *"Which buying triggers does Deel own vs Rippling after normalizing for
-  corpus size?"*): it answers in rich text from this run's evidence only,
-  shows the sources it grounded in as chips, and can scope to one product
-  vertical with the Focus selector.
+  quote-verified. With a billing-enabled Gemini key it also pulls LIVE SERP
+  intelligence per cluster — the actual People-Also-Ask questions and related
+  searches on today's Google results, each with its grounding source; for
+  volumes and CPC it honestly points to the free Keyword Planner, because
+  this provider doesn't return them and we never invent numbers."*
+- **Buyer voice** (same tab, section 7): review mining with per-quote
+  containment verification — and when no reviews were collected, it says so
+  honestly instead of hiding the section.
+- Ask the chat dock one question on camera (e.g. *"Which buying triggers does
+  Deel own vs Rippling after normalizing for corpus size?"*): it answers in
+  rich text from this run's evidence only, shows the sources it grounded in
+  as chips, and can scope to one product vertical with the Focus selector.
 
 ## 4. Change over time — honestly, with YOUR windows (60s)
 

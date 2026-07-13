@@ -1,0 +1,50 @@
+{
+  "objections": [
+    {
+      "theme": "implementation_pain",
+      "quote": "setup took weeks, support was slow to respond",
+      "confidence": "low",
+      "reason": "1 reviewer quote on this page"
+    },
+    {
+      "theme": "pricing_at_renewal",
+      "quote": "The biggest complaint from our team was pricing at renewal",
+      "confidence": "low",
+      "reason": "1 reviewer quote on this page"
+    }
+  ],
+  "praise": [
+    {
+      "theme": "easy_contractor_payments",
+      "quote": "contractor payments are easy and the UI is clean",
+      "confidence": "low",
+      "reason": "1 reviewer quote on this page"
+    },
+    {
+      "theme": "global_payroll",
+      "quote": "Great for global payroll though",
+      "confidence": "low",
+      "reason": "1 reviewer quote on this page"
+    }
+  ],
+  "alternatives": [
+    {
+      "alternative": "legacy suite",
+      "direction": "switched_from",
+      "quote": "We switched from a legacy suite",
+      "confidence": "low",
+      "reason": "1 reviewer quote on this page"
+    }
+  ],
+  "buyer_contexts": [],
+  "message_reality_signals": [
+    {
+      "claim_theme": "ease_of_use",
+      "relation": "contradicts",
+      "quote": "the onboarding is painful",
+      "confidence": "low",
+      "reason": "1 reviewer quote on this page"
+    }
+  ],
+  "classifier_confidence": "low"
+}

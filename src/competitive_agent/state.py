@@ -102,6 +102,19 @@ class DirectorState(VersionedModel):
     stop_reason: str | None = None
     pending_user_question: str | None = None
 
+    # Shared contract fields (CONTRACTS.md "Shared state fields") — additive,
+    # persistence-safe defaults so old checkpointed runs keep loading.
+    # When set, propose_actions proposes ONLY actions whose source is in it
+    # (internal/analysis actions like reuse_evidence stay allowed).
+    source_allowlist: list[str] | None = None
+    # UI-launched runs; enables mid-run clarifying decisions.
+    interactive: bool = False
+    # {"question": str, "context": str,
+    #  "options": [{"id": str, "label": str, "source": str|None}]}
+    pending_decision: dict[str, Any] | None = None
+    # Append {"question": ..., "choice": option_id, "via": "user"|"auto"}.
+    decision_log: list[dict[str, Any]] = Field(default_factory=list)
+
     def total_spend_usd(self) -> float:
         return self.spent_usd + self.model_cost_usd
 

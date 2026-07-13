@@ -36,12 +36,38 @@ CHAT_SYSTEM = (
     "give your best partial answer for the most likely reading, and say which reading you assumed. "
     "Only ask when the answer genuinely forks — never for stalling. "
     "Always propose 2-3 specific follow-up questions the user could ask next. "
+    "RESEARCH ON DEMAND: when (and ONLY when) the stored run data cannot answer the question, "
+    "ALSO emit research_request so the user can launch a deeper in-place research pass: "
+    "focus = ONE specific sentence describing exactly what to find out; sources = which sources "
+    "to search, chosen ONLY from these canonical names: "
+    "web (competitor site + general web), wayback (historical site archive), "
+    "ads (Google/Meta/LinkedIn ad libraries), reviews (buyer review sites), "
+    "similarweb (estimated traffic/demand), linkedin (employee + company posts), "
+    "news (press + launches), keywords (search volume/CPC enrichment); "
+    "reason = one line on why the stored data is insufficient. "
+    "Set needs_deeper_research=true whenever you emit research_request (backward compat). "
+    "NEVER emit research_request when the stored data already answers the question — it "
+    "triggers a paid research run. Leave it null otherwise. "
     "Respond ONLY via the structured tool."
 )
 
 # Char budget for the grounded context. Structured findings are always included;
 # raw evidence excerpts fill the remainder and truncate last (with a disclosed note).
 _CONTEXT_BUDGET_CHARS = 280_000
+
+
+class ResearchRequest(BaseModel):
+    """A concrete deeper-research proposal, emitted ONLY when the stored run
+    data cannot answer the user's question. ``sources`` uses the canonical
+    user-facing names (see conversation.SOURCE_NAME_MAP): web, wayback, ads,
+    reviews, similarweb, linkedin, news, keywords."""
+
+    focus: str = Field(description="One specific sentence: exactly what to find out.")
+    sources: list[str] = Field(
+        description="Canonical source names to search: web, wayback, ads, reviews, "
+        "similarweb, linkedin, news, keywords."
+    )
+    reason: str = Field(description="Why the stored run data cannot answer this question.")
 
 
 class ChatResponse(BaseModel):
@@ -61,6 +87,12 @@ class ChatResponse(BaseModel):
         "the answer genuinely forks on their intent. Null when the question is clear.",
     )
     confidence: str = Field(default="medium", description="high | medium | low")
+    research_request: ResearchRequest | None = Field(
+        default=None,
+        description="ONLY when the stored data cannot answer: a concrete deeper-research "
+        "proposal (focus + canonical sources + reason). Null whenever the stored data "
+        "answers the question. Set needs_deeper_research=true alongside it.",
+    )
 
 
 def _package_path(run_id: str) -> Path:
@@ -424,6 +456,9 @@ async def chat_about_run(
             "needs_deeper_research": out.needs_deeper_research,
             "clarifying_question": out.clarifying_question,
             "confidence": out.confidence,
+            "research_request": (
+                out.research_request.model_dump() if out.research_request else None
+            ),
         }
     except Exception as exc:  # never crash the chat surface
         return {
@@ -434,5 +469,158 @@ async def chat_about_run(
             "clarifying_question": None,
             "needs_deeper_research": False,
             "confidence": "low",
+            "research_request": None,
             "error": type(exc).__name__,
         }
+
+
+def build_briefing(pkg: dict[str, Any]) -> str:
+    """Deterministic run briefing — the chat panel's opening message.
+
+    Pure function over the stored ``data.json`` package: NO model call, no
+    invented numbers — every figure is read verbatim from verified package
+    fields, absences are stated honestly. Fixed 9-part order (contract):
+    bottom line; top opportunities; buying-intent ownership; what changed;
+    demand context (estimated); ads presence; LinkedIn top theme; coverage
+    caveats; research-on-demand closer. Formatting uses **bold** and "- "
+    bullets ONLY (the UI's renderRich supports exactly those + bare links).
+    """
+    from collections import Counter
+
+    companies = pkg.get("companies", [])
+    competitor = (
+        (companies[0].get("canonical_name") if companies else None)
+        or (pkg.get("scope") or {}).get("company_input")
+        or "the competitor"
+    )
+    focal = (companies[1].get("canonical_name") if len(companies) > 1 else None) or "Rippling"
+    es = pkg.get("eval_summary", {}) or {}
+    lines: list[str] = []
+
+    # 1. Bottom line (verbatim from the package's deterministic composer).
+    bottom = pkg.get("bottom_line")
+    lines.append(
+        f"**The bottom line:** {bottom}"
+        if bottom
+        else "**The bottom line:** not computed for this run (too few verified signals)."
+    )
+
+    # 2. Top 2-3 opportunities (title + metric + priority = report rank).
+    opps = pkg.get("opportunities") or []
+    lines.append("")
+    if opps:
+        lines.append(f"**Top opportunities for {focal}:**")
+        for rank, opp in enumerate(opps[:3], start=1):
+            metric = opp.get("primary_metric") or opp.get("kill_rule") or "see Action Board"
+            lines.append(f"- {opp.get('title')} (metric: {metric}; priority {rank})")
+    else:
+        lines.append(f"**Top opportunities for {focal}:** none generated this run.")
+
+    # 3. Ownership headline (X of N buying intents vs Y).
+    ceps = pkg.get("category_entry_points") or []
+    own = {
+        k: sum(1 for r in ceps if r.get("ownership") == k)
+        for k in ("competitor_advantage", "contested", "focal_owns")
+    }
+    lines.append("")
+    if ceps:
+        lines.append(
+            f"**Buying-intent ownership:** {competitor} owns {own['competitor_advantage']} of "
+            f"{len(ceps)} observed buying intents vs {focal}'s {own['focal_owns']} "
+            f"({own['contested']} contested)."
+        )
+    else:
+        lines.append(
+            "**Buying-intent ownership:** not computed — no category-entry-point rows in this run."
+        )
+
+    # 4. What changed (verified change events only).
+    changes = pkg.get("change_events") or []
+    lines.append("")
+    if changes:
+        top = changes[0]
+        dim = str(top.get("dimension") or "message").replace("_", " ")
+        lines.append(
+            f"**What changed:** {len(changes)} verified change(s) over the lookback window; "
+            f"top: {dim} — {top.get('prior_state')} → {top.get('current_state')}."
+        )
+    else:
+        lines.append("**What changed:** no verified changes over the lookback window.")
+
+    # 5. Demand context (Similarweb-style estimates, always labeled estimated).
+    sw = pkg.get("similarweb") or {}
+    metrics = sw.get("metrics") or {}
+    visits = (metrics.get("estimated_monthly_visits") or {}).get("value")
+    lines.append("")
+    if visits is not None:
+        demand = (
+            f"**Demand context (estimated):** ~{int(visits):,} visits/month "
+            f"({sw.get('data_source') or 'similarweb'} estimate)"
+        )
+        peers = (metrics.get("digital_competitors") or {}).get("value") or []
+        if peers:
+            top_peer = peers[0]
+            demand += (
+                f"; top affinity competitor: {top_peer.get('domain')} "
+                f"(affinity {top_peer.get('affinity')}, estimated)"
+            )
+        lines.append(demand + ".")
+    else:
+        lines.append("**Demand context:** no traffic estimates collected for this run.")
+
+    # 6. Ads presence (observed library artifacts; never spend/performance).
+    artifacts = pkg.get("artifacts") or []
+    n_google = sum(1 for a in artifacts if a.get("source_type") == "google_ads")
+    n_meta = sum(1 for a in artifacts if a.get("source_type") == "meta_ads")
+    lines.append("")
+    if n_google or n_meta:
+        lines.append(
+            f"**Ads presence:** {n_google} Google Ads + {n_meta} Meta ad-library artifacts "
+            "collected (observed creatives/pointers only — no spend or performance data)."
+        )
+    else:
+        lines.append(
+            "**Ads presence:** none collected — the ad libraries yielded nothing this run."
+        )
+
+    # 7. LinkedIn top theme (from collected employee/company posts).
+    posts = pkg.get("linkedin_posts") or []
+    theme_counts = Counter(p.get("theme") for p in posts if p.get("theme"))
+    lines.append("")
+    if theme_counts:
+        theme, n = theme_counts.most_common(1)[0]
+        lines.append(
+            f"**LinkedIn:** top theme across {len(posts)} collected post(s): "
+            f"{str(theme).replace('_', ' ')} ({n} post(s))."
+        )
+    else:
+        lines.append("**LinkedIn:** no employee/company posts collected.")
+
+    # 8. Coverage caveats (honest scope: corpus sizes + what was never attempted).
+    lines.append("")
+    lines.append("**Coverage caveats:**")
+    lines.append(
+        f"- Corpus: {es.get('n_artifacts', 0)} sources, "
+        f"{es.get('n_classifications', 0)} classifications, "
+        f"{es.get('n_claims', 0)} grounded claims, "
+        f"{es.get('n_proof_gaps', 0)} proof gaps."
+    )
+    not_attempted = sorted(
+        d for d, lvl in (pkg.get("coverage") or {}).items() if lvl == "not_attempted"
+    )
+    if not_attempted:
+        lines.append(
+            "- Dimensions not attempted: "
+            + ", ".join(d.replace("_", " ") for d in not_attempted)
+            + "."
+        )
+    else:
+        lines.append("- All coverage dimensions were attempted this run.")
+
+    # 9. Research-on-demand closer.
+    lines.append("")
+    lines.append(
+        "**Ask me anything** about this run — I can also run deeper research on demand "
+        "(tell me what to dig into and which sources)."
+    )
+    return "\n".join(lines)
