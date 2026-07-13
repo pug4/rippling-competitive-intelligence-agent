@@ -497,6 +497,22 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         v["focal_theme_counts"] = fv.get("theme_counts", {})
         v["competitor_share"] = round(v.get("n_artifacts", 0) / _nc, 4)
         v["focal_share"] = round(fv.get("n_artifacts", 0) / _nf, 4)
+    # EDA-verified insight graphics (marketing-ops): five cross-cutting joins
+    # (proof×demand, funnel×vertical, channel×proof, affinity×sitemap) that the
+    # single-dimension charts can't show. Deterministic; each block self-omits
+    # when its inputs are missing.
+    insight_gfx = synthesis.insight_graphics(
+        data["classification_models"],
+        data["artifact_models"],
+        focal_cls_models,
+        ceps,
+        similarweb,
+        vertical_analysis.get("by_artifact", {}),
+        focal_vertical_analysis.get("by_artifact", {}),
+        {a.artifact_id: a.source_type for a in focal_artifact_models},
+        state.company.canonical_name if state.company else state.company_input,
+        state.focal_company.canonical_name if state.focal_company else "Rippling",
+    )
     # Tag each LinkedIn post with its product verticals (per-offering view).
     for lp in linkedin_posts:
         lp["verticals"] = vertical_analysis["by_artifact"].get(lp["artifact_id"], [])
@@ -621,6 +637,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # vertical (deterministic keyword mapping; method disclosed inside).
         "product_vertical_analysis": vertical_analysis,
         "focal_vertical_analysis": focal_vertical_analysis,
+        "insight_graphics": insight_gfx,
         # Paid-vs-organic + employee-advocacy theme alignment (deterministic).
         "channel_alignment": channel_alignment,
         "theme_comparison": theme_comparison,
@@ -1018,6 +1035,100 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             "product categories carry each trigger. For a per-vertical read, scope the chat to "
             "that vertical._"
         )
+
+    # --- EDA insight graphics (marketing-ops joins) -------------------------
+    ig = pkg.get("insight_graphics") or {}
+    if ig:
+        add("\n## EDA insights — the joins the single charts can't show\n")
+        add(
+            "_Deterministic cross-cutting analysis (proof×demand, funnel×vertical, "
+            "channel×proof, audience×sitemap); every number carries its denominator. "
+            "Full series in the JSON `insight_graphics`; interactive versions in the UI._\n"
+        )
+        cvr = ig.get("claim_vs_record")
+        if cvr:
+            c, f = cvr["competitor"], cvr.get("focal")
+            add(f"**[{cvr['board_column']}] {cvr['title']}**")
+            add(
+                f"- {company}: compliance voiced on {c['voice_n']}/{c['n_classified']} pages "
+                f"({c['voice_share']:.0%}); certification shown on {c['cert_n']}/{c['voice_n']} "
+                f"({c['cert_rate']:.0%}); quantified-outcome stand-in {c['quant_standin_rate']:.0%}"
+            )
+            if f:
+                add(
+                    f"- {focal}: voiced {f['voice_n']}/{f['n_classified']} ({f['voice_share']:.0%}); "
+                    f"record shown {f['cert_rate']:.0%}"
+                )
+            for h in cvr.get("cep_hit_list", [])[:2]:
+                add(
+                    f"- Hit list — {h['cep'].replace('_', ' ')}: {focal} record rate "
+                    f"{h['focal']['rate']:.0%} (n={h['focal']['n']}) vs {company} "
+                    f"{h['competitor']['rate']:.0%} (n={h['competitor']['n']})"
+                )
+            for g_ in cvr.get("guardrail", [])[:1]:
+                add(
+                    f"- Guardrail — {g_['cep'].replace('_', ' ')}: rates match "
+                    f"({g_['competitor']['rate']:.0%} vs {g_['focal']['rate']:.0%}) — do not attack there"
+                )
+            add(f"- **Play:** {cvr['action']}")
+        pvv = ig.get("proof_vs_voice")
+        if pvv:
+            add(f"\n**[{pvv['board_column']}] {pvv['title']}**")
+            for r in pvv["rows"][:4]:
+                add(
+                    f"- {r['cep'].replace('_', ' ')} ({str(r['ownership']).replace('_', ' ')}): "
+                    f"{company} quantifies {r['competitor']['rate']:.0%} (n={r['competitor']['n']}) "
+                    f"vs {focal} {r['focal']['rate']:.0%} (n={r['focal']['n']})"
+                )
+            nm = pvv.get("naming", {})
+            add(
+                f"- Naming war is one-way: {company} names {focal} on "
+                f"{nm.get('competitor_names_focal', 0)} pages; {focal} names {company} on "
+                f"{nm.get('focal_names_competitor', 0)}"
+            )
+            add(f"- **Play:** {pvv['action']}")
+        fv_ = ig.get("funnel_voids")
+        if fv_:
+            add(f"\n**[{fv_['board_column']}] {fv_['title']}**")
+            for r in [x for x in fv_["rows"] if x.get("void")][:3]:
+                cc, ff = r["competitor"], r["focal"]
+                add(
+                    f"- {r['vertical'].replace('_', ' ')}: {company} 0/{cc['n']} decision "
+                    f"(evaluation {cc['evaluation_n']}/{cc['n']}) vs {focal} "
+                    f"{ff['decision_n']}/{ff['n']}"
+                )
+            add(f"- **Play:** {fv_['action']}")
+        ad = ig.get("affinity_defense")
+        if ad:
+            add(f"\n**[{ad['board_column']}] {ad['title']}**")
+            for r in ad["rows"][:4]:
+                add(
+                    f"- {r['domain']}: affinity {r['affinity']:.2f} — "
+                    f"{'defended (vs-page exists)' if r['defended'] else 'NO comparison page'} · "
+                    f"{r['mentions']} mention(s) in {company}'s classified corpus"
+                )
+            if ad.get("orphan_comparison_slugs"):
+                add(
+                    "- vs-pages spent outside the top-affinity audience: "
+                    + ", ".join(ad["orphan_comparison_slugs"][:4])
+                )
+            add(f"- **Play:** {ad['action']} _(affinity = estimated overlap index)_")
+        cps = ig.get("channel_proof_split")
+        if cps:
+            c = cps["competitor"]
+            add(f"\n**[{cps['board_column']}] {cps['title']}**")
+            add(
+                f"- Product demos: LinkedIn {c['demo_linkedin']}/{c['linkedin_n']} "
+                f"({c['demo_linkedin'] / max(1, c['linkedin_n']):.0%}) vs website "
+                f"{c['demo_web']}/{c['web_n']} ({c['demo_web'] / max(1, c['web_n']):.0%}); "
+                f"quantified outcomes flip the other way "
+                f"({c['quant_linkedin']}/{c['linkedin_n']} vs {c['quant_web']}/{c['web_n']})"
+            )
+            add(
+                f"- Website friction: {c['no_public_pricing_web']}/{c['web_n']} pages hide "
+                f"pricing; {c['no_cta_web']}/{c['web_n']} carry no CTA at all"
+            )
+            add(f"- **Play:** {cps['action']}")
 
     # --- Persona × channel matrix (feedback #21) ---------------------------
     mtx = pkg.get("persona_channel_matrix") or {}

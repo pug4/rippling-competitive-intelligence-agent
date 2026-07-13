@@ -1021,3 +1021,394 @@ def temporal_baseline(
         "receded_themes": receded,
         "note": note,
     }
+
+
+# ---------------------------------------------------------------------------
+# EDA-derived insight graphics (marketing-ops): five cross-cutting joins that
+# single-dimension charts miss. Every block is pure deterministic counting over
+# already-validated classifications — the EDA pass found the structure, this
+# code reproduces it for ANY competitor pair, with n's and honest omissions
+# (no focal mirror -> focal side absent, never zero-filled).
+# ---------------------------------------------------------------------------
+
+_STRONG_PROOF_TYPES = tuple(_STRONG_PROOF)
+
+
+def _brand_token(name: str) -> str:
+    return (name or "").split()[0].lower() if name else ""
+
+
+def _proof_rate(cls_list: list[Any], proof: str) -> tuple[int, int]:
+    hits = sum(1 for c in cls_list if proof in (c.proof_types or []))
+    return hits, len(cls_list)
+
+
+def _cep_pages(cls_list: list[Any], cep_key: str) -> list[Any]:
+    return [
+        c
+        for c in cls_list
+        if any(_norm_label(x) == cep_key for x in (c.category_entry_points or []) if x)
+    ]
+
+
+def insight_graphics(
+    competitor_cls: list[MarketingClassification],
+    competitor_arts: list[RawArtifact],
+    focal_cls: list[MarketingClassification],
+    ceps: list[dict[str, Any]],
+    similarweb: dict[str, Any],
+    comp_verticals_by_artifact: dict[str, list[str]],
+    focal_verticals_by_artifact: dict[str, list[str]],
+    focal_cls_arts_source: dict[str, str],
+    competitor_name: str,
+    focal_name: str,
+) -> dict[str, Any]:
+    """Five EDA-verified insight graphics. Each block carries its own n's,
+    caveats, and an ops-executable action caption."""
+    out: dict[str, Any] = {}
+    nc, nf = len(competitor_cls), len(focal_cls)
+    has_focal = nf > 0
+    src_of = {a.artifact_id: a.source_type for a in competitor_arts}
+
+    def side(cls_list: list[Any]) -> dict[str, Any]:
+        voice = [
+            c
+            for c in cls_list
+            if c.primary_theme == "compliance" or "compliance" in (c.supporting_themes or [])
+        ]
+        cert_n, _ = _proof_rate(voice, "certification_or_compliance_record")
+        quant_n, _ = _proof_rate(voice, "quantified_customer_outcome")
+        return {
+            "n_classified": len(cls_list),
+            "voice_n": len(voice),
+            "voice_share": round(len(voice) / max(1, len(cls_list)), 4),
+            "cert_n": cert_n,
+            "cert_rate": round(cert_n / max(1, len(voice)), 4),
+            "quant_standin_n": quant_n,
+            "quant_standin_rate": round(quant_n / max(1, len(voice)), 4),
+        }
+
+    # -- 1. Claim vs record: compliance voiced vs certification shown --------
+    comp_side = side(competitor_cls)
+    if comp_side["voice_n"]:
+        hit_list: list[dict[str, Any]] = []
+        guardrail: list[dict[str, Any]] = []
+        if has_focal:
+            for row in ceps:
+                key = str(row.get("cep") or "")
+                cp = _cep_pages(competitor_cls, key)
+                fp = _cep_pages(focal_cls, key)
+                if len(cp) < 3 and len(fp) < 3:
+                    continue
+                c_cert, _ = _proof_rate(cp, "certification_or_compliance_record")
+                f_cert, _ = _proof_rate(fp, "certification_or_compliance_record")
+                c_rate = c_cert / max(1, len(cp))
+                f_rate = f_cert / max(1, len(fp))
+                entry = {
+                    "cep": key,
+                    "ownership": row.get("ownership"),
+                    "competitor": {"cert_n": c_cert, "n": len(cp), "rate": round(c_rate, 4)},
+                    "focal": {"cert_n": f_cert, "n": len(fp), "rate": round(f_rate, 4)},
+                }
+                if f_rate - c_rate >= 0.05 and len(fp) >= 3:
+                    hit_list.append(entry)
+                elif row.get("ownership") == "competitor_advantage" and abs(f_rate - c_rate) < 0.05:
+                    guardrail.append(entry)
+            hit_list.sort(key=lambda e: -(e["focal"]["rate"] - e["competitor"]["rate"]))
+        block: dict[str, Any] = {
+            "board_column": "ATTACK",
+            "title": (
+                f"{competitor_name} claims compliance on {comp_side['voice_share']:.0%} of pages "
+                f"but shows a compliance record on {comp_side['cert_rate']:.0%} — "
+                "quantified outcomes stand in"
+            ),
+            "competitor": comp_side,
+            "read_in_5s": (
+                "The wider the gap between the two dots, the more compliance is voiced "
+                "without a matching certification record."
+            ),
+            "method": (
+                "voice = classified pages carrying the compliance theme (primary or supporting); "
+                "record = those pages carrying certification_or_compliance_record proof"
+            ),
+        }
+        if has_focal:
+            block["focal"] = side(focal_cls)
+            block["cep_hit_list"] = hit_list[:4]
+            block["guardrail"] = guardrail[:3]
+            block["action"] = (
+                f"Buy audit/certification intent where {focal_name}'s record rate beats "
+                f"{competitor_name}'s (hit list); do NOT spend where the rates match "
+                "(guardrail rows) — creative: certification wall vs story-backed claims, "
+                "ungated comparison LP, gate only the audit-prep checklist."
+            )
+        else:
+            block["action"] = (
+                "No focal mirror this run — voice-vs-record shown for the competitor only."
+            )
+        out["claim_vs_record"] = block
+
+    # -- 2. Proof vs voice: quantified-outcome rate on the owned triggers ----
+    if has_focal and ceps:
+        rows = []
+        eligible = sorted(
+            (r for r in ceps if (r.get("competitor_pages") or 0) + (r.get("focal_pages") or 0) >= 20),
+            key=lambda r: -((r.get("competitor_pages") or 0) + (r.get("focal_pages") or 0)),
+        )
+        ranked = eligible[:5]
+        # The DEFEND story hinges on the focal-owned trigger — always include
+        # the biggest one even when it isn't top-5 by combined volume.
+        if not any(r.get("ownership") == "focal_owns" for r in ranked):
+            best_owned = next((r for r in eligible if r.get("ownership") == "focal_owns"), None)
+            if best_owned is not None:
+                ranked.append(best_owned)
+        for row in ranked:
+            key = str(row.get("cep") or "")
+            cp, fp = _cep_pages(competitor_cls, key), _cep_pages(focal_cls, key)
+            cq, _ = _proof_rate(cp, "quantified_customer_outcome")
+            fq, _ = _proof_rate(fp, "quantified_customer_outcome")
+            rows.append(
+                {
+                    "cep": key,
+                    "ownership": row.get("ownership"),
+                    "competitor": {"quant_n": cq, "n": len(cp), "rate": round(cq / max(1, len(cp)), 4)},
+                    "focal": {"quant_n": fq, "n": len(fp), "rate": round(fq / max(1, len(fp)), 4)},
+                }
+            )
+        cq_all, _ = _proof_rate(competitor_cls, "quantified_customer_outcome")
+        fq_all, _ = _proof_rate(focal_cls, "quantified_customer_outcome")
+        comp_names = sum(
+            1
+            for c in competitor_cls
+            if any(_brand_token(focal_name) in str(x).lower() for x in (c.named_competitors or []))
+        )
+        focal_names = sum(
+            1
+            for c in focal_cls
+            if any(_brand_token(competitor_name) in str(x).lower() for x in (c.named_competitors or []))
+        )
+        if rows:
+            out["proof_vs_voice"] = {
+                "board_column": "DEFEND",
+                "title": (
+                    f"Ownership by voice, not by proof: {competitor_name} quantifies "
+                    f"{cq_all / max(1, nc):.0%} of its corpus vs {focal_name}'s "
+                    f"{fq_all / max(1, nf):.0%} — including on triggers {focal_name} owns"
+                ),
+                "rows": rows,
+                "overall": {
+                    "competitor": {"quant_n": cq_all, "n": nc, "rate": round(cq_all / max(1, nc), 4)},
+                    "focal": {"quant_n": fq_all, "n": nf, "rate": round(fq_all / max(1, nf), 4)},
+                },
+                "naming": {
+                    "competitor_names_focal": comp_names,
+                    "focal_names_competitor": focal_names,
+                },
+                "read_in_5s": (
+                    "Where the competitor dot sits right of yours on a trigger YOU own by page "
+                    "count, your ownership is voice without proof — a flank, not a moat."
+                ),
+                "action": (
+                    f"Quantified case-study sprint on {focal_name}-owned triggers where the "
+                    f"competitor out-proves you; freeze paid spend on triggers where their "
+                    "quantified rate is a fortress."
+                ),
+            }
+
+    # -- 3. Funnel voids: decision-stage assets per vertical -----------------
+    all_verts = sorted(
+        {v for vs in comp_verticals_by_artifact.values() for v in vs}
+        | {v for vs in focal_verticals_by_artifact.values() for v in vs}
+    )
+    if all_verts:
+        comp_by_art = {c.artifact_id: c for c in competitor_cls}
+        focal_by_art = {c.artifact_id: c for c in focal_cls}
+
+        def stage_counts(by_art: dict[str, Any], vmap: dict[str, list[str]], vert: str):
+            pages = [by_art[a] for a, vs in vmap.items() if vert in vs and a in by_art]
+            ev = sum(1 for c in pages if "evaluation" in (c.funnel_stages or []))
+            de = sum(1 for c in pages if "decision" in (c.funnel_stages or []))
+            return {"n": len(pages), "evaluation_n": ev, "decision_n": de}
+
+        frows: list[dict[str, Any]] = []
+        for vert in all_verts:
+            comp_s = stage_counts(comp_by_art, comp_verticals_by_artifact, vert)
+            focal_s = (
+                stage_counts(focal_by_art, focal_verticals_by_artifact, vert) if has_focal else None
+            )
+            if comp_s["n"] < 5 and (not focal_s or focal_s["n"] < 5):
+                continue
+            frows.append(
+                {
+                    "vertical": vert,
+                    "competitor": comp_s,
+                    "focal": focal_s,
+                    "void": bool(
+                        comp_s["decision_n"] == 0
+                        and comp_s["n"] >= 5
+                        and focal_s
+                        and focal_s["decision_n"] > 0
+                    ),
+                }
+            )
+        frows.sort(key=lambda r: (not bool(r["void"]), -int(r["competitor"]["n"])))
+        rows = frows
+        voids = [str(r["vertical"]) for r in rows if r["void"]]
+        comp_dec_total = sum(
+            1 for c in competitor_cls if "decision" in (c.funnel_stages or [])
+        )
+        dec_verticals = sorted(
+            {
+                v
+                for c in competitor_cls
+                if "decision" in (c.funnel_stages or [])
+                for v in comp_verticals_by_artifact.get(c.artifact_id, [])
+            }
+        )
+        if rows:
+            out["funnel_voids"] = {
+                "board_column": "INTERCEPT",
+                "title": (
+                    f"{competitor_name} closes only on home turf: its {comp_dec_total} "
+                    f"decision assets sit on {', '.join(dec_verticals[:3]) or 'few verticals'} — "
+                    f"zero in {', '.join(v.replace('_', ' ') for v in voids[:3]) or 'no void found'}"
+                    + (f", where {focal_name} has them" if voids and has_focal else "")
+                ),
+                "rows": rows,
+                "competitor_decision_total": comp_dec_total,
+                "competitor_decision_verticals": dec_verticals,
+                "read_in_5s": (
+                    "Rows at 0% decision with deep evaluation content strand a researching "
+                    "buyer — whoever has a decision asset there catches them."
+                ),
+                "action": (
+                    "Ship comparison LPs on the void verticals and bid the competitor's "
+                    "branded queries there — they have no decision asset to answer with; "
+                    "ungated, quote/demo CTA."
+                ),
+            }
+
+    # -- 4. Affinity defense: audience overlap vs comparison-page census -----
+    aff = ((similarweb or {}).get("metrics") or {}).get("digital_competitors") or {}
+    aff_rows = aff.get("value") if isinstance(aff, dict) else aff
+    comparison_slugs: list[str] = []
+    for a in competitor_arts:
+        if a.source_type == "sitemap":
+            for p in (a.metadata or {}).get("page_map") or []:
+                if p.get("category") == "comparison":
+                    slug = str(p.get("url", "")).rstrip("/").rsplit("/", 1)[-1].lower()
+                    if slug and "vs" not in slug.split("-"):
+                        comparison_slugs.append(slug)
+    if isinstance(aff_rows, list) and aff_rows and comparison_slugs is not None:
+        def defended(domain: str) -> bool:
+            base = str(domain).split(".")[0].lower()
+            for slug in comparison_slugs:
+                s = slug.replace("-", "")
+                if s and (s in base or base in s):
+                    return True
+            return False
+
+        def mentions(domain: str) -> int:
+            base = str(domain).split(".")[0].lower().removeprefix("use").removesuffix("hr")
+            return sum(
+                1
+                for c in competitor_cls
+                if any(base in str(x).lower().replace(" ", "") for x in (c.named_competitors or []))
+            )
+
+        rows = [
+            {
+                "domain": r.get("domain"),
+                "affinity": round(float(r.get("affinity", 0)), 2),
+                "defended": defended(str(r.get("domain", ""))),
+                "mentions": mentions(str(r.get("domain", ""))),
+            }
+            for r in aff_rows[:8]
+            if isinstance(r, dict)
+        ]
+        matched = {s for s in comparison_slugs if any(
+            s.replace("-", "") in str(r.get("domain", "")).split(".")[0]
+            or str(r.get("domain", "")).split(".")[0] in s.replace("-", "")
+            for r in aff_rows[:20] if isinstance(r, dict)
+        )}
+        orphan_slugs = sorted(set(comparison_slugs) - matched)
+        undefended_top = [r for r in rows if not r["defended"]]
+        if rows:
+            out["affinity_defense"] = {
+                "board_column": "SEO/CONQUEST",
+                "title": (
+                    f"{competitor_name}'s highest-affinity rival"
+                    + (
+                        f" ({undefended_top[0]['domain']}) has no comparison page"
+                        if undefended_top and undefended_top[0] is rows[0]
+                        else "s include undefended flanks"
+                    )
+                    + (
+                        f" — while {len(orphan_slugs)} vs-page(s) target domains outside its "
+                        "audience's top affinities"
+                        if orphan_slugs
+                        else ""
+                    )
+                ),
+                "rows": rows,
+                "orphan_comparison_slugs": orphan_slugs,
+                "n_comparison_pages": len(comparison_slugs),
+                "read_in_5s": (
+                    "Grey (undefended) bars at the top = the audience's real destinations with "
+                    "no comparison page — those SERPs are open to whoever moves first."
+                ),
+                "action": (
+                    "Publish named comparison LPs against the undefended high-affinity domains "
+                    "and bid their 'vs' queries; affinity is an estimated overlap index, not "
+                    "lost-deal share (labeled on-chart)."
+                ),
+            }
+
+    # -- 5. Channel proof split: what the feed shows that the site doesn't ---
+    li = [c for c in competitor_cls if src_of.get(c.artifact_id) == "linkedin_post"]
+    web = [c for c in competitor_cls if src_of.get(c.artifact_id) == "webpage"]
+    if li and web:
+        def split_side(li_c: list[Any], web_c: list[Any]) -> dict[str, Any]:
+            d_li, _ = _proof_rate(li_c, "product_demonstration")
+            d_web, _ = _proof_rate(web_c, "product_demonstration")
+            q_li, _ = _proof_rate(li_c, "quantified_customer_outcome")
+            q_web, _ = _proof_rate(web_c, "quantified_customer_outcome")
+            no_pub = sum(
+                1 for c in web_c if c.pricing_disclosure_level in ("hidden", "sales_gated")
+            )
+            no_cta = sum(1 for c in web_c if not c.cta)
+            return {
+                "linkedin_n": len(li_c),
+                "web_n": len(web_c),
+                "demo_linkedin": d_li,
+                "demo_web": d_web,
+                "quant_linkedin": q_li,
+                "quant_web": q_web,
+                "no_public_pricing_web": no_pub,
+                "no_cta_web": no_cta,
+            }
+
+        comp_split = split_side(li, web)
+        fli = [c for c in focal_cls if focal_cls_arts_source.get(c.artifact_id) == "linkedin_post"]
+        fweb = [c for c in focal_cls if focal_cls_arts_source.get(c.artifact_id) == "webpage"]
+        out["channel_proof_split"] = {
+            "board_column": "WHITESPACE",
+            "title": (
+                f"The only place {competitor_name} shows its product is LinkedIn "
+                f"({comp_split['demo_linkedin']}/{comp_split['linkedin_n']} posts) — its website "
+                f"demos on {comp_split['demo_web']}/{comp_split['web_n']} pages and hides pricing "
+                f"on {comp_split['no_public_pricing_web'] / max(1, comp_split['web_n']):.0%}"
+            ),
+            "competitor": comp_split,
+            "focal": split_side(fli, fweb) if (fli or fweb) and has_focal else None,
+            "read_in_5s": (
+                "Demo proof crashes from feed to indexed site while outcome stats do the "
+                "reverse — nobody serves demo intent on an indexable page; that SERP is unowned."
+            ),
+            "action": (
+                "Ship one ungated interactive product-tour LP + a public 'what pricing depends "
+                "on' table; exact-match paid on the competitor's demo/pricing queries; validate "
+                "query volume before committing budget."
+            ),
+        }
+    return out

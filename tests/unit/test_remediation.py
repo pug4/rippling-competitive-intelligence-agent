@@ -655,3 +655,120 @@ def test_gap_shares_populated_for_normal_corpora():
     assert g.competitor_theme_share == pytest.approx(4 / 20)
     assert g.focal_theme_share == pytest.approx(1.0)
     assert g.sample_sufficiency == "ok"
+
+
+# ---------------------------------------------------------------------------
+# EDA insight graphics — the five judged joins, reproduced deterministically
+# ---------------------------------------------------------------------------
+
+
+def _cls_ig(aid, theme=None, supporting=None, proofs=None, funnel=None, ceps=None,
+            named=None, pricing=None, cta=None):
+    from competitive_agent.schemas.classification import MarketingClassification as MC
+
+    return MC(
+        classification_id="c-" + aid, artifact_id=aid, company_id="c1",
+        primary_theme=theme, supporting_themes=supporting or [],
+        proof_types=proofs or [], funnel_stages=funnel or [],
+        category_entry_points=ceps or [], named_competitors=named or [],
+        pricing_disclosure_level=pricing or "unknown", cta=cta,
+    )
+
+
+def test_insight_graphics_claim_vs_record_and_channel_split():
+    from competitive_agent.synthesis import insight_graphics
+
+    comp_cls = [
+        _cls_ig("w1", "compliance", proofs=["certification_or_compliance_record"]),
+        _cls_ig("w2", "compliance", proofs=["quantified_customer_outcome"]),
+        _cls_ig("w3", "automation", supporting=["compliance"], proofs=["quantified_customer_outcome"]),
+        _cls_ig("w4", "compliance", proofs=["quantified_customer_outcome"], pricing="hidden"),
+        _cls_ig("li1", "automation", proofs=["product_demonstration"]),
+        _cls_ig("li2", "automation"),
+        *[_cls_ig(f"p{i}", "automation", pricing="hidden") for i in range(4)],
+    ]
+    comp_arts = [
+        _art(a.artifact_id, None, "linkedin_post" if a.artifact_id.startswith("li") else "webpage")
+        for a in comp_cls
+    ]
+    focal_cls = [
+        _cls_ig("f1", "compliance", proofs=["certification_or_compliance_record"]),
+        _cls_ig("f2", "compliance", proofs=["certification_or_compliance_record"]),
+        _cls_ig("f3", "automation"),
+        _cls_ig("f4", "automation"),
+    ]
+    ig = insight_graphics(comp_cls, comp_arts, focal_cls, [], {}, {}, {}, {}, "Deel", "Rippling")
+    cvr = ig["claim_vs_record"]
+    assert cvr["competitor"]["voice_n"] == 4 and cvr["competitor"]["voice_share"] == 0.4
+    assert cvr["competitor"]["cert_rate"] == 0.25  # 1/4 incl. the supporting-theme page
+    assert cvr["competitor"]["quant_standin_rate"] == 0.75
+    assert cvr["focal"]["cert_rate"] == 1.0  # 2/2
+    assert cvr["board_column"] == "ATTACK"
+    cps = ig["channel_proof_split"]
+    assert cps["competitor"]["demo_linkedin"] == 1 and cps["competitor"]["linkedin_n"] == 2
+    assert cps["competitor"]["demo_web"] == 0 and cps["competitor"]["web_n"] == 8
+    assert cps["competitor"]["no_public_pricing_web"] == 5  # w4 + 4 plain hidden
+
+
+def test_insight_graphics_funnel_voids_and_proof_vs_voice():
+    from competitive_agent.synthesis import insight_graphics
+
+    comp_cls = [
+        *[_cls_ig(f"a{i}", "automation", funnel=["evaluation"], ceps=["big_trigger"],
+                  proofs=["quantified_customer_outcome"]) for i in range(12)],
+        *[_cls_ig(f"b{i}", "automation", funnel=["awareness"]) for i in range(6)],
+    ]
+    comp_arts = [_art(a.artifact_id) for a in comp_cls]
+    focal_cls = [
+        *[_cls_ig(f"f{i}", "automation", funnel=["decision"], ceps=["big_trigger"]) for i in range(8)],
+        *[_cls_ig(f"g{i}", "automation") for i in range(4)],
+    ]
+    comp_vmap = {a.artifact_id: ["benefits"] for a in comp_cls}
+    focal_vmap = {c.artifact_id: ["benefits"] for c in focal_cls}
+    ceps = [{"cep": "big_trigger", "ownership": "contested",
+             "competitor_pages": 12, "focal_pages": 8}]
+    ig = insight_graphics(
+        comp_cls, comp_arts, focal_cls, ceps, {}, comp_vmap, focal_vmap, {}, "Deel", "Rippling"
+    )
+    fv = ig["funnel_voids"]
+    benefits = next(r for r in fv["rows"] if r["vertical"] == "benefits")
+    assert benefits["void"] is True
+    assert benefits["competitor"] == {"n": 18, "evaluation_n": 12, "decision_n": 0}
+    assert benefits["focal"]["decision_n"] == 8
+    row = ig["proof_vs_voice"]["rows"][0]
+    assert row["competitor"]["rate"] == 1.0 and row["focal"]["rate"] == 0.0
+
+
+def test_insight_graphics_affinity_defense_census():
+    from competitive_agent.synthesis import insight_graphics
+
+    sitemap = _art("sm", None, "sitemap")
+    sitemap.metadata["page_map"] = [
+        {"url": "https://x.com/vs/rippling/", "category": "comparison"},
+        {"url": "https://x.com/vs/gusto/", "category": "comparison"},
+        {"url": "https://x.com/products/payroll", "category": "product"},
+    ]
+    similarweb = {"metrics": {"digital_competitors": {"value": [
+        {"domain": "remote.com", "affinity": 1.0},
+        {"domain": "rippling.com", "affinity": 0.88},
+    ]}}}
+    comp_cls = [_cls_ig("w1", "automation", named=["Rippling"])]
+    ig = insight_graphics(
+        comp_cls, [sitemap, _art("w1")], [_cls_ig("f1", "automation")],
+        [], similarweb, {}, {}, {}, "Deel", "Rippling"
+    )
+    ad = ig["affinity_defense"]
+    rows = {r["domain"]: r for r in ad["rows"]}
+    assert rows["remote.com"]["defended"] is False  # top affinity, open SERP
+    assert rows["rippling.com"]["defended"] is True
+    assert rows["rippling.com"]["mentions"] == 1
+    assert "gusto" in ad["orphan_comparison_slugs"]  # vs-page outside the audience
+
+
+def test_insight_graphics_honest_without_focal():
+    from competitive_agent.synthesis import insight_graphics
+
+    comp_cls = [_cls_ig("w1", "compliance", proofs=["quantified_customer_outcome"])]
+    ig = insight_graphics(comp_cls, [_art("w1")], [], [], {}, {}, {}, {}, "X", "Rippling")
+    assert "focal" not in ig["claim_vs_record"]  # competitor-only, no fabricated zeros
+    assert "proof_vs_voice" not in ig

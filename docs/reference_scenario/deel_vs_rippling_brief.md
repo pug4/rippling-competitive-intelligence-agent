@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-12T23:55:37.056477+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T02:41:34.751912+00:00*
 
 ## Executive summary
 
@@ -141,6 +141,45 @@ How the competitor positions in each product category it touches (keyword-derive
 _12 low-sample trigger(s) (too few pages on either side to call) omitted here — full list incl. `insufficient_sample` rows in the JSON/UI._
 
 _Ownership is SHARE-normalized (count ÷ that company's classified corpus) so different corpus sizes can't fabricate a verdict; the Verticals column shows which product categories carry each trigger. For a per-vertical read, scope the chat to that vertical._
+
+## EDA insights — the joins the single charts can't show
+
+_Deterministic cross-cutting analysis (proof×demand, funnel×vertical, channel×proof, audience×sitemap); every number carries its denominator. Full series in the JSON `insight_graphics`; interactive versions in the UI._
+
+**[ATTACK] Deel claims compliance on 67% of pages but shows a compliance record on 13% — quantified outcomes stand in**
+- Deel: compliance voiced on 82/123 pages (67%); certification shown on 11/82 (13%); quantified-outcome stand-in 71%
+- Rippling: voiced 36/114 (32%); record shown 25%
+- Hit list — replacing a peo: Rippling record rate 40% (n=5) vs Deel 0% (n=4)
+- Hit list — controlling app access: Rippling record rate 21% (n=24) vs Deel 0% (n=7)
+- Guardrail — opening new country: rates match (13% vs 12%) — do not attack there
+- **Play:** Buy audit/certification intent where Rippling's record rate beats Deel's (hit list); do NOT spend where the rates match (guardrail rows) — creative: certification wall vs story-backed claims, ungated comparison LP, gate only the audit-prep checklist.
+
+**[DEFEND] Ownership by voice, not by proof: Deel quantifies 61% of its corpus vs Rippling's 17% — including on triggers Rippling owns**
+- consolidating hr tools (contested): Deel quantifies 67% (n=60) vs Rippling 19% (n=81)
+- opening new country (competitor advantage): Deel quantifies 73% (n=79) vs Rippling 19% (n=16)
+- automating onboarding offboarding (contested): Deel quantifies 61% (n=38) vs Rippling 16% (n=55)
+- hiring first international employee (competitor advantage): Deel quantifies 71% (n=42) vs Rippling 22% (n=9)
+- Naming war is one-way: Deel names Rippling on 9 pages; Rippling names Deel on 0
+- **Play:** Quantified case-study sprint on Rippling-owned triggers where the competitor out-proves you; freeze paid spend on triggers where their quantified rate is a fortress.
+
+**[INTERCEPT] Deel closes only on home turf: its 9 decision assets sit on compliance_legal, global_eor_contractors, hris_core_hr — zero in benefits, it device management, identity security, where Rippling has them**
+- benefits: Deel 0/13 decision (evaluation 9/13) vs Rippling 2/22
+- it device management: Deel 0/12 decision (evaluation 6/12) vs Rippling 2/19
+- identity security: Deel 0/8 decision (evaluation 4/8) vs Rippling 2/15
+- **Play:** Ship comparison LPs on the void verticals and bid the competitor's branded queries there — they have no decision asset to answer with; ungated, quote/demo CTA.
+
+**[SEO/CONQUEST] Deel's highest-affinity rival (remote.com) has no comparison page — while 3 vs-page(s) target domains outside its audience's top affinities**
+- remote.com: affinity 1.00 — NO comparison page · 1 mention(s) in Deel's classified corpus
+- oysterhr.com: affinity 0.92 — defended (vs-page exists) · 1 mention(s) in Deel's classified corpus
+- usemultiplier.com: affinity 0.90 — defended (vs-page exists) · 1 mention(s) in Deel's classified corpus
+- rippling.com: affinity 0.88 — defended (vs-page exists) · 9 mention(s) in Deel's classified corpus
+- vs-pages spent outside the top-affinity audience: adp, gusto, ontop
+- **Play:** Publish named comparison LPs against the undefended high-affinity domains and bid their 'vs' queries; affinity is an estimated overlap index, not lost-deal share (labeled on-chart). _(affinity = estimated overlap index)_
+
+**[WHITESPACE] The only place Deel shows its product is LinkedIn (12/30 posts) — its website demos on 1/63 pages and hides pricing on 94%**
+- Product demos: LinkedIn 12/30 (40%) vs website 1/63 (2%); quantified outcomes flip the other way (7/30 vs 51/63)
+- Website friction: 59/63 pages hide pricing; 50/63 carry no CTA at all
+- **Play:** Ship one ungated interactive product-tour LP + a public 'what pricing depends on' table; exact-match paid on the competitor's demo/pricing queries; validate query volume before committing budget.
 
 ## Persona × channel coverage (observed)
 

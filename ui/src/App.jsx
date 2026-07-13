@@ -794,6 +794,240 @@ function VerticalAnalysis({ pkg }) {
   );
 }
 
+/* ------------------- EDA insight graphics (marketing-ops) --------------- */
+
+const pct = (x) => `${Math.round((x || 0) * 100)}%`;
+
+// Dumbbell row: two dots on a 0-100% track, n labels. The distance IS the story.
+function Dumbbell({ label, aPct, bPct, aLabel, bLabel, aColor = "--bad", bColor = "--good", note }) {
+  return (
+    <div className="dbrow" title={note || `${aLabel} vs ${bLabel}`}>
+      <div className="dblabel">{label}</div>
+      <div className="dbtrack">
+        <div className="dbline" style={{ left: `${Math.min(aPct, bPct)}%`, width: `${Math.abs(aPct - bPct)}%` }} />
+        <div className="dbdot" style={{ left: `${aPct}%`, background: `var(${aColor})` }} title={aLabel} />
+        <div className="dbdot" style={{ left: `${bPct}%`, background: `var(${bColor})` }} title={bLabel} />
+      </div>
+      <div className="dbvals">{aLabel} · {bLabel}</div>
+    </div>
+  );
+}
+
+function InsightHeader({ block, boardTip }) {
+  return (
+    <h2>
+      <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}>{block.board_column}</span>{" "}
+      {block.title}
+      <Info tip={`${block.read_in_5s} — ${boardTip || "EDA-derived: deterministic cross-cutting join over this run's classified corpus; every number carries its denominator."}`} />
+    </h2>
+  );
+}
+
+// [ATTACK] compliance voiced vs certification shown, + CEP hit list/guardrail.
+function ClaimVsRecord({ pkg }) {
+  const b = (pkg.insight_graphics || {}).claim_vs_record;
+  if (!b) return null;
+  const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const c = b.competitor, f = b.focal;
+  return (
+    <>
+      <InsightHeader block={b} />
+      <div className="card">
+        <Dumbbell label={`${comp} (n=${c.n_classified})`} aPct={c.voice_share * 100} bPct={c.cert_rate * 100}
+                  aLabel={`voiced ${c.voice_n}/${c.n_classified} = ${pct(c.voice_share)}`}
+                  bLabel={`record ${c.cert_n}/${c.voice_n} = ${pct(c.cert_rate)}`} />
+        {f && (
+          <Dumbbell label={`${focal} (n=${f.n_classified})`} aPct={f.voice_share * 100} bPct={f.cert_rate * 100}
+                    aLabel={`voiced ${f.voice_n}/${f.n_classified} = ${pct(f.voice_share)}`}
+                    bLabel={`record ${f.cert_n}/${f.voice_n} = ${pct(f.cert_rate)}`}
+                    aColor="--accent" bColor="--good" />
+        )}
+        <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
+          {comp} substitutes quantified outcomes on {pct(c.quant_standin_rate)} of compliance pages — stories, not records.
+        </div>
+        {(b.cep_hit_list || []).length > 0 && (
+          <div className="row" style={{ fontSize: 12 }}>
+            <b>Cert hit list (buy these intents):</b>{" "}
+            {b.cep_hit_list.map((h) => (
+              <span key={h.cep} className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}
+                    title={`${focal} ${pct(h.focal.rate)} (n=${h.focal.n}) vs ${comp} ${pct(h.competitor.rate)} (n=${h.competitor.n})${h.competitor.n < 10 ? " — small cell" : ""}`}>
+                {h.cep.replace(/_/g, " ")} {pct(h.focal.rate)} vs {pct(h.competitor.rate)}
+              </span>
+            ))}
+          </div>
+        )}
+        {(b.guardrail || []).length > 0 && (
+          <div className="row" style={{ fontSize: 12 }}>
+            <b>Guardrail (do NOT attack):</b>{" "}
+            {b.guardrail.map((h) => (
+              <span key={h.cep} className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
+                    title={`no record edge: ${comp} ${pct(h.competitor.rate)} vs ${focal} ${pct(h.focal.rate)}`}>
+                {h.cep.replace(/_/g, " ")} — no edge
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="scaction">→ {b.action}</div>
+      </div>
+    </>
+  );
+}
+
+// [DEFEND] quantified-outcome rate per owned trigger — voice vs proof inversion.
+function ProofVsVoice({ pkg }) {
+  const b = (pkg.insight_graphics || {}).proof_vs_voice;
+  if (!b) return null;
+  const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  return (
+    <>
+      <InsightHeader block={b} />
+      <div className="card">
+        {b.rows.map((r) => (
+          <Dumbbell key={r.cep}
+                    label={`${r.cep.replace(/_/g, " ")} (${String(r.ownership).replace(/_/g, " ")})`}
+                    aPct={r.focal.rate * 100} bPct={r.competitor.rate * 100}
+                    aLabel={`${focal} ${r.focal.quant_n}/${r.focal.n} = ${pct(r.focal.rate)}`}
+                    bLabel={`${comp} ${r.competitor.quant_n}/${r.competitor.n} = ${pct(r.competitor.rate)}`}
+                    aColor="--accent" bColor="--bad"
+                    note={r.competitor.n < 15 || r.focal.n < 15 ? "small cell — n shown" : undefined} />
+        ))}
+        <Dumbbell label="overall corpus"
+                  aPct={b.overall.focal.rate * 100} bPct={b.overall.competitor.rate * 100}
+                  aLabel={`${focal} ${b.overall.focal.quant_n}/${b.overall.focal.n} = ${pct(b.overall.focal.rate)}`}
+                  bLabel={`${comp} ${b.overall.competitor.quant_n}/${b.overall.competitor.n} = ${pct(b.overall.competitor.rate)}`}
+                  aColor="--accent" bColor="--bad" />
+        <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
+          Naming war is one-way: {comp} names {focal} on {b.naming.competitor_names_focal} pages; {focal} names {comp} on {b.naming.focal_names_competitor}.
+        </div>
+        <div className="scaction">→ {b.action}</div>
+      </div>
+    </>
+  );
+}
+
+// [INTERCEPT] decision-stage voids per vertical.
+function FunnelVoids({ pkg }) {
+  const b = (pkg.insight_graphics || {}).funnel_voids;
+  if (!b) return null;
+  const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  return (
+    <>
+      <InsightHeader block={b} />
+      <div className="card">
+        {b.rows.slice(0, 8).map((r) => {
+          const c = r.competitor, f = r.focal;
+          const cRate = c.decision_n / Math.max(1, c.n);
+          const fRate = f ? f.decision_n / Math.max(1, f.n) : null;
+          return (
+            <div className="ktrow" key={r.vertical}>
+              <div className="ktlabel" title={`evaluation depth: ${comp} ${c.evaluation_n}/${c.n}`}>
+                {r.vertical.replace(/_/g, " ")} {r.void && <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>VOID</span>}
+              </div>
+              <div className="ktbars" title={`${comp}: ${c.decision_n}/${c.n} decision-stage pages`}>
+                <div className="ktbar comp" style={{ width: `${cRate * 400}%`, maxWidth: "100%" }} />
+                <span className="ktnum">{c.decision_n}/{c.n}</span>
+              </div>
+              <div className="ktbars" title={f ? `${focal}: ${f.decision_n}/${f.n} decision-stage pages` : "no focal mirror"}>
+                {f ? (<><div className="ktbar focal" style={{ width: `${(fRate || 0) * 400}%`, maxWidth: "100%" }} /><span className="ktnum">{f.decision_n}/{f.n}</span></>) : <span className="ktnum">—</span>}
+              </div>
+            </div>
+          );
+        })}
+        <div className="ktlegend">
+          <span><span className="ktbar comp" style={{ width: 14, display: "inline-block", height: 8 }} /> {comp} decision assets</span>{" "}
+          <span><span className="ktbar focal" style={{ width: 14, display: "inline-block", height: 8 }} /> {focal}</span>
+          <span style={{ color: "var(--muted)" }}> · VOID = they walk buyers to evaluation there, then strand them</span>
+        </div>
+        <div className="scaction">→ {b.action}</div>
+      </div>
+    </>
+  );
+}
+
+// [SEO/CONQUEST] audience affinity vs the comparison-page census.
+function AffinityDefense({ pkg }) {
+  const b = (pkg.insight_graphics || {}).affinity_defense;
+  if (!b) return null;
+  const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const max = Math.max(0.01, ...b.rows.map((r) => r.affinity));
+  return (
+    <>
+      <InsightHeader block={b} />
+      <div className="card">
+        {b.rows.map((r) => (
+          <div className="ktrow" key={r.domain} style={{ gridTemplateColumns: "150px 1fr auto" }}>
+            <div className="ktlabel" title={`${r.mentions} mention(s) in ${comp}'s classified corpus`}>{r.domain}</div>
+            <div className="ktbars">
+              <div className="ktbar" style={{ width: `${(r.affinity / max) * 100}%`, background: r.defended ? "var(--accent)" : "var(--muted)", opacity: r.defended ? 0.9 : 0.55 }} />
+              <span className="ktnum">{r.affinity.toFixed(2)}</span>
+            </div>
+            <span className="atag" style={r.defended
+              ? { color: "var(--accent)", borderColor: "var(--accent)" }
+              : { color: "var(--good)", borderColor: "var(--good)" }}
+              title={r.defended ? `${comp} has a vs-page for this domain` : "no comparison page — this SERP is open"}>
+              {r.defended ? "DEFENDED" : "OPEN SERP"}
+            </span>
+          </div>
+        ))}
+        {(b.orphan_comparison_slugs || []).length > 0 && (
+          <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
+            vs-pages spent outside the top-affinity audience: {b.orphan_comparison_slugs.join(", ")}
+          </div>
+        )}
+        <div className="row" style={{ fontSize: 11, color: "var(--muted)" }}>
+          affinity = estimated audience-overlap index (0–1, top-normalized), not lost-deal share
+        </div>
+        <div className="scaction">→ {b.action}</div>
+      </div>
+    </>
+  );
+}
+
+// [WHITESPACE] what the feed shows that the indexed site doesn't.
+function ChannelProofSplit({ pkg }) {
+  const b = (pkg.insight_graphics || {}).channel_proof_split;
+  if (!b) return null;
+  const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
+  const c = b.competitor;
+  const rows = [
+    { label: `${comp} product demos`, li: c.demo_linkedin / Math.max(1, c.linkedin_n), web: c.demo_web / Math.max(1, c.web_n), liN: `${c.demo_linkedin}/${c.linkedin_n}`, webN: `${c.demo_web}/${c.web_n}` },
+    { label: `${comp} quantified outcomes`, li: c.quant_linkedin / Math.max(1, c.linkedin_n), web: c.quant_web / Math.max(1, c.web_n), liN: `${c.quant_linkedin}/${c.linkedin_n}`, webN: `${c.quant_web}/${c.web_n}` },
+  ];
+  return (
+    <>
+      <InsightHeader block={b} />
+      <div className="card">
+        <div className="ktrow" style={{ fontWeight: 600, fontSize: 11, color: "var(--muted)" }}>
+          <div className="ktlabel">proof type</div><div>LinkedIn feed</div><div>indexed website</div>
+        </div>
+        {rows.map((r) => (
+          <div className="ktrow" key={r.label}>
+            <div className="ktlabel">{r.label}</div>
+            <div className="ktbars" title={`${r.liN} of LinkedIn posts`}>
+              <div className="ktbar comp" style={{ width: `${r.li * 100}%` }} /><span className="ktnum">{r.liN} = {pct(r.li)}</span>
+            </div>
+            <div className="ktbars" title={`${r.webN} of website pages`}>
+              <div className="ktbar focal" style={{ width: `${r.web * 100}%` }} /><span className="ktnum">{r.webN} = {pct(r.web)}</span>
+            </div>
+          </div>
+        ))}
+        <div className="row" style={{ fontSize: 12 }}>
+          <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>
+            {c.no_public_pricing_web}/{c.web_n} pages hide pricing
+          </span>
+          <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>
+            {c.no_cta_web}/{c.web_n} pages have no CTA
+          </span>
+        </div>
+        <div className="scaction">→ {b.action}</div>
+      </div>
+    </>
+  );
+}
+
 /* ---------------------------- linkedin tab ----------------------------- */
 
 function LinkedInPosts({ pkg }) {
@@ -1408,6 +1642,8 @@ export default function App() {
             {tab === "product" && (
               <>
                 <AttackDefendMatrix pkg={pkg} />
+                <ClaimVsRecord pkg={pkg} />
+                <FunnelVoids pkg={pkg} />
                 <KeyTopicsComparison pkg={pkg} />
                 <VerticalThemeHeatmap pkg={pkg} />
                 <GapsSection pkg={pkg} srcIdx={srcIdx} />
@@ -1417,6 +1653,7 @@ export default function App() {
             )}
             {tab === "linkedin" && (
               <>
+                <ChannelProofSplit pkg={pkg} />
                 <LinkedInThemeBar pkg={pkg} />
                 <LinkedInPosts pkg={pkg} />
                 <PersonaChannelHeatmap pkg={pkg} />
@@ -1431,8 +1668,11 @@ export default function App() {
             )}
             {tab === "performance" && (
               <>
-                <AffinityBar pkg={pkg} />
+                {(pkg.insight_graphics || {}).affinity_defense
+                  ? <AffinityDefense pkg={pkg} />
+                  : <AffinityBar pkg={pkg} />}
                 <CepOwnership pkg={pkg} />
+                <ProofVsVoice pkg={pkg} />
                 <Similarweb pkg={pkg} />
                 <CommercialMotion pkg={pkg} />
               </>

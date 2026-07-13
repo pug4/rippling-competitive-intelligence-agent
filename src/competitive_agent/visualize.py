@@ -591,6 +591,86 @@ def _scorecard(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     return "<div class='card'>" + "".join(rows) + "</div>"
 
 
+def _insights(pkg: dict[str, Any], competitor: str, focal: str) -> str:
+    """EDA insight graphics — compact static rendering (full versions in the UI)."""
+    ig = pkg.get("insight_graphics") or {}
+    if not ig:
+        return ""
+    cards = []
+    cvr = ig.get("claim_vs_record")
+    if cvr:
+        c = cvr["competitor"]
+        f = cvr.get("focal") or {}
+        hit = ", ".join(
+            f"{h['cep'].replace('_', ' ')} ({h['focal']['rate']:.0%} vs {h['competitor']['rate']:.0%})"
+            for h in (cvr.get("cep_hit_list") or [])[:2]
+        )
+        cards.append(
+            f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(cvr['board_column'])}</span> {_esc(cvr['title'])}</div>"
+            f"<div class='abrow'>{_esc(competitor)}: voiced {c['voice_n']}/{c['n_classified']} ({c['voice_share']:.0%}) → record {c['cert_rate']:.0%}"
+            + (f" · {_esc(focal)}: voiced {f.get('voice_share', 0):.0%} → record {f.get('cert_rate', 0):.0%}" if f else "")
+            + "</div>"
+            + (f"<div class='abrow'><b>Cert hit list:</b> {_esc(hit)}</div>" if hit else "")
+            + f"<div class='abrow'><b>Play:</b> {_esc(cvr['action'])}</div></div>"
+        )
+    pvv = ig.get("proof_vs_voice")
+    if pvv:
+        rows = " · ".join(
+            f"{r['cep'].replace('_', ' ')}: {r['competitor']['rate']:.0%} vs {r['focal']['rate']:.0%}"
+            for r in pvv["rows"][:3]
+        )
+        nm = pvv.get("naming", {})
+        cards.append(
+            f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(pvv['board_column'])}</span> {_esc(pvv['title'])}</div>"
+            f"<div class='abrow'>quantified-outcome rate ({_esc(competitor)} vs {_esc(focal)}): {_esc(rows)}</div>"
+            f"<div class='abrow'>naming war: {nm.get('competitor_names_focal', 0)} vs {nm.get('focal_names_competitor', 0)} pages</div>"
+            f"<div class='abrow'><b>Play:</b> {_esc(pvv['action'])}</div></div>"
+        )
+    fv = ig.get("funnel_voids")
+    if fv:
+        voids = " · ".join(
+            f"{r['vertical'].replace('_', ' ')} 0/{r['competitor']['n']} vs {r['focal']['decision_n']}/{r['focal']['n']}"
+            for r in fv["rows"]
+            if r.get("void")
+        )
+        cards.append(
+            f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(fv['board_column'])}</span> {_esc(fv['title'])}</div>"
+            + (f"<div class='abrow'><b>Decision voids ({_esc(competitor)} vs {_esc(focal)}):</b> {_esc(voids)}</div>" if voids else "")
+            + f"<div class='abrow'><b>Play:</b> {_esc(fv['action'])}</div></div>"
+        )
+    ad = ig.get("affinity_defense")
+    if ad:
+        open_serps = ", ".join(f"{r['domain']} ({r['affinity']:.2f})" for r in ad["rows"] if not r["defended"])
+        cards.append(
+            f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(ad['board_column'])}</span> {_esc(ad['title'])}</div>"
+            + (f"<div class='abrow'><b>Open SERPs (no vs-page):</b> {_esc(open_serps)}</div>" if open_serps else "")
+            + (
+                f"<div class='abrow'><b>vs-pages outside the audience:</b> {_esc(', '.join(ad.get('orphan_comparison_slugs') or []))}</div>"
+                if ad.get("orphan_comparison_slugs")
+                else ""
+            )
+            + f"<div class='abrow'><b>Play:</b> {_esc(ad['action'])} <i>(affinity = estimated index)</i></div></div>"
+        )
+    cps = ig.get("channel_proof_split")
+    if cps:
+        c = cps["competitor"]
+        cards.append(
+            f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(cps['board_column'])}</span> {_esc(cps['title'])}</div>"
+            f"<div class='abrow'>demos: LinkedIn {c['demo_linkedin']}/{c['linkedin_n']} vs website {c['demo_web']}/{c['web_n']} · "
+            f"no public pricing {c['no_public_pricing_web']}/{c['web_n']} · no CTA {c['no_cta_web']}/{c['web_n']}</div>"
+            f"<div class='abrow'><b>Play:</b> {_esc(cps['action'])}</div></div>"
+        )
+    if not cards:
+        return ""
+    return (
+        "<h2>EDA insights — joins the single charts can't show</h2>"
+        "<div class='forwho'><b>Ops:</b> each card is a campaign-board entry — the tag is its column, "
+        "the play names asset/channel/audience/CTA. Every number carries its denominator; interactive "
+        "versions with per-page drill-down live in the UI.</div>"
+        f"<div class='card'>{''.join(cards)}</div>"
+    )
+
+
 def build_dashboard(pkg: dict[str, Any]) -> str:
     companies = pkg.get("companies", [])
     competitor = (
@@ -725,6 +805,8 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 
 <h2>Scorecard — the analysis as actions</h2>
 {_scorecard(pkg, competitor, focal)}
+
+{_insights(pkg, competitor, focal)}
 
 <h2>Action Board — what {_esc(focal)} should do</h2>
 <div class='forwho'><b>Exec:</b> the ranked openings with their kill rules — fund, watch, or kill. <b>IC:</b> each card carries the full experiment plan (metric, guardrails, staged gates).</div>

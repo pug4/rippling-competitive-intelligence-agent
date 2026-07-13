@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-12T23:55:37.056477+00:00",
+    "generated_at": "2026-07-13T02:41:34.751912+00:00",
     "stop_reason": "runtime_exhausted",
     "stop_reason_label": "budget-bounded (hit the research-time cap)",
     "iterations": 19,
@@ -1226,7 +1226,7 @@
       ]
     },
     {
-      "cep": "expanding_globally_safely",
+      "cep": "rapid_growth_scaling_employees",
       "competitor_pages": 0,
       "focal_pages": 1,
       "competitor_share": 0.0,
@@ -1237,7 +1237,7 @@
       "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [],
       "focal_example_artifact_ids": [
-        "ART-9e8697e401cd"
+        "ART-361550a9bb81"
       ],
       "top_verticals": []
     },
@@ -1258,7 +1258,7 @@
       "top_verticals": []
     },
     {
-      "cep": "rapid_growth_scaling_employees",
+      "cep": "expanding_globally_safely",
       "competitor_pages": 0,
       "focal_pages": 1,
       "competitor_share": 0.0,
@@ -1269,9 +1269,44 @@
       "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [],
       "focal_example_artifact_ids": [
-        "ART-361550a9bb81"
+        "ART-9e8697e401cd"
       ],
       "top_verticals": []
+    },
+    {
+      "cep": "paying_contractors_and_employees_globally",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
+    },
+    {
+      "cep": "consolidating_fragmented_regional_workforce_providers",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "expanding_into_complex_field_markets",
@@ -1291,6 +1326,22 @@
         "payroll",
         "global_eor_contractors"
       ]
+    },
+    {
+      "cep": "replacing_traditional_cross_border_payment_rails",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
     },
     {
       "cep": "growing_remote_and_international_teams",
@@ -1330,25 +1381,6 @@
       ]
     },
     {
-      "cep": "expanding_to_new_countries",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-ceb5d6ab049f"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
       "cep": "managing_global_device_fleet",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -1367,7 +1399,7 @@
       ]
     },
     {
-      "cep": "consolidating_fragmented_regional_workforce_providers",
+      "cep": "expanding_to_new_countries",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -1377,45 +1409,13 @@
       "ownership": "insufficient_sample",
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
-        "ART-39db3bdefb26"
+        "ART-ceb5d6ab049f"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
         "payroll",
         "global_eor_contractors"
       ]
-    },
-    {
-      "cep": "replacing_traditional_cross_border_payment_rails",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": []
-    },
-    {
-      "cep": "paying_contractors_and_employees_globally",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": []
     }
   ],
   "persona_channel_matrix": {
@@ -67874,6 +67874,476 @@
     },
     "method": "deterministic keyword mapping over products/themes/messages/url (config taxonomy.product_verticals); not a model judgment"
   },
+  "insight_graphics": {
+    "claim_vs_record": {
+      "board_column": "ATTACK",
+      "title": "Deel claims compliance on 67% of pages but shows a compliance record on 13% \u2014 quantified outcomes stand in",
+      "competitor": {
+        "n_classified": 123,
+        "voice_n": 82,
+        "voice_share": 0.6667,
+        "cert_n": 11,
+        "cert_rate": 0.1341,
+        "quant_standin_n": 58,
+        "quant_standin_rate": 0.7073
+      },
+      "read_in_5s": "The wider the gap between the two dots, the more compliance is voiced without a matching certification record.",
+      "method": "voice = classified pages carrying the compliance theme (primary or supporting); record = those pages carrying certification_or_compliance_record proof",
+      "focal": {
+        "n_classified": 114,
+        "voice_n": 36,
+        "voice_share": 0.3158,
+        "cert_n": 9,
+        "cert_rate": 0.25,
+        "quant_standin_n": 8,
+        "quant_standin_rate": 0.2222
+      },
+      "cep_hit_list": [
+        {
+          "cep": "replacing_a_peo",
+          "ownership": "contested",
+          "competitor": {
+            "cert_n": 0,
+            "n": 4,
+            "rate": 0.0
+          },
+          "focal": {
+            "cert_n": 2,
+            "n": 5,
+            "rate": 0.4
+          }
+        },
+        {
+          "cep": "controlling_app_access",
+          "ownership": "focal_owns",
+          "competitor": {
+            "cert_n": 0,
+            "n": 7,
+            "rate": 0.0
+          },
+          "focal": {
+            "cert_n": 5,
+            "n": 24,
+            "rate": 0.2083
+          }
+        },
+        {
+          "cep": "preparing_for_audit",
+          "ownership": "contested",
+          "competitor": {
+            "cert_n": 4,
+            "n": 18,
+            "rate": 0.2222
+          },
+          "focal": {
+            "cert_n": 8,
+            "n": 24,
+            "rate": 0.3333
+          }
+        }
+      ],
+      "guardrail": [
+        {
+          "cep": "opening_new_country",
+          "ownership": "competitor_advantage",
+          "competitor": {
+            "cert_n": 10,
+            "n": 79,
+            "rate": 0.1266
+          },
+          "focal": {
+            "cert_n": 2,
+            "n": 16,
+            "rate": 0.125
+          }
+        }
+      ],
+      "action": "Buy audit/certification intent where Rippling's record rate beats Deel's (hit list); do NOT spend where the rates match (guardrail rows) \u2014 creative: certification wall vs story-backed claims, ungated comparison LP, gate only the audit-prep checklist."
+    },
+    "proof_vs_voice": {
+      "board_column": "DEFEND",
+      "title": "Ownership by voice, not by proof: Deel quantifies 61% of its corpus vs Rippling's 17% \u2014 including on triggers Rippling owns",
+      "rows": [
+        {
+          "cep": "consolidating_hr_tools",
+          "ownership": "contested",
+          "competitor": {
+            "quant_n": 40,
+            "n": 60,
+            "rate": 0.6667
+          },
+          "focal": {
+            "quant_n": 15,
+            "n": 81,
+            "rate": 0.1852
+          }
+        },
+        {
+          "cep": "opening_new_country",
+          "ownership": "competitor_advantage",
+          "competitor": {
+            "quant_n": 58,
+            "n": 79,
+            "rate": 0.7342
+          },
+          "focal": {
+            "quant_n": 3,
+            "n": 16,
+            "rate": 0.1875
+          }
+        },
+        {
+          "cep": "automating_onboarding_offboarding",
+          "ownership": "contested",
+          "competitor": {
+            "quant_n": 23,
+            "n": 38,
+            "rate": 0.6053
+          },
+          "focal": {
+            "quant_n": 9,
+            "n": 55,
+            "rate": 0.1636
+          }
+        },
+        {
+          "cep": "hiring_first_international_employee",
+          "ownership": "competitor_advantage",
+          "competitor": {
+            "quant_n": 30,
+            "n": 42,
+            "rate": 0.7143
+          },
+          "focal": {
+            "quant_n": 2,
+            "n": 9,
+            "rate": 0.2222
+          }
+        },
+        {
+          "cep": "preparing_for_audit",
+          "ownership": "contested",
+          "competitor": {
+            "quant_n": 15,
+            "n": 18,
+            "rate": 0.8333
+          },
+          "focal": {
+            "quant_n": 7,
+            "n": 24,
+            "rate": 0.2917
+          }
+        },
+        {
+          "cep": "reducing_payroll_errors",
+          "ownership": "focal_owns",
+          "competitor": {
+            "quant_n": 7,
+            "n": 12,
+            "rate": 0.5833
+          },
+          "focal": {
+            "quant_n": 7,
+            "n": 27,
+            "rate": 0.2593
+          }
+        }
+      ],
+      "overall": {
+        "competitor": {
+          "quant_n": 75,
+          "n": 123,
+          "rate": 0.6098
+        },
+        "focal": {
+          "quant_n": 19,
+          "n": 114,
+          "rate": 0.1667
+        }
+      },
+      "naming": {
+        "competitor_names_focal": 9,
+        "focal_names_competitor": 0
+      },
+      "read_in_5s": "Where the competitor dot sits right of yours on a trigger YOU own by page count, your ownership is voice without proof \u2014 a flank, not a moat.",
+      "action": "Quantified case-study sprint on Rippling-owned triggers where the competitor out-proves you; freeze paid spend on triggers where their quantified rate is a fortress."
+    },
+    "funnel_voids": {
+      "board_column": "INTERCEPT",
+      "title": "Deel closes only on home turf: its 9 decision assets sit on compliance_legal, global_eor_contractors, hris_core_hr \u2014 zero in benefits, it device management, identity security, where Rippling has them",
+      "rows": [
+        {
+          "vertical": "benefits",
+          "competitor": {
+            "n": 13,
+            "evaluation_n": 9,
+            "decision_n": 0
+          },
+          "focal": {
+            "n": 22,
+            "evaluation_n": 14,
+            "decision_n": 2
+          },
+          "void": true
+        },
+        {
+          "vertical": "it_device_management",
+          "competitor": {
+            "n": 12,
+            "evaluation_n": 6,
+            "decision_n": 0
+          },
+          "focal": {
+            "n": 19,
+            "evaluation_n": 14,
+            "decision_n": 2
+          },
+          "void": true
+        },
+        {
+          "vertical": "identity_security",
+          "competitor": {
+            "n": 8,
+            "evaluation_n": 4,
+            "decision_n": 0
+          },
+          "focal": {
+            "n": 15,
+            "evaluation_n": 13,
+            "decision_n": 2
+          },
+          "void": true
+        },
+        {
+          "vertical": "payroll",
+          "competitor": {
+            "n": 68,
+            "evaluation_n": 45,
+            "decision_n": 8
+          },
+          "focal": {
+            "n": 42,
+            "evaluation_n": 21,
+            "decision_n": 4
+          },
+          "void": false
+        },
+        {
+          "vertical": "global_eor_contractors",
+          "competitor": {
+            "n": 47,
+            "evaluation_n": 36,
+            "decision_n": 8
+          },
+          "focal": {
+            "n": 11,
+            "evaluation_n": 8,
+            "decision_n": 1
+          },
+          "void": false
+        },
+        {
+          "vertical": "hris_core_hr",
+          "competitor": {
+            "n": 43,
+            "evaluation_n": 30,
+            "decision_n": 4
+          },
+          "focal": {
+            "n": 32,
+            "evaluation_n": 20,
+            "decision_n": 4
+          },
+          "void": false
+        },
+        {
+          "vertical": "compliance_legal",
+          "competitor": {
+            "n": 37,
+            "evaluation_n": 25,
+            "decision_n": 4
+          },
+          "focal": {
+            "n": 15,
+            "evaluation_n": 10,
+            "decision_n": 1
+          },
+          "void": false
+        },
+        {
+          "vertical": "talent_performance",
+          "competitor": {
+            "n": 30,
+            "evaluation_n": 19,
+            "decision_n": 1
+          },
+          "focal": {
+            "n": 14,
+            "evaluation_n": 9,
+            "decision_n": 3
+          },
+          "void": false
+        },
+        {
+          "vertical": "immigration_mobility",
+          "competitor": {
+            "n": 24,
+            "evaluation_n": 19,
+            "decision_n": 3
+          },
+          "focal": {
+            "n": 0,
+            "evaluation_n": 0,
+            "decision_n": 0
+          },
+          "void": false
+        },
+        {
+          "vertical": "workforce_analytics",
+          "competitor": {
+            "n": 19,
+            "evaluation_n": 12,
+            "decision_n": 2
+          },
+          "focal": {
+            "n": 22,
+            "evaluation_n": 12,
+            "decision_n": 2
+          },
+          "void": false
+        },
+        {
+          "vertical": "time_attendance",
+          "competitor": {
+            "n": 10,
+            "evaluation_n": 8,
+            "decision_n": 1
+          },
+          "focal": {
+            "n": 21,
+            "evaluation_n": 11,
+            "decision_n": 4
+          },
+          "void": false
+        },
+        {
+          "vertical": "spend_expense",
+          "competitor": {
+            "n": 3,
+            "evaluation_n": 1,
+            "decision_n": 0
+          },
+          "focal": {
+            "n": 17,
+            "evaluation_n": 8,
+            "decision_n": 2
+          },
+          "void": false
+        }
+      ],
+      "competitor_decision_total": 9,
+      "competitor_decision_verticals": [
+        "compliance_legal",
+        "global_eor_contractors",
+        "hris_core_hr",
+        "immigration_mobility",
+        "payroll",
+        "talent_performance",
+        "time_attendance",
+        "workforce_analytics"
+      ],
+      "read_in_5s": "Rows at 0% decision with deep evaluation content strand a researching buyer \u2014 whoever has a decision asset there catches them.",
+      "action": "Ship comparison LPs on the void verticals and bid the competitor's branded queries there \u2014 they have no decision asset to answer with; ungated, quote/demo CTA."
+    },
+    "affinity_defense": {
+      "board_column": "SEO/CONQUEST",
+      "title": "Deel's highest-affinity rival (remote.com) has no comparison page \u2014 while 3 vs-page(s) target domains outside its audience's top affinities",
+      "rows": [
+        {
+          "domain": "remote.com",
+          "affinity": 1.0,
+          "defended": false,
+          "mentions": 1
+        },
+        {
+          "domain": "oysterhr.com",
+          "affinity": 0.92,
+          "defended": true,
+          "mentions": 1
+        },
+        {
+          "domain": "usemultiplier.com",
+          "affinity": 0.9,
+          "defended": true,
+          "mentions": 1
+        },
+        {
+          "domain": "rippling.com",
+          "affinity": 0.88,
+          "defended": true,
+          "mentions": 9
+        },
+        {
+          "domain": "bamboohr.com",
+          "affinity": 0.85,
+          "defended": false,
+          "mentions": 2
+        },
+        {
+          "domain": "papayaglobal.com",
+          "affinity": 0.83,
+          "defended": true,
+          "mentions": 2
+        },
+        {
+          "domain": "hibob.com",
+          "affinity": 0.8,
+          "defended": false,
+          "mentions": 2
+        },
+        {
+          "domain": "nativeteams.com",
+          "affinity": 0.78,
+          "defended": false,
+          "mentions": 0
+        }
+      ],
+      "orphan_comparison_slugs": [
+        "adp",
+        "gusto",
+        "ontop"
+      ],
+      "n_comparison_pages": 7,
+      "read_in_5s": "Grey (undefended) bars at the top = the audience's real destinations with no comparison page \u2014 those SERPs are open to whoever moves first.",
+      "action": "Publish named comparison LPs against the undefended high-affinity domains and bid their 'vs' queries; affinity is an estimated overlap index, not lost-deal share (labeled on-chart)."
+    },
+    "channel_proof_split": {
+      "board_column": "WHITESPACE",
+      "title": "The only place Deel shows its product is LinkedIn (12/30 posts) \u2014 its website demos on 1/63 pages and hides pricing on 94%",
+      "competitor": {
+        "linkedin_n": 30,
+        "web_n": 63,
+        "demo_linkedin": 12,
+        "demo_web": 1,
+        "quant_linkedin": 7,
+        "quant_web": 51,
+        "no_public_pricing_web": 59,
+        "no_cta_web": 50
+      },
+      "focal": {
+        "linkedin_n": 29,
+        "web_n": 64,
+        "demo_linkedin": 4,
+        "demo_web": 1,
+        "quant_linkedin": 2,
+        "quant_web": 13,
+        "no_public_pricing_web": 53,
+        "no_cta_web": 34
+      },
+      "read_in_5s": "Demo proof crashes from feed to indexed site while outcome stats do the reverse \u2014 nobody serves demo intent on an indexable page; that SERP is unowned.",
+      "action": "Ship one ungated interactive product-tour LP + a public 'what pricing depends on' table; exact-match paid on the competitor's demo/pricing queries; validate query volume before committing budget."
+    }
+  },
   "channel_alignment": {
     "website_themes": {
       "consolidation": 27,
@@ -67907,60 +68377,60 @@
   },
   "theme_comparison": {
     "competitor_themes": {
-      "native_platform_breadth": 5,
+      "cost_reduction": 5,
+      "employee_experience": 4,
+      "speed_to_value": 7,
+      "integration_ecosystem": 8,
+      "automation": 14,
+      "consolidation": 39,
       "data_unification": 6,
+      "native_platform_breadth": 5,
+      "global_hiring": 7,
       "status": 0,
       "all_in_one": 1,
-      "employee_experience": 4,
-      "consolidation": 39,
-      "integration_ecosystem": 8,
-      "compliance": 10,
-      "speed_to_value": 7,
-      "cost_reduction": 5,
-      "global_hiring": 7,
-      "automation": 14
+      "compliance": 10
     },
     "focal_themes": {
-      "native_platform_breadth": 3,
+      "cost_reduction": 1,
+      "employee_experience": 2,
+      "speed_to_value": 2,
+      "integration_ecosystem": 4,
+      "automation": 15,
+      "consolidation": 28,
       "data_unification": 35,
+      "native_platform_breadth": 3,
+      "global_hiring": 2,
       "status": 4,
       "all_in_one": 2,
-      "employee_experience": 2,
-      "consolidation": 28,
-      "integration_ecosystem": 4,
-      "compliance": 3,
-      "speed_to_value": 2,
-      "cost_reduction": 1,
-      "global_hiring": 2,
-      "automation": 15
+      "compliance": 3
     },
     "competitor_shares": {
-      "native_platform_breadth": 0.0407,
+      "cost_reduction": 0.0407,
+      "employee_experience": 0.0325,
+      "speed_to_value": 0.0569,
+      "integration_ecosystem": 0.065,
+      "automation": 0.1138,
+      "consolidation": 0.3171,
       "data_unification": 0.0488,
+      "native_platform_breadth": 0.0407,
+      "global_hiring": 0.0569,
       "status": 0.0,
       "all_in_one": 0.0081,
-      "employee_experience": 0.0325,
-      "consolidation": 0.3171,
-      "integration_ecosystem": 0.065,
-      "compliance": 0.0813,
-      "speed_to_value": 0.0569,
-      "cost_reduction": 0.0407,
-      "global_hiring": 0.0569,
-      "automation": 0.1138
+      "compliance": 0.0813
     },
     "focal_shares": {
-      "native_platform_breadth": 0.0263,
+      "cost_reduction": 0.0088,
+      "employee_experience": 0.0175,
+      "speed_to_value": 0.0175,
+      "integration_ecosystem": 0.0351,
+      "automation": 0.1316,
+      "consolidation": 0.2456,
       "data_unification": 0.307,
+      "native_platform_breadth": 0.0263,
+      "global_hiring": 0.0175,
       "status": 0.0351,
       "all_in_one": 0.0175,
-      "employee_experience": 0.0175,
-      "consolidation": 0.2456,
-      "integration_ecosystem": 0.0351,
-      "compliance": 0.0263,
-      "speed_to_value": 0.0175,
-      "cost_reduction": 0.0088,
-      "global_hiring": 0.0175,
-      "automation": 0.1316
+      "compliance": 0.0263
     },
     "competitor_n_classified": 123,
     "focal_n_classified": 114,
@@ -81976,7 +82446,7 @@
           ]
         },
         {
-          "cep": "expanding_globally_safely",
+          "cep": "rapid_growth_scaling_employees",
           "competitor_pages": 0,
           "focal_pages": 1,
           "competitor_share": 0.0,
@@ -81987,7 +82457,7 @@
           "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [],
           "focal_example_artifact_ids": [
-            "ART-9e8697e401cd"
+            "ART-361550a9bb81"
           ],
           "top_verticals": []
         },
@@ -82008,7 +82478,7 @@
           "top_verticals": []
         },
         {
-          "cep": "rapid_growth_scaling_employees",
+          "cep": "expanding_globally_safely",
           "competitor_pages": 0,
           "focal_pages": 1,
           "competitor_share": 0.0,
@@ -82019,9 +82489,44 @@
           "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [],
           "focal_example_artifact_ids": [
-            "ART-361550a9bb81"
+            "ART-9e8697e401cd"
           ],
           "top_verticals": []
+        },
+        {
+          "cep": "paying_contractors_and_employees_globally",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
+        },
+        {
+          "cep": "consolidating_fragmented_regional_workforce_providers",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "expanding_into_complex_field_markets",
@@ -82041,6 +82546,22 @@
             "payroll",
             "global_eor_contractors"
           ]
+        },
+        {
+          "cep": "replacing_traditional_cross_border_payment_rails",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
         },
         {
           "cep": "growing_remote_and_international_teams",
@@ -82080,25 +82601,6 @@
           ]
         },
         {
-          "cep": "expanding_to_new_countries",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-ceb5d6ab049f"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
           "cep": "managing_global_device_fleet",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -82117,7 +82619,7 @@
           ]
         },
         {
-          "cep": "consolidating_fragmented_regional_workforce_providers",
+          "cep": "expanding_to_new_countries",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82127,45 +82629,13 @@
           "ownership": "insufficient_sample",
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
-            "ART-39db3bdefb26"
+            "ART-ceb5d6ab049f"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
             "payroll",
             "global_eor_contractors"
           ]
-        },
-        {
-          "cep": "replacing_traditional_cross_border_payment_rails",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": []
-        },
-        {
-          "cep": "paying_contractors_and_employees_globally",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": []
         }
       ]
     }
