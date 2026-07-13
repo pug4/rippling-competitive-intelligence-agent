@@ -1813,7 +1813,7 @@ function ProofVsVoice({ pkg, msgIdx }) {
                   bLabel={`${comp} ${b.overall.competitor.quant_n}/${b.overall.competitor.n} = ${pct(b.overall.competitor.rate)}`}
                   aColor="--accent" bColor="--bad" />
         <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
-          Naming war is one-way: {comp} names {focal} on {b.naming.competitor_names_focal} pages; {focal} names {comp} on {b.naming.focal_names_competitor}.
+          Naming war in collected pages is one-way: {comp} names {focal} on {b.naming.competitor_names_focal} pages; {focal} names {comp} on {b.naming.focal_names_competitor} <span title="Scoped to crawled marketing pages — excludes press, litigation, and social.">(crawled pages only)</span>.
         </div>
         <div className="scaction">→ {b.action}</div>
       </div>

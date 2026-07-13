@@ -1468,9 +1468,10 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 )
             nm = pvv.get("naming", {})
             add(
-                f"- Naming war is one-way: {company} names {focal} on "
+                f"- Naming war in collected pages is one-way: {company} names {focal} on "
                 f"{nm.get('competitor_names_focal', 0)} pages; {focal} names {company} on "
-                f"{nm.get('focal_names_competitor', 0)}"
+                f"{nm.get('focal_names_competitor', 0)} (scoped to crawled marketing pages — "
+                "not press, litigation, or social)"
             )
             add(f"- **Play:** {pvv['action']}")
         fv_ = ig.get("funnel_voids")
