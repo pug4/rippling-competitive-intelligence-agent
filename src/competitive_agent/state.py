@@ -96,6 +96,15 @@ class DirectorState(VersionedModel):
     max_iterations: int = 40
     tool_calls_made: int = 0
     max_tool_calls: int = 120
+    # Minimum-corpus FLOOR for the focal mirror only (comparison.run_focal_mirror
+    # sets it > 0, scaled to the competitor's collected page count). While the
+    # focal run holds fewer classified message pages than this AND more focal
+    # pages are still fetchable, the loop DEFERS the coverage/model "complete"
+    # stops and keeps crawling so the comparison isn't built on a lopsided
+    # snapshot (e.g. 15 focal vs 151 competitor pages). 0 (the default) = no
+    # floor, so every normal run is completely unaffected. Additive,
+    # persistence-safe default so old checkpointed runs keep loading.
+    focal_min_pages: int = 0
 
     # Completion
     is_complete: bool = False

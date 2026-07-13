@@ -136,6 +136,11 @@ _MAX_CLAIMS_JUDGED = 10
 # source of truth is the planner's Level-B map.
 _OPTIONAL_ACTION_TYPES = frozenset(planner.LEVEL_B_ACTION_DIMENSIONS)
 
+# Site-collection actions that pull the focal company's OWN pages. Used by the
+# focal-mirror floor to distinguish "we could still fetch more focal pages" from
+# "the site's fetchable pages are exhausted, so stopping is honest".
+_SITE_COLLECTION_ACTIONS = frozenset({"map_current_website", "fetch_webpage"})
+
 # Family model class name -> classifications.family column value.
 _FAMILY_TABLE = {
     "MessageFamily": "message",
@@ -187,6 +192,33 @@ def _focal_name(ctx: GraphContext, state: DirectorState | None = None) -> str:
     if state is not None and state.focal_company is not None:
         return state.focal_company.canonical_name
     return ctx.config.focal_company.name if ctx.config else "Rippling"
+
+
+def _focal_corpus_below_floor(state: DirectorState, ctx: GraphContext) -> bool:
+    """True when the focal mirror still owes pages against its minimum-corpus
+    floor AND more focal pages are actually fetchable.
+
+    Only the focal mirror sets ``focal_min_pages`` > 0 (comparison.run_focal_
+    mirror); every normal run keeps the 0 default, so this returns False
+    immediately for the competitor run and every standalone run — their loop
+    behavior is completely unaffected. When the floor IS set, we keep collecting
+    only while the site still has fetchable pages (a site-collection action
+    remains); once the focal site's fetchable pages are exhausted this returns
+    False so the mirror can stop honestly. It is consulted to DEFER only the
+    coverage/model "complete" stops — never the hard budget/runtime/iteration/
+    tool-call caps — so the loop can never spin forever below the floor.
+    """
+    floor = getattr(state, "focal_min_pages", 0) or 0
+    if floor <= 0:
+        return False
+    # classification_ids holds one merged classification id per classified page
+    # (1:1 with the message family), i.e. the classified message-page count that
+    # comparison.py normalizes the comparison against.
+    if len(state.classification_ids) >= floor:
+        return False
+    return any(
+        a.action_type in _SITE_COLLECTION_ACTIONS for a in planner.propose_actions(state, ctx)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -341,19 +373,34 @@ async def score_actions(state: DirectorState, ctx: GraphContext):
         if decision is not None and decision.should_stop:
             # Honor a model stop ONLY when no REQUIRED dimension still needs its
             # public fallbacks exhausted (accuracy #1 — the model cannot waive a
-            # required dimension). Otherwise defer: keep collecting with the
-            # deterministic winner and record why the stop was deferred.
-            if not planner.required_dims_needing_exhaustion(state):
+            # required dimension) AND the focal mirror's minimum-corpus floor is
+            # met. Otherwise defer: keep collecting with the deterministic winner
+            # and record why the stop was deferred.
+            if planner.required_dims_needing_exhaustion(state):
+                ctx.scratch["model_stop_deferred"] = (
+                    decision.stop_rationale or decision.model_rationale
+                )
+            elif _focal_corpus_below_floor(state, ctx):
+                # Focal-mirror floor: the model judged the snapshot complete, but
+                # the focal corpus is still below its minimum comparable size and
+                # more focal pages remain to fetch. Defer exactly like the
+                # required-dim deferral so the comparison isn't built on a
+                # 10x-asymmetric snapshot. focal_min_pages==0 (every normal run)
+                # never reaches here, so their behavior is unchanged.
+                note = (
+                    "stop_deferred: focal corpus below floor "
+                    f"({len(state.classification_ids)}/{state.focal_min_pages} pages)"
+                )
+                ctx.scratch["model_stop_deferred"] = note
+                if ctx.trace:
+                    ctx.trace.append("stop_deferred", {"reason": note})
+            else:
                 ctx.scratch["model_requested_stop"] = True
                 ctx.scratch["model_stop_rationale"] = (
                     decision.stop_rationale or decision.model_rationale
                 )
                 ctx.scratch["selection_model_rationale"] = decision.model_rationale
                 ctx.scratch["selection_decision_by"] = "model"
-            else:
-                ctx.scratch["model_stop_deferred"] = (
-                    decision.stop_rationale or decision.model_rationale
-                )
         elif decision is not None and decision.action is not None:
             ctx.scratch["selected_action"] = decision.action
             ctx.scratch["selection_decision_by"] = "model"
@@ -1413,6 +1460,15 @@ async def decide_continue_or_stop(state: DirectorState, ctx: GraphContext):
         ok, missing = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
         remaining = planner.propose_actions(state, ctx)
         needing = planner.required_dims_needing_exhaustion(state)
+        # Focal-mirror floor (comparison.run_focal_mirror sets focal_min_pages>0):
+        # keep collecting focal pages until the corpus is comparable to the
+        # competitor's, or the site's fetchable pages are exhausted. Defers ONLY
+        # the coverage/model "complete" stops — the hard budget/runtime/iteration/
+        # tool-call caps are checked ABOVE and have already set `reason`, so the
+        # mirror can never loop forever below the floor. A normal run keeps
+        # focal_min_pages==0, so this is always False and behavior is unchanged.
+        if _focal_corpus_below_floor(state, ctx):
+            return state, "assess_coverage"
         # Reasoning model IN the loop chose to STOP (§37.16). score_actions only
         # sets this flag once no REQUIRED dimension still needs its fallbacks, so
         # honoring it here can never waive a required dimension (accuracy #1). It

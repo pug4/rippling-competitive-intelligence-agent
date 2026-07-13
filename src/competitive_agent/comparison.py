@@ -68,10 +68,32 @@ async def run_focal_mirror(state: DirectorState, ctx: Any) -> str | None:
     focal_state.max_runtime_seconds = int(min(focal_state.max_runtime_seconds, remaining * 0.55))
     focal_state.max_iterations = min(focal_state.max_iterations, 22)
     focal_state.max_tool_calls = min(focal_state.max_tool_calls, 70)
+    # Minimum-corpus FLOOR for the mirror (fix: a comparative run collected 151
+    # competitor pages while the focal mirror stopped at 15 once the LLM planner
+    # judged the snapshot "complete" — share-normalization is noisy at n=15, the
+    # asymmetry banner fires, and a 30+-product focal company is badly
+    # misrepresented). Give the mirror a floor scaled to the competitor so it
+    # keeps crawling the focal site until its corpus is comparable (or the site's
+    # fetchable pages are exhausted). `competitor_pages` is the competitor's
+    # classified message-page count available at mirror time — classification_ids
+    # holds one merged classification id per classified page (1:1 with the message
+    # family), which is exactly the denominator comparison normalizes against.
+    competitor_pages = len(state.classification_ids)
+    # Bounded [40, 80]: 40 gives a fair comparable corpus even against a small
+    # competitor; the 80 cap keeps a huge competitor (Rippling has plenty of
+    # pages) from triggering an unbounded focal crawl. The existing
+    # iteration/tool/runtime caps above stay the HARD backstops — this floor only
+    # DEFERS the early coverage/model "complete" stops, never the caps.
+    focal_state.focal_min_pages = min(80, max(40, competitor_pages))
     if ctx.trace:
         ctx.trace.append(
             "company_pipeline_created",
-            {"purpose": "focal_mirror", "focal_run_id": focal_state.run_id},
+            {
+                "purpose": "focal_mirror",
+                "focal_run_id": focal_state.run_id,
+                "focal_min_pages": focal_state.focal_min_pages,
+                "competitor_pages": competitor_pages,
+            },
         )
     focal_state = await drive(focal_state, focal_ctx)
     ctx.scratch[reuse_key] = focal_state.run_id

@@ -502,11 +502,23 @@ def test_serpapi_ad_records_distinct_by_creative_id_not_deduped():
     assert a1.content_hash == a3.content_hash, "the same creative id is the same ad"
     # And a real video creative (with copy) is distinct from the empty ones.
     from competitive_agent.tools.ads import _ad_record_artifact as _mk
-    vid = AdRecord(advertiser="Deel, Inc.", platform="google", creative_text="Deel x Strada",
-                   headline="Deel x Strada", format="video", regions=[],
-                   source_url="https://adstransparency.google.com/advertiser/AR1/creative/CR_VID?region=anywhere",
-                   extraction_confidence="high")
-    av = _mk(action, source_type="google_ads", platform_surface="google_ads_transparency",
-             collection_method="serpapi_transparency", record=vid,
-             provenance={"ad_creative_id": "CR_VID", "collection_method": "serpapi_transparency"})
+
+    vid = AdRecord(
+        advertiser="Deel, Inc.",
+        platform="google",
+        creative_text="Deel x Strada",
+        headline="Deel x Strada",
+        format="video",
+        regions=[],
+        source_url="https://adstransparency.google.com/advertiser/AR1/creative/CR_VID?region=anywhere",
+        extraction_confidence="high",
+    )
+    av = _mk(
+        action,
+        source_type="google_ads",
+        platform_surface="google_ads_transparency",
+        collection_method="serpapi_transparency",
+        record=vid,
+        provenance={"ad_creative_id": "CR_VID", "collection_method": "serpapi_transparency"},
+    )
     assert av.content_hash not in {a1.content_hash, a2.content_hash}

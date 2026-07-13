@@ -22,3 +22,7 @@ docs/eval_harness_issues.md
 docs/demo_runbook.md
 docs/decision_log.md
 IMPLEMENTATION_STATUS.md
+
+# macOS junk
+.DS_Store
+**/.DS_Store
