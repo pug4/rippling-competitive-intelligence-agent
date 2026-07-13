@@ -50,7 +50,7 @@ summary { cursor: pointer; font-size: 14px; }
 .tracerow .ev { color: var(--accent); }
 
 /* ---- instant tooltip (replaces slow native title popups) ---- */
-#tooltip { position: fixed; left: 0; top: 0; display: none; max-width: 380px;
+#tooltip { position: fixed; left: 0; top: 0; display: none; max-width: 420px; white-space: pre-line;
   font-size: 13px; line-height: 1.45; color: var(--text); background: var(--panel2);
   border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px;
   z-index: 100; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.45); }

@@ -9,7 +9,7 @@ export function HBar({ data, unit = "", colorVar = "--accent" }) {
     <div className="hbar">
       {rows.map((d) => (
         <div className="hbar-row" key={d.label}>
-          <div className="hbar-label" data-tip={d.label}>{d.label}</div>
+          <div className="hbar-label" data-tip={d.tip || d.label}>{d.label}</div>
           <div className="hbar-track">
             <div
               className="hbar-fill"

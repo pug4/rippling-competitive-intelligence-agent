@@ -280,8 +280,12 @@ def _author_from_linkedin_url(url: str) -> str | None:
     m = _re.search(r"linkedin\.com/posts/([a-z0-9-]+?)_", str(url or ""))
     if not m:
         return None
-    slug = _re.sub(r"-\d+$", "", m.group(1))  # strip trailing numeric ids
-    return " ".join(w.capitalize() for w in slug.split("-") if w) or None
+    # Strip trailing profile-id tokens (numeric or hex — 'dan-westgarth-710650a4'
+    # must not render as author 'Dan Westgarth 710650a4').
+    words = [w for w in m.group(1).split("-") if w]
+    while words and _re.fullmatch(r"[0-9]+|[0-9a-f]{6,}", words[-1]):
+        words.pop()
+    return " ".join(w.capitalize() for w in words) or None
 
 
 def _linkedin_posts(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -337,7 +341,10 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     skew = synthesis.corpus_skew(data["artifact_models"])
     dist = synthesis.source_distribution(data["artifact_models"])
     motion = synthesis.commercial_motion(data["classification_models"])
-    positioning = synthesis.product_positioning(data["classification_models"])
+    positioning = synthesis.product_positioning(
+        data["classification_models"],
+        company_name=state.company.canonical_name if state.company else None,
+    )
     artifact_source = {a["artifact_id"]: a["source_type"] for a in data["artifacts"]}
     matrix = synthesis.persona_channel_funnel(data["classification_models"], artifact_source)
     focal_cls_models = _focal_classifications(ctx, state)
@@ -807,7 +814,7 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 )
             add(
                 f"  - {focal} proof: {o['focal_proof_status']} · already-saying-it: {o['focal_current_usage']} "
-                f"· legal review: {o['legal_review_required']}"
+                f"· legal review: {'required' if o['legal_review_required'] else 'not required'}"
             )
             add(f"  - Risk (backfire): {o['why_this_could_backfire']}")
             if o.get("campaign_plan"):
@@ -901,7 +908,10 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         )
     themes = _theme_counts(cls)
     if themes:
-        add("- **Themes observed:** " + ", ".join(f"{t} ({n})" for t, n in themes[:8]))
+        add(
+            "- **Themes observed (primary theme per page):** "
+            + ", ".join(f"{t} ({n})" for t, n in themes[:8])
+        )
     # Divergent verticals (audit): call out product verticals whose narrative
     # departs from the company-level dominant message so the exec read never
     # masks a per-offering story. Deterministic join, no model call.

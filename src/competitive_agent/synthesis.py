@@ -365,20 +365,45 @@ def proof_distribution(proof_type_lists: list[list[str]]) -> ProofDistribution:
     )
 
 
-def product_positioning(classifications: list[MarketingClassification]) -> list[dict[str, Any]]:
+_PRODUCT_ALIAS_RX = re.compile(r"^(.*?)\s*\((.*?)\)\s*$")
+
+
+def _canon_product_key(name: str, company_name: str | None) -> str:
+    """One key per product regardless of alias spelling (accuracy fix: the
+    listing showed 'EOR (Employer of Record)' and 'Employer of Record (EOR)'
+    as two products, splitting one product's counts across two rows). The key
+    is order-insensitive over the name/parenthetical pair, with the company's
+    own brand prefix stripped ('Deel Payroll' == 'Payroll')."""
+    n = name.strip()
+    if company_name:
+        brand = company_name.split()[0].lower()
+        if n.lower().startswith(brand + " "):
+            n = n[len(brand) + 1 :]
+    m = _PRODUCT_ALIAS_RX.match(n)
+    if m:
+        parts = sorted([m.group(1).strip().lower(), m.group(2).strip().lower()])
+        return "|".join(parts)
+    return n.lower()
+
+
+def product_positioning(
+    classifications: list[MarketingClassification], company_name: str | None = None
+) -> list[dict[str, Any]]:
     """Aggregate observed product positioning by product (feedback #18): which
     themes, personas, and proof each named product carries in public pages.
-    Deterministic over the classified corpus — no new extraction."""
+    Deterministic over the classified corpus — no new extraction. Alias
+    spellings of the same product merge into one row (first-seen display name)."""
     products: dict[str, dict[str, Any]] = {}
     for c in classifications:
         for p in c.products or []:
-            key = p.strip()
-            if not key:
+            raw = p.strip()
+            if not raw:
                 continue
+            key = _canon_product_key(raw, company_name)
             slot = products.setdefault(
                 key,
                 {
-                    "product": key,
+                    "product": raw,
                     "themes": Counter(),
                     "personas": Counter(),
                     "proof_types": Counter(),
@@ -397,6 +422,28 @@ def product_positioning(classifications: list[MarketingClassification]) -> list[
             for x in c.category_entry_points or []:
                 if not is_placeholder_label(x):
                     slot["ceps"][_norm_label(x)] += 1
+    # Second merge pass: alias spellings of ONE product must land in one row
+    # ("EOR", "Employer of Record (EOR)", "HRIS", "HR (HRIS)", "HRIS (Human
+    # Resources Information System)" are all the same product). Union keys
+    # transitively over shared alias components — components are full alias
+    # strings, never single words, so distinct products don't collapse.
+    comp_sets: dict[str, set[str]] = {k: set(k.split("|")) for k in products}
+    merged = True
+    while merged:
+        merged = False
+        keys = sorted(comp_sets, key=lambda k: -products[k]["pages"])
+        for i, a in enumerate(keys):
+            for b in keys[i + 1 :]:
+                if comp_sets[a] & comp_sets[b]:
+                    target, src = products[a], products.pop(b)
+                    target["pages"] += src["pages"]
+                    for field in ("themes", "personas", "proof_types", "ceps"):
+                        target[field].update(src[field])
+                    comp_sets[a] |= comp_sets.pop(b)
+                    merged = True
+                    break
+            if merged:
+                break
     out = []
     for slot in sorted(products.values(), key=lambda s: -s["pages"]):
         if slot["pages"] < 1:

@@ -158,6 +158,37 @@ function themeSourceIndex(pkg) {
   return idx;
 }
 
+// theme -> [{msg, url, st}] — the competitor's ACTUAL verbatim messaging per
+// theme, for the hover popup on any classification (user ask: see the real
+// wording + sources without leaving the chart).
+function themeMessagingIndex(pkg) {
+  const art = {};
+  (pkg.artifacts || []).forEach((a) => { art[a.artifact_id] = { url: a.url, st: a.source_type }; });
+  const idx = {};
+  (pkg.classifications || []).forEach((c) => {
+    if (!c.primary_theme || !c.primary_message) return;
+    const t = normTheme(c.primary_theme);
+    const a = art[c.artifact_id] || {};
+    (idx[t] = idx[t] || []).push({ msg: c.primary_message, url: a.url, st: a.st });
+  });
+  return idx;
+}
+
+// Multi-line hover popup: the theme's real messaging excerpts + where each
+// comes from. Plain text only (rendered via textContent; pre-line CSS).
+function themeTip(msgIdx, theme, extra) {
+  const rows = (msgIdx || {})[normTheme(theme)] || [];
+  const name = String(theme || "").replace(/_/g, " ");
+  if (rows.length === 0) return extra || name;
+  const lines = rows.slice(0, 4).map((r) => {
+    const host = (r.url || "").replace(/^https?:\/\/(www\.)?/, "").split("/")[0] || "source";
+    const chan = r.st === "linkedin_post" ? " · LinkedIn" : r.st === "wayback" ? " · archived" : r.st === "news" ? " · news" : "";
+    return `• “${String(r.msg).slice(0, 110)}” — ${host}${chan}`;
+  });
+  const more = rows.length > 4 ? `\n…+${rows.length - 4} more (open the section's sources for all)` : "";
+  return `${name.toUpperCase()} — their actual messaging (${rows.length} classified pages/posts):\n${lines.join("\n")}${more}${extra ? `\n\n${extra}` : ""}`;
+}
+
 // Click-through: expand any finding to the exact excerpts + links behind it.
 function SourceDrawer({ sources, label }) {
   const [open, setOpen] = useState(false);
@@ -306,7 +337,7 @@ function ActionTag({ verb, tip }) {
 // OVERVIEW — strategic scorecard: one glance = where to act. Every tile is a
 // graph + an action line + a click-through to its deep-dive tab. All numbers
 // come from the validated package (no new analytics, §40.6).
-function StrategicScorecard({ pkg, go }) {
+function StrategicScorecard({ pkg, go, msgIdx }) {
   const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
   const ceps = (pkg.category_entry_points || []).filter((c) => !CEP_PLACEHOLDER.test(String(c.cep)));
@@ -375,14 +406,14 @@ function StrategicScorecard({ pkg, go }) {
             <div className="title">Message-investment deltas (share of corpus)</div>
             {theyLead.map(({ t, d }) => (
               <div className="scdelta" key={t}>
-                <span className="sclabel" data-tip={t}>{t.replace(/_/g, " ")}</span>
+                <span className="sclabel" data-tip={themeTip(msgIdx, t)}>{t.replace(/_/g, " ")}</span>
                 <div className="scbarwrap"><div className="scbar comp" style={{ width: `${(d / maxD) * 100}%` }} /></div>
                 <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>CLOSE GAP +{Math.round(d * 100)}pt</span>
               </div>
             ))}
             {weLead.map(({ t, d }) => (
               <div className="scdelta" key={t}>
-                <span className="sclabel" data-tip={t}>{t.replace(/_/g, " ")}</span>
+                <span className="sclabel" data-tip={themeTip(msgIdx, t)}>{t.replace(/_/g, " ")}</span>
                 <div className="scbarwrap"><div className="scbar focal" style={{ width: `${(-d / maxD) * 100}%` }} /></div>
                 <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>PRESS +{Math.round(-d * 100)}pt</span>
               </div>
@@ -467,7 +498,7 @@ function AsymmetryBanner({ pkg }) {
   );
 }
 
-function DataVisuals({ pkg }) {
+function DataVisuals({ pkg, msgIdx }) {
   const cls = pkg.classifications || [];
   const src = pkg.source_distribution || {};
   const srcData = Object.entries(src).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
@@ -477,11 +508,11 @@ function DataVisuals({ pkg }) {
     return Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   };
   const allThemes = count("primary_theme");
-  const themeData = allThemes.slice(0, 8);
+  const themeData = allThemes.slice(0, 8).map((d) => ({ ...d, tip: themeTip(msgIdx, d.label) }));
   const stanceData = count("competitive_stance");
   if (srcData.length === 0 && themeData.length === 0) return null;
   const total = srcData.reduce((s, d) => s + d.value, 0);
-  const themeTitle = allThemes.length > 8 ? `Top message themes (8 of ${allThemes.length})` : "Top message themes";
+  const themeTitle = allThemes.length > 8 ? `Top message themes (8 of ${allThemes.length}, primary per page)` : "Top message themes (primary per page)";
   return (
     <>
       <Sec n={4} title="Data at a glance"
@@ -489,7 +520,7 @@ function DataVisuals({ pkg }) {
            tip="Counts are observed artifacts from this run — never population claims." />
       <div className="grid2">
         <div className="card"><div className="title">Source mix ({total} artifacts) <Info tip="Every collected source by type — websites, archives, news, reviews, ads, LinkedIn. Click Sources & evidence for each URL." /></div><HBar data={srcData} /></div>
-        <div className="card"><div className="title">{themeTitle} <Info tip="What the competitor talks about most, classified per page/post by the message classifier." /></div><HBar data={themeData} colorVar="--good" /></div>
+        <div className="card"><div className="title">{themeTitle} <Info tip="What the competitor talks about most — each page/post's PRIMARY theme (temporal counts elsewhere also include supporting themes and say so). Hover any bar for their actual wording + sources." /></div><HBar data={themeData} colorVar="--good" /></div>
         <div className="card"><div className="title">Competitive stance <Info tip="How each page/post positions vs competitors: ignores → implicit contrast → named comparison → direct attack." /></div><HBar data={stanceData} colorVar="--warn" /></div>
       </div>
     </>
@@ -517,7 +548,7 @@ function Positioning({ pkg }) {
 
 /* ----------------------- product marketing tab ------------------------- */
 
-function GapsSection({ pkg, srcIdx }) {
+function GapsSection({ pkg, srcIdx, msgIdx }) {
   const gaps = pkg.proof_gaps || [];
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
   const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
@@ -531,7 +562,7 @@ function GapsSection({ pkg, srcIdx }) {
         {gaps.map((g) => (
           <div className="gaprow" key={g.claim_id}>
             <div>
-              <div className="gaplabel" data-tip={g.claim_text}>{g.short_label}</div>
+              <div className="gaplabel" data-tip={themeTip(msgIdx, g.short_label, `Their repeated claim: “${g.claim_text}”`)}>{g.short_label}</div>
               <ActionTag verb={gapVerb(g)} tip={`attackability ${g.attackability} → ${gapVerb(g)}`} />
               {g.sample_sufficiency && g.sample_sufficiency !== "ok" && (
                 <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
@@ -580,7 +611,7 @@ function Opportunities({ pkg, srcIdx }) {
             <div className="row">
               <b data-tip={`${focal}'s own publishable proof for this angle`}>Focal proof:</b> {o.focal_proof_status} ·{" "}
               <b data-tip={`is ${focal} already using this angle?`}>already-saying-it:</b> {o.focal_current_usage} ·{" "}
-              <b>legal review:</b> {String(o.legal_review_required)}
+              <b>legal review:</b> {o.legal_review_required ? "required" : "not required"}
             </div>
             <div className="row"><b>Why it could backfire:</b> {o.why_this_could_backfire}</div>
             <div className="row"><b>Experiment:</b> {o.experiment_hypothesis}</div>
@@ -663,7 +694,7 @@ function AttackDefendMatrix({ pkg }) {
 }
 
 // PRODUCT MARKETING — key related topics per company (side-by-side theme bars).
-function KeyTopicsComparison({ pkg }) {
+function KeyTopicsComparison({ pkg, msgIdx }) {
   const tc = pkg.theme_comparison || {};
   // No focal mirror = no cross-company comparison — rendering 0-bars would
   // fabricate a measured absence (competitor themes live in Data at a glance).
@@ -691,7 +722,7 @@ function KeyTopicsComparison({ pkg }) {
       <div className="card">
         {themes.map((t) => (
           <div className="ktrow" key={t}>
-            <div className="ktlabel" data-tip={t}>{t.replace(/_/g, " ")}</div>
+            <div className="ktlabel" data-tip={themeTip(msgIdx, t)}>{t.replace(/_/g, " ")}</div>
             <div className="ktbars">
               <div className="ktbar comp" style={{ width: `${(w(t, compSh, comp) / max) * 100}%` }}
                    data-tip={`${competitor}: ${lbl(t, compSh, comp)}`} />
@@ -736,12 +767,12 @@ function VerticalThemeHeatmap({ pkg }) {
 }
 
 // LINKEDIN — what employees post about (theme bar).
-function LinkedInThemeBar({ pkg }) {
+function LinkedInThemeBar({ pkg, msgIdx }) {
   const posts = pkg.linkedin_posts || [];
   if (posts.length === 0) return null;
   const c = {};
   posts.forEach((p) => { if (p.theme) c[p.theme] = (c[p.theme] || 0) + 1; });
-  const data = Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  const data = Object.entries(c).map(([label, value]) => ({ label, value, tip: themeTip(msgIdx, label) })).sort((a, b) => b.value - a.value);
   if (data.length === 0) return null;
   return (
     <>
@@ -811,7 +842,7 @@ function WindowPicker({ runId, overlay, onOverlay }) {
 }
 
 // STRATEGY CHANGES — prior-vs-current window baseline (what WAS observed then).
-function TemporalBaseline({ pkg }) {
+function TemporalBaseline({ pkg, msgIdx }) {
   const tb = pkg.temporal_baseline || {};
   const pw = tb.prior_window;
   if (!pw) return null;
@@ -832,7 +863,7 @@ function TemporalBaseline({ pkg }) {
         </div>
         {themes.map((t) => (
           <div className="ktrow" key={t}>
-            <div className="ktlabel" data-tip={t}>{t.replace(/_/g, " ")}</div>
+            <div className="ktlabel" data-tip={themeTip(msgIdx, t)}>{t.replace(/_/g, " ")}</div>
             <div className="ktbars">
               <div className="ktbar comp" style={{ width: `${((pw.themes?.[t] || 0) / max) * 100}%` }} />
               <span className="ktnum">{pw.themes?.[t] || 0}</span>
@@ -855,7 +886,7 @@ function TemporalBaseline({ pkg }) {
 }
 
 // STRATEGY CHANGES — visual timeline (prior → current evidence bars).
-function ChangesTimeline({ pkg }) {
+function ChangesTimeline({ pkg, msgIdx }) {
   const changes = pkg.change_events || [];
   if (changes.length === 0) return null;
   const max = Math.max(1, ...changes.map((c) => (c.current_evidence_ids || []).length));
@@ -883,7 +914,7 @@ function ChangesTimeline({ pkg }) {
             : `prior window: ${(c.prior_evidence_ids || []).length} artifacts sampled`;
           return (
             <div className="tlrow2" key={c.change_id}>
-              <div className="tllabel" data-tip={c.current_state}>{themeOf(c)} {pill(c.confidence)} <span className="pill">{c.lifecycle}</span></div>
+              <div className="tllabel" data-tip={themeTip(msgIdx, themeOf(c), c.current_state)}>{themeOf(c)} {pill(c.confidence)} <span className="pill">{c.lifecycle}</span></div>
               <div className="tlprior2" data-tip={priorTitle}>{priorLabel}</div>
               <div className="tltrack2">
                 <div className="tlbar2" style={{ width: `${((c.current_evidence_ids || []).length / max) * 100}%` }} />
@@ -1805,6 +1836,7 @@ export default function App() {
 
   const focalDefault = (runs && runs.find((r) => r.compare_to)?.compare_to) || "rippling.com";
   const srcIdx = pkg ? themeSourceIndex(pkg) : {};
+  const msgIdx = pkg ? themeMessagingIndex(pkg) : {};
 
   return (
     <div className={`app ${menuOpen ? "menu-open" : ""}`}>
@@ -1871,11 +1903,11 @@ export default function App() {
               <>
                 <TabIntro q="What did we find, and what should Rippling do about it?"
                           why="Start with the scorecard (the whole analysis as actions), take the top plays, then ask the chat anything — it answers only from this run's collected evidence and cites its sources." />
-                <StrategicScorecard pkg={pkg} go={setTab} />
+                <StrategicScorecard pkg={pkg} go={setTab} msgIdx={msgIdx} />
                 <TopActions pkg={pkg} onOpenBoard={() => setTab("product")} />
                 <ChatPanel key={selected} runId={selected} pkg={pkg} />
                 <Positioning pkg={pkg} />
-                <DataVisuals pkg={pkg} />
+                <DataVisuals pkg={pkg} msgIdx={msgIdx} />
               </>
             )}
             {tab === "product" && (
@@ -1885,9 +1917,9 @@ export default function App() {
                 <AttackDefendMatrix pkg={pkg} />
                 <ClaimVsRecord pkg={pkg} />
                 <FunnelVoids pkg={pkg} />
-                <GapsSection pkg={pkg} srcIdx={srcIdx} />
+                <GapsSection pkg={pkg} srcIdx={srcIdx} msgIdx={msgIdx} />
                 <Opportunities pkg={pkg} srcIdx={srcIdx} />
-                <KeyTopicsComparison pkg={pkg} />
+                <KeyTopicsComparison pkg={pkg} msgIdx={msgIdx} />
                 <VerticalThemeHeatmap pkg={pkg} />
                 <VerticalAnalysis pkg={pkg} />
               </>
@@ -1897,7 +1929,7 @@ export default function App() {
                 <TabIntro q="What are their people saying that their website isn't?"
                           why="Employee posts are the leading indicator — launches, demos, and themes show up here first. Use this tab to catch the story early and to see which audiences their feed serves that yours doesn't." />
                 <ChannelProofSplit pkg={pkg} />
-                <LinkedInThemeBar pkg={pkg} />
+                <LinkedInThemeBar pkg={pkg} msgIdx={msgIdx} />
                 <LinkedInPosts pkg={pkg} />
                 <PersonaChannelHeatmap pkg={pkg} />
               </>
@@ -1922,8 +1954,8 @@ export default function App() {
                         ` ${winOverlay.reconciliation_notes.length} event(s) re-reconciled under these windows.`}
                     </div>
                   )}
-                  <TemporalBaseline pkg={shim} />
-                  <ChangesTimeline pkg={shim} />
+                  <TemporalBaseline pkg={shim} msgIdx={msgIdx} />
+                  <ChangesTimeline pkg={shim} msgIdx={msgIdx} />
                   <StrategyOverTime pkg={shim} srcIdx={srcIdx} />
                 </>
               );

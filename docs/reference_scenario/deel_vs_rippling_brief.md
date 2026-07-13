@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T03:34:24.722846+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T03:54:41.845041+00:00*
 
 ## Executive summary
 
@@ -22,14 +22,14 @@
 - **The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure** `product_marketing_proof` [medium]
   - Why now: Deel is marketing breadth — 7 new integrated products announced to cover global hiring, payroll, compliance, and workforce management. But announcing more products is not the same as giving customers the ability to shape any one of them to their actual workflow. Rippling's proof point on this theme is a strong, demonstrable capability: build custom internal apps without code to automate workflow-specific processes. The action is to make that capability tangible and comparable — show, in a live demo, a specific global HR/payroll edge case (e.g., a multi-country approval exception or compliance escalation) being solved via a no-code custom app, and let the buyer judge configurability vs. product-count.
   - Product comparability: **weak** (Deel's 7 newly launched integrated products (global hiring, payroll, compliance, workforce management) vs Rippling custom internal app builder (no-code) applied to global HR/payroll workflows)
-  - Rippling proof: available · already-saying-it: underweighted · legal review: True
+  - Rippling proof: available · already-saying-it: underweighted · legal review: required
   - Risk (backfire): Deel could respond by showcasing its own configurability features (if any exist but weren't in this evidence set), reframing the comparison as apples-to-apples and neutralizing the differentiation. Additionally, because comparability is weak (product breadth vs. configurability are different value axes), a buyer or analyst could call out the comparison as a deflection rather than a direct rebuttal to Deel's breadth claim — Rippling must be careful to position this as "a different lens on complexity" rather than implying its custom app builder makes Deel's 7 products redundant.
   - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
   - Kill rule: If validate_proof stage surfaces credible evidence that Deel has an equivalent no-code configurability capability, or if legal review cannot clear the asset without diluting it into a non-differentiated statement, kill the campaign-launch stage and revert to internal enablement only
 - **"Certified, Not Just Claimed": IT Security Demand-Gen Push Targeting Deel Endpoint-Security Claims** `demand_gen_campaign` [medium]
   - Why now: Deel IT's endpoint protection claims are backed mostly by feature assertions and a single customer story, not third-party certification. Rippling can lead with its documented industry certifications and regular audits as the evidence-backed reason security-conscious IT buyers should scrutinize vendor security claims before trusting device-lifecycle security to a payroll-first HR platform.
   - Product comparability: **weak** (Deel IT (endpoint protection / device fleet management) vs Rippling IT (device management + security/compliance program))
-  - Rippling proof: partial · already-saying-it: underweighted · legal review: True
+  - Rippling proof: partial · already-saying-it: underweighted · legal review: required
   - Risk (backfire): Deel may already hold relevant certifications not captured in the supplied evidence (the gap reflects observed proof distribution, not an audited absence of certification) — if Deel publishes or already has equivalent certification claims, Rippling's implicit "more substantiated" framing could look either redundant or, worse, factually wrong, inviting a direct rebuttal. The campaign must avoid stating or implying Deel is uncertified.
   - Campaign: audience IT and security decision-makers at mid-market companies (200-2000 employees) currently evaluating or renewing global HR/IT/EOR platforms, Security-conscious buyers in industries with compliance sensitivity (fintech, healthcare-adjacent, regulated services); channels LinkedIn ABM ads targeting IT/security titles, Search ads on security-certification and vendor-comparison keywords, Retargeting ads to visitors of security/compliance content; metric Marketing-qualified leads (MQLs) from IT/security persona segment attributable to campaign
   - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
@@ -37,7 +37,7 @@
 - **Deel Goals/Engage Objection-Handling Battlecard + Discovery Guide for Workforce Visibility Deals** `competitive_enablement` [low]
   - Why now: When Deel reps lead with "Goals in Engage gives you built-in goal-setting and alignment tracking across the org, without manual effort," Rippling's field team needs a structured way to probe the actual evidence behind that claim (which today is thin: two feature assertions, one customer story, one quantified outcome, one unsupported assertion) rather than concede the ground or overclaim Rippling's own unified position. The angle is not "Rippling is better at goals tracking" — Rippling has no comparable proof point on this theme yet — but rather "let's test whether Deel's alignment claim holds up under the customer's actual multi-level, multi-country reporting workflow," using discovery questions that surface gaps distributors of HR software commonly find in point/expansion modules bolted onto payroll-and-EOR cores.
   - Product comparability: **weak** (Deel Engage (Goals module) vs Rippling workforce management / HRIS)
-  - Rippling proof: missing · already-saying-it: underweighted · legal review: True
+  - Rippling proof: missing · already-saying-it: underweighted · legal review: required
   - Risk (backfire): If reps use the battlecard to imply Rippling has superior or equivalent goal-tracking capability without any shipped proof, prospects or Deel could call out the bluff, and it could surface publicly as an unsubstantiated claim, damaging trust. There is also risk that probing Deel's "weak proof" comes across as deflection if Rippling cannot show its own roadmap or capability in this area when directly asked.
   - Staged: build_proof → validate_proof → launch_campaign (each with its own proceed/stop rule)
   - Kill rule: If fewer than 25% of piloted deals show improved objection handling, or if legal/compliance identifies unresolvable risk in the claims framing, retire the asset and default reps to a neutral 'we don't have a comparable proof point yet' response
@@ -63,7 +63,7 @@ _Rating rubric: proof strength is the MODAL per-page strength for the theme (tie
 
 - **Dominant company message:** Deel is an all-in-one global people platform that enables companies to expand internationally with unified payroll, HR, compliance, and workforce management across 150 countries.
   - Basis: surfaces comparison, customers, home, platform, pricing, product, segment, unknown; source classes events, exa_web, linkedin_post, wayback, webpage
-- **Themes observed:** consolidation (39), automation (14), compliance (10), integration_ecosystem (8), global_hiring (7), speed_to_value (7), data_unification (6), cost_reduction (5)
+- **Themes observed (primary theme per page):** consolidation (39), automation (14), compliance (10), integration_ecosystem (8), global_hiring (7), speed_to_value (7), data_unification (6), cost_reduction (5)
 - **Villain / status-quo wording (exact):**
   - “setting up entities in multiple countries”
   - “fragmented local providers”
@@ -92,16 +92,16 @@ _Rating rubric: proof strength is the MODAL per-page strength for the theme (tie
 
 | Product | Pages | Themes | Personas | Proof |
 |---|---:|---|---|---|
-| HRIS | 17 | consolidation, api_extensibility | operations_leader, hr_leader | quantified_customer_outcome, feature_assertion |
-| Payroll | 15 | consolidation, compliance | hr_leader, operations_leader | quantified_customer_outcome, feature_assertion |
-| Global Payroll | 14 | consolidation, integration_ecosystem | operations_leader, hr_leader | quantified_customer_outcome, feature_assertion |
-| Deel Payroll | 12 | consolidation, compliance | hr_leader, operations_leader | named_customer_story, feature_assertion |
-| PEO | 11 | consolidation, compliance | hr_leader, operations_leader | quantified_customer_outcome, feature_assertion |
-| Deel HR | 11 | consolidation, global_hiring | hr_leader, operations_leader | feature_assertion, quantified_customer_outcome |
+| HRIS | 41 | consolidation, data_unification | hr_leader, operations_leader | quantified_customer_outcome, feature_assertion |
+| Employer of Record (EOR) | 35 | consolidation, compliance | operations_leader, hr_leader | feature_assertion, quantified_customer_outcome |
+| Payroll | 29 | consolidation, compliance | hr_leader, operations_leader | feature_assertion, quantified_customer_outcome |
+| Global payroll | 19 | consolidation, integration_ecosystem | operations_leader, hr_leader | quantified_customer_outcome, feature_assertion |
+| PEO | 17 | consolidation, compliance | operations_leader, hr_leader | feature_assertion, quantified_customer_outcome |
+| Deel Mobility | 13 | consolidation, data_unification | hr_leader, operations_leader | feature_assertion, quantified_customer_outcome |
+| Contractor Management | 12 | consolidation, compliance | operations_leader, hr_leader | quantified_customer_outcome, feature_assertion |
+| Engage | 11 | consolidation, employee_experience | hr_leader, people_ops_manager | feature_assertion, quantified_customer_outcome |
 | Compliance Hub | 11 | consolidation, data_unification | hr_leader, founder_or_ceo | quantified_customer_outcome, feature_assertion |
-| EOR (Employer of Record) | 11 | consolidation, global_hiring | operations_leader, founder_or_ceo | quantified_customer_outcome, feature_assertion |
-| Employer of Record (EOR) | 10 | consolidation, cost_reduction | founder_or_ceo, operations_leader | feature_assertion, quantified_customer_outcome |
-| Deel Mobility | 10 | consolidation, data_unification | hr_leader, operations_leader | feature_assertion, quantified_customer_outcome |
+| Deel IT | 11 | consolidation, security_and_control | it_leader, operations_leader | quantified_customer_outcome, feature_assertion |
 
 ## Positioning by product vertical (Deel)
 
@@ -213,7 +213,7 @@ Individual public posts (Exa-extracted text + real post link), classified. Click
 | Deel | data_unification | category_attack | [link](https://www.linkedin.com/posts/deel_deel-ai-analytics-is-live-ask-any-workforce-activity-7480613431809843200-KAc7) | Deel AI Analytics enables instant workforce insights through natural language queries on a |
 | Shirleyleaalexander | cross_system_workflow | implicit_contrast | [link](https://www.linkedin.com/posts/shirleyleaalexander_deel-is-hiring-a-founding-account-executive-activity-7481023411255697408-KKGB) | Deel's new agentic workflow platform (Akai) automates repetitive manual workflows for glob |
 | Shahriyarmim | speed_to_value | — | [link](https://www.linkedin.com/posts/shahriyarmim_yesterday-we-launched-the-new-deel-app-activity-7468585820481036288-GcYo) | The new Deel app is rebuilt from scratch to reduce time workers spend on the platform by o |
-| Dan Westgarth 710650a4 | native_platform_breadth | implicit_contrast | [link](https://www.linkedin.com/posts/dan-westgarth-710650a4_big-milestone-for-us-at-deel-last-week-activity-7442224497837035521-1kzg) | Big milestone for us at Deel 🙌 Last week during The Big Deel we showed off a new pillar of |
+| Dan Westgarth | native_platform_breadth | implicit_contrast | [link](https://www.linkedin.com/posts/dan-westgarth-710650a4_big-milestone-for-us-at-deel-last-week-activity-7442224497837035521-1kzg) | Big milestone for us at Deel 🙌 Last week during The Big Deel we showed off a new pillar of |
 | Alanprice | automation | — | [link](https://www.linkedin.com/posts/alanprice_at-deel-for-our-ats-product-were-reshaping-activity-7480212257050910720-d9zE) | AI agents are being integrated into ATS workflows to automate repetitive tasks and improve |
 | Shahriyarmim | native_platform_breadth | — | [link](https://www.linkedin.com/posts/shahriyarmim_were-hiring-a-staff-product-designer-to-activity-7466161258359357440-_6mz) | We're hiring a Staff Product Designer to help us shape Design Systems at Deel. Here is my  |
 | Jacintobarreiros | automation | implicit_contrast | [link](https://www.linkedin.com/posts/jacintobarreiros_im-incredibly-proud-to-have-led-the-product-activity-7478440070786650112-UaWL) | Deel built an AI-first recruitment system that dramatically reduces hiring time by automat |

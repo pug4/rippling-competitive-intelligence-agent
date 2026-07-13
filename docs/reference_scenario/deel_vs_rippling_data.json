@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-13T03:34:24.722846+00:00",
+    "generated_at": "2026-07-13T03:54:41.845041+00:00",
     "stop_reason": "runtime_exhausted",
     "stop_reason_label": "budget-bounded (hit the research-time cap)",
     "iterations": 19,
@@ -625,10 +625,34 @@
   "product_positioning": [
     {
       "product": "HRIS",
-      "pages": 17,
+      "pages": 41,
       "themes": [
         "consolidation",
-        "api_extensibility",
+        "data_unification",
+        "global_hiring"
+      ],
+      "personas": [
+        "hr_leader",
+        "operations_leader",
+        "founder_or_ceo"
+      ],
+      "proof_types": [
+        "quantified_customer_outcome",
+        "feature_assertion",
+        "customer_quotation"
+      ],
+      "category_entry_points": [
+        "consolidating_hr_tools",
+        "opening_new_country",
+        "hiring_first_international_employee"
+      ]
+    },
+    {
+      "product": "Employer of Record (EOR)",
+      "pages": 35,
+      "themes": [
+        "consolidation",
+        "compliance",
         "global_hiring"
       ],
       "personas": [
@@ -637,23 +661,23 @@
         "founder_or_ceo"
       ],
       "proof_types": [
-        "quantified_customer_outcome",
         "feature_assertion",
-        "independent_validation"
+        "quantified_customer_outcome",
+        "customer_quotation"
       ],
       "category_entry_points": [
         "opening_new_country",
         "consolidating_hr_tools",
-        "automating_onboarding_offboarding"
+        "hiring_first_international_employee"
       ]
     },
     {
       "product": "Payroll",
-      "pages": 15,
+      "pages": 29,
       "themes": [
         "consolidation",
         "compliance",
-        "automation"
+        "data_unification"
       ],
       "personas": [
         "hr_leader",
@@ -661,9 +685,9 @@
         "finance_leader"
       ],
       "proof_types": [
-        "quantified_customer_outcome",
         "feature_assertion",
-        "customer_quotation"
+        "quantified_customer_outcome",
+        "named_customer_story"
       ],
       "category_entry_points": [
         "opening_new_country",
@@ -672,12 +696,12 @@
       ]
     },
     {
-      "product": "Global Payroll",
-      "pages": 14,
+      "product": "Global payroll",
+      "pages": 19,
       "themes": [
         "consolidation",
         "integration_ecosystem",
-        "global_hiring"
+        "api_extensibility"
       ],
       "personas": [
         "operations_leader",
@@ -692,49 +716,25 @@
       "category_entry_points": [
         "opening_new_country",
         "consolidating_hr_tools",
-        "automating_onboarding_offboarding"
-      ]
-    },
-    {
-      "product": "Deel Payroll",
-      "pages": 12,
-      "themes": [
-        "consolidation",
-        "compliance",
-        "cost_reduction"
-      ],
-      "personas": [
-        "hr_leader",
-        "operations_leader",
-        "finance_leader"
-      ],
-      "proof_types": [
-        "named_customer_story",
-        "feature_assertion",
-        "customer_quotation"
-      ],
-      "category_entry_points": [
-        "consolidating_hr_tools",
-        "opening_new_country",
-        "integrating_an_acquisition"
+        "hiring_first_international_employee"
       ]
     },
     {
       "product": "PEO",
-      "pages": 11,
+      "pages": 17,
       "themes": [
         "consolidation",
         "compliance",
         "cost_reduction"
       ],
       "personas": [
-        "hr_leader",
         "operations_leader",
+        "hr_leader",
         "finance_leader"
       ],
       "proof_types": [
-        "quantified_customer_outcome",
         "feature_assertion",
+        "quantified_customer_outcome",
         "customer_quotation"
       ],
       "category_entry_points": [
@@ -744,27 +744,75 @@
       ]
     },
     {
-      "product": "Deel HR",
-      "pages": 11,
+      "product": "Deel Mobility",
+      "pages": 13,
       "themes": [
         "consolidation",
-        "global_hiring",
-        "native_platform_breadth"
+        "data_unification",
+        "global_hiring"
       ],
       "personas": [
         "hr_leader",
         "operations_leader",
-        "finance_leader"
+        "founder_or_ceo"
       ],
       "proof_types": [
         "feature_assertion",
         "quantified_customer_outcome",
+        "named_customer_story"
+      ],
+      "category_entry_points": [
+        "opening_new_country",
+        "consolidating_hr_tools",
+        "hiring_first_international_employee"
+      ]
+    },
+    {
+      "product": "Contractor Management",
+      "pages": 12,
+      "themes": [
+        "consolidation",
+        "compliance",
+        "api_extensibility"
+      ],
+      "personas": [
+        "operations_leader",
+        "hr_leader",
+        "finance_leader"
+      ],
+      "proof_types": [
+        "quantified_customer_outcome",
+        "feature_assertion",
         "independent_validation"
       ],
       "category_entry_points": [
-        "consolidating_hr_tools",
         "opening_new_country",
-        "hiring_first_international_employee"
+        "consolidating_hr_tools",
+        "managing_contractors_and_employees"
+      ]
+    },
+    {
+      "product": "Engage",
+      "pages": 11,
+      "themes": [
+        "consolidation",
+        "employee_experience",
+        "data_unification"
+      ],
+      "personas": [
+        "hr_leader",
+        "people_ops_manager",
+        "operations_leader"
+      ],
+      "proof_types": [
+        "feature_assertion",
+        "quantified_customer_outcome",
+        "named_customer_story"
+      ],
+      "category_entry_points": [
+        "consolidating_hr_tools",
+        "automating_onboarding_offboarding",
+        "opening_new_country"
       ]
     },
     {
@@ -791,111 +839,15 @@
       ]
     },
     {
-      "product": "EOR (Employer of Record)",
-      "pages": 11,
-      "themes": [
-        "consolidation",
-        "global_hiring",
-        "integration_ecosystem"
-      ],
-      "personas": [
-        "operations_leader",
-        "founder_or_ceo",
-        "hr_leader"
-      ],
-      "proof_types": [
-        "quantified_customer_outcome",
-        "feature_assertion",
-        "customer_quotation"
-      ],
-      "category_entry_points": [
-        "opening_new_country",
-        "consolidating_hr_tools",
-        "hiring_first_international_employee"
-      ]
-    },
-    {
-      "product": "Employer of Record (EOR)",
-      "pages": 10,
-      "themes": [
-        "consolidation",
-        "cost_reduction",
-        "integration_ecosystem"
-      ],
-      "personas": [
-        "founder_or_ceo",
-        "operations_leader",
-        "hr_leader"
-      ],
-      "proof_types": [
-        "feature_assertion",
-        "quantified_customer_outcome",
-        "independent_validation"
-      ],
-      "category_entry_points": [
-        "opening_new_country",
-        "consolidating_hr_tools",
-        "hiring_first_international_employee"
-      ]
-    },
-    {
-      "product": "Deel Mobility",
-      "pages": 10,
-      "themes": [
-        "consolidation",
-        "data_unification",
-        "global_hiring"
-      ],
-      "personas": [
-        "hr_leader",
-        "operations_leader",
-        "finance_leader"
-      ],
-      "proof_types": [
-        "feature_assertion",
-        "quantified_customer_outcome",
-        "named_customer_story"
-      ],
-      "category_entry_points": [
-        "opening_new_country",
-        "consolidating_hr_tools",
-        "hiring_first_international_employee"
-      ]
-    },
-    {
-      "product": "Contractor Management",
-      "pages": 10,
-      "themes": [
-        "consolidation",
-        "compliance",
-        "global_hiring"
-      ],
-      "personas": [
-        "operations_leader",
-        "hr_leader",
-        "finance_leader"
-      ],
-      "proof_types": [
-        "quantified_customer_outcome",
-        "feature_assertion",
-        "independent_validation"
-      ],
-      "category_entry_points": [
-        "opening_new_country",
-        "managing_contractors_and_employees",
-        "consolidating_hr_tools"
-      ]
-    },
-    {
       "product": "Deel IT",
-      "pages": 8,
+      "pages": 11,
       "themes": [
         "consolidation",
         "security_and_control"
       ],
       "personas": [
-        "operations_leader",
         "it_leader",
+        "operations_leader",
         "hr_leader"
       ],
       "proof_types": [
@@ -907,6 +859,54 @@
         "consolidating_hr_tools",
         "opening_new_country",
         "integrating_an_acquisition"
+      ]
+    },
+    {
+      "product": "HR Platform",
+      "pages": 10,
+      "themes": [
+        "consolidation",
+        "compliance",
+        "automation"
+      ],
+      "personas": [
+        "hr_leader",
+        "operations_leader",
+        "founder_or_ceo"
+      ],
+      "proof_types": [
+        "feature_assertion",
+        "quantified_customer_outcome",
+        "customer_quotation"
+      ],
+      "category_entry_points": [
+        "opening_new_country",
+        "preparing_for_audit",
+        "consolidating_hr_tools"
+      ]
+    },
+    {
+      "product": "Deel Platform",
+      "pages": 9,
+      "themes": [
+        "consolidation",
+        "compliance",
+        "employee_experience"
+      ],
+      "personas": [
+        "founder_or_ceo",
+        "hr_leader",
+        "operations_leader"
+      ],
+      "proof_types": [
+        "quantified_customer_outcome",
+        "feature_assertion",
+        "named_customer_story"
+      ],
+      "category_entry_points": [
+        "opening_new_country",
+        "consolidating_hr_tools",
+        "hiring_first_international_employee"
       ]
     }
   ],
@@ -1226,22 +1226,6 @@
       ]
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "competitor_share": 0.0,
-      "focal_share": 0.0088,
-      "share_ratio": null,
-      "share_delta": -0.0088,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [],
-      "focal_example_artifact_ids": [
-        "ART-9e8697e401cd"
-      ],
-      "top_verticals": []
-    },
-    {
       "cep": "rapid_growth_scaling_employees",
       "competitor_pages": 0,
       "focal_pages": 1,
@@ -1274,7 +1258,23 @@
       "top_verticals": []
     },
     {
-      "cep": "replacing_traditional_cross_border_payment_rails",
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-9e8697e401cd"
+      ],
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_service_offerings",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -1284,10 +1284,13 @@
       "ownership": "insufficient_sample",
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
+        "ART-22cb144808e1"
       ],
       "focal_example_artifact_ids": [],
-      "top_verticals": []
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
     },
     {
       "cep": "growing_remote_and_international_teams",
@@ -1305,6 +1308,40 @@
       "focal_example_artifact_ids": [],
       "top_verticals": [
         "benefits"
+      ]
+    },
+    {
+      "cep": "replacing_traditional_cross_border_payment_rails",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
+    },
+    {
+      "cep": "managing_global_device_fleet",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4d052e00f8e5"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "it_device_management"
       ]
     },
     {
@@ -1327,7 +1364,7 @@
       ]
     },
     {
-      "cep": "expanding_service_offerings",
+      "cep": "expanding_to_new_countries",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -1337,7 +1374,7 @@
       "ownership": "insufficient_sample",
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
-        "ART-22cb144808e1"
+        "ART-ceb5d6ab049f"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
@@ -1373,43 +1410,6 @@
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
         "ART-39db3bdefb26"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "managing_global_device_fleet",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4d052e00f8e5"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "it_device_management"
-      ]
-    },
-    {
-      "cep": "expanding_to_new_countries",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-ceb5d6ab049f"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
@@ -65490,7 +65490,7 @@
     },
     {
       "artifact_id": "ART-edf178c1cd08",
-      "author": "Dan Westgarth 710650a4",
+      "author": "Dan Westgarth",
       "author_role": null,
       "post_url": "https://www.linkedin.com/posts/dan-westgarth-710650a4_big-milestone-for-us-at-deel-last-week-activity-7442224497837035521-1kzg",
       "posted_at": "2026-03-24T00:00:00Z",
@@ -65784,7 +65784,7 @@
     },
     {
       "artifact_id": "ART-7114703efa09",
-      "author": "Saumil Sharma 8273601a",
+      "author": "Saumil Sharma",
       "author_role": null,
       "post_url": "https://www.linkedin.com/posts/saumil-sharma-8273601a_payroll-ai-futureofwork-activity-7474815985288368128-WV3c",
       "posted_at": "2026-06-22T00:00:00Z",
@@ -68377,60 +68377,60 @@
   },
   "theme_comparison": {
     "competitor_themes": {
-      "automation": 14,
-      "all_in_one": 1,
-      "cost_reduction": 5,
-      "data_unification": 6,
-      "status": 0,
-      "consolidation": 39,
-      "compliance": 10,
-      "integration_ecosystem": 8,
       "global_hiring": 7,
-      "native_platform_breadth": 5,
+      "integration_ecosystem": 8,
+      "compliance": 10,
       "employee_experience": 4,
-      "speed_to_value": 7
+      "cost_reduction": 5,
+      "status": 0,
+      "speed_to_value": 7,
+      "data_unification": 6,
+      "automation": 14,
+      "native_platform_breadth": 5,
+      "consolidation": 39,
+      "all_in_one": 1
     },
     "focal_themes": {
-      "automation": 15,
-      "all_in_one": 2,
-      "cost_reduction": 1,
-      "data_unification": 35,
-      "status": 4,
-      "consolidation": 28,
-      "compliance": 3,
-      "integration_ecosystem": 4,
       "global_hiring": 2,
-      "native_platform_breadth": 3,
+      "integration_ecosystem": 4,
+      "compliance": 3,
       "employee_experience": 2,
-      "speed_to_value": 2
+      "cost_reduction": 1,
+      "status": 4,
+      "speed_to_value": 2,
+      "data_unification": 35,
+      "automation": 15,
+      "native_platform_breadth": 3,
+      "consolidation": 28,
+      "all_in_one": 2
     },
     "competitor_shares": {
-      "automation": 0.1138,
-      "all_in_one": 0.0081,
-      "cost_reduction": 0.0407,
-      "data_unification": 0.0488,
-      "status": 0.0,
-      "consolidation": 0.3171,
-      "compliance": 0.0813,
-      "integration_ecosystem": 0.065,
       "global_hiring": 0.0569,
-      "native_platform_breadth": 0.0407,
+      "integration_ecosystem": 0.065,
+      "compliance": 0.0813,
       "employee_experience": 0.0325,
-      "speed_to_value": 0.0569
+      "cost_reduction": 0.0407,
+      "status": 0.0,
+      "speed_to_value": 0.0569,
+      "data_unification": 0.0488,
+      "automation": 0.1138,
+      "native_platform_breadth": 0.0407,
+      "consolidation": 0.3171,
+      "all_in_one": 0.0081
     },
     "focal_shares": {
-      "automation": 0.1316,
-      "all_in_one": 0.0175,
-      "cost_reduction": 0.0088,
-      "data_unification": 0.307,
-      "status": 0.0351,
-      "consolidation": 0.2456,
-      "compliance": 0.0263,
-      "integration_ecosystem": 0.0351,
       "global_hiring": 0.0175,
-      "native_platform_breadth": 0.0263,
+      "integration_ecosystem": 0.0351,
+      "compliance": 0.0263,
       "employee_experience": 0.0175,
-      "speed_to_value": 0.0175
+      "cost_reduction": 0.0088,
+      "status": 0.0351,
+      "speed_to_value": 0.0175,
+      "data_unification": 0.307,
+      "automation": 0.1316,
+      "native_platform_breadth": 0.0263,
+      "consolidation": 0.2456,
+      "all_in_one": 0.0175
     },
     "competitor_n_classified": 123,
     "focal_n_classified": 114,
@@ -82446,22 +82446,6 @@
           ]
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "competitor_share": 0.0,
-          "focal_share": 0.0088,
-          "share_ratio": null,
-          "share_delta": -0.0088,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [],
-          "focal_example_artifact_ids": [
-            "ART-9e8697e401cd"
-          ],
-          "top_verticals": []
-        },
-        {
           "cep": "rapid_growth_scaling_employees",
           "competitor_pages": 0,
           "focal_pages": 1,
@@ -82494,7 +82478,23 @@
           "top_verticals": []
         },
         {
-          "cep": "replacing_traditional_cross_border_payment_rails",
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-9e8697e401cd"
+          ],
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_service_offerings",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82504,10 +82504,13 @@
           "ownership": "insufficient_sample",
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
+            "ART-22cb144808e1"
           ],
           "focal_example_artifact_ids": [],
-          "top_verticals": []
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
         },
         {
           "cep": "growing_remote_and_international_teams",
@@ -82525,6 +82528,40 @@
           "focal_example_artifact_ids": [],
           "top_verticals": [
             "benefits"
+          ]
+        },
+        {
+          "cep": "replacing_traditional_cross_border_payment_rails",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
+        },
+        {
+          "cep": "managing_global_device_fleet",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4d052e00f8e5"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "it_device_management"
           ]
         },
         {
@@ -82547,7 +82584,7 @@
           ]
         },
         {
-          "cep": "expanding_service_offerings",
+          "cep": "expanding_to_new_countries",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82557,7 +82594,7 @@
           "ownership": "insufficient_sample",
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
-            "ART-22cb144808e1"
+            "ART-ceb5d6ab049f"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
@@ -82593,43 +82630,6 @@
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
             "ART-39db3bdefb26"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "managing_global_device_fleet",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4d052e00f8e5"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "it_device_management"
-          ]
-        },
-        {
-          "cep": "expanding_to_new_countries",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-ceb5d6ab049f"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
