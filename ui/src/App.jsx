@@ -3,6 +3,62 @@ import { HBar, Heatmap, ProofBar, VizSpec } from "./charts";
 
 const pill = (level) => <span className={`pill ${level}`}>{level}</span>;
 
+// ---------------------------------------------------------------------------
+// Static-demo data layer (Vercel has NO FastAPI backend).
+//
+// On startup we probe GET /api/runs once. If it does not return a real JSON
+// array — a network error (backend down), or the SPA fallback serving
+// index.html on a static host — we flip DEMO_MODE on and thereafter read every
+// GET from the bundled static files under /demo/ (written by
+// scripts/build_demo_data.py). Writes (POST) and non-bundled GETs reject so
+// the interactive features degrade gracefully behind a read-only banner.
+//
+// When the backend IS reachable (local `make api`), the probe returns the real
+// array, DEMO_MODE stays false, and behavior is byte-for-byte unchanged.
+let DEMO_MODE = false;
+
+// Map an /api GET path to its bundled static file, or null when none exists
+// (jobs, live, briefing, paid-search, and every POST have no static twin).
+function demoPathFor(path) {
+  if (path === "/api/runs") return "/demo/runs.json";
+  let m = path.match(/^\/api\/runs\/([^/]+)$/);
+  if (m) return `/demo/${m[1]}.json`;
+  m = path.match(/^\/api\/runs\/([^/]+)\/brief$/);
+  if (m) return `/demo/${m[1]}.brief.md`;
+  return null;
+}
+
+// Demo-aware fetch. Outside DEMO_MODE it is a transparent passthrough to the
+// real backend (local behavior is untouched). In DEMO_MODE a GET is redirected
+// to its bundled file — or rejected when there is no static twin — and every
+// write is rejected: the static demo is strictly read-only.
+function fetchData(path, opts) {
+  if (!DEMO_MODE) return fetch(path, opts);
+  const isGet = !opts || !opts.method || opts.method === "GET";
+  if (!isGet) return Promise.reject(new Error("read-only demo — writes are disabled"));
+  const dp = demoPathFor(path);
+  if (!dp) return Promise.reject(new Error("unavailable in the static demo"));
+  return fetch(dp);
+}
+
+// Probe the backend exactly once. On a static host /api/runs is rewritten to
+// index.html (200 HTML) — r.json() throws there — and on a dead backend the
+// fetch rejects; either way we go read-only.
+async function probeBackend() {
+  try {
+    const r = await fetch("/api/runs", { method: "GET" });
+    if (!r.ok) throw new Error("api not ok");
+    const d = await r.json();
+    if (!Array.isArray(d)) throw new Error("not the api");
+    DEMO_MODE = false;
+  } catch {
+    DEMO_MODE = true;
+  }
+}
+
+// Shared read-only note text (also used as a tooltip, so plain text only).
+const DEMO_LOCAL_HINT = "available when running locally (make api && make ui-dev)";
+
 // Ask-AI wiring: App supplies { ask(context) } through context so ANY section
 // header / row can open the right-side panel without prop-drilling. A null
 // value (no run selected) makes every AskAIButton render nothing.
@@ -413,7 +469,7 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
 
   const send = async (q) => {
     const question = (q || input).trim();
-    if (!question || busy) return;
+    if (!question || busy || DEMO_MODE) return;
     setInput("");
     // Local system lines (research started/finished) are UI narration, not
     // conversation turns — keep them out of the model's history.
@@ -472,10 +528,18 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
         {busy && <div className="chatmsg assistant"><div className="chatbubble"><span className="spinner" /> thinking…</div></div>}
       </div>
       <form className="chatform" onSubmit={(e) => { e.preventDefault(); send(); }}>
-        <input className="nr-in" placeholder={vertical ? `Ask about ${competitor} ${vertical.replace(/_/g, " ")}…` : `Ask about ${competitor}…`}
+        <input className="nr-in" disabled={DEMO_MODE}
+               placeholder={DEMO_MODE ? "Chat is disabled in the read-only demo" : (vertical ? `Ask about ${competitor} ${vertical.replace(/_/g, " ")}…` : `Ask about ${competitor}…`)}
                value={input} onChange={(e) => setInput(e.target.value)} />
-        <button className="nr-btn" disabled={busy || !input.trim()}>Ask</button>
+        <button className="nr-btn" disabled={busy || DEMO_MODE || !input.trim()}
+                data-tip={DEMO_MODE ? DEMO_LOCAL_HINT : undefined}>Ask</button>
       </form>
+      {DEMO_MODE && (
+        <div className="demonote" role="note">
+          Grounded chat runs locally only — start the backend (<code>make api</code>) for
+          Q&amp;A, Ask-AI, and on-demand deeper research on this run.
+        </div>
+      )}
       </>
       )}
     </div>
@@ -513,7 +577,7 @@ function AskAIPanel({ runId, pkg, messages, onMessages, ctx, open, onClose, onRe
 
   const send = async (q) => {
     const question = (q || input).trim();
-    if (!question || busy || !runId) return;
+    if (!question || busy || !runId || DEMO_MODE) return;
     setInput("");
     const history = messages
       .filter((m) => !m.system_note)
@@ -560,10 +624,18 @@ function AskAIPanel({ runId, pkg, messages, onMessages, ctx, open, onClose, onRe
           ))}
           {busy && <div className="chatmsg assistant"><div className="chatbubble"><span className="spinner" /> thinking…</div></div>}
         </div>
+        {DEMO_MODE && (
+          <div className="demonote" role="note">
+            Ask-AI runs locally only — start the backend (<code>make api</code>) to ask
+            grounded questions about this section.
+          </div>
+        )}
         <form className="chatform askaiform" onSubmit={(e) => { e.preventDefault(); send(); }}>
-          <input className="nr-in" placeholder={ctx && ctx.label ? `Ask about ${ctx.label}…` : `Ask about ${competitor}…`}
+          <input className="nr-in" disabled={DEMO_MODE}
+                 placeholder={DEMO_MODE ? "Ask-AI is disabled in the read-only demo" : (ctx && ctx.label ? `Ask about ${ctx.label}…` : `Ask about ${competitor}…`)}
                  value={input} onChange={(e) => setInput(e.target.value)} />
-          <button className="nr-btn" disabled={busy || !input.trim()}>Ask</button>
+          <button className="nr-btn" disabled={busy || DEMO_MODE || !input.trim()}
+                  data-tip={DEMO_MODE ? DEMO_LOCAL_HINT : undefined}>Ask</button>
         </form>
       </aside>
     </>
@@ -867,6 +939,10 @@ function TopActions({ pkg, onOpenBoard }) {
 // the full JSON package, downloadable in one click. Plain same-origin anchors
 // (the vite proxy forwards /api) with a `download` filename — no blob logic.
 function DeliverablesBar({ runId }) {
+  // In the static demo the real backend endpoints are gone; point the (still
+  // genuine) downloads at the bundled report files instead.
+  const briefHref = DEMO_MODE ? `/demo/${runId}.brief.md` : `/api/runs/${runId}/brief`;
+  const jsonHref = DEMO_MODE ? `/demo/${runId}.json` : `/api/runs/${runId}`;
   return (
     <div className="card dlbar" role="region" aria-label="Required deliverables — download">
       <div className="dlbar-title">
@@ -876,7 +952,7 @@ function DeliverablesBar({ runId }) {
       <div className="dlbar-btns">
         <a
           className="dlbtn primary"
-          href={`/api/runs/${runId}/brief`}
+          href={briefHref}
           download={`${runId}-brief.md`}
           data-tip="Markdown brief: answers the four assignment questions — the competitor's messaging themes, their positioning, recent changes, and the gaps/plays for the focal company — every claim cited to a collected source."
         >
@@ -885,7 +961,7 @@ function DeliverablesBar({ runId }) {
         </a>
         <a
           className="dlbtn"
-          href={`/api/runs/${runId}`}
+          href={jsonHref}
           download={`${runId}-data.json`}
           data-tip="JSON data: the full structured package — assignment_answers (the four answers with citations), the claims ledger, every artifact with retrieval timestamps, and all classifications."
         >
@@ -1304,6 +1380,7 @@ function WindowPicker({ runId, overlay, onOverlay }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const apply = async () => {
+    if (DEMO_MODE) return;
     setBusy(true); setErr(null);
     try {
       const res = await fetch(`/api/runs/${runId}/rewindow`, {
@@ -1336,7 +1413,8 @@ function WindowPicker({ runId, overlay, onOverlay }) {
             {CURRENT_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </div>
-        <button type="button" className="nr-btn" disabled={busy || currentDays >= lookback} onClick={apply}>
+        <button type="button" className="nr-btn" disabled={busy || DEMO_MODE || currentDays >= lookback} onClick={apply}
+                data-tip={DEMO_MODE ? DEMO_LOCAL_HINT : undefined}>
           {busy ? "Recounting…" : "Apply windows"}
         </button>
         {overlay && (
@@ -1348,6 +1426,12 @@ function WindowPicker({ runId, overlay, onOverlay }) {
       </div>
       {currentDays >= lookback && <div className="nr-warn">recent window must be shorter than the history range</div>}
       {err && <div className="nr-warn">could not recount: {err}</div>}
+      {DEMO_MODE && (
+        <div className="demonote" role="note">
+          Re-slicing the windows recounts server-side — {DEMO_LOCAL_HINT}. The events
+          below use this run's original windows.
+        </div>
+      )}
     </div>
   );
 }
@@ -2042,13 +2126,16 @@ function PaidSearchTargets({ pkg, runId }) {
   useEffect(() => {
     let stop = false;
     setDraft(null); setErr(null);
-    fetch(`/api/runs/${runId}/paid-search`)
+    // No static twin for the cached draft — fetchData rejects in DEMO_MODE, so
+    // draft stays null and the (disabled) generate affordance shows instead.
+    fetchData(`/api/runs/${runId}/paid-search`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (!stop && d && d.generated) setDraft(d); })
       .catch(() => {});
     return () => { stop = true; };
   }, [runId]);
   const generate = async (force) => {
+    if (DEMO_MODE) return;
     setBusy(true); setErr(null);
     try {
       const r = await fetch(`/api/runs/${runId}/paid-search`, {
@@ -2084,9 +2171,15 @@ function PaidSearchTargets({ pkg, runId }) {
           <div className="row">
             Draft keyword clusters from this run's evidence — one model call, cached afterwards.
           </div>
-          <button className="lvbtn" disabled={busy} onClick={() => generate(false)} style={{ marginTop: 8 }}>
+          <button className="lvbtn" disabled={busy || DEMO_MODE} onClick={() => generate(false)} style={{ marginTop: 8 }}
+                  data-tip={DEMO_MODE ? DEMO_LOCAL_HINT : undefined}>
             {busy ? "Drafting…" : "Draft paid-search targets"}
           </button>
+          {DEMO_MODE && (
+            <p className="empty demonote" style={{ marginTop: 8 }}>
+              Paid-search drafting is an on-demand model call — {DEMO_LOCAL_HINT}.
+            </p>
+          )}
           {err && <p className="empty" style={{ color: "var(--bad)" }}>{err}</p>}
         </div>
       )}
@@ -2572,7 +2665,7 @@ function useJson(url, refresh) {
     }
     if (!url) return;
     let cancelled = false;
-    fetch(url)
+    fetchData(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
       .then((d) => { if (!cancelled) setData(d); })
       .catch((e) => { if (!cancelled) setErr(e); });
@@ -2903,7 +2996,21 @@ export default function App() {
   // Separate refresh counter for the (potentially large) package fetch — it
   // must NOT re-download on every 3s jobs tick, only when a report lands.
   const [pkgRefresh, setPkgRefresh] = useState(0);
-  const [runs] = useJson("/api/runs", refresh);
+  // Gate the first data fetch on the backend probe so DEMO_MODE is decided
+  // before any GET runs. `demoMode` mirrors the module flag into render so the
+  // banner / disabled composers appear once the probe resolves.
+  const [ready, setReady] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    probeBackend().finally(() => {
+      if (cancelled) return;
+      setDemoMode(DEMO_MODE);
+      setReady(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  const [runs] = useJson(ready ? "/api/runs" : null, refresh);
   const [selected, setSelected] = useState(null);
   const [pkg] = useJson(selected ? `/api/runs/${selected}` : null, pkgRefresh);
   const [jobs, setJobs] = useState([]);
@@ -2945,7 +3052,9 @@ export default function App() {
     if (briefingTried.current[selected]) return;
     briefingTried.current[selected] = true;
     const runId = selected;
-    fetch(`/api/runs/${runId}/briefing`)
+    // The briefing seed needs the backend; in the static demo it simply never
+    // lands (fetchData rejects), and the chat shows its starter hint instead.
+    fetchData(`/api/runs/${runId}/briefing`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d || !d.briefing) return;
@@ -2959,14 +3068,17 @@ export default function App() {
 
   // Seed jobs on mount — without this, a page refresh mid-run showed nothing
   // until the user started ANOTHER run (the poller only armed on submit).
+  // No live jobs exist in the static demo, so skip it (no backend to poll).
   useEffect(() => {
+    if (!ready || DEMO_MODE) return; // wait for the probe, then skip if no backend
     fetch("/api/jobs")
       .then((r) => (r.ok ? r.json() : []))
       .then((js) => { if (Array.isArray(js) && js.length) setJobs(js); })
       .catch(() => {});
-  }, []);
+  }, [ready]);
 
   useEffect(() => {
+    if (DEMO_MODE) return; // static demo has no live jobs — never poll /api/jobs
     const active =
       jobs.some((j) => j.status === "pending" || j.status === "running") ||
       (runs || []).some((r) => r.in_progress && r.live_status === "running");
@@ -3129,7 +3241,18 @@ export default function App() {
       </div>
       <div className="sidebar">
         <h1>Competitive Intel</h1>
-        <NewRunForm onSubmit={submitRun} focalDefault={focalDefault} />
+        {demoMode ? (
+          <div className="newrun demo-newrun">
+            <div className="nr-title">+ New analysis</div>
+            <div className="nr-help">
+              Live runs need the local backend. Clone the repo and run{" "}
+              <code>make api &amp;&amp; make ui-dev</code> to start your own analysis —
+              this shareable link is a read-only demo of completed runs.
+            </div>
+          </div>
+        ) : (
+          <NewRunForm onSubmit={submitRun} focalDefault={focalDefault} />
+        )}
         <JobsList jobs={jobs} onSelect={(rid) => { setSelected(rid); setMenuOpen(false); }} />
         <p className="meta" style={{ color: "var(--muted)", fontSize: 12, marginTop: 12 }}>Runs</p>
         {!runs && <p className="empty">Loading…</p>}
@@ -3173,6 +3296,13 @@ export default function App() {
         ))}
       </div>
       <div className="main">
+        {demoMode && (
+          <div className="demobanner" role="note">
+            📖 Read-only demo — this is a real completed analysis served statically.
+            Run it locally (<code>make api &amp;&amp; make ui-dev</code>) for the chat, Ask-AI,
+            live runs, deeper research, and window re-slicing.
+          </div>
+        )}
         {showLive && (
           <LiveRunView
             key={selected}

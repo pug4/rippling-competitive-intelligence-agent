@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd ui && npm install && npm run build",
+  "outputDirectory": "ui/dist",
+  "rewrites": [
+    { "source": "/((?!demo/|assets/).*)", "destination": "/index.html" }
+  ]
+}
