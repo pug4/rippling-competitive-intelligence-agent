@@ -344,6 +344,61 @@ def _similarweb_summary(data: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def _serpapi_ads_summary(data: dict[str, Any]) -> dict[str, Any] | None:
+    """Deterministic summary of Google Ads Transparency creatives collected via
+    SerpApi (``collection_method == 'serpapi_transparency'``).
+
+    Claims ONLY what the API returns: advertiser (+ verified id), format mix,
+    run-date window (first_shown -> last_shown), and VIDEO ad headlines (real
+    machine-readable copy). Image/text creative copy is a rendered image and is
+    never surfaced as text. No spend / impressions / performance — Google
+    Transparency shows none for commercial ads. Returns None when there are no
+    such records.
+    """
+    rows = [a for a in data["artifacts"] if a.get("collection_method") == "serpapi_transparency"]
+    if not rows:
+        return None
+    advertisers: dict[str, str | None] = {}
+    fmt_counts = {"video": 0, "image": 0, "text": 0, "other": 0}
+    first_dates: list[str] = []
+    last_dates: list[str] = []
+    video_examples: list[dict[str, str]] = []
+    non_machine_readable = 0
+    for a in rows:
+        meta = a.get("metadata") or {}
+        rec = meta.get("ad_record") or {}
+        adv = str(rec.get("advertiser") or meta.get("advertiser") or "").strip()
+        if adv:
+            advertisers[adv] = meta.get("advertiser_id") or advertisers.get(adv)
+        fmt = str(rec.get("format") or meta.get("serpapi_format") or "").strip().lower()
+        fmt_counts[fmt if fmt in fmt_counts else "other"] += 1
+        if rec.get("first_seen"):
+            first_dates.append(str(rec["first_seen"]))
+        if rec.get("last_seen"):
+            last_dates.append(str(rec["last_seen"]))
+        if not meta.get("copy_machine_readable"):
+            non_machine_readable += 1
+        headline = str(rec.get("headline") or "").strip()
+        if fmt == "video" and headline and len(video_examples) < 5:
+            video_examples.append(
+                {
+                    "headline": headline,
+                    "permalink": str(rec.get("source_url") or a.get("url") or ""),
+                }
+            )
+    return {
+        "n_creatives": len(rows),
+        "advertisers": [{"name": k, "advertiser_id": v} for k, v in advertisers.items()],
+        "format_mix": {k: v for k, v in fmt_counts.items() if v},
+        "date_range": {
+            "earliest_first_shown": min(first_dates) if first_dates else None,
+            "latest_last_shown": max(last_dates) if last_dates else None,
+        },
+        "video_examples": video_examples,
+        "non_machine_readable_creatives": non_machine_readable,
+    }
+
+
 def _similarweb_peers(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Deterministic rollup of stored PEER Similarweb artifacts (metadata.peer).
 
@@ -649,6 +704,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     linkedin_posts = _linkedin_posts(data)
     similarweb = _similarweb_summary(data)
     similarweb_peers = _similarweb_peers(data)
+    serpapi_ads = _serpapi_ads_summary(data)
     channel_alignment = synthesis.message_channel_alignment(
         data["classification_models"], data["artifact_models"]
     )
@@ -894,6 +950,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # _similarweb_summary skips on purpose so the competitor's own traffic
         # view stays untouched.
         "similarweb_peers": similarweb_peers,
+        # Observed paid ads: real Google Ads Transparency creatives collected via
+        # the SerpApi seam (deterministic; None when the seam collected nothing).
+        "serpapi_ads": serpapi_ads,
         # Buyer voice: deterministic rollup of stored family="buyer_voice"
         # classifications (review pages mined in-loop). Selection-biased
         # sample — language/direction only, never representative sentiment.
@@ -1564,6 +1623,42 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 "marketing claims either way."
             )
         add(f"  - _{bv.get('note', '')}_")
+
+    # --- Observed paid ads: Google Ads Transparency via SerpApi ------------
+    sa = pkg.get("serpapi_ads")
+    if sa:
+        add(f"\n## Observed paid ads (Google Ads Transparency via SerpApi) ({company})\n")
+        adv_line = ", ".join(
+            x["name"]
+            + (f" (verified advertiser id {x['advertiser_id']})" if x.get("advertiser_id") else "")
+            for x in sa["advertisers"]
+        )
+        fm = sa["format_mix"]
+        add(f"- **Advertiser (verified):** {adv_line or 'unnamed advertiser'}")
+        add(
+            f"- **Active creatives observed:** {sa['n_creatives']} "
+            f"({fm.get('video', 0)} video / {fm.get('image', 0)} image / {fm.get('text', 0)} text)"
+        )
+        dr = sa["date_range"]
+        if dr.get("earliest_first_shown") or dr.get("latest_last_shown"):
+            add(
+                "- **Run window (as shown by Transparency):** "
+                f"{dr.get('earliest_first_shown') or '?'} → "
+                f"{dr.get('latest_last_shown') or '?'} (first_shown → last_shown)"
+            )
+        if sa["video_examples"]:
+            add("- **Example VIDEO ad headlines (real machine-readable API copy):**")
+            for ex in sa["video_examples"]:
+                add(f"  - “{ex['headline']}” — [Transparency permalink]({ex['permalink']})")
+        add(
+            "- Image/text creative copy is a rendered image — not machine-readable; "
+            f"{sa['non_machine_readable_creatives']} such creative(s) observed "
+            "(copy is never OCR'd or invented)."
+        )
+        add(
+            "  - _Google Ads Transparency shows no spend, impressions, CPC, or "
+            "performance for commercial ads — none is claimed._"
+        )
 
     # --- Channel alignment: paid vs organic vs employee advocacy -----------
     ca = pkg.get("channel_alignment") or {}

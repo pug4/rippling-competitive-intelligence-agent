@@ -87,6 +87,31 @@ _META_ARCHIVE_FIELDS: tuple[str, ...] = (
     "languages",
 )
 
+# SerpApi Google Ads Transparency Center — the PREFERRED live Google-ads seam.
+# LIST returns real cited creatives (advertiser + verified id, format, run
+# dates, target domain); DETAIL returns VIDEO ad copy (headline/CTA/snippet) —
+# the only machine-readable creative text Google Transparency exposes. Image /
+# text creatives are rendered images whose copy is NOT machine-readable (never
+# OCR'd, never invented). Google shows NO spend / impressions for commercial
+# ads, so none is ever claimed.
+SERPAPI_SEARCH_URL = "https://serpapi.com/search"
+SERPAPI_ENGINE = "google_ads_transparency_center"
+SERPAPI_API_KEY_ENV = "SERPAPI_API_KEY"
+# Fail-closed sources sub-flag gating the SerpApi seam (same discipline as every
+# BaseTool source flag: absent -> disabled). This is what keeps unit tests that
+# legitimately carry the real .env SERPAPI_API_KEY (and pass a domain) from ever
+# making a LIVE SerpApi call — those test configs omit the flag. default.yaml
+# turns it on for real runs.
+SERPAPI_FLAG_NAME = "google_ads_serpapi"
+_SERPAPI_TIMEOUT_SECONDS = 20.0
+_SERPAPI_MAX_RETRIES = 1  # 1 retry on 5xx / connect / timeout; 4xx is terminal
+_SERPAPI_RETRY_BASE_DELAY = 0.5
+_SERPAPI_LIST_NUM = 40  # bound the LIST result set (API allows up to 100)
+# Cap DETAIL fetches to respect the ~100/mo free tier: 1 LIST + up to 12 DETAIL
+# = <=13 SerpApi calls per run.
+_SERPAPI_MAX_DETAILS = 12
+_SERPAPI_IMAGE_COPY_NOTE = "creative is a rendered image; copy not machine-readable"
+
 # Agentic extraction bounds. The TOOL owns the loop over the prompt's
 # next_queries: at most 3 follow-up iterations after the initial discovery,
 # each iteration exactly one Exa search plus fetches.
@@ -166,6 +191,39 @@ def record_in_scope(record: AdRecord, advertiser: str, advertiser_domain: str) -
 def _valid_http_url(url: str | None) -> bool:
     parts = urlsplit((url or "").strip())
     return parts.scheme in ("http", "https") and bool(parts.netloc)
+
+
+def _clean_str(value: Any) -> str:
+    """Trimmed string, or '' for None/non-string — never fabricates content."""
+    return str(value).strip() if isinstance(value, str) else ""
+
+
+def _unix_to_iso_date(value: Any) -> str | None:
+    """Convert a SerpApi unix timestamp (int seconds) to an ISO date string.
+
+    Missing / non-positive / out-of-range values return None — a run date is
+    never fabricated when the API did not supply a usable timestamp.
+    """
+    try:
+        ts = int(value)
+    except (TypeError, ValueError):
+        return None
+    if ts <= 0:
+        return None
+    from datetime import datetime
+
+    try:
+        return datetime.fromtimestamp(ts, tz=UTC).date().isoformat()
+    except (OverflowError, OSError, ValueError):
+        return None
+
+
+def _transparency_permalink(advertiser_id: str, creative_id: str) -> str:
+    """The public Google Ads Transparency creative permalink for a creative."""
+    return (
+        f"https://adstransparency.google.com/advertiser/{advertiser_id}"
+        f"/creative/{creative_id}?region=anywhere"
+    )
 
 
 def repair_record_provenance(
@@ -842,13 +900,21 @@ class _AdLibraryTool(BaseTool):
 
 
 class GoogleAdsTool(_AdLibraryTool):
-    """Google Ads Transparency Center — advertiser-scoped public creative discovery.
+    """Google Ads Transparency Center — advertiser-scoped public creative collection.
 
-    Live path: Exa discovery of ``adstransparency.google.com`` references for
+    Preferred live path (when the ``google_ads_serpapi`` flag is on, a SerpApi
+    key is configured, and an advertiser DOMAIN is supplied): the SerpApi Google
+    Ads Transparency Center API returns real cited creatives — advertiser (with
+    verified id), format, run dates, target domain, and, for VIDEO ads, the real
+    headline/CTA/snippet copy. These structured records skip the LLM extractor
+    (cheaper + more accurate). Image/text creatives are rendered images whose
+    copy is NOT machine-readable and is never OCR'd or invented.
+
+    Fallback path: Exa discovery of ``adstransparency.google.com`` references for
     the advertiser (STRICTLY scoped to the competitor), first-party fetch, and
-    structured extraction via the ``ad_intelligence`` prompt. No Exa key
-    configured -> typed ``unsupported``. Never infers bid keywords or
-    performance from the transparency corpus.
+    structured extraction via the ``ad_intelligence`` prompt — used when SerpApi
+    is unavailable/typed-empty or only a name (no domain) is known. Neither path
+    ever infers bid keywords, spend, impressions, or performance.
     """
 
     name: ClassVar[str] = "google_ads"
@@ -882,15 +948,21 @@ class GoogleAdsTool(_AdLibraryTool):
                 "Google Ads Transparency Center is a creative repository, not an "
                 "analytics API: it exposes creatives but never spend, ROAS, CPA, "
                 "conversions, revenue, or bid keywords (§39.7).",
-                "There is no stable public API; live collection is best-effort Exa "
-                "discovery of adstransparency.google.com references and may miss "
-                "creatives — absence is never evidence the advertiser is not "
-                "running ads (§39.7).",
+                "There is no stable public API for creatives; live collection "
+                "prefers the SerpApi Google Ads Transparency Center seam "
+                "(advertiser DOMAIN required) and falls back to best-effort Exa "
+                "discovery of adstransparency.google.com references — either may "
+                "miss creatives, and absence is never evidence the advertiser is "
+                "not running ads (§39.7).",
+                "Via the SerpApi seam, only VIDEO ad copy (headline/CTA/snippet) "
+                "is machine-readable; image/text creatives are rendered images "
+                "whose copy is never OCR'd or invented, and Google Transparency "
+                "shows no spend or impressions for commercial ads at all.",
                 "No keyword-bidding or performance conclusions may be drawn from "
                 "the transparency creative corpus.",
-                "Extracted records claim only what the library visibly shows "
-                "(creatives, formats, regions, run dates, active status, "
-                "impression buckets); every creative is containment-verified "
+                "Exa-path extracted records claim only what the library visibly "
+                "shows (creatives, formats, regions, run dates, active status, "
+                "impression buckets); every such creative is containment-verified "
                 "against the fetched page text before it is kept.",
             ],
         )
@@ -901,24 +973,6 @@ class GoogleAdsTool(_AdLibraryTool):
         return is_junk_ads_artifact(url, {"is_discovery_pointer": True}, advertiser_domain)
 
     async def _execute_live(self, action: ResearchAction, context: ToolContext) -> ToolResult:
-        api_key = (context.settings.exa_api_key or "").strip()
-        if not api_key:
-            return self._result(
-                action,
-                status="unsupported",
-                error_type="provider_not_configured",
-                error_message=(
-                    "Google Ads Transparency has no stable public API; best-effort "
-                    "live discovery requires an Exa API key (exa_api_key), which is "
-                    "not set."
-                ),
-                negative_observations=[
-                    f"Google Ads Transparency discovery not attempted for "
-                    f"'{action.action_type}': no Exa API key configured (this is a "
-                    "coverage gap, not evidence of no advertising)."
-                ],
-            )
-
         advertiser = str(
             action.parameters.get("advertiser") or action.parameters.get("query") or ""
         ).strip()
@@ -934,13 +988,412 @@ class GoogleAdsTool(_AdLibraryTool):
             action.parameters.get("advertiser_domain") or action.parameters.get("domain") or ""
         ).strip()
 
+        # PREFERRED path: the SerpApi Google Ads Transparency Center API (real
+        # cited creatives). Gated by the fail-closed google_ads_serpapi flag so
+        # that only real runs (default.yaml on) ever reach a LIVE SerpApi call;
+        # test configs omit the flag. Needs the advertiser DOMAIN — SerpApi's
+        # `text` param is the domain, not the company name.
+        serpapi_enabled = bool(context.config.sources.get(SERPAPI_FLAG_NAME, False))
+        serpapi_key = secret_from_env_or_settings(SERPAPI_API_KEY_ENV) if serpapi_enabled else ""
+        serp_notes: list[str] = []
+        if serpapi_enabled and serpapi_key and advertiser_domain:
+            serp_result = await self._serpapi_path(
+                action,
+                context,
+                advertiser=advertiser,
+                advertiser_domain=advertiser_domain,
+                api_key=serpapi_key,
+            )
+            if serp_result.artifacts:
+                return serp_result
+            # Typed-empty / unsupported / failed with no creatives: carry the
+            # honest notes and still ATTEMPT web discovery (never propagate a
+            # retryable from here — that would re-burn the free tier).
+            serp_notes = list(serp_result.negative_observations)
+            serp_notes.append(
+                "SerpApi Transparency Center yielded no usable creatives; falling "
+                "back to Exa public-web discovery."
+            )
+        elif serpapi_enabled and serpapi_key and not advertiser_domain:
+            serp_notes.append(
+                "SerpApi Transparency Center needs the advertiser DOMAIN (none "
+                "supplied); using Exa public-web discovery instead."
+            )
+
+        api_key = (context.settings.exa_api_key or "").strip()
+        if not api_key:
+            return self._result(
+                action,
+                status="unsupported",
+                error_type="provider_not_configured",
+                error_message=(
+                    "Google Ads Transparency has no stable public API; best-effort "
+                    "live discovery requires the SerpApi seam (SERPAPI_API_KEY + "
+                    "advertiser domain) or an Exa API key (exa_api_key) — neither is "
+                    "available for this run."
+                ),
+                negative_observations=[
+                    *serp_notes,
+                    f"Google Ads Transparency discovery not attempted for "
+                    f"'{action.action_type}': no SerpApi/Exa route configured (this is "
+                    "a coverage gap, not evidence of no advertising).",
+                ],
+            )
+
         return await self._web_path(
             action,
             context,
             advertiser=advertiser,
             advertiser_domain=advertiser_domain,
             api_key=api_key,
+            pre_notes=serp_notes,
         )
+
+    # ---- SerpApi Google Ads Transparency Center (preferred seam) -------------
+
+    async def _serpapi_get(self, url: str, params: dict[str, str]) -> httpx.Response:
+        """Direct provider GET to SerpApi (api_key rides as a query param).
+
+        ``params`` are MERGED into any query already on the URL — the DETAIL
+        ``serpapi_details_link`` arrives pre-populated with engine + ids, and
+        httpx's ``params=`` kwarg would REPLACE that query, so we merge it in by
+        hand (append &api_key=... without dropping the existing params). 1 retry
+        on 5xx / connect / timeout; a 4xx is returned as-is (terminal). The key
+        is never logged or persisted.
+        """
+        merged = httpx.URL(url).copy_merge_params(params)
+        async with httpx.AsyncClient(timeout=httpx.Timeout(_SERPAPI_TIMEOUT_SECONDS)) as client:
+            return await retry_async(
+                lambda: client.get(merged),
+                retries=_SERPAPI_MAX_RETRIES,
+                base_delay=_SERPAPI_RETRY_BASE_DELAY,
+            )
+
+    def _serpapi_http_error(
+        self, action: ResearchAction, response: httpx.Response, what: str
+    ) -> ToolResult | None:
+        """Map a SerpApi HTTP status to a typed failure; None means proceed."""
+        code = response.status_code
+        if code in (401, 403):
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="provider_auth",
+                error_message=f"SerpApi rejected the API key (HTTP {code}).",
+            )
+        if code == 429:
+            return self._result(
+                action,
+                status="failed_retryable",
+                error_type="rate_limited",
+                error_message="SerpApi rate limit / monthly quota hit (HTTP 429).",
+                retryable=True,
+            )
+        if code >= 500:
+            return self._result(
+                action,
+                status="failed_retryable",
+                error_type="provider_5xx",
+                error_message=f"SerpApi server error (HTTP {code}) after retries.",
+                retryable=True,
+            )
+        if code >= 400:
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type=f"provider_http_{code}",
+                error_message=f"SerpApi {what} returned HTTP {code}.",
+            )
+        return None
+
+    async def _serpapi_detail(
+        self, detail_link: str, api_key: str
+    ) -> tuple[dict[str, Any], str | None]:
+        """Fetch one creative's DETAIL. Returns (ad_creatives_dict, permalink).
+
+        Failures degrade to ({}, None) — never a crash, never fabricated copy.
+        The ``ad_creatives`` object's shape depends on format (VIDEO -> real
+        headline/CTA/snippet; image/text -> {image: url} only).
+        """
+        try:
+            response = await self._serpapi_get(detail_link, {"api_key": api_key})
+            if response.status_code >= 400:
+                return {}, None
+            data = response.json()
+        except Exception:  # noqa: BLE001 - a detail miss degrades, never propagates
+            return {}, None
+        if not isinstance(data, dict):
+            return {}, None
+        # The DETAIL ``ad_creatives`` is a LIST of creative variants for VIDEO
+        # ads (each with headline/CTA/snippet/video_link) and may be a bare dict
+        # for other formats — take the first usable object either way.
+        ad = data.get("ad_creatives")
+        if isinstance(ad, dict):
+            detail = ad
+        elif isinstance(ad, list):
+            detail = next((c for c in ad if isinstance(c, dict)), {})
+        else:
+            detail = {}
+        permalink: str | None = None
+        meta = data.get("search_metadata")
+        if isinstance(meta, dict):
+            permalink = (
+                _clean_str(meta.get("google_ads_transparency_center_ad_details_url")) or None
+            )
+        return detail, permalink
+
+    async def _serpapi_path(
+        self,
+        action: ResearchAction,
+        context: ToolContext,
+        *,
+        advertiser: str,
+        advertiser_domain: str,
+        api_key: str,
+    ) -> ToolResult:
+        """Collect real cited Google Transparency creatives via SerpApi.
+
+        1 LIST call (bounded to ``_SERPAPI_LIST_NUM``) + up to
+        ``_SERPAPI_MAX_DETAILS`` DETAIL calls on the newest in-scope creatives.
+        Returns a typed ``empty`` (with an honest coverage note) when the API
+        returns no results or an error payload, so the caller can fall back to
+        the web path.
+        """
+        list_params: dict[str, str] = {
+            "engine": SERPAPI_ENGINE,
+            "text": advertiser_domain,  # MUST be the domain, not the company name
+            "num": str(_SERPAPI_LIST_NUM),
+            "api_key": api_key,
+        }
+        try:
+            response = await self._serpapi_get(SERPAPI_SEARCH_URL, list_params)
+        except Exception as exc:  # noqa: BLE001 - generic message; key never surfaced
+            retryable = isinstance(exc, (httpx.TimeoutException, httpx.ConnectError))
+            return self._result(
+                action,
+                status="failed_retryable" if retryable else "failed_terminal",
+                error_type=type(exc).__name__,
+                error_message=f"SerpApi Transparency LIST request failed: {type(exc).__name__}",
+                retryable=retryable,
+            )
+        list_error = self._serpapi_http_error(action, response, "LIST")
+        if list_error is not None:
+            return list_error
+        try:
+            data = response.json()
+        except Exception as exc:  # noqa: BLE001
+            return self._result(
+                action,
+                status="failed_terminal",
+                error_type="invalid_response",
+                error_message=f"SerpApi LIST response was not valid JSON: {type(exc).__name__}",
+            )
+
+        creatives = data.get("ad_creatives")
+        # The API's "no results" case is an {"error": ...} body with HTTP 200 —
+        # a coverage gap, not a crash. Treat it (and an empty list) as typed
+        # empty so the caller can still attempt web discovery.
+        if data.get("error") or not isinstance(creatives, list) or not creatives:
+            return self._result(
+                action,
+                status="empty",
+                negative_observations=[
+                    f"SerpApi returned no Transparency Center results for "
+                    f"{advertiser_domain} — a coverage gap, not evidence of no "
+                    "advertising."
+                ],
+            )
+
+        rows = [c for c in creatives if isinstance(c, dict)]
+        total_listed = len(rows)
+
+        def _last_shown(c: dict[str, Any]) -> int:
+            try:
+                return int(c.get("last_shown") or 0)
+            except (TypeError, ValueError):
+                return 0
+
+        # Newest-first, then bound DETAIL fetches to the free-tier cap.
+        sample = sorted(rows, key=_last_shown, reverse=True)[:_SERPAPI_MAX_DETAILS]
+
+        artifacts: list[RawArtifact] = []
+        dropped_scope = 0
+        detail_calls = 0
+        seen_creative_ids: set[str] = set()
+        for item in sample:
+            adv = _clean_str(item.get("advertiser"))
+            advertiser_id = _clean_str(item.get("advertiser_id"))
+            creative_id = _clean_str(item.get("ad_creative_id"))
+            target_domain = _clean_str(item.get("target_domain"))
+            fmt = _clean_str(item.get("format")).lower() or None
+            # STRICT advertiser scoping: advertiser name / id / target domain
+            # must match the competitor; a stray advertiser is dropped + counted.
+            scope_haystack = f"{adv}\n{advertiser_id}\n{target_domain}"
+            if not matches_advertiser_scope(scope_haystack, advertiser, advertiser_domain):
+                dropped_scope += 1
+                continue
+            if creative_id and creative_id in seen_creative_ids:
+                continue
+            if creative_id:
+                seen_creative_ids.add(creative_id)
+
+            detail: dict[str, Any] = {}
+            permalink_from_meta: str | None = None
+            detail_link = _clean_str(item.get("serpapi_details_link"))
+            if detail_link and detail_calls < _SERPAPI_MAX_DETAILS:
+                detail_calls += 1
+                detail, permalink_from_meta = await self._serpapi_detail(detail_link, api_key)
+
+            source_url = permalink_from_meta or (
+                _transparency_permalink(advertiser_id, creative_id)
+                if advertiser_id and creative_id
+                else "https://adstransparency.google.com/"
+            )
+            record, provenance = self._serpapi_record(
+                item,
+                detail,
+                fmt=fmt,
+                advertiser=adv or advertiser,
+                advertiser_id=advertiser_id,
+                creative_id=creative_id,
+                target_domain=target_domain,
+                source_url=source_url,
+            )
+            artifacts.append(
+                _ad_record_artifact(
+                    action,
+                    source_type=self.name,
+                    platform_surface=self.PLATFORM_SURFACE,
+                    collection_method="serpapi_transparency",
+                    record=record,
+                    provenance=provenance,
+                )
+            )
+
+        notes: list[str] = [
+            f"SerpApi Google Ads Transparency: {total_listed} creative(s) listed for "
+            f"{advertiser_domain}; detailed the newest {len(sample)} (cap "
+            f"{_SERPAPI_MAX_DETAILS}) to respect the free tier "
+            f"({1 + detail_calls} SerpApi call(s): 1 LIST + {detail_calls} DETAIL).",
+            "Google Ads Transparency shows no spend, impressions, CPC, or "
+            "performance for commercial ads — none is claimed.",
+        ]
+        if dropped_scope:
+            notes.append(
+                f"{dropped_scope} SerpApi creative(s) dropped by strict advertiser "
+                f"scoping for '{advertiser}' ({advertiser_domain}): another "
+                "advertiser's ad, not attributable to the competitor."
+            )
+        if not artifacts:
+            notes.append(
+                f"SerpApi listed creatives for {advertiser_domain} but none were "
+                f"attributable to '{advertiser}' after strict scoping."
+            )
+            return self._result(action, status="empty", negative_observations=notes)
+        status = "success" if not dropped_scope else "partial"
+        return self._result(action, status=status, artifacts=artifacts, negative_observations=notes)
+
+    def _serpapi_record(
+        self,
+        item: dict[str, Any],
+        detail: dict[str, Any],
+        *,
+        fmt: str | None,
+        advertiser: str,
+        advertiser_id: str,
+        creative_id: str,
+        target_domain: str,
+        source_url: str,
+    ) -> tuple[AdRecord, dict[str, Any]]:
+        """Map one SerpApi LIST item (+ DETAIL) to an AdRecord + provenance.
+
+        VIDEO ads carry real machine-readable copy (headline/CTA/snippet). Image
+        and text creatives are rendered images: ``creative_text`` stays empty and
+        the note records that the copy is not machine-readable — copy is NEVER
+        OCR'd or invented.
+        """
+        first_iso = _unix_to_iso_date(item.get("first_shown"))
+        last_iso = _unix_to_iso_date(item.get("last_shown"))
+        raw_days = item.get("total_days_shown")
+        try:
+            total_days_shown: int | None = int(raw_days) if raw_days is not None else None
+        except (TypeError, ValueError):
+            total_days_shown = None
+
+        provenance: dict[str, Any] = {
+            "discovery_via": "serpapi_transparency",
+            "collection_method": "serpapi_transparency",
+            "advertiser_id": advertiser_id or None,
+            "ad_creative_id": creative_id or None,
+            "target_domain": target_domain or None,
+            "total_days_shown": total_days_shown,
+            "serpapi_format": fmt,
+            "advertiser_verified": True,
+        }
+
+        if fmt == "video":
+            headline = _clean_str(detail.get("headline")) or None
+            cta = _clean_str(detail.get("call_to_action")) or None
+            snippet = _clean_str(detail.get("snippet")) or None
+            visible_link = _clean_str(detail.get("visible_link")) or None
+            video_link = _clean_str(detail.get("video_link")) or None
+            video_duration = _clean_str(detail.get("video_duration")) or None
+            # creative_text = headline + snippet/CTA, exactly as the API returns
+            # them (the copy IS the primary source; nothing to contain against).
+            creative_text = "\n".join(p for p in (headline, snippet, cta) if p)
+            provenance.update(
+                {
+                    "copy_machine_readable": bool(creative_text),
+                    "snippet": snippet,
+                    "visible_link": visible_link,
+                    "video_link": video_link,
+                    "video_duration": video_duration,
+                }
+            )
+            record = AdRecord(
+                advertiser=advertiser,
+                platform="google",
+                creative_text=creative_text,
+                headline=headline,
+                cta=cta,
+                format="video",
+                regions=[],
+                first_seen=first_iso,
+                last_seen=last_iso,
+                active=None,  # Transparency shows no active/inactive status here
+                impression_bucket=None,  # NEVER: no impressions for commercial ads
+                landing_url=visible_link,
+                source_url=source_url,
+                extraction_confidence="high",  # the copy is the primary API field
+            )
+            return record, provenance
+
+        # image / text -> rendered image; copy not machine-readable.
+        image_url = _clean_str(item.get("image")) or _clean_str(detail.get("image")) or None
+        provenance.update(
+            {
+                "copy_machine_readable": False,
+                "creative_copy_note": _SERPAPI_IMAGE_COPY_NOTE,
+                "image_url": image_url,
+            }
+        )
+        record = AdRecord(
+            advertiser=advertiser,
+            platform="google",
+            creative_text="",  # copy is baked into the image — never invented
+            headline=None,
+            cta=None,
+            format=fmt,
+            regions=[],
+            first_seen=first_iso,
+            last_seen=last_iso,
+            active=None,
+            impression_bucket=None,
+            landing_url=None,
+            source_url=source_url,
+            extraction_confidence="high",
+        )
+        return record, provenance
 
 
 class MetaAdsTool(_AdLibraryTool):

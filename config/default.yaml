@@ -12,6 +12,11 @@ sources:
   exa_linkedin: true
   similarweb: true
   google_ads: true
+  # Preferred live Google-ads seam: SerpApi Google Ads Transparency Center API
+  # (real cited creatives). Needs SERPAPI_API_KEY + an advertiser domain; on
+  # typed-empty/unavailable it falls back to the Exa web path. Fail-closed: when
+  # this flag is absent the SerpApi seam is skipped entirely.
+  google_ads_serpapi: true
   # Meta/LinkedIn ad libraries are proposed so the attempt + honest limitation
   # show in the trace; live they degrade to a typed unsupported/skip (§39.7).
   meta_ads: true

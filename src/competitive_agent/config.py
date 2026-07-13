@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     gemini_model: str = ""
     semrush_api_key: str = ""
     meta_ads_access_token: str = ""
+    # SerpApi Google Ads Transparency Center seam (preferred live Google-ads
+    # path). Read via secret_from_env_or_settings("SERPAPI_API_KEY").
+    serpapi_api_key: str = ""
 
     playwright_enabled: bool = False
 
