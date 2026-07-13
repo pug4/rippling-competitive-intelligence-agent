@@ -271,6 +271,55 @@ def create_run(req: NewRunRequest) -> dict[str, Any]:
     return snapshot
 
 
+class SpawnBody(BaseModel):
+    # The DIFFERENT company/domain to analyze next ("run this again for Gusto").
+    company: str
+    # Focal to compare against; defaults to the PARENT run's focal (Rippling).
+    compare_to: str | None = None
+    # Defaults to the parent run's execution_mode.
+    execution_mode: str | None = None
+
+
+@app.post("/api/runs/{run_id}/spawn")
+def spawn_run(run_id: str, req: SpawnBody) -> dict[str, Any]:
+    """Launch a NEW run for a DIFFERENT company from the chat's "run this again
+    for {company}" affordance (chat.ChatResponse.spawn_run).
+
+    Reuses the same create_run/_run_job machinery as POST /api/runs, inheriting
+    the parent run's execution_mode and focal (compare_to) by default so the
+    new analysis matches the one the user is looking at. 404 on unknown parent,
+    400 on missing company. Returns the new job (job_id now; run_id once the
+    background thread has created the run).
+    """
+    repo = _open_repo()
+    parent = repo.get_run(run_id)
+    if parent is None:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    company = (req.company or "").strip()
+    if not company:
+        raise HTTPException(status_code=400, detail="company is required")
+    exec_mode = req.execution_mode or parent["execution_mode"] or "fixture"
+    if exec_mode not in _ALLOWED_EXEC:
+        raise HTTPException(
+            status_code=400, detail=f"execution_mode must be one of {sorted(_ALLOWED_EXEC)}"
+        )
+    # Inherit the parent's focal (compare_to lives in state_json) and mode.
+    parent_compare_to = repo.conn.execute(
+        "SELECT json_extract(state_json, '$.compare_to') FROM runs WHERE run_id = ?",
+        (run_id,),
+    ).fetchone()[0]
+    parent_mode = parent["mode"] if parent["mode"] in _ALLOWED_MODES else "comparative"
+    new_req = NewRunRequest(
+        company=company,
+        compare_to=(req.compare_to if req.compare_to is not None else parent_compare_to),
+        mode=parent_mode,
+        execution_mode=exec_mode,
+    )
+    # Delegate to the shared create-run path (validates, starts the thread,
+    # returns the job snapshot with a fresh job_id).
+    return create_run(new_req)
+
+
 def _runs_dir() -> Path:
     return Path(get_settings().outputs_dir) / "runs"
 

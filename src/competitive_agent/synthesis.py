@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from datetime import UTC, datetime
 from typing import Any
 
 from .schemas.artifact import RawArtifact
@@ -72,6 +73,21 @@ def _norm_label(label: str) -> str:
     return re.sub(r"\s+", "_", label.strip().lower())
 
 
+def _as_aware(dt: datetime) -> datetime:
+    """Coerce a datetime to timezone-aware UTC (accuracy/robustness fix).
+
+    Some sources yield NAIVE published/capture dates (no tzinfo), while the
+    time-window bounds and ``utcnow()`` are tz-AWARE. Comparing the two raises
+    ``TypeError: can't compare offset-naive and offset-aware datetimes`` — a
+    real "works on any competitor" crash that took down ``run_focal_mirror_check``
+    on a live workday.com run. Assume UTC when tzinfo is missing so a naive date
+    can never reach a comparison against an aware one; an already-aware datetime
+    passes through unchanged (its offset is preserved for the comparison)."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt
+
+
 def assign_window(artifact: RawArtifact, time_windows: list[Any]) -> str:
     """THE single window-membership rule (red-team: two divergent predicates
     let the same artifact be 'prior' in change detection and 'current' in the
@@ -82,12 +98,15 @@ def assign_window(artifact: RawArtifact, time_windows: list[Any]) -> str:
         (w for w in time_windows if getattr(w, "purpose", None) == "comparison"), None
     )
     current = next((w for w in time_windows if getattr(w, "purpose", None) == "current"), None)
-    dated = artifact.archive_capture_at or artifact.published_at
-    if dated is None:
+    raw = artifact.archive_capture_at or artifact.published_at
+    if raw is None:
         return "current"
-    if comparison and comparison.start_at <= dated <= comparison.end_at:
+    # Coerce BOTH the artifact date and every window bound to tz-aware UTC before
+    # any comparison — a naive date on either side would otherwise crash the run.
+    dated = _as_aware(raw)
+    if comparison and _as_aware(comparison.start_at) <= dated <= _as_aware(comparison.end_at):
         return "prior"
-    if current and dated >= current.start_at:
+    if current and dated >= _as_aware(current.start_at):
         return "current"
     return "outside"
 

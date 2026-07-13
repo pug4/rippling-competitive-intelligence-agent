@@ -50,6 +50,33 @@ CHAT_SYSTEM = (
     "Set needs_deeper_research=true whenever you emit research_request (backward compat). "
     "NEVER emit research_request when the stored data already answers the question — it "
     "triggers a paid research run. Leave it null otherwise. "
+    "DIG DEEPER = ALWAYS RESEARCH: when the user EXPLICITLY asks to dig deeper, go deeper, "
+    "dig into, research more, or pull more on a TOPIC (e.g. 'Now dig deeper on their pricing', "
+    "'go deeper on their ads', 'research their reviews more'), ALWAYS emit research_request — "
+    "this is an explicit request for MORE than the run currently holds, so emit it EVEN when "
+    "the stored data already has SOME coverage of that topic; do NOT suppress it just because "
+    "the topic is partially covered. Map the topic to sources: pricing->[web, wayback]; "
+    "ads->[ads]; reviews->[reviews]; social or linkedin->[linkedin]; news, funding, or "
+    "lawsuit->[news]; keywords or search volume->[keywords]; anything else->[web]. Set focus "
+    "to ONE specific sentence naming the competitor and the deeper thing to find, and set "
+    "needs_deeper_research=true. Few-shot: user 'Now dig deeper on their pricing' -> "
+    "research_request{focus:'Find the competitor's current and historical pricing tiers, "
+    "published prices, and packaging changes.', sources:['web','wayback'], reason:'the run "
+    "only lightly covers pricing and the user explicitly asked to go deeper.'}. user 'dig "
+    "deeper on their ads' -> research_request{focus:'Pull the competitor's live ad creatives "
+    "and messaging across the ad libraries.', sources:['ads'], reason:'the user asked for "
+    "deeper ad coverage than the run collected.'}. The ONLY time a 'deeper'-sounding question "
+    "does NOT trigger research is when it is really a fully-answerable factual question the "
+    "stored data already answers completely (then just answer it). "
+    "RUN A DIFFERENT COMPANY: when the user asks to run/analyze a DIFFERENT company or domain "
+    "('Run this again for Gusto', 'now do Deel', 'analyze workday.com'), emit spawn_run so the "
+    "app can launch a NEW analysis: company = the company name or domain to analyze (extract "
+    "it verbatim from the request); compare_to = the FOCAL company to compare against, which "
+    "defaults to THIS run's FOCAL COMPANY shown above (usually Rippling) unless the user names "
+    "a different focal. In your answer, tell the user you can launch that run for them. Leave "
+    "spawn_run null when the user is only asking about THIS run's competitor. Few-shot: user "
+    "'Run this again for Gusto' -> spawn_run{company:'Gusto', compare_to:'Rippling'} and "
+    "answer 'I can kick off a fresh analysis of Gusto vs Rippling — launching it now.'. "
     "VISUALIZE ON DEMAND: when a chart or table would answer better than prose (a "
     "distribution, a ranking, an ownership split, a coverage matrix, a list of ad "
     "creatives), request EXACTLY ONE visualization via viz_request. chart_type MUST be "
@@ -94,6 +121,23 @@ class ResearchRequest(BaseModel):
         "similarweb, linkedin, news, keywords."
     )
     reason: str = Field(description="Why the stored run data cannot answer this question.")
+
+
+class SpawnRun(BaseModel):
+    """A request to launch a NEW analysis of a DIFFERENT company, emitted when
+    the user asks to "run this again for {company}" / "now do {company}" /
+    "analyze {domain}". Carries only WHAT to run; the API (POST
+    /api/runs/{id}/spawn) starts the run, inheriting this run's mode +
+    execution_mode by default."""
+
+    company: str = Field(
+        description="The company name or domain to analyze next (extracted from the request)."
+    )
+    compare_to: str | None = Field(
+        default=None,
+        description="The focal company to compare against; defaults to THIS run's focal "
+        "(usually Rippling) unless the user names a different one.",
+    )
 
 
 class VizRequest(BaseModel):
@@ -142,6 +186,12 @@ class ChatResponse(BaseModel):
         default=None,
         description="Optional: request ONE on-demand chart/table when it answers better "
         "than prose. Null when prose is enough. Python renders it from real data.",
+    )
+    spawn_run: SpawnRun | None = Field(
+        default=None,
+        description="Set ONLY when the user asks to run/analyze a DIFFERENT company ('run this "
+        "again for Gusto', 'now do Deel', 'analyze workday.com'): the company/domain to analyze "
+        "plus the focal to compare against (defaults to this run's focal). Null otherwise.",
     )
     visualizations: list[dict[str, Any]] = Field(
         default_factory=list,
@@ -569,6 +619,7 @@ async def chat_about_run(
                 out.research_request.model_dump() if out.research_request else None
             ),
             "viz_request": (out.viz_request.model_dump() if out.viz_request else None),
+            "spawn_run": (out.spawn_run.model_dump() if out.spawn_run else None),
             "visualizations": visualizations,
         }
     except Exception as exc:  # never crash the chat surface
@@ -582,6 +633,7 @@ async def chat_about_run(
             "confidence": "low",
             "research_request": None,
             "viz_request": None,
+            "spawn_run": None,
             "visualizations": [],
             "error": type(exc).__name__,
         }

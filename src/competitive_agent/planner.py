@@ -16,10 +16,80 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .schemas.common import new_id
-from .schemas.source import ResearchAction
+from .schemas.source import ResearchAction, ToolResult
 from .state import DirectorState
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Provider circuit breaker (red team: after Exa returned HTTP 402 out-of-credits
+# mid-run, the loop kept scheduling MORE Exa-backed tools into the dead provider,
+# reliably ending fresh competitors in runtime_exhausted). Map each tool source
+# to the external PROVIDER it depends on; a terminal provider error (402 out of
+# credits / 401-403 auth) takes the WHOLE provider down for the rest of the run.
+# ---------------------------------------------------------------------------
+# Tool source_name -> external provider. Tools sharing a provider share its fate:
+# once the provider is dead, none of them can succeed, so all are skipped.
+_SOURCE_PROVIDER: dict[str, str] = {
+    # Exa REST (api.exa.ai, x-api-key) — search, agent runs, contents, and every
+    # source built on top of Exa search (similarweb-via-agent, reviews, jobs,
+    # events, ooh, market/launch news, and the Exa-discovery ad adapters).
+    "exa_search": "exa",
+    "exa_agent": "exa",
+    "exa_contents": "exa",
+    "similarweb": "exa",
+    "reviews": "exa",
+    "jobs": "exa",
+    "events": "exa",
+    "ooh": "exa",
+    "news_market": "exa",
+    "meta_ads": "exa",
+    "linkedin_ads": "exa",
+    # Google Ads Transparency via SerpApi (its own key/quota, distinct provider).
+    "google_ads": "serpapi",
+}
+# Human-facing provider names for the one-time outage disclosure.
+_PROVIDER_DISPLAY: dict[str, str] = {"exa": "Exa", "serpapi": "SerpApi"}
+# error_type values that mean the ENTIRE provider is down (not a per-call blip):
+# out of credits (HTTP 402) or a rejected key (HTTP 401/403). A 429 rate-limit or
+# 5xx is retryable and must NOT trip the breaker.
+TERMINAL_PROVIDER_ERRORS: frozenset[str] = frozenset({"provider_out_of_credits", "provider_auth"})
+
+
+def provider_for_source(source_name: str | None) -> str | None:
+    """The external provider a tool source depends on, or None if it uses no
+    circuit-breakable provider (e.g. public HTTP fetch / wayback)."""
+    return _SOURCE_PROVIDER.get(source_name or "")
+
+
+def provider_display(provider: str) -> str:
+    return _PROVIDER_DISPLAY.get(provider, provider.capitalize())
+
+
+def dead_provider_from_result(source_name: str | None, result: ToolResult) -> str | None:
+    """Return the provider to circuit-break for this result, else None.
+
+    A terminal provider-down error (out of credits / auth) on a provider-backed
+    tool means every remaining tool that provider backs will also fail — so the
+    whole provider is recorded dead and skipped for the rest of the run."""
+    if result.status != "failed_terminal":
+        return None
+    if (result.error_type or "") not in TERMINAL_PROVIDER_ERRORS:
+        return None
+    return provider_for_source(source_name)
+
+
+def provider_outage_disclosure(provider: str, error_type: str | None) -> str:
+    """One-line, honest disclosure of a mid-run provider outage."""
+    name = provider_display(provider)
+    if error_type == "provider_out_of_credits":
+        cause = f"{name} credits exhausted mid-run (HTTP 402)"
+    elif error_type == "provider_auth":
+        cause = f"{name} rejected the API key mid-run (HTTP 401/403)"
+    else:
+        cause = f"{name} became unavailable mid-run"
+    return f"{cause} — remaining {name}-backed sources skipped for this run."
+
 
 # Level-B optional (breadth) action types -> the coverage dimension each one
 # primarily serves. Single source of truth: nodes.py derives its optional set
@@ -287,11 +357,20 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     cap = int(cfg.budgets.get("max_retries_per_source", 2)) if cfg else 2
     proposals: list[ResearchAction] = []
 
+    # Provider circuit breaker: once a provider is terminally down (out of
+    # credits / auth), skip every action its tools back — proposing them again
+    # only burns the loop budget into a provider that can no longer answer.
+    dead_providers = set(getattr(state, "dead_providers", None) or [])
+
     def allowed(a: ResearchAction) -> bool:
         if action_key(a.action_type, a.parameters) in state.executed_action_keys:
             return False
         if _too_many_failures(state, a.source_name or "", a.action_type, cap):
             return False
+        if dead_providers:
+            provider = provider_for_source(a.source_name)
+            if provider is not None and provider in dead_providers:
+                return False
         return True
 
     # 1. Map the site before anything else.

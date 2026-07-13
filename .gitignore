@@ -10,3 +10,5 @@ outputs/*
 *.db
 *.sqlite3
 dist/
+.vercel
+.env*

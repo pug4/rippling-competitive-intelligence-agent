@@ -451,6 +451,31 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
     if len(outcomes) > 10:
         del outcomes[:-10]
 
+    # Provider circuit breaker (red team: after Exa returned 402 out-of-credits,
+    # the loop scheduled 3 more Exa-backed tools into the dead provider). A
+    # terminal provider-down error means every remaining tool that provider backs
+    # will also fail — record the provider once so propose_actions stops offering
+    # its tools, and disclose the outage a SINGLE time.
+    dead_provider = planner.dead_provider_from_result(
+        action.source_name or result.tool_name, result
+    )
+    if dead_provider is not None and dead_provider not in state.dead_providers:
+        state.dead_providers.append(dead_provider)
+        disclosure = planner.provider_outage_disclosure(dead_provider, result.error_type)
+        if disclosure not in state.negative_observations:
+            state.negative_observations.append(disclosure)
+        if disclosure not in state.limitations:
+            state.limitations.append(disclosure)
+        if ctx.trace:
+            ctx.trace.append(
+                "provider_circuit_open",
+                {
+                    "provider": dead_provider,
+                    "error_type": result.error_type,
+                    "source": action.source_name or result.tool_name,
+                },
+            )
+
     # Deciding what to SKIP is part of the agentic loop (§39.6): a disabled or
     # unavailable source is recorded as a deliberate skip-with-reason, not a
     # silent gap.

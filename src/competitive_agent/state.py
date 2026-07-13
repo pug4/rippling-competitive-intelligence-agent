@@ -124,6 +124,11 @@ class DirectorState(VersionedModel):
     # {source, id, claim_excerpt, x_phrase, verdict, focal_evidence}. A
     # "contradicted" verdict drops/softens the offending recommendation. Additive.
     focal_gate_findings: list[dict[str, Any]] = Field(default_factory=list)
+    # Provider circuit breaker: providers that returned a TERMINAL error mid-run
+    # (out of credits / auth — HTTP 402/401) and are therefore down for the rest
+    # of the run. The planner skips proposing/executing any tool backed by a dead
+    # provider, and the outage is disclosed once. Additive, persistence-safe.
+    dead_providers: list[str] = Field(default_factory=list)
 
     def total_spend_usd(self) -> float:
         return self.spent_usd + self.model_cost_usd

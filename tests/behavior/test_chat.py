@@ -918,3 +918,156 @@ def test_chat_api_accepts_clicked_context(isolated_env: Path):
     assert r.status_code == 200
     body = r.json()
     assert "visualizations" in body and isinstance(body["visualizations"], list)
+
+
+# ---------------------------------------------------------------------------
+# Chat follow-up behaviors named in the assignment: "dig deeper on {topic}"
+# reliably emits a research_request, and "run this again for {company}" emits
+# a spawn_run + is actionable via POST /api/runs/{id}/spawn.
+# ---------------------------------------------------------------------------
+
+
+def test_chat_dig_deeper_on_pricing_emits_research_request(isolated_env: Path, monkeypatch):
+    """The assignment phrasing 'Now dig deeper on their pricing' must reliably
+    emit a research_request even when the run has SOME pricing coverage — the
+    system prompt teaches the DIG DEEPER rule + the pricing->[web,wayback]
+    mapping, and the chat surface returns the request in the dict."""
+    from competitive_agent import chat as chat_mod
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+
+    resp = ChatResponse.model_validate(
+        {
+            "answer": "I can pull deeper pricing detail than this run collected.",
+            "needs_deeper_research": True,
+            "research_request": {
+                "focus": "Find Deel's current and historical pricing tiers and packaging.",
+                "sources": ["web", "wayback"],
+                "reason": "the user explicitly asked to go deeper on pricing",
+            },
+        }
+    )
+
+    class _FakeResult:
+        output = resp
+
+    class _FakeGateway:
+        async def generate_structured(self, task, system, user, output_model, **kw):
+            # The prompt teaches the explicit dig-deeper rule + the topic map.
+            assert "DIG DEEPER" in system
+            assert "pricing" in system and "wayback" in system
+            assert "Now dig deeper on their pricing" in user
+            return _FakeResult()
+
+    from competitive_agent import model_gateway as gw_mod
+
+    monkeypatch.setattr(gw_mod, "build_gateway", lambda *a, **k: _FakeGateway())
+    out = asyncio.run(
+        chat_mod.chat_about_run(
+            state.run_id, "Now dig deeper on their pricing", execution_mode="fixture"
+        )
+    )
+    assert out["research_request"] == {
+        "focus": "Find Deel's current and historical pricing tiers and packaging.",
+        "sources": ["web", "wayback"],
+        "reason": "the user explicitly asked to go deeper on pricing",
+    }
+    assert out["needs_deeper_research"] is True
+    assert out["spawn_run"] is None  # a deeper-dive is not a new run
+
+
+def test_chat_run_again_for_company_emits_spawn_run(isolated_env: Path, monkeypatch):
+    """The assignment phrasing 'Run this again for Gusto' must emit spawn_run
+    (company + focal), returned in the chat dict. The prompt teaches the rule
+    and the ChatResponse carries the new optional field."""
+    from competitive_agent import chat as chat_mod
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+
+    resp = ChatResponse.model_validate(
+        {
+            "answer": "I can kick off a fresh analysis of Gusto vs Rippling — launching it now.",
+            "spawn_run": {"company": "Gusto", "compare_to": "Rippling"},
+        }
+    )
+
+    class _FakeResult:
+        output = resp
+
+    class _FakeGateway:
+        async def generate_structured(self, task, system, user, output_model, **kw):
+            # The prompt teaches the run-a-different-company rule.
+            assert "spawn_run" in system and "RUN A DIFFERENT COMPANY" in system
+            assert "Run this again for Gusto" in user
+            return _FakeResult()
+
+    from competitive_agent import model_gateway as gw_mod
+
+    monkeypatch.setattr(gw_mod, "build_gateway", lambda *a, **k: _FakeGateway())
+    out = asyncio.run(
+        chat_mod.chat_about_run(state.run_id, "Run this again for Gusto", execution_mode="fixture")
+    )
+    assert out["spawn_run"] == {"company": "Gusto", "compare_to": "Rippling"}
+    assert out["research_request"] is None  # spawning a run is not in-place research
+
+
+def test_spawn_endpoint_starts_new_run_and_guards(isolated_env: Path):
+    """POST /api/runs/{id}/spawn launches a NEW run reusing the create_run/
+    _run_job machinery: the background job gets a run_id DISTINCT from the
+    parent and inherits the parent's focal (compare_to). 404 unknown parent,
+    400 missing company."""
+    import time
+
+    from fastapi.testclient import TestClient
+
+    from competitive_agent import api as api_mod
+    from competitive_agent.api import app
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    client = TestClient(app)
+
+    # Guards: unknown parent 404; missing company 400.
+    assert client.post("/api/runs/RUN-nope/spawn", json={"company": "gusto.com"}).status_code == 404
+    assert client.post(f"/api/runs/{state.run_id}/spawn", json={"company": "  "}).status_code == 400
+
+    # Spawn a new run for a different company; the focal is inherited.
+    res = client.post(f"/api/runs/{state.run_id}/spawn", json={"company": "gusto.com"})
+    assert res.status_code == 200
+    job = res.json()
+    assert job["job_id"]
+    assert job["company"] == "gusto.com"
+    assert job["compare_to"] == "rippling.com"  # inherited from the parent's focal
+
+    # The background thread creates the new run; its run_id must differ from the
+    # parent (a fresh analysis, not an in-place re-drive of the same run).
+    entry: dict = {}
+    for _ in range(300):  # fixture create_run lands a run_id in seconds
+        with api_mod._JOBS_LOCK:
+            entry = dict(api_mod._JOBS[job["job_id"]])
+        if entry.get("run_id") or entry.get("status") == "error":
+            break
+        time.sleep(0.05)
+    assert entry.get("run_id"), entry.get("error")
+    assert entry["run_id"] != state.run_id  # a NEW run, distinct from the parent
+
+
+def test_chat_response_spawn_run_defaults_none_and_fixture_validates(isolated_env: Path):
+    """ChatResponse gains spawn_run (default None); the stored analysis_chat
+    fixture — which has no spawn_run — still validates."""
+    import json as _json
+
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.config import get_settings
+
+    fixture_path = Path(get_settings().fixtures_dir) / "model" / "analysis_chat" / "default.json"
+    resp = ChatResponse.model_validate(_json.loads(fixture_path.read_text()))
+    assert resp.spawn_run is None
