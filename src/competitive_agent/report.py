@@ -613,6 +613,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     # THE BOTTOM LINE — 2-3 sentences composed ONLY from verified numbers
     # (top play, ownership split, momentum). Deterministic template, no model
     # prose: every clause traces to a chart in the package.
+    def _plural(n: int, word: str) -> str:
+        return f"{n} {word}{'' if n == 1 else 's'}"
+
     def _bottom_line() -> str | None:
         comp_name = state.company.canonical_name if state.company else state.company_input
         focal_name = state.focal_company.canonical_name if state.focal_company else "Rippling"
@@ -623,14 +626,22 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         }
         if ceps and (own["competitor_advantage"] or own["contested"] or own["focal_owns"]):
             bits.append(
-                f"{comp_name} owns {own['competitor_advantage']} buying intents to "
-                f"{focal_name}'s {own['focal_owns']}, with {own['contested']} contested"
+                f"{comp_name} owns {own['competitor_advantage']} of {len(ceps)} buying "
+                f"intents to {focal_name}'s {own['focal_owns']} "
+                f"({_plural(own['contested'], 'contested intent')})"
             )
-        n_moving = sum(
-            1 for c in change_events if c.get("lifecycle") in ("emerging", "expanding")
-        )
-        if n_moving:
-            bits.append(f"{n_moving} theme(s) are gaining ground in their messaging")
+        # Momentum: NEVER count 'expanding' — with asymmetric windows raw-count
+        # growth is guaranteed (reviewer P0). Repositioned + emerging only.
+        repositioned = [c for c in change_events if c.get("lifecycle") == "repositioned"]
+        n_new = sum(1 for c in change_events if c.get("lifecycle") == "emerging")
+        if repositioned:
+            r0 = repositioned[0]
+            bits.append(
+                f"their story is shifting — {r0.get('dimension', 'message').replace('_', ' ')} "
+                f"{r0.get('prior_state')} → {r0.get('current_state')} (low-confidence)"
+            )
+        elif n_new:
+            bits.append(f"{_plural(n_new, 'new theme')} appeared in their messaging")
         elif change_events is not None:
             bits.append("their core story is static")
         verbs = [
@@ -640,9 +651,11 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         ]
         n_attack = sum(1 for v in verbs if v == "attack")
         if data["proof_gaps"]:
+            n_g = len(data["proof_gaps"])
             bits.append(
-                f"{n_attack} of {len(data['proof_gaps'])} repeated claims are clean attack "
-                "openings" + ("" if n_attack else " — build proof before attacking")
+                f"{n_attack} of {_plural(n_g, 'repeated claim')} "
+                f"{'is a clean attack opening' if n_attack == 1 else 'are clean attack openings'}"
+                + ("" if n_attack else " — build proof before attacking")
             )
         if not bits:
             return None
@@ -653,6 +666,25 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
                 f" Start with “{top.get('title')}” (metric: "
                 f"{top.get('primary_metric') or top.get('kill_rule') or 'see Action Board'})."
             )
+            # THIN disclosure on the #1 play (reviewer P1: the deep-dive said
+            # THIN while the exec surface sold the play unqualified).
+            top_gap = next(
+                (
+                    g
+                    for gid in top.get("supporting_claim_ids", [])
+                    for g in data["proof_gaps"]
+                    if g.get("claim_id") == gid
+                ),
+                None,
+            )
+            if top_gap and (
+                top_gap.get("outlier_flag") == "thin_theme"
+                or (top_gap.get("theme_page_count") or 99) < 5
+            ):
+                line += (
+                    f" Caveat: that play rests on {_plural(top_gap.get('theme_page_count') or 0, 'competitor page')}"
+                    " — verify their pages before committing spend."
+                )
         return line
 
     return {

@@ -1,11 +1,12 @@
 {
   "schema_version": "1.3.0",
+  "bottom_line": "Deel owns 3 of 23 buying intents to Rippling's 3 (5 contested intents); 2 new themes appeared in their messaging; 0 of 6 repeated claims are clean attack openings \u2014 build proof before attacking. Start with \u201cThe Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure\u201d (metric: Sales-assisted win rate in active Deel-competitive opportunities where the demo/asset was used).",
   "run": {
     "run_id": "RUN-b256fab1c1dd",
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-13T03:54:41.845041+00:00",
+    "generated_at": "2026-07-13T05:07:04.778468+00:00",
     "stop_reason": "runtime_exhausted",
     "stop_reason_label": "budget-bounded (hit the research-time cap)",
     "iterations": 19,
@@ -1226,6 +1227,22 @@
       ]
     },
     {
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-9e8697e401cd"
+      ],
+      "top_verticals": []
+    },
+    {
       "cep": "rapid_growth_scaling_employees",
       "competitor_pages": 0,
       "focal_pages": 1,
@@ -1258,22 +1275,6 @@
       "top_verticals": []
     },
     {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "competitor_share": 0.0,
-      "focal_share": 0.0088,
-      "share_ratio": null,
-      "share_delta": -0.0088,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [],
-      "focal_example_artifact_ids": [
-        "ART-9e8697e401cd"
-      ],
-      "top_verticals": []
-    },
-    {
       "cep": "expanding_service_offerings",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -1285,96 +1286,6 @@
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
         "ART-22cb144808e1"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "growing_remote_and_international_teams",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-0e665529aaf9"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "benefits"
-      ]
-    },
-    {
-      "cep": "replacing_traditional_cross_border_payment_rails",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": []
-    },
-    {
-      "cep": "managing_global_device_fleet",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4d052e00f8e5"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "it_device_management"
-      ]
-    },
-    {
-      "cep": "consolidating_fragmented_regional_workforce_providers",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-39db3bdefb26"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "expanding_to_new_countries",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-ceb5d6ab049f"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
@@ -1399,7 +1310,97 @@
       "top_verticals": []
     },
     {
+      "cep": "expanding_to_new_countries",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-ceb5d6ab049f"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "managing_global_device_fleet",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4d052e00f8e5"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "it_device_management"
+      ]
+    },
+    {
+      "cep": "growing_remote_and_international_teams",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-0e665529aaf9"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "benefits"
+      ]
+    },
+    {
       "cep": "expanding_into_complex_field_markets",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "replacing_traditional_cross_border_payment_rails",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
+    },
+    {
+      "cep": "consolidating_fragmented_regional_workforce_providers",
       "competitor_pages": 1,
       "focal_pages": 0,
       "competitor_share": 0.0081,
@@ -67942,6 +67943,7 @@
           }
         }
       ],
+      "unopposed": [],
       "guardrail": [
         {
           "cep": "opening_new_country",
@@ -67958,7 +67960,7 @@
           }
         }
       ],
-      "action": "Buy audit/certification intent where Rippling's record rate beats Deel's (hit list); do NOT spend where the rates match (guardrail rows) \u2014 creative: certification wall vs story-backed claims, ungated comparison LP, gate only the audit-prep checklist."
+      "action": "Buy audit/certification intent where Rippling's record rate beats Deel's (hit list); do NOT spend where the rates match (guardrail rows) \u2014 creative: certification wall vs story-backed claims, ungated comparison LP, gate only the audit-prep checklist. This attacks their missing certification RECORD specifically \u2014 where their general compliance proof is strong (see the gap table), lead with certifications, never with 'their compliance is weak'."
     },
     "proof_vs_voice": {
       "board_column": "DEFEND",
@@ -68070,7 +68072,8 @@
     },
     "funnel_voids": {
       "board_column": "INTERCEPT",
-      "title": "Deel closes only on home turf: its 9 decision assets sit on compliance_legal, global_eor_contractors, hris_core_hr \u2014 zero in benefits, it device management, identity security, where Rippling has them",
+      "title": "Deel has 9 decision-stage assets, concentrated in payroll, global eor contractors \u2014 zero in benefits, it device management, identity security, where Rippling has them",
+      "method_note": "one asset can map to several verticals; per-row decision counts overlap and exceed the unique total",
       "rows": [
         {
           "vertical": "benefits",
@@ -68315,7 +68318,7 @@
       ],
       "n_comparison_pages": 7,
       "read_in_5s": "Grey (undefended) bars at the top = the audience's real destinations with no comparison page \u2014 those SERPs are open to whoever moves first.",
-      "action": "Publish named comparison LPs against the undefended high-affinity domains and bid their 'vs' queries; affinity is an estimated overlap index, not lost-deal share (labeled on-chart)."
+      "action": "For Rippling: define the 'Deel vs Rippling' SERP first if it's undefended (comparison LP + paid on the query), then intercept the other open 'vs' queries with 'considering Deel? compare Rippling' content."
     },
     "channel_proof_split": {
       "board_column": "WHITESPACE",
@@ -68377,60 +68380,60 @@
   },
   "theme_comparison": {
     "competitor_themes": {
-      "global_hiring": 7,
-      "integration_ecosystem": 8,
-      "compliance": 10,
-      "employee_experience": 4,
       "cost_reduction": 5,
+      "all_in_one": 1,
+      "native_platform_breadth": 5,
+      "employee_experience": 4,
       "status": 0,
-      "speed_to_value": 7,
+      "global_hiring": 7,
+      "compliance": 10,
       "data_unification": 6,
       "automation": 14,
-      "native_platform_breadth": 5,
       "consolidation": 39,
-      "all_in_one": 1
+      "speed_to_value": 7,
+      "integration_ecosystem": 8
     },
     "focal_themes": {
-      "global_hiring": 2,
-      "integration_ecosystem": 4,
-      "compliance": 3,
-      "employee_experience": 2,
       "cost_reduction": 1,
+      "all_in_one": 2,
+      "native_platform_breadth": 3,
+      "employee_experience": 2,
       "status": 4,
-      "speed_to_value": 2,
+      "global_hiring": 2,
+      "compliance": 3,
       "data_unification": 35,
       "automation": 15,
-      "native_platform_breadth": 3,
       "consolidation": 28,
-      "all_in_one": 2
+      "speed_to_value": 2,
+      "integration_ecosystem": 4
     },
     "competitor_shares": {
-      "global_hiring": 0.0569,
-      "integration_ecosystem": 0.065,
-      "compliance": 0.0813,
-      "employee_experience": 0.0325,
       "cost_reduction": 0.0407,
+      "all_in_one": 0.0081,
+      "native_platform_breadth": 0.0407,
+      "employee_experience": 0.0325,
       "status": 0.0,
-      "speed_to_value": 0.0569,
+      "global_hiring": 0.0569,
+      "compliance": 0.0813,
       "data_unification": 0.0488,
       "automation": 0.1138,
-      "native_platform_breadth": 0.0407,
       "consolidation": 0.3171,
-      "all_in_one": 0.0081
+      "speed_to_value": 0.0569,
+      "integration_ecosystem": 0.065
     },
     "focal_shares": {
-      "global_hiring": 0.0175,
-      "integration_ecosystem": 0.0351,
-      "compliance": 0.0263,
-      "employee_experience": 0.0175,
       "cost_reduction": 0.0088,
+      "all_in_one": 0.0175,
+      "native_platform_breadth": 0.0263,
+      "employee_experience": 0.0175,
       "status": 0.0351,
-      "speed_to_value": 0.0175,
+      "global_hiring": 0.0175,
+      "compliance": 0.0263,
       "data_unification": 0.307,
       "automation": 0.1316,
-      "native_platform_breadth": 0.0263,
       "consolidation": 0.2456,
-      "all_in_one": 0.0175
+      "speed_to_value": 0.0175,
+      "integration_ecosystem": 0.0351
     },
     "competitor_n_classified": 123,
     "focal_n_classified": 114,
@@ -82446,6 +82449,22 @@
           ]
         },
         {
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-9e8697e401cd"
+          ],
+          "top_verticals": []
+        },
+        {
           "cep": "rapid_growth_scaling_employees",
           "competitor_pages": 0,
           "focal_pages": 1,
@@ -82478,22 +82497,6 @@
           "top_verticals": []
         },
         {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "competitor_share": 0.0,
-          "focal_share": 0.0088,
-          "share_ratio": null,
-          "share_delta": -0.0088,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [],
-          "focal_example_artifact_ids": [
-            "ART-9e8697e401cd"
-          ],
-          "top_verticals": []
-        },
-        {
           "cep": "expanding_service_offerings",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -82505,96 +82508,6 @@
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
             "ART-22cb144808e1"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "growing_remote_and_international_teams",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-0e665529aaf9"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "benefits"
-          ]
-        },
-        {
-          "cep": "replacing_traditional_cross_border_payment_rails",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": []
-        },
-        {
-          "cep": "managing_global_device_fleet",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4d052e00f8e5"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "it_device_management"
-          ]
-        },
-        {
-          "cep": "consolidating_fragmented_regional_workforce_providers",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-39db3bdefb26"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "expanding_to_new_countries",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-ceb5d6ab049f"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [
@@ -82619,7 +82532,97 @@
           "top_verticals": []
         },
         {
+          "cep": "expanding_to_new_countries",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-ceb5d6ab049f"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "managing_global_device_fleet",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4d052e00f8e5"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "it_device_management"
+          ]
+        },
+        {
+          "cep": "growing_remote_and_international_teams",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-0e665529aaf9"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "benefits"
+          ]
+        },
+        {
           "cep": "expanding_into_complex_field_markets",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "replacing_traditional_cross_border_payment_rails",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
+        },
+        {
+          "cep": "consolidating_fragmented_regional_workforce_providers",
           "competitor_pages": 1,
           "focal_pages": 0,
           "competitor_share": 0.0081,
@@ -82710,7 +82713,8 @@
         "overall": "investigate",
         "rationale": "competitor proof=weak; Rippling proof=strong"
       },
-      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation."
+      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation.",
+      "theme_page_count": 5
     },
     {
       "claim_id": "GAP-b44596421614",
@@ -82770,7 +82774,8 @@
         "overall": "investigate",
         "rationale": "competitor proof=weak; Rippling proof=strong"
       },
-      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation."
+      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation.",
+      "theme_page_count": 4
     },
     {
       "claim_id": "GAP-bafc223ed328",
@@ -82830,7 +82835,8 @@
         "overall": "investigate",
         "rationale": "competitor proof=weak; Rippling proof=none"
       },
-      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation."
+      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation.",
+      "theme_page_count": 2
     },
     {
       "claim_id": "GAP-fa3fdc497e55",
@@ -82946,7 +82952,8 @@
         "overall": "reframe",
         "rationale": "competitor proof=strong; Rippling proof=strong"
       },
-      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation."
+      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation.",
+      "theme_page_count": 39
     },
     {
       "claim_id": "GAP-f7bbbe635fb4",
@@ -83042,7 +83049,8 @@
         "overall": "reframe",
         "rationale": "competitor proof=strong; Rippling proof=strong"
       },
-      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation."
+      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation.",
+      "theme_page_count": 14
     },
     {
       "claim_id": "GAP-9bf1d1f99fb1",
@@ -83134,7 +83142,8 @@
         "overall": "reframe",
         "rationale": "competitor proof=strong; Rippling proof=strong"
       },
-      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation."
+      "why_attack_might_backfire": "If Deel holds unpublished proof, a comparative claim invites a documented counterattack; comparative copy also requires legal substantiation.",
+      "theme_page_count": 10
     }
   ],
   "opportunities": [

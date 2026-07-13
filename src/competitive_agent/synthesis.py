@@ -1197,7 +1197,10 @@ def insight_graphics(
                 f"Buy audit/certification intent where {focal_name}'s record rate beats "
                 f"{competitor_name}'s (hit list); do NOT spend where the rates match "
                 "(guardrail rows) — creative: certification wall vs story-backed claims, "
-                "ungated comparison LP, gate only the audit-prep checklist."
+                "ungated comparison LP, gate only the audit-prep checklist. This attacks "
+                "their missing certification RECORD specifically — where their general "
+                "compliance proof is strong (see the gap table), lead with certifications, "
+                "never with 'their compliance is weak'."
             )
         else:
             block["action"] = (
@@ -1334,14 +1337,27 @@ def insight_graphics(
                 for v in comp_verticals_by_artifact.get(c.artifact_id, [])
             }
         )
+        _dec_top = [
+            r["vertical"]
+            for r in sorted(rows, key=lambda r: -int(r["competitor"]["decision_n"]))
+            if r["competitor"]["decision_n"] > 0
+        ][:2]
         if rows:
             out["funnel_voids"] = {
                 "board_column": "INTERCEPT",
                 "title": (
-                    f"{competitor_name} closes only on home turf: its {comp_dec_total} "
-                    f"decision assets sit on {', '.join(dec_verticals[:3]) or 'few verticals'} — "
-                    f"zero in {', '.join(v.replace('_', ' ') for v in voids[:3]) or 'no void found'}"
-                    + (f", where {focal_name} has them" if voids and has_focal else "")
+                    f"{competitor_name} has {comp_dec_total} decision-stage assets, "
+                    f"concentrated in {', '.join(v.replace('_', ' ') for v in _dec_top) or 'few verticals'}"
+                    + (
+                        f" — zero in {', '.join(v.replace('_', ' ') for v in voids[:3])}"
+                        + (f", where {focal_name} has them" if has_focal else "")
+                        if voids
+                        else ""
+                    )
+                ),
+                "method_note": (
+                    "one asset can map to several verticals; per-row decision counts overlap "
+                    "and exceed the unique total"
                 ),
                 "rows": rows,
                 "competitor_decision_total": comp_dec_total,
@@ -1433,9 +1449,10 @@ def insight_graphics(
                     "no comparison page — those SERPs are open to whoever moves first."
                 ),
                 "action": (
-                    "Publish named comparison LPs against the undefended high-affinity domains "
-                    "and bid their 'vs' queries; affinity is an estimated overlap index, not "
-                    "lost-deal share (labeled on-chart)."
+                    f"For {focal_name}: define the '{competitor_name} vs {focal_name}' SERP "
+                    f"first if it's undefended (comparison LP + paid on the query), then "
+                    f"intercept the other open 'vs' queries with 'considering "
+                    f"{competitor_name}? compare {focal_name}' content."
                 ),
             }
 

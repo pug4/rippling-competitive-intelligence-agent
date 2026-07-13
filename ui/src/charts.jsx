@@ -45,6 +45,9 @@ export function ProofBar({ strength, label }) {
 
 // Personas × channels coverage heatmap; intensity scales with cell count.
 export function Heatmap({ personas, channels, cells, rowTip, colTip, cellTip }) {
+  // Drop all-zero columns — an empty channel column is noise, not whitespace.
+  const liveChannels = (channels || []).filter((c) => (personas || []).some((p) => ((cells || {})[p] || {})[c] > 0));
+  channels = liveChannels.length ? liveChannels : channels;
   if (!personas?.length || !channels?.length) return <p className="empty">No matrix data.</p>;
   let max = 1;
   personas.forEach((p) => channels.forEach((c) => { max = Math.max(max, (cells[p] || {})[c] || 0); }));

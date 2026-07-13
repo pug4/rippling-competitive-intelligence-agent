@@ -442,7 +442,8 @@ def _stance(
             f"only {n_pages} page(s) — below the ≥{ATTACK_MIN_PAGES}-page / "
             f"≥{ATTACK_MIN_SHARE:.0%}-of-corpus floor for a full ATTACK verdict"
             if (n_pages < ATTACK_MIN_PAGES and theme_share < ATTACK_MIN_SHARE)
-            else "one page already carries strong proof"
+            else f"at least one of their {n_pages} pages already carries strong proof — "
+            "the weak modal read may under-sample"
             if has_strong_page
             else "grounded only in third-party news/blog coverage, not the competitor's own pages"
         )
@@ -450,7 +451,7 @@ def _stance(
             "investigate",
             "medium",
             f"“{theme}” LOOKS attackable ({competitor} {strength} vs {focal} {focal_strength}), but "
-            f"the read is thin ({why}). Fetch {competitor}'s own product page for this theme before "
+            f"the read needs verification: {why}. Fetch {competitor}'s own product page for this theme before "
             "committing to a comparative attack.",
         )
     if strength in ("weak", "none"):

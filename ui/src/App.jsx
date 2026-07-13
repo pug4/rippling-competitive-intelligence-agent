@@ -259,7 +259,7 @@ function SourceDrawer({ sources, label }) {
         <div className="srclist">
           {sources.slice(0, 8).map((s, i) => (
             <div className="srcrow" key={i}>
-              <span className="srcq" data-tip="source quality band">{s.quality}</span>{" "}
+              <span className="srcq" data-tip="Source quality: high = independent/archived source, medium = their own site, low = weakly attributed — weigh the excerpt accordingly">{s.quality}</span>{" "}
               <a href={s.url} target="_blank" rel="noreferrer">
                 {(s.url || "").replace(/^https?:\/\/(www\.)?/, "").slice(0, 52)} ↗
               </a>
@@ -432,13 +432,15 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
   // Outlier gate: a delta needs >=4pt of corpus share AND >=3 pages on the
   // leading side — 1-page themes can't drive a CLOSE/PRESS call.
   const leadN = (t, d) => (d > 0 ? (tc.competitor_themes || {})[t] || 0 : (tc.focal_themes || {})[t] || 0);
-  const theyLead = deltas.filter((x) => x.d >= 0.04 && leadN(x.t, x.d) >= 3).slice(0, 3);
-  const weLead = deltas.filter((x) => x.d <= -0.04 && leadN(x.t, x.d) >= 3).slice(-3).reverse();
+  const theyLeadAll = deltas.filter((x) => x.d >= 0.04 && leadN(x.t, x.d) >= 3);
+  const weLeadAll = deltas.filter((x) => x.d <= -0.04 && leadN(x.t, x.d) >= 3);
+  const theyLead = theyLeadAll.slice(0, 3);
+  const weLead = weLeadAll.slice(-3).reverse();
   const maxD = Math.max(0.01, ...deltas.map((x) => Math.abs(x.d)));
 
   const changes = pkg.change_events || [];
   const nEmerging = changes.filter((c) => c.lifecycle === "emerging").length;
-  const nExpanding = changes.filter((c) => c.lifecycle === "expanding").length;
+  const repositioned = changes.filter((c) => c.lifecycle === "repositioned");
   const nStable = (pkg.temporal_baseline?.stable_themes || []).length;
 
   const gaps = pkg.proof_gaps || [];
@@ -455,7 +457,7 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
            why="The whole analysis in four tiles: who owns the buying intents, where they out-message you, what's moving, and how many openings say ATTACK. Click any tile to jump to its deep-dive with sources."
            tip="Ownership is share-normalized (page counts ÷ each company's classified corpus) so corpus size can't fabricate a verdict." />
       <div className="grid2">
-        <div className="card sctile" onClick={() => go("performance")} data-tip="open Performance marketing → full ownership map with contributing pages">
+        <div className="card sctile" onClick={() => go("performance")} data-tip="open Demand & channels → full ownership map with contributing pages">
           <div className="title">Search-intent ownership ({ceps.length} triggers)</div>
           <div className="scstack">
             {OWN_META.map(([k, color]) => own[k] > 0 && (
@@ -467,11 +469,11 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
               <span key={k}><span className="scdot" style={{ background: `var(${color})` }} /> {own[k]} {label}</span>
             ))}
           </div>
-          <div className="scaction">→ target the {own.contested} contested intents; defend the {own.focal_owns} you own</div>
+          <div className="scaction">→ target the {own.contested} contested intent{own.contested === 1 ? "" : "s"}; defend the {own.focal_owns} you own</div>
         </div>
 
         {hasFocalThemes && (
-          <div className="card sctile" onClick={() => go("product")} data-tip="open Product marketing → full key-topics comparison">
+          <div className="card sctile" onClick={() => go("product")} data-tip="open Where to win → full key-topics comparison">
             <div className="title">Message-investment deltas (share of corpus)</div>
             {theyLead.map(({ t, d }) => (
               <div className="scdelta" key={t}>
@@ -487,25 +489,38 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
                 <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>PRESS +{Math.round(-d * 100)}pt</span>
               </div>
             ))}
-            <div className="scaction">→ {competitor} out-messages {focal} on {theyLead.length} themes; {focal} leads on {weLead.length}</div>
+            <div className="scaction">→ {competitor} out-messages {focal} on {theyLeadAll.length} theme{theyLeadAll.length === 1 ? "" : "s"}; {focal} leads on {weLeadAll.length}</div>
           </div>
         )}
 
-        <div className="card sctile" onClick={() => go("changes")} data-tip="open Strategy changes → reconciled events + prior-window baseline">
+        <div className="card sctile" onClick={() => go("changes")} data-tip="open Changes over time → reconciled events + prior-window baseline">
           <div className="title">Theme momentum</div>
           <div className="scmomentum">
-            <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>{nEmerging} EMERGING</span>
-            <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}>{nExpanding} EXPANDING</span>
-            <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}>{nStable} STABLE</span>
+            {repositioned.map((c) => (
+              <span key={c.change_id} className="atag" style={{ color: "var(--bad)", borderColor: "var(--bad)" }}
+                    data-tip={`their dominant ${String(c.dimension).replace(/_/g, " ")} shifted: ${c.prior_state} → ${c.current_state} (low-confidence — see Changes over time)`}>
+                SHIFTED: {String(c.prior_state).slice(0, 16)} → {String(c.current_state).slice(0, 16)}
+              </span>
+            ))}
+            <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}
+                  data-tip="themes absent from the prior window that appear now — genuinely new messaging (count-based 'expanding' is excluded: with asymmetric windows raw growth is guaranteed)">
+              {nEmerging} NEW THEME{nEmerging === 1 ? "" : "S"}
+            </span>
+            <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
+                  data-tip="themes present in BOTH windows — their messaging spine; don't expect these to move">
+              {nStable} STABLE
+            </span>
           </div>
           <div className="scaction">
-            → {nEmerging + nExpanding > 0
-              ? `watch the ${nEmerging + nExpanding} moving themes — counter before they harden`
+            → {repositioned.length > 0
+              ? "their story is shifting — read the two-window comparison before it hardens"
+              : nEmerging > 0
+              ? `watch the ${nEmerging} new theme${nEmerging === 1 ? "" : "s"} — counter before they harden`
               : "no messaging movement detected — their story is static"}
           </div>
         </div>
 
-        <div className="card sctile" onClick={() => go("product")} data-tip="open Product marketing → gaps with sources + Action Board">
+        <div className="card sctile" onClick={() => go("product")} data-tip="open Where to win → gaps with sources + Action Board">
           <div className="title">Attack surface ({gaps.length} repeated claims)</div>
           <div className="scmomentum">
             <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>{verbs.attack || 0} ATTACK</span>
@@ -514,7 +529,7 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
           </div>
           <div className="scaction">
             → {verbs.attack > 0
-              ? `${verbs.attack} claim(s) they can't prove and ${focal} can — start there`
+              ? `${verbs.attack} claim${verbs.attack === 1 ? "" : "s"} they can't prove and ${focal} can — start there`
               : "no clean attack this run — build proof on the investigate list first"}
           </div>
         </div>
@@ -528,6 +543,8 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
 function TopActions({ pkg, onOpenBoard }) {
   const opps = (pkg.opportunities || []).slice(0, 3);
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
+  const gapsById = {};
+  (pkg.proof_gaps || []).forEach((g) => { gapsById[g.claim_id] = g; });
   if (opps.length === 0) return null;
   return (
     <>
@@ -537,7 +554,13 @@ function TopActions({ pkg, onOpenBoard }) {
       <div className="card">
         {opps.map((o) => (
           <div className="tarow" key={o.opportunity_id}>
-            <div className="talabel"><b>{o.title}</b> <span className="pill">{o.deliverable_type}</span></div>
+            <div className="talabel">
+              <b>{o.title}</b> <span className="pill">{o.deliverable_type}</span>
+              {(o.supporting_claim_ids || []).map((id) => gapsById[id]).filter(Boolean).some((g) => g.outlier_flag === "thin_theme" || (g.theme_page_count != null && g.theme_page_count < 5)) && (
+                <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
+                      data-tip="the gap behind this play rests on very few competitor pages — verify their pages before committing spend">THIN — verify first</span>
+              )}
+            </div>
             <div className="row" style={{ fontSize: 12 }}>{o.message_angle}</div>
             <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
               <b>metric:</b> {o.primary_metric || "—"} · <b>kill rule:</b> {o.kill_rule || "—"}
@@ -574,10 +597,12 @@ function DataVisuals({ pkg, msgIdx }) {
   const count = (field) => {
     const c = {};
     cls.forEach((x) => { if (x[field]) c[x[field]] = (c[x[field]] || 0) + 1; });
-    return Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    return Object.entries(c)
+      .map(([label, value]) => ({ label: label.replace(/_/g, " "), rawLabel: label, value }))
+      .sort((a, b) => b.value - a.value);
   };
   const allThemes = count("primary_theme");
-  const themeData = allThemes.slice(0, 8).map((d) => ({ ...d, tip: themeTip(msgIdx, d.label) }));
+  const themeData = allThemes.slice(0, 8).map((d) => ({ ...d, tip: themeTip(msgIdx, d.rawLabel) }));
   const stanceData = count("competitive_stance");
   if (srcData.length === 0 && themeData.length === 0) return null;
   const total = srcData.reduce((s, d) => s + d.value, 0);
@@ -645,7 +670,7 @@ function GapsSection({ pkg, srcIdx, msgIdx }) {
             <div>
               <div className="gaplabel" data-tip={themeTip(msgIdx, g.short_label, `Their repeated claim: “${g.claim_text}”`)}>{g.short_label}</div>
               <ActionTag verb={gapVerb(g)} tip={`attackability ${g.attackability} → ${gapVerb(g)}`} />
-              {(g.outlier_flag === "thin_theme" || (g.sample_sufficiency && g.sample_sufficiency !== "ok")) && (
+              {(g.outlier_flag === "thin_theme" || (g.theme_page_count != null && g.theme_page_count < 5) || (g.sample_sufficiency && g.sample_sufficiency !== "ok")) && (
                 <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
                       data-tip={`this verdict rests on ${g.theme_page_count ?? "too few"} competitor pages${g.outlier_flag === "thin_theme" ? " — below the ≥5-page/≥15% ATTACK floor" : ""} — disclosed, not asserted; verify before spending`}>
                   THIN{g.theme_page_count != null ? ` n=${g.theme_page_count}` : " SAMPLE"}
@@ -687,7 +712,7 @@ function Opportunities({ pkg, srcIdx }) {
             <div className="title">
               <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
                     data-tip="priority = the engine's overall ranking (defensibility, proof status, comparability)">P{i + 1}</span>{" "}
-              {o.title} <span className="pill" data-tip="deliverable type">{o.deliverable_type}</span>{" "}
+              {o.title} <span className="pill" data-tip="What you'd actually ship — demo asset, landing page, battlecard — so the right team can pick it up">{o.deliverable_type}</span>{" "}
               <span data-tip="structural defensibility — how hard this is for the competitor to copy">{pill(o.structural_defensibility)}</span>
             </div>
             <div className="row"><b>Angle:</b> {o.message_angle}</div>
@@ -737,7 +762,7 @@ function AttackDefendMatrix({ pkg, msgIdx }) {
   const verbCol = { attack: "--good", investigate: "--warn", reframe: "--bad", concede: "--bad" };
   const dotCol = (g) => `var(${verbCol[gapVerb(g)] || "--border"})`;
   const whyOf = (g) => String(g.actionable_interpretation || "").split(". ")[0];
-  const thin = (g) => g.outlier_flag === "thin_theme" || (g.sample_sufficiency && g.sample_sufficiency !== "ok");
+  const thin = (g) => g.outlier_flag === "thin_theme" || (g.theme_page_count != null && g.theme_page_count < 5) || (g.sample_sufficiency && g.sample_sufficiency !== "ok");
   // Quadrant membership from proof positions (matches dot placement).
   const quad = (g) => {
     const x = PROOF_LVL[String(g.proof_strength || "none").toLowerCase()] || 0;
@@ -781,7 +806,7 @@ function AttackDefendMatrix({ pkg, msgIdx }) {
         <div className="admx">{competitor} proof →</div>
         <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
           {Object.entries(quadCounts).map(([q, verbs]) => (
-            <span key={q} className="atag" data-tip={`claims whose proof positions land in the ${q} quadrant — the tag on each shows the recommended stance after thin-sample and strong-page checks`}>
+            <span key={q} className="atag" data-tip={`quadrant = proof geometry (their proof vs yours); the tag on each dot = the FINAL stance after thin-sample and strong-page checks — they can differ, and the tag wins`}>
               {q}: {verbs.length} ({[...new Set(verbs)].join("/")})
             </span>
           ))}
@@ -945,7 +970,6 @@ function LinkedInThemeBar({ pkg, msgIdx }) {
 function WindowPicker({ runId, overlay, onOverlay }) {
   const [lookback, setLookback] = useState(365);
   const [currentDays, setCurrentDays] = useState(90);
-  const [includeLinkedin, setIncludeLinkedin] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const apply = async () => {
@@ -1046,7 +1070,10 @@ function ChangesTimeline({ pkg, msgIdx }) {
   const changes = pkg.change_events || [];
   if (changes.length === 0) return null;
   const max = Math.max(1, ...changes.map((c) => (c.current_evidence_ids || []).length));
-  const themeOf = (c) => ((String(c.current_state || "").match(/[“"']([a-z_]+)[”"']/) || [])[1] || c.dimension || "change").replace(/_/g, " ");
+  const themeOf = (c) =>
+    c.lifecycle === "repositioned"
+      ? `${c.prior_state} → ${c.current_state}`
+      : ((String(c.current_state || "").match(/[“"']([a-z_]+)[”"']/) || [])[1] || c.dimension || "change").replace(/_/g, " ");
   return (
     <>
       <Sec n={2} title="Change timeline"
@@ -1058,12 +1085,16 @@ function ChangesTimeline({ pkg, msgIdx }) {
           // (the baseline above can hold the theme). Fallback keeps old
           // packages rendering.
           const hasCounts = Number.isFinite(c.prior_theme_count) && Number.isFinite(c.prior_window_n);
-          const priorLabel = hasCounts
+          const priorLabel = c.lifecycle === "repositioned"
+            ? `prior: ${c.prior_state}`
+            : hasCounts
             ? (c.prior_theme_count > 0
                 ? `prior: ${c.prior_theme_count} of ${c.prior_window_n}`
                 : `prior: not observed (${c.prior_window_n} dated)`)
             : "prior: not observed";
-          const priorTitle = hasCounts
+          const priorTitle = c.lifecycle === "repositioned"
+            ? `their dominant ${String(c.dimension).replace(/_/g, " ")} in the prior window was '${c.prior_state}'; now it's '${c.current_state}' — a repositioning, not an emergence`
+            : hasCounts
             ? (c.prior_theme_count > 0
                 ? `prior window: theme present in ${c.prior_theme_count} of ${c.prior_window_n} dated artifacts`
                 : `prior window: theme absent from all ${c.prior_window_n} dated artifacts`)
@@ -1229,7 +1260,7 @@ function ClaimVsRecord({ pkg, msgIdx }) {
             {b.cep_hit_list.map((h) => (
               <span key={h.cep} className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}
                     data-tip={cepTip(msgIdx, h.cep, `${focal} record rate ${pct(h.focal.rate)} (n=${h.focal.n}) vs ${comp} ${pct(h.competitor.rate)} (n=${h.competitor.n})`)}>
-                {h.cep.replace(/_/g, " ")} {pct(h.focal.rate)} vs {pct(h.competitor.rate)}{h.competitor.n < 10 || h.focal.n < 10 ? ` (n=${h.competitor.n}/${h.focal.n})` : ""}
+                {h.cep.replace(/_/g, " ")} — you {pct(h.focal.rate)} vs them {pct(h.competitor.rate)}{h.competitor.n < 10 || h.focal.n < 10 ? ` (n=${h.focal.n}/${h.competitor.n})` : ""}
               </span>
             ))}
           </div>
@@ -1240,7 +1271,7 @@ function ClaimVsRecord({ pkg, msgIdx }) {
             {b.unopposed.map((h) => (
               <span key={h.cep} className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
                     data-tip={cepTip(msgIdx, h.cep, `${focal}: ${pct(h.focal.rate)} record rate (n=${h.focal.n}); competitor has only ${h.competitor.n} page(s) on this trigger — no rate comparison possible`)}>
-                {h.cep.replace(/_/g, " ")} — competitor: {h.competitor.n} page{h.competitor.n === 1 ? "" : "s"}
+                {h.cep.replace(/_/g, " ")} — you: {pct(h.focal.rate)} record rate; them: {h.competitor.n} page{h.competitor.n === 1 ? "" : "s"}
               </span>
             ))}
           </div>
@@ -1440,8 +1471,8 @@ function LinkedInPosts({ pkg }) {
           <div className="gaprow" key={p.artifact_id} style={{ gridTemplateColumns: "1fr" }}>
             <div className="row">
               <b>{p.author || "?"}</b>{p.author_role ? ` · ${p.author_role}` : ""}{" "}
-              <span className="pill" data-tip="classified message theme">{p.theme || "—"}</span>
-              <span className="pill" data-tip="competitive stance">{p.competitive_stance || "—"}</span>
+              <span className="pill" data-tip="The one theme this post pushes hardest — feed themes that outrun the website are early strategy signals">{p.theme || "—"}</span>
+              <span className="pill" data-tip="How openly this post attacks: ignores → implicit contrast → named comparison → direct attack">{p.competitive_stance || "—"}</span>
               {(p.verticals || []).map((v) => (
                 <span className="pill vert" key={v} data-tip="product vertical this post touches">{v.replace(/_/g, " ")}</span>
               ))}{" "}
@@ -1455,12 +1486,12 @@ function LinkedInPosts({ pkg }) {
   );
 }
 
-function PersonaChannelHeatmap({ pkg, msgIdx }) {
+function PersonaChannelHeatmap({ pkg, msgIdx, n = 4 }) {
   const m = pkg.persona_channel_matrix || {};
   if (!m.personas?.length) return null;
   return (
     <>
-      <Sec n={4} title="Persona × channel coverage"
+      <Sec n={n} title="Persona × channel coverage"
            why="Who they talk to, where. Empty cells are audiences no channel is serving — content whitespace you can own first."
            tip="Cell intensity = number of classified artifacts; an empty cell means not observed, not proof of absence." />
       <div className="card"><Heatmap personas={m.personas} channels={m.channels} cells={m.cells || {}}
@@ -1472,7 +1503,10 @@ function PersonaChannelHeatmap({ pkg, msgIdx }) {
 /* ------------------------- strategy changes tab ------------------------ */
 
 function StrategyOverTime({ pkg, srcIdx }) {
-  const changes = pkg.change_events || [];
+  const all = pkg.change_events || [];
+  const repositionedFirst = [...all].sort((a, b) =>
+    (a.lifecycle === "repositioned" ? 0 : 1) - (b.lifecycle === "repositioned" ? 0 : 1));
+  const changes = repositionedFirst;
   const artIdx = artifactIndex(pkg);
   const evIdx = evidenceIndex(pkg);
   return (
@@ -1504,7 +1538,7 @@ function StrategyOverTime({ pkg, srcIdx }) {
           <div className="card" key={c.change_id}>
             <div className="title">
               {c.dimension} <span data-tip="confidence — low means treat as a signal, not a fact">{pill(c.confidence)}</span>{" "}
-              <span className="pill" data-tip="lifecycle state">{c.lifecycle}</span>
+              <span className="pill" data-tip="emerging = absent from the prior window; expanding = present before, more artifacts now; repositioned = replaced a prior dominant message">{c.lifecycle}</span>
             </div>
             <div className="row"><b>Prior:</b> {c.prior_state}</div>
             <div className="row"><b>Current:</b> {c.current_state}</div>
@@ -1618,7 +1652,7 @@ function Similarweb({ pkg }) {
   const label = sw.data_source === "similarweb" ? "Similarweb" : "public-web estimate";
   return (
     <>
-      <Sec n={4} title={`Traffic & channel mix (${label})`}
+      <Sec n={4} title={`Traffic estimates (${label})`}
            why="The demand behind the content: estimated visits and where their traffic comes from — sizing context for every play on this tab."
            tip="Estimated via Exa's Similarweb partner (or a labeled public-web estimate). Every value is an estimate — never measured analytics." />
       <div className="card">
@@ -1656,7 +1690,12 @@ function CommercialMotion({ pkg }) {
            tip="Pricing disclosure = the most-open level observed on ≥2 pages (noise-guarded). Never CAC/conversion/spend — those aren't publicly knowable." />
       <div className="card">
         <div className="row"><b>Primary motion:</b> {cm.primary_motion} <span className="pill">{cm.confidence}</span></div>
-        <div className="row"><b data-tip="most-disclosing pricing level observed (noise-guarded)">Pricing disclosure:</b> {cm.pricing_disclosure}</div>
+        <div className="row">
+          <b data-tip="The full observed mix, not just the most-open level — a single label can contradict the Changes tab when disclosure is shifting">Pricing disclosure:</b>{" "}
+          {cm.pricing_disclosure_mix && Object.keys(cm.pricing_disclosure_mix).length > 1
+            ? `mixed — ${Object.entries(cm.pricing_disclosure_mix).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k.replace(/_/g, " ")} on ${v}`).join(", ")} (most-open: ${cm.pricing_disclosure})`
+            : cm.pricing_disclosure}
+        </div>
         {cm.dominant_ctas && <div className="row"><b>Dominant CTAs:</b> {Object.entries(cm.dominant_ctas).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(" · ")}</div>}
         {cm.segment_focus && <div className="row"><b>Segment focus:</b> {Object.entries(cm.segment_focus).map(([k, v]) => `${k} (${v})`).join(" · ")}</div>}
         <div className="row" style={{ color: "var(--muted)", fontSize: 12 }}>{cm.basis}</div>
@@ -1786,7 +1825,7 @@ function ClaimsLedger({ pkg }) {
             <details key={c.claim_id}>
               <summary>
                 <span className={`pill ${c.claim_confidence}`}>{c.claim_confidence}</span>{" "}
-                <span className="pill" data-tip="claim status after the evidence judge">{c.status}</span>{" "}
+                <span className="pill" data-tip="observed = directly quoted from a source; supported_inference = follows from the evidence but not stated verbatim; hypothesis = plausible — act only after verification">{c.status}</span>{" "}
                 {String(c.statement || "").slice(0, 110)}
               </summary>
               <div className="row" style={{ fontSize: 12 }}><b>Statement:</b> {c.statement}</div>
@@ -1862,6 +1901,7 @@ function NewRunForm({ onSubmit, focalDefault }) {
   const [exec, setExec] = useState("live"); // live by default — real data
   const [lookback, setLookback] = useState(365);
   const [currentDays, setCurrentDays] = useState(90);
+  const [includeLinkedin, setIncludeLinkedin] = useState(true);
   const [busy, setBusy] = useState(false);
   const submit = async (e) => {
     e.preventDefault();
@@ -2100,9 +2140,15 @@ export default function App() {
                 )}
                 <StrategicScorecard pkg={pkg} go={setTab} msgIdx={msgIdx} />
                 <TopActions pkg={pkg} onOpenBoard={() => setTab("product")} />
-                <ChatPanel key={selected} runId={selected} pkg={pkg} />
                 <Positioning pkg={pkg} msgIdx={msgIdx} />
                 <DataVisuals pkg={pkg} msgIdx={msgIdx} />
+                {pkg.corpus_normalization && (
+                  <p className="empty" style={{ fontSize: 12 }}
+                     data-tip="the trust envelope: how much data this run rests on and what's missing — full detail on Evidence & trust">
+                    Basis: {pkg.run?.execution_mode} run, {pkg.run?.stop_reason_label || ""} · {pkg.corpus_normalization.competitor?.n_classified} vs {pkg.corpus_normalization.focal?.n_classified} classified pages · {Object.values(pkg.coverage || {}).filter((v) => v === "not_attempted").length} dimensions not attempted — see Evidence & trust.
+                  </p>
+                )}
+                <ChatPanel key={selected} runId={selected} pkg={pkg} />
               </>
             )}
             {tab === "product" && (
@@ -2119,16 +2165,22 @@ export default function App() {
                 <VerticalAnalysis pkg={pkg} msgIdx={msgIdx} />
               </>
             )}
-            {tab === "linkedin" && (
+            {tab === "linkedin" && ((pkg.linkedin_posts || []).length > 0 || (pkg.insight_graphics || {}).channel_proof_split ? (
               <>
                 <TabIntro q="What are their people saying that their website isn't?"
                           why="Employee posts are the leading indicator — launches, demos, and themes show up here first. Use this tab to catch the story early and to see which audiences their feed serves that yours doesn't." />
                 <ChannelProofSplit pkg={pkg} />
                 <LinkedInThemeBar pkg={pkg} msgIdx={msgIdx} />
                 <LinkedInPosts pkg={pkg} />
-                <PersonaChannelHeatmap pkg={pkg} msgIdx={msgIdx} />
+                <PersonaChannelHeatmap pkg={pkg} msgIdx={msgIdx} n={4} />
               </>
-            )}
+            ) : (
+              <>
+                <TabIntro q="LinkedIn wasn't collected on this run"
+                          why="Post collection failed or was turned off (see Evidence & trust → tool failures / data honesty for the exact reason). Re-run with 'Collect LinkedIn posts' enabled to fill this tab. The persona × channel view below still works from the website corpus." />
+                <PersonaChannelHeatmap pkg={pkg} msgIdx={msgIdx} n={1} />
+              </>
+            ))}
             {tab === "changes" && (() => {
               // Shim the package with the custom-window recount when active —
               // the three components read only these two fields.

@@ -1,8 +1,10 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T03:54:41.845041+00:00*
+*Run `RUN-b256fab1c1dd` · mode `comparative` · execution `live` · generated 2026-07-13T05:07:04.778468+00:00*
 
 ## Executive summary
+
+> **The bottom line:** Deel owns 3 of 23 buying intents to Rippling's 3 (5 contested intents); 2 new themes appeared in their messaging; 0 of 6 repeated claims are clean attack openings — build proof before attacking. Start with “The Custom Workflow Builder Demo: Show a Live No-Code App Solving a Global Hiring Edge Case Deel's 7 Products Can't Configure” (metric: Sales-assisted win rate in active Deel-competitive opportunities where the demo/asset was used).
 
 - **Dominant company message:** Deel is an all-in-one global people platform that enables companies to expand internationally with unified payroll, HR, compliance, and workforce management across 150 countries. (repeated across ≥2 source classes and present on a top-level surface).
 - **Product-positioning read:** Deel's public pages cluster around consolidation, automation, compliance
@@ -152,7 +154,7 @@ _Deterministic cross-cutting analysis (proof×demand, funnel×vertical, channel�
 - Hit list — replacing a peo: Rippling record rate 40% (n=5) vs Deel 0% (n=4)
 - Hit list — controlling app access: Rippling record rate 21% (n=24) vs Deel 0% (n=7)
 - Guardrail — opening new country: rates match (13% vs 12%) — do not attack there
-- **Play:** Buy audit/certification intent where Rippling's record rate beats Deel's (hit list); do NOT spend where the rates match (guardrail rows) — creative: certification wall vs story-backed claims, ungated comparison LP, gate only the audit-prep checklist.
+- **Play:** Buy audit/certification intent where Rippling's record rate beats Deel's (hit list); do NOT spend where the rates match (guardrail rows) — creative: certification wall vs story-backed claims, ungated comparison LP, gate only the audit-prep checklist. This attacks their missing certification RECORD specifically — where their general compliance proof is strong (see the gap table), lead with certifications, never with 'their compliance is weak'.
 
 **[DEFEND] Ownership by voice, not by proof: Deel quantifies 61% of its corpus vs Rippling's 17% — including on triggers Rippling owns**
 - consolidating hr tools (contested): Deel quantifies 67% (n=60) vs Rippling 19% (n=81)
@@ -162,7 +164,7 @@ _Deterministic cross-cutting analysis (proof×demand, funnel×vertical, channel�
 - Naming war is one-way: Deel names Rippling on 9 pages; Rippling names Deel on 0
 - **Play:** Quantified case-study sprint on Rippling-owned triggers where the competitor out-proves you; freeze paid spend on triggers where their quantified rate is a fortress.
 
-**[INTERCEPT] Deel closes only on home turf: its 9 decision assets sit on compliance_legal, global_eor_contractors, hris_core_hr — zero in benefits, it device management, identity security, where Rippling has them**
+**[INTERCEPT] Deel has 9 decision-stage assets, concentrated in payroll, global eor contractors — zero in benefits, it device management, identity security, where Rippling has them**
 - benefits: Deel 0/13 decision (evaluation 9/13) vs Rippling 2/22
 - it device management: Deel 0/12 decision (evaluation 6/12) vs Rippling 2/19
 - identity security: Deel 0/8 decision (evaluation 4/8) vs Rippling 2/15
@@ -174,7 +176,7 @@ _Deterministic cross-cutting analysis (proof×demand, funnel×vertical, channel�
 - usemultiplier.com: affinity 0.90 — defended (vs-page exists) · 1 mention(s) in Deel's classified corpus
 - rippling.com: affinity 0.88 — defended (vs-page exists) · 9 mention(s) in Deel's classified corpus
 - vs-pages spent outside the top-affinity audience: adp, gusto, ontop
-- **Play:** Publish named comparison LPs against the undefended high-affinity domains and bid their 'vs' queries; affinity is an estimated overlap index, not lost-deal share (labeled on-chart). _(affinity = estimated overlap index)_
+- **Play:** For Rippling: define the 'Deel vs Rippling' SERP first if it's undefended (comparison LP + paid on the query), then intercept the other open 'vs' queries with 'considering Deel? compare Rippling' content. _(affinity = estimated overlap index)_
 
 **[WHITESPACE] The only place Deel shows its product is LinkedIn (12/30 posts) — its website demos on 1/63 pages and hides pricing on 94%**
 - Product demos: LinkedIn 12/30 (40%) vs website 1/63 (2%); quantified outcomes flip the other way (7/30 vs 51/63)
