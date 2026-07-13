@@ -300,3 +300,9 @@ summary { cursor: pointer; font-size: 14px; }
 .lvbtn { background: var(--accent); color: #0b1220; border: none; border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; margin-right: 6px; }
 .lvbtn:disabled { opacity: 0.5; cursor: default; }
 .lvbtn.ghost { background: none; border: 1px solid var(--border); color: var(--muted); font-weight: 400; }
+
+/* paid-search targets */
+.pscluster .title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pskws { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.psmeta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 12.5px; }
+.atag.legal { color: var(--bad); border-color: var(--bad); font-weight: 700; }

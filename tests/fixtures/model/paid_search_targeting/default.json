@@ -1,0 +1,45 @@
+{
+  "clusters": [
+    {
+      "cluster_label": "consolidating HR tools",
+      "seed_keywords": [
+        "hr software consolidation",
+        "replace multiple hr tools",
+        "all in one hr platform"
+      ],
+      "search_intent": "commercial_investigation",
+      "funnel_stage": "consideration",
+      "category_entry_point": "consolidating_hr_tools",
+      "evidence_basis": "category_entry_point",
+      "supporting_quote": "consolidating_hr_tools",
+      "focal_angle": "Lead with the observed integration proof.",
+      "focal_proof_status": "partial",
+      "competitor_defensibility": "medium",
+      "cluster_type": "category_intent",
+      "priority_tier": "high",
+      "priority_reason": "Maps to an observed CEP and focal has partial proof.",
+      "risk_note": "",
+      "legal_review_required": false,
+      "validate_before_spend": false
+    },
+    {
+      "cluster_label": "competitor brand comparison",
+      "seed_keywords": ["deel vs rippling", "deel alternatives"],
+      "search_intent": "comparison",
+      "funnel_stage": "decision",
+      "category_entry_point": null,
+      "evidence_basis": "observed_page",
+      "supporting_quote": "this quote is fabricated and appears nowhere",
+      "focal_angle": "Comparison landing page with cited proof only.",
+      "focal_proof_status": "missing",
+      "competitor_defensibility": "high",
+      "cluster_type": "competitor_conquesting",
+      "priority_tier": "high",
+      "priority_reason": "Decision-stage traffic.",
+      "risk_note": "",
+      "legal_review_required": false,
+      "validate_before_spend": false
+    }
+  ],
+  "method_note": "Fixture draft for deterministic tests."
+}

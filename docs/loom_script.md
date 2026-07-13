@@ -89,6 +89,14 @@ a file to open instead.
   it says 'insufficient sample' instead of asserting ownership — 12 of 23
   triggers here."* Plus proof-vs-voice, the open-SERP affinity view, and
   traffic estimates (labeled estimated).
+- **Paid-search targets** (same tab, section 4): *"It goes from analysis to
+  media plan: keyword clusters drafted ONLY from observed evidence — their
+  buying triggers, their verbatim villain wording, their live ad creatives.
+  Volumes and CPCs aren't publicly knowable, so it never invents them: every
+  cluster ships 'validate before spend', competitor-brand bidding is
+  auto-flagged for legal review, and any quote the model can't prove verbatim
+  demotes its cluster to 'inferred'. On this run: 9 of 10 clusters
+  quote-verified."*
 - Ask the grounded chat one question on camera (bottom of Overview — e.g.
   *"Which buying triggers does Deel own vs Rippling after normalizing for
   corpus size?"*): it answers in rich text from this run's evidence only,
@@ -125,6 +133,12 @@ a file to open instead.
 - `competitive-agent portfolio deel.com gusto.com workday.com` → isolated
   pipelines, provably no cross-company leakage. Modes (snapshot, comparative,
   longitudinal) run concurrently — the UI queues them as background jobs.
+- **Runs are durable and stream live** (optional beat — start a new run to
+  show it): *"Queue a competitor and watch it work: sources, themes, and the
+  agent's own decisions stream into the UI from its database checkpoints.
+  Refresh the page — still there. Kill the server mid-run — it comes back as
+  'interrupted' with everything saved, and Resume continues from the last
+  checkpoint without re-fetching or re-paying for anything."*
 - Benchmark: *"Grounding and validity are objective and final. Classification
   accuracy is human-adjudicated on a held-out set — we don't ship an accuracy
   number we haven't earned."*

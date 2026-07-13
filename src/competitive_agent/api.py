@@ -693,6 +693,45 @@ def rewindow(run_id: str, req: RewindowRequest) -> dict[str, Any]:
     }
 
 
+class PaidSearchRequest(BaseModel):
+    execution_mode: str = "live"
+    force: bool = False
+
+
+@app.get("/api/runs/{run_id}/paid-search")
+def get_paid_search(run_id: str) -> dict[str, Any]:
+    """Cached paid-search targeting draft, if one was generated for this run."""
+    from .paid_search import _cache_path
+
+    cache = _cache_path(run_id)
+    if not cache.exists():
+        return {"generated": False}
+    return {"generated": True, **json.loads(cache.read_text())}
+
+
+@app.post("/api/runs/{run_id}/paid-search")
+async def draft_paid_search(run_id: str, req: PaidSearchRequest) -> dict[str, Any]:
+    """Draft grounded paid-search keyword clusters for a completed run.
+
+    One bounded model call over the run's OBSERVED evidence; volumes/CPCs are
+    never estimated (not publicly knowable) and every cluster ships with
+    validate-before-spend forced on. Cached — repeats are free unless force.
+    """
+    from .paid_search import generate_paid_search_targets
+
+    if req.execution_mode not in _ALLOWED_EXEC:
+        raise HTTPException(
+            status_code=400, detail=f"execution_mode must be one of {sorted(_ALLOWED_EXEC)}"
+        )
+    try:
+        result = await generate_paid_search_targets(
+            run_id, execution_mode=req.execution_mode, force=req.force
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}") from None
+    return {"generated": True, **result}
+
+
 @app.get("/api/runs/{run_id}/brief", response_class=PlainTextResponse)
 def get_brief(run_id: str) -> str:
     brief = _runs_dir() / run_id / "brief.md"

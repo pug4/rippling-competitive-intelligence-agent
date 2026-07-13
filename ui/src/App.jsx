@@ -1643,6 +1643,107 @@ function CepOwnership({ pkg, msgIdx }) {
   );
 }
 
+const TIER_ORDER = { high: 0, medium: 1, low: 2 };
+
+// On-demand paid-search targeting: one model call over this run's OBSERVED
+// evidence, drafted server-side with hard guards (validate-before-spend
+// forced, conquesting flagged for legal, quotes containment-verified).
+// Volumes/CPCs are never shown — they are not publicly knowable.
+function PaidSearchTargets({ pkg, runId }) {
+  const [draft, setDraft] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  useEffect(() => {
+    let stop = false;
+    setDraft(null); setErr(null);
+    fetch(`/api/runs/${runId}/paid-search`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!stop && d && d.generated) setDraft(d); })
+      .catch(() => {});
+    return () => { stop = true; };
+  }, [runId]);
+  const generate = async (force) => {
+    setBusy(true); setErr(null);
+    try {
+      const r = await fetch(`/api/runs/${runId}/paid-search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ execution_mode: "live", force: !!force }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.generated) setDraft(d);
+      else setErr(d.detail || "generation failed");
+    } catch { setErr("Could not reach the API — is `make api` running?"); }
+    setBusy(false);
+  };
+  const focal = pkg.companies?.[1]?.canonical_name || "the focal company";
+  const clusters = (draft?.clusters || []).slice().sort(
+    (a, b) => (TIER_ORDER[a.priority_tier] ?? 3) - (TIER_ORDER[b.priority_tier] ?? 3)
+  );
+  return (
+    <>
+      <Sec n={4} title={`Paid-search targets for ${focal} (draft)`}
+           why="Keyword clusters worth testing, grounded only in what this run observed — their buying triggers, their verbatim messaging, their live ad creatives, and your proof. Volumes and CPCs are NOT publicly knowable, so every cluster is a hypothesis to validate in Keyword Planner before spend."
+           tip="Generated on demand by one bounded model call over this run's stored evidence, then hard-guarded in code: validate-before-spend is forced on every cluster, competitor-brand bidding is flagged for legal review, and any supporting quote that isn't verbatim in the observed evidence demotes its cluster to 'inferred'." />
+      {!draft && (
+        <div className="card">
+          <div className="row">
+            Draft keyword clusters from this run's evidence — one model call, cached afterwards.
+          </div>
+          <button className="lvbtn" disabled={busy} onClick={() => generate(false)} style={{ marginTop: 8 }}>
+            {busy ? "Drafting…" : "Draft paid-search targets"}
+          </button>
+          {err && <p className="empty" style={{ color: "var(--bad)" }}>{err}</p>}
+        </div>
+      )}
+      {draft && (
+        <>
+          <div className="banner" role="note">{draft.disclaimer}</div>
+          {clusters.map((c, i) => (
+            <div className="card pscluster" key={i}>
+              <div className="title">
+                {c.cluster_label}
+                <span className={`pill ${c.priority_tier}`} data-tip={c.priority_reason || "priority reasoning not stated"}>{c.priority_tier}</span>
+                <span className="atag" data-tip="category_intent: win the buying situation · competitor_conquesting: bid on their brand (legal review) · brand_defense: protect your own SERP · whitespace: intent neither side serves yet">{String(c.cluster_type).replace(/_/g, " ")}</span>
+                {c.legal_review_required && (
+                  <span className="atag legal" data-tip={c.risk_note || "Bidding on competitor brand/trademark terms carries legal and ad-policy risk — route through legal before launch"}>LEGAL REVIEW</span>
+                )}
+              </div>
+              <div className="pskws">
+                {(c.seed_keywords || []).map((k) => (
+                  <span className="chip" key={k} data-tip={`Seed query for this intent (${c.search_intent}, ${c.funnel_stage} stage) — expand and validate in Keyword Planner`}>{k}</span>
+                ))}
+              </div>
+              <div className="row"><b>Angle for {focal}:</b> {c.focal_angle || "—"}</div>
+              <div className="row psmeta">
+                <span data-tip={c.quote_verified
+                  ? `Verbatim from the observed evidence: “${c.supporting_quote}”`
+                  : c.supporting_quote
+                    ? "The model's supporting quote was NOT found in the observed evidence — demoted to inferred; treat with care"
+                    : "No verbatim quote — inferred from the mapped buying trigger / theme"}>
+                  evidence: {String(c.evidence_basis).replace(/_/g, " ")}{c.quote_verified ? " ✓" : ""}
+                </span>
+                <span data-tip="Whether your side already has the proof to land this ad's promise — 'missing' means build the landing page/proof first">your proof: {c.focal_proof_status}</span>
+                <span data-tip="How entrenched they are on this intent (dedicated pages + ads + strong proof = high)">their defense: {c.competitor_defensibility}</span>
+                {c.category_entry_point && (
+                  <span data-tip="The buying trigger this cluster maps to — see section 1 for who owns it">CEP: {String(c.category_entry_point).replace(/_/g, " ")}</span>
+                )}
+              </div>
+              {c.risk_note && !c.legal_review_required && (
+                <div className="row" style={{ color: "var(--warn)" }}>{c.risk_note}</div>
+              )}
+            </div>
+          ))}
+          <p className="empty" style={{ fontSize: 12 }}>
+            {draft.method_note ? `${draft.method_note} · ` : ""}Drafted {String(draft.generated_at).slice(0, 10)} from this run's stored evidence.{" "}
+            <button className="lvbtn ghost" disabled={busy} onClick={() => generate(true)}>{busy ? "…" : "Re-draft"}</button>
+          </p>
+        </>
+      )}
+    </>
+  );
+}
+
 function Similarweb({ pkg }) {
   const sw = pkg.similarweb || {};
   const m = sw.metrics || {};
@@ -1652,7 +1753,7 @@ function Similarweb({ pkg }) {
   const label = sw.data_source === "similarweb" ? "Similarweb" : "public-web estimate";
   return (
     <>
-      <Sec n={4} title={`Traffic estimates (${label})`}
+      <Sec n={5} title={`Traffic estimates (${label})`}
            why="The demand behind the content: estimated visits and where their traffic comes from — sizing context for every play on this tab."
            tip="Estimated via Exa's Similarweb partner (or a labeled public-web estimate). Every value is an estimate — never measured analytics." />
       <div className="card">
@@ -1685,7 +1786,7 @@ function CommercialMotion({ pkg }) {
   if (!cm.primary_motion) return null;
   return (
     <>
-      <Sec n={5} title="Commercial motion"
+      <Sec n={6} title="Commercial motion"
            why="How they sell, read from public signals: demo-led vs self-serve CTAs, how openly they price, which segments they chase. Mismatches with your motion are positioning openings."
            tip="Pricing disclosure = the most-open level observed on ≥2 pages (noise-guarded). Never CAC/conversion/spend — those aren't publicly knowable." />
       <div className="card">
@@ -2455,12 +2556,13 @@ export default function App() {
             {tab === "performance" && (
               <>
                 <TabIntro q="Which buying moments do they own — and where is the demand?"
-                          why="Work top to bottom: who owns each buying intent (1), whether that ownership is backed by proof or just page volume (2), which comparison SERPs are undefended (3), then the traffic and sales-motion context behind it all (4–5)." />
+                          why="Work top to bottom: who owns each buying intent (1), whether that ownership is backed by proof or just page volume (2), which comparison SERPs are undefended (3), the paid-search keywords those add up to (4), then the traffic and sales-motion context behind it all (5–6)." />
                 <CepOwnership pkg={pkg} msgIdx={msgIdx} />
                 <ProofVsVoice pkg={pkg} msgIdx={msgIdx} />
                 {(pkg.insight_graphics || {}).affinity_defense
                   ? <AffinityDefense pkg={pkg} />
                   : <AffinityBar pkg={pkg} />}
+                <PaidSearchTargets pkg={pkg} runId={selected} />
                 <Similarweb pkg={pkg} />
                 <CommercialMotion pkg={pkg} />
               </>

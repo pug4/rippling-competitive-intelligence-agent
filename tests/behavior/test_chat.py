@@ -257,3 +257,61 @@ def test_resume_endpoint_guards_and_dismiss(isolated_env: Path):
         "SELECT COUNT(*) FROM artifacts WHERE run_id=?", (state2.run_id,)
     ).fetchone()[0]
     assert n_artifacts > 0  # dismiss never deletes collected evidence
+
+
+def test_paid_search_targeting_guards_and_cache(isolated_env: Path):
+    """Paid-search drafts are grounded and guarded (user req: ad targeting).
+
+    validate_before_spend and conquesting legal review are FORCED regardless
+    of model output; a quote absent from the supplied evidence demotes its
+    cluster to inferred/low; results cache to paid_search.json.
+    """
+    import asyncio
+
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.paid_search import generate_paid_search_targets
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    res = asyncio.run(generate_paid_search_targets(state.run_id, execution_mode="fixture"))
+    assert res["disclaimer"].startswith("Search volume")
+    by_label = {c["cluster_label"]: c for c in res["clusters"]}
+
+    grounded = by_label["consolidating HR tools"]
+    assert grounded["validate_before_spend"] is True  # fixture said false — forced
+    assert grounded["quote_verified"] is True  # 'consolidating_hr_tools' is in the CEP block
+    assert grounded["priority_tier"] == "high"  # verified quote keeps its tier
+
+    conquest = by_label["competitor brand comparison"]
+    assert conquest["legal_review_required"] is True  # forced for conquesting
+    assert conquest["quote_verified"] is False  # fabricated quote
+    assert conquest["evidence_basis"] == "inferred"  # demoted
+    assert conquest["priority_tier"] == "low"  # capped
+    assert "could not be verified" in conquest["risk_note"]
+
+    # Cached on disk; the API serves it without regenerating.
+    cache = Path(get_settings_outputs()) / "runs" / state.run_id / "paid_search.json"
+    assert cache.exists()
+    client = TestClient(app)
+    got = client.get(f"/api/runs/{state.run_id}/paid-search").json()
+    assert got["generated"] is True and len(got["clusters"]) == 2
+    assert client.get("/api/runs/RUN-nope/paid-search").json() == {"generated": False}
+    post = client.post(
+        f"/api/runs/{state.run_id}/paid-search", json={"execution_mode": "fixture"}
+    )
+    assert post.status_code == 200 and post.json()["generated"] is True
+    assert (
+        client.post("/api/runs/RUN-nope/paid-search", json={"execution_mode": "fixture"})
+        .status_code
+        == 404
+    )
+
+
+def get_settings_outputs():
+    from competitive_agent.config import get_settings
+
+    return get_settings().outputs_dir

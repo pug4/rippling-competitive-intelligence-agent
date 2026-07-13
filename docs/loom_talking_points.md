@@ -166,7 +166,29 @@ this), each opens with the question it answers, sections are numbered in
 reading order, every finding carries a visible one-line justification, and the
 messaging popup means no claim is more than one hover from its evidence.
 
-**Q13. "What breaks it?"** (be honest, it lands well)
+**Q13. "Why don't you show search volumes or the keywords they bid on?"**
+Because they're not publicly knowable, and we refuse to fake them. Ad
+transparency libraries prove WHICH creatives a competitor is running — never
+the keyword buy, the spend, or the auction (Meta discloses spend only for
+political ads). Similarweb's keyword product isn't exposed through Exa's
+provider (verified by live probe — it returns visits, rank, and audience-
+affinity competitors, which we DO use). So the paid-search view drafts
+keyword clusters as explicit hypotheses grounded in observed evidence — CEPs,
+verbatim villain wording, live creatives — with validate-before-spend forced
+on every cluster and legal review auto-flagged on brand conquesting. A GTM
+engineer plugs the clusters into Keyword Planner; the system never pretends
+to know the economics.
+
+**Q14. "What happens if a run dies halfway — or I close the tab?"**
+Nothing is lost. Every node transition checkpoints the full typed state to
+SQLite, so the run list is rebuilt from the database, not server memory:
+refresh the page mid-run and it's still there, streaming progress. Restart
+the server and the orphaned run shows up as "interrupted" with everything it
+collected intact — one click resumes it from the last checkpoint without
+re-fetching or re-paying for anything, and a run that died between its stop
+decision and the report write just replays the deterministic render.
+
+**Q15. "What breaks it?"** (be honest, it lands well)
 JS-only sites with no crawlable content degrade first-party coverage (Exa
 fallback helps); LinkedIn depends on Exa credits (it's a toggle and the run
 says so when it fails); tiny prior windows make temporal reads signals, not
