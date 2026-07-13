@@ -295,6 +295,141 @@ async def test_next_query_loop_is_bounded_to_three_follow_ups(monkeypatch: Any) 
     assert result.status in ("partial", "success")
 
 
+# ---- defensive provenance repair (platform / source_url) ---------------------------
+
+
+def make_record(**overrides: Any) -> AdRecord:
+    base: dict[str, Any] = {
+        "advertiser": "Deel",
+        "platform": "google",
+        "creative_text": FIXTURE_CREATIVE_1,
+        "source_url": DEEL_ADVERTISER_URL,
+        "extraction_confidence": "high",
+    }
+    base.update(overrides)
+    return AdRecord.model_validate(base)
+
+
+async def run_google_extraction(
+    monkeypatch: Any, intelligence: AdIntelligence, page_text: str
+) -> Any:
+    """Run the Google web path with a faked extraction result over one page."""
+    tool = GoogleAdsTool()
+    monkeypatch.setattr(tool, "_build_gateway", lambda ctx: object())  # extraction on
+
+    async def fake_extract(
+        gateway: Any, prompt: Any, **kwargs: Any
+    ) -> tuple[AdIntelligence, float]:
+        return intelligence, 0.0
+
+    monkeypatch.setattr(tool, "_extract", fake_extract)
+    install_exa(
+        monkeypatch,
+        tool,
+        [
+            {
+                "results": [
+                    exa_result(DEEL_ADVERTISER_URL, "Deel - Ads Transparency Center", page_text)
+                ]
+            }
+        ],
+    )
+    return await tool.execute(
+        make_action("search_google_ads", advertiser="Deel", domain="deel.com"),
+        make_context(),
+    )
+
+
+async def test_blank_or_invalid_source_url_corrected_to_extraction_page(
+    monkeypatch: Any,
+) -> None:
+    """A record is never dropped for a blank/invalid source_url alone: the
+    persisted artifact carries the extraction page URL, and the correction is
+    counted in the notes."""
+    creative_blank = "Deel runs payroll in 150+ countries."
+    creative_invalid = "Hire globally with Deel EOR today."
+    intelligence = AdIntelligence(
+        ads=[
+            make_record(creative_text=creative_blank, source_url=""),
+            make_record(creative_text=creative_invalid, source_url="not-a-url"),
+        ]
+    )
+    result = await run_google_extraction(
+        monkeypatch,
+        intelligence,
+        f"Ads by Deel.\n{creative_blank}\n{creative_invalid}\n",
+    )
+    records = [a for a in result.artifacts if "ad_record" in a.metadata]
+    assert len(records) == 2  # never dropped for these fields alone
+    for artifact in records:
+        assert artifact.url == DEEL_ADVERTISER_URL  # canonical URL = extraction page
+        parsed = AdRecord.model_validate(artifact.metadata["ad_record"])
+        assert parsed.source_url == DEEL_ADVERTISER_URL
+    assert any(
+        "2 record(s) had platform/source_url corrected to the extraction page" in n
+        for n in result.negative_observations
+    )
+
+
+async def test_wrong_platform_record_corrected_to_tool_platform(monkeypatch: Any) -> None:
+    creative = "Deel handles compliance and taxes worldwide."
+    intelligence = AdIntelligence(
+        ads=[make_record(creative_text=creative, platform="meta")]  # wrong library
+    )
+    result = await run_google_extraction(monkeypatch, intelligence, f"Ads by Deel.\n{creative}\n")
+    records = [a for a in result.artifacts if "ad_record" in a.metadata]
+    assert len(records) == 1  # never dropped for platform alone
+    parsed = AdRecord.model_validate(records[0].metadata["ad_record"])
+    assert parsed.platform == "google"  # the tool knows which library it searched
+    assert records[0].url == DEEL_ADVERTISER_URL  # valid source_url untouched
+    assert any(
+        "1 record(s) had platform/source_url corrected to the extraction page" in n
+        for n in result.negative_observations
+    )
+
+
+async def test_valid_record_provenance_untouched(monkeypatch: Any) -> None:
+    """A sound record keeps its own source_url (a creative permalink is NOT
+    overwritten with the extraction page) and no correction note appears."""
+    creative = "Run global payroll in minutes with Deel."
+    permalink = "https://adstransparency.google.com/advertiser/AR13975028471928374650/creative/CR42"
+    intelligence = AdIntelligence(ads=[make_record(creative_text=creative, source_url=permalink)])
+    result = await run_google_extraction(monkeypatch, intelligence, f"Ads by Deel.\n{creative}\n")
+    records = [a for a in result.artifacts if "ad_record" in a.metadata]
+    assert len(records) == 1
+    assert records[0].url == permalink
+    parsed = AdRecord.model_validate(records[0].metadata["ad_record"])
+    assert parsed.source_url == permalink
+    assert parsed.platform == "google"
+    assert not any("corrected to the extraction page" in n for n in result.negative_observations)
+    assert result.status == "success"  # nothing dropped, nothing corrected
+
+
+def test_repair_record_provenance_helper() -> None:
+    from competitive_agent.tools.ads import repair_record_provenance
+
+    page_url = DEEL_ADVERTISER_URL
+    # Non-http(s) scheme and scheme-only URLs are invalid -> extraction page.
+    for bad in ("", "   ", "not-a-url", "ftp://example.com/x", "https://"):
+        repaired, corrected = repair_record_provenance(
+            make_record(source_url=bad), platform="google", page_url=page_url
+        )
+        assert corrected is True
+        assert repaired.source_url == page_url
+    # Both fields repaired at once.
+    repaired, corrected = repair_record_provenance(
+        make_record(source_url="", platform="other"), platform="google", page_url=page_url
+    )
+    assert corrected is True
+    assert repaired.source_url == page_url
+    assert repaired.platform == "google"
+    # A sound record comes back untouched.
+    sound = make_record()
+    repaired, corrected = repair_record_provenance(sound, platform="google", page_url=page_url)
+    assert corrected is False
+    assert repaired == sound
+
+
 # ---- Meta: typed keyless degrade + official-API seam ------------------------------
 
 

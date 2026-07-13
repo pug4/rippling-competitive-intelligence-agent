@@ -232,7 +232,9 @@ def test_rollup_counts_exactly() -> None:
                 direction="switched_from",
                 quote="we switched from LegacySuite",
             ),
-            # 'evaluated' is not a switching trigger -> excluded from that list.
+            # 'evaluated' is not a switching trigger -> surfaced separately in
+            # alternatives_considered (never silently dropped, never mislabeled
+            # as an observed switch).
             BuyerVoiceAlternative(
                 alternative="OtherHR", direction="evaluated", quote="we also looked at OtherHR"
             ),
@@ -287,6 +289,15 @@ def test_rollup_counts_exactly() -> None:
                 "source_url": "https://g2.example/r1",
             }
         ],
+        "alternatives_considered": [
+            {
+                "theme": "OtherHR",
+                "direction": "evaluated",
+                "n": 1,
+                "example_quote": "we also looked at OtherHR",
+                "source_url": "https://g2.example/r1",
+            }
+        ],
         "objections": [
             {
                 "theme": "implementation_pain",
@@ -314,6 +325,7 @@ def test_rollup_empty_is_honest() -> None:
         "n_reviews": 0,
         "themes": [],
         "switching_triggers": [],
+        "alternatives_considered": [],
         "objections": [],
         "message_reality": [],
         "note": _BUYER_VOICE_NOTE,

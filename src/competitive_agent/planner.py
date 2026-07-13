@@ -49,6 +49,11 @@ _STARVATION_FLOOR_CAP = 2.4
 # competitors of the researched company.
 _MAX_SIMILARWEB_PEERS = 3
 
+# Action types backed by the (paid) Exa Agent — each execution is one bounded
+# agentic run, capped per pipeline by config exa_agent.max_exa_agent_runs.
+_EXA_AGENT_ACTION_TYPES = frozenset({"enrich_similarweb", "research_linkedin"})
+_DEFAULT_MAX_EXA_AGENT_RUNS = 6
+
 # Seed phrases for a focused keyword-intelligence pass (chat: research
 # "keywords"): up to 8 humanized CEP labels, else name + user-focus fallback.
 _MAX_KEYWORD_SEEDS = 8
@@ -722,6 +727,22 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
             )
 
     out = [p for p in proposals if allowed(p)]
+
+    # Exa-Agent run cap (config exa_agent.max_exa_agent_runs, default 6):
+    # enrich_similarweb (own domain + peers) and research_linkedin each consume
+    # one bounded agentic run. Once EXECUTED runs reach the cap, no NEW
+    # exa-agent-backed action is proposed — a single filter here so no other
+    # proposal logic changes.
+    max_exa_agent_runs = int(
+        (cfg.exa_agent.get("max_exa_agent_runs", _DEFAULT_MAX_EXA_AGENT_RUNS))
+        if cfg
+        else _DEFAULT_MAX_EXA_AGENT_RUNS
+    )
+    executed_exa_agent_runs = sum(
+        1 for k in state.executed_action_keys if k.split(":", 1)[0] in _EXA_AGENT_ACTION_TYPES
+    )
+    if executed_exa_agent_runs >= max_exa_agent_runs:
+        out = [p for p in out if p.action_type not in _EXA_AGENT_ACTION_TYPES]
 
     # Source allowlist (CONTRACTS.md): when set (e.g. focused in-place research),
     # ONLY actions from allowlisted sources are proposed. This is an additional

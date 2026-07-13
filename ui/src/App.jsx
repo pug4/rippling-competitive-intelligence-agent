@@ -1248,25 +1248,68 @@ function ChangesTimeline({ pkg, msgIdx }) {
 }
 
 // PERFORMANCE — audience-affinity competitors (Similarweb graph).
+// Peer domains that got their own Similarweb enrichment run carry an
+// "est. visits/mo" chip (pkg.similarweb_peers) — no chip when the provider
+// returned no visits estimate for that peer (honest absence, never zero).
+const normDomain = (d) => String(d || "").trim().toLowerCase().replace(/^www\./, "");
+const fmtVisits = (n) =>
+  n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n);
+const peerVisitsByDomain = (pkg) => {
+  const m = {};
+  (pkg.similarweb_peers || []).forEach((p) => {
+    if (p.estimated_monthly_visits != null) m[normDomain(p.domain)] = p.estimated_monthly_visits;
+  });
+  return m;
+};
+function PeerVisitsChip({ domain, visits }) {
+  return (
+    <span className="atag" style={{ color: "var(--text)", borderColor: "var(--border)", fontWeight: 400, letterSpacing: 0 }}
+          data-tip={`${domain}: ~${Number(visits).toLocaleString()} estimated monthly visits (this peer got its own Similarweb enrichment run) — an estimate, never measured analytics; sizing context for the audience-overlap set`}>
+      ~{fmtVisits(visits)}/mo est.
+    </span>
+  );
+}
+function PeerEnrichNote({ pkg }) {
+  const peers = pkg.similarweb_peers || [];
+  if (peers.length === 0) return null;
+  const withData = peers.filter((p) => p.estimated_monthly_visits != null).length;
+  return (
+    <p className="empty" style={{ fontSize: 11, marginBottom: 0 }}
+       data-tip="each listed peer domain was enriched with its own Similarweb run; an est. visits/mo chip appears only where the provider returned a visits estimate — a missing chip means no data came back, never zero traffic">
+      {peers.length} peer domain{peers.length === 1 ? "" : "s"} enriched via Similarweb · {withData} returned a visits estimate (all values estimated)
+    </p>
+  );
+}
 function AffinityBar({ pkg }) {
   const comps = ((pkg.similarweb || {}).metrics || {}).digital_competitors;
   const val = comps && (comps.value != null ? comps.value : comps);
   if (!Array.isArray(val) || val.length === 0) return null;
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
-  const data = val.slice(0, 10).map((c) => ({
-    label: c.domain,
-    value: Math.round((c.affinity || 0) * 100),
-    display: (c.affinity || 0).toFixed(2),
-    colorVar: String(c.domain || "").includes(focal.toLowerCase()) ? "--good" : "--accent",
-  }));
+  const visitsMap = peerVisitsByDomain(pkg);
+  const rows = val.slice(0, 10);
+  const max = Math.max(0.01, ...rows.map((c) => c.affinity || 0));
   return (
     <>
       <Sec n={3} title="Audience-affinity competitors (Similarweb, estimated)"
            why="Who their audience actually shops against — a demand-side reality check on the competitor set."
            tip="Affinity is a rank INDEX (0–1, top-normalized), not a percentage audience overlap; all values estimated." />
       <div className="card">
-        <HBar data={data} />
+        {rows.map((c) => {
+          const domain = String(c.domain || "");
+          const visits = visitsMap[normDomain(domain)];
+          return (
+            <div className="ktrow" key={domain} style={{ gridTemplateColumns: "150px 1fr auto" }}>
+              <div className="ktlabel" data-tip={`estimated audience-affinity peer of the researched company`}>{domain}</div>
+              <div className="ktbars">
+                <div className="ktbar" style={{ width: `${((c.affinity || 0) / max) * 100}%`, background: domain.includes(focal.toLowerCase()) ? "var(--good)" : "var(--accent)" }} />
+                <span className="ktnum" data-tip="affinity index (0–1, top-normalized) — not % overlap">{(c.affinity || 0).toFixed(2)}</span>
+              </div>
+              {visits != null ? <PeerVisitsChip domain={domain} visits={visits} /> : <span />}
+            </div>
+          );
+        })}
         <p className="empty" style={{ fontSize: 11, marginBottom: 0 }}>affinity index (0–1, top-normalized) — not % overlap · all values estimated</p>
+        <PeerEnrichNote pkg={pkg} />
       </div>
     </>
   );
@@ -1506,25 +1549,30 @@ function AffinityDefense({ pkg }) {
   if (!b) return null;
   const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
   const max = Math.max(0.01, ...b.rows.map((r) => r.affinity));
+  const visitsMap = peerVisitsByDomain(pkg);
   return (
     <>
       <InsightHeader block={b} n={3} />
       <div className="card">
-        {b.rows.map((r) => (
-          <div className="ktrow" key={r.domain} style={{ gridTemplateColumns: "150px 1fr auto" }}>
-            <div className="ktlabel" data-tip={`${r.mentions} mention(s) in ${comp}'s classified corpus`}>{r.domain}</div>
-            <div className="ktbars">
-              <div className="ktbar" style={{ width: `${(r.affinity / max) * 100}%`, background: r.defended ? "var(--accent)" : "var(--muted)", opacity: r.defended ? 0.9 : 0.55 }} />
-              <span className="ktnum">{r.affinity.toFixed(2)}</span>
+        {b.rows.map((r) => {
+          const visits = visitsMap[normDomain(r.domain)];
+          return (
+            <div className="ktrow" key={r.domain} style={{ gridTemplateColumns: "150px 1fr auto" }}>
+              <div className="ktlabel" data-tip={`${r.mentions} mention(s) in ${comp}'s classified corpus`}>{r.domain}</div>
+              <div className="ktbars">
+                <div className="ktbar" style={{ width: `${(r.affinity / max) * 100}%`, background: r.defended ? "var(--accent)" : "var(--muted)", opacity: r.defended ? 0.9 : 0.55 }} />
+                <span className="ktnum">{r.affinity.toFixed(2)}</span>
+                {visits != null && <PeerVisitsChip domain={r.domain} visits={visits} />}
+              </div>
+              <span className="atag" style={r.defended
+                ? { color: "var(--accent)", borderColor: "var(--accent)" }
+                : { color: "var(--good)", borderColor: "var(--good)" }}
+                data-tip={r.defended ? `${comp} has a vs-page for this domain` : "no comparison page — this SERP is open"}>
+                {r.defended ? "DEFENDED" : "OPEN SERP"}
+              </span>
             </div>
-            <span className="atag" style={r.defended
-              ? { color: "var(--accent)", borderColor: "var(--accent)" }
-              : { color: "var(--good)", borderColor: "var(--good)" }}
-              data-tip={r.defended ? `${comp} has a vs-page for this domain` : "no comparison page — this SERP is open"}>
-              {r.defended ? "DEFENDED" : "OPEN SERP"}
-            </span>
-          </div>
-        ))}
+          );
+        })}
         {(b.orphan_comparison_slugs || []).length > 0 && (
           <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
             vs-pages spent outside the top-affinity audience: {b.orphan_comparison_slugs.join(", ")}
@@ -1533,6 +1581,7 @@ function AffinityDefense({ pkg }) {
         <div className="row" style={{ fontSize: 11, color: "var(--muted)" }}>
           affinity = estimated audience-overlap index (0–1, top-normalized), not lost-deal share
         </div>
+        <PeerEnrichNote pkg={pkg} />
         <div className="scaction">→ {b.action}</div>
       </div>
     </>
@@ -2041,6 +2090,7 @@ function BuyerVoice({ pkg }) {
   const themes = bv.themes || [];
   const lists = [
     ["Switching triggers", bv.switching_triggers || [], `what pushed reviewers to switch TO or FROM ${competitor} — the strongest conquesting angles come from here`],
+    ["Also evaluated (no switch observed)", bv.alternatives_considered || [], `alternatives reviewers mention evaluating alongside ${competitor} WITHOUT an observed switch — the live competitive shortlist; useful for comparison pages and conquesting research, but never churn evidence`],
     ["Objections", bv.objections || [], "what reviewers complain about or push back on — landing pages that pre-empt these convert the deal-stage searches above"],
   ];
   return (
@@ -2094,6 +2144,44 @@ function BuyerVoice({ pkg }) {
               ))}
             </div>
           ))}
+          {/* Message vs reality: their marketing claims checked against buyer
+              language. Empty is an honest finding (reviews WERE mined), so it
+              renders as a statement, never a silent omission. */}
+          <div className="row" style={{ fontSize: 12, marginTop: 10 }}>
+            <b data-tip={`${competitor}'s marketing claim themes checked against verbatim buyer language: CONFIRMS = reviewers back the claim (their marketing holds up — don't attack it); CONTRADICTS = reviewers dispute it (attack it with buyers' own words)`}>
+              Message vs reality:
+            </b>
+          </div>
+          {(bv.message_reality || []).length > 0 ? (
+            (bv.message_reality || []).map((r) => (
+              <div className="bvrow" key={`${r.theme}:${r.relation}`}>
+                <div className="bvhead">
+                  <span className="bvsent"
+                        style={{ color: `var(${r.relation === "confirms" ? "--good" : "--bad"})`, borderColor: `var(${r.relation === "confirms" ? "--good" : "--bad"})` }}
+                        data-tip={r.relation === "confirms"
+                          ? `buyer language BACKS this claim in ${r.n} review${r.n === 1 ? "" : "s"} — the claim holds up; don't build a campaign attacking it`
+                          : `buyer language DISPUTES this claim in ${r.n} review${r.n === 1 ? "" : "s"} — quote buyers' own words against their marketing`}>
+                    {r.relation === "confirms" ? "CONFIRMS" : "CONTRADICTS"}
+                  </span>
+                  <b data-tip={`${competitor} marketing claim theme, as reviewers reference it`}>
+                    {String(r.theme || "").replace(/_/g, " ")}
+                  </b>
+                  <span className="ktnum" data-tip="number of reviews carrying this signal">n={r.n}</span>
+                </div>
+                {r.example_quote && (
+                  <div className="srcex">
+                    “{String(r.example_quote).slice(0, 240)}”{" "}
+                    {r.source_url && <a href={r.source_url} target="_blank" rel="noreferrer">source ↗</a>}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="empty" style={{ fontSize: 12 }}
+               data-tip="reviews were mined, but no verbatim buyer language matched a marketing claim theme in either direction — an honest absence, not a verdict on their claims">
+              no review language matched their marketing claims either way.
+            </p>
+          )}
         </div>
       )}
     </>
@@ -2699,18 +2787,33 @@ export default function App() {
       if (j.status === "done") {
         stripRuns.current.delete(j.run_id);
         setPkgRefresh((n) => n + 1);
-        appendChat(j.run_id, {
-          role: "assistant",
-          system_note: true,
-          answer: "Research finished — tabs updated with the new evidence.",
-        });
-      } else if (j.status === "paused") {
-        // Honest state: nothing landed yet; the run is waiting on the user.
+        // artifacts_added is SERVER-computed (real before/after artifact
+        // counts on the job dict) — never counted client-side. Jobs from
+        // older servers lack the field and keep the generic line.
+        const added = j.artifacts_added;
         appendChat(j.run_id, {
           role: "assistant",
           system_note: true,
           answer:
-            "Research paused — a source failed and the agent needs your decision (pick an option in the strip below). Tabs keep the previous evidence until the run finishes.",
+            added == null
+              ? "Research finished — tabs updated with the new evidence."
+              : added === 0
+                ? "Research finished — no new sources — coverage was already complete; tabs re-verified."
+                : `Research finished — ${added} new source(s) folded in. Tabs updated.`,
+        });
+      } else if (j.status === "paused") {
+        // Honest state: the run is waiting on the user — and sources CAN land
+        // before the pause (in-place appends precede the failed source), so
+        // say so with the server-computed count rather than claiming nothing did.
+        const landed = j.artifacts_added;
+        appendChat(j.run_id, {
+          role: "assistant",
+          system_note: true,
+          answer:
+            (landed > 0
+              ? `Research paused — ${landed} new source(s) landed before a source failed, and the agent needs your decision (pick an option in the strip below). `
+              : "Research paused — a source failed and the agent needs your decision (pick an option in the strip below). ") +
+            "Tabs keep the previous evidence until the run finishes.",
         });
       }
     });

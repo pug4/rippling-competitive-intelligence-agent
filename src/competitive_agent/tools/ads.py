@@ -163,6 +163,34 @@ def record_in_scope(record: AdRecord, advertiser: str, advertiser_domain: str) -
     return _host_matches_domain(record.landing_url or "", advertiser_domain)
 
 
+def _valid_http_url(url: str | None) -> bool:
+    parts = urlsplit((url or "").strip())
+    return parts.scheme in ("http", "https") and bool(parts.netloc)
+
+
+def repair_record_provenance(
+    record: AdRecord, *, platform: str, page_url: str
+) -> tuple[AdRecord, bool]:
+    """Defensive provenance repair for extracted records — never a drop.
+
+    ``source_url`` is persisted as the artifact's canonical URL and drives
+    downstream classification, so a blank/invalid value is replaced with the
+    URL of the page the record was actually extracted from; a ``platform``
+    that is not this tool's platform is replaced with the tool's own (the tool
+    KNOWS which library it searched — the model does not get a vote). Returns
+    ``(record, True)`` when either field was corrected, ``(record, False)``
+    when the record was already sound (and is returned untouched).
+    """
+    updates: dict[str, Any] = {}
+    if not _valid_http_url(record.source_url):
+        updates["source_url"] = page_url
+    if record.platform != platform:
+        updates["platform"] = platform
+    if not updates:
+        return record, False
+    return record.model_copy(update=updates), True
+
+
 # ---- artifact builders -------------------------------------------------------
 
 
@@ -551,6 +579,7 @@ class _AdLibraryTool(BaseTool):
         dropped_junk = 0
         dropped_no_url = 0
         dropped_uncontained = 0
+        corrected_provenance = 0
         kept_records = 0
         extraction_pages = 0
         next_iterations = 0
@@ -732,6 +761,15 @@ class _AdLibraryTool(BaseTool):
                     if creative_hash in seen_creative_hashes:
                         continue
                     seen_creative_hashes.add(creative_hash)
+                    # Defensive provenance repair, never a drop: source_url is
+                    # the artifact's canonical URL, so a blank/invalid value
+                    # becomes the page we extracted FROM; a platform that is
+                    # not this tool's is set to the tool's own.
+                    record, corrected = repair_record_provenance(
+                        record, platform=self.PLATFORM, page_url=url
+                    )
+                    if corrected:
+                        corrected_provenance += 1
                     kept_records += 1
                     artifacts.append(
                         _ad_record_artifact(
@@ -769,6 +807,11 @@ class _AdLibraryTool(BaseTool):
             notes.append(
                 f"{dropped_uncontained} extracted record(s) dropped in total: "
                 "creative_text failed verbatim containment against the fetched page text."
+            )
+        if corrected_provenance:
+            notes.append(
+                f"{corrected_provenance} record(s) had platform/source_url "
+                "corrected to the extraction page."
             )
 
         if not artifacts:

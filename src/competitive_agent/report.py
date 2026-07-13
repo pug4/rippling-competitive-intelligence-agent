@@ -20,7 +20,8 @@ from .state import DirectorState
 
 # 1.4.0: additive keys — buyer_voice rollup, keyword_provider/keyword_metrics/
 # opportunity_score in paid_search, ad-record artifact metadata.
-JSON_SCHEMA_VERSION = "1.4.0"
+# 1.5.0: additive key — similarweb_peers (peer-domain Similarweb enrichments).
+JSON_SCHEMA_VERSION = "1.5.0"
 
 
 def run_output_dir(state: DirectorState, ctx: GraphContext) -> Path:
@@ -343,6 +344,61 @@ def _similarweb_summary(data: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def _similarweb_peers(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Deterministic rollup of stored PEER Similarweb artifacts (metadata.peer).
+
+    Surfaces the peer-domain enrichments (planner §7b) that
+    :func:`_similarweb_summary` deliberately skips: estimated demand context
+    for the audience-overlap set. ``affinity`` joins from the OWN-domain
+    artifact's ``digital_competitors`` when available; a metric a peer
+    artifact does not carry stays ``None`` — honest absence, never a
+    fabricated number. Empty list when no peer enrichment ran.
+    """
+
+    def _norm(domain: Any) -> str:
+        return str(domain or "").strip().lower().removeprefix("www.")
+
+    def _value(metrics: dict[str, Any], key: str) -> Any:
+        raw = metrics.get(key)
+        return raw.get("value") if isinstance(raw, dict) else raw
+
+    affinity: dict[str, float] = {}
+    for a in data["artifacts"]:
+        meta = a.get("metadata", {}) or {}
+        if a.get("source_type") != "similarweb" or meta.get("peer"):
+            continue
+        for item in _value(meta.get("metrics", {}) or {}, "digital_competitors") or []:
+            if isinstance(item, dict) and item.get("domain"):
+                try:
+                    affinity[_norm(item["domain"])] = float(item.get("affinity") or 0.0)
+                except (TypeError, ValueError):
+                    continue
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for a in data["artifacts"]:
+        meta = a.get("metadata", {}) or {}
+        if a.get("source_type") != "similarweb" or not meta.get("peer"):
+            continue
+        domain = _norm(meta.get("domain"))
+        if not domain or domain in seen:
+            continue
+        seen.add(domain)
+        visits = _value(meta.get("metrics", {}) or {}, "estimated_monthly_visits")
+        rows.append(
+            {
+                "domain": domain,
+                "estimated_monthly_visits": (
+                    visits
+                    if isinstance(visits, (int, float)) and not isinstance(visits, bool)
+                    else None
+                ),
+                "affinity": affinity.get(domain),
+            }
+        )
+    rows.sort(key=lambda r: (r["affinity"] is None, -(r["affinity"] or 0.0), r["domain"]))
+    return rows
+
+
 _BUYER_VOICE_NOTE = (
     "Selection-biased sample of public reviews (G2/Capterra/TrustRadius): buyer "
     "language and direction only — never representative sentiment, satisfaction "
@@ -388,6 +444,7 @@ def buyer_voice_rollup(records: list[dict[str, Any]]) -> dict[str, Any]:
     objection_entries: list[Entry] = []
     praise_entries: list[Entry] = []
     switching_entries: list[Entry] = []
+    considered_entries: list[Entry] = []
     reality_entries: list[Entry] = []
     for record in records:
         url = record.get("source_url", "")
@@ -398,8 +455,15 @@ def buyer_voice_rollup(records: list[dict[str, Any]]) -> dict[str, Any]:
             if s.get("theme"):
                 praise_entries.append((s["theme"], {"sentiment": "positive"}, s, url))
         for s in record.get("alternatives") or []:
-            if s.get("alternative") and s.get("direction") in ("switched_from", "switched_to"):
+            if not s.get("alternative"):
+                continue
+            if s.get("direction") in ("switched_from", "switched_to"):
                 switching_entries.append((s["alternative"], {"direction": s["direction"]}, s, url))
+            elif s.get("direction") in ("evaluated", "unclear"):
+                # NOT a switching trigger — surfaced separately so evaluated
+                # alternatives are never silently dropped nor mislabeled as
+                # observed switches (review nit: dropped from every surface).
+                considered_entries.append((s["alternative"], {"direction": s["direction"]}, s, url))
         for s in record.get("message_reality_signals") or []:
             if s.get("claim_theme") and s.get("relation") in ("contradicts", "confirms"):
                 reality_entries.append((s["claim_theme"], {"relation": s["relation"]}, s, url))
@@ -410,6 +474,9 @@ def buyer_voice_rollup(records: list[dict[str, Any]]) -> dict[str, Any]:
         "n_reviews": len(records),
         "themes": sorted(_group(praise_entries) + objections, key=_row_key),
         "switching_triggers": _group(switching_entries),
+        # Alternatives reviewers EVALUATED (or mentioned unclearly) without an
+        # observed switch — competitive shortlist context, not churn evidence.
+        "alternatives_considered": _group(considered_entries),
         "objections": objections,
         "message_reality": _group(reality_entries),
         "note": _BUYER_VOICE_NOTE,
@@ -581,6 +648,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     focal_evidence = _focal_evidence(ctx, state)
     linkedin_posts = _linkedin_posts(data)
     similarweb = _similarweb_summary(data)
+    similarweb_peers = _similarweb_peers(data)
     channel_alignment = synthesis.message_channel_alignment(
         data["classification_models"], data["artifact_models"]
     )
@@ -821,6 +889,11 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         # Competitor LinkedIn employee posts (one per post) + Similarweb traffic.
         "linkedin_posts": linkedin_posts,
         "similarweb": similarweb,
+        # Peer-domain Similarweb enrichments (metadata.peer=true): estimated
+        # demand context for the audience-overlap set — the rows
+        # _similarweb_summary skips on purpose so the competitor's own traffic
+        # view stays untouched.
+        "similarweb_peers": similarweb_peers,
         # Buyer voice: deterministic rollup of stored family="buyer_voice"
         # classifications (review pages mined in-loop). Selection-biased
         # sample — language/direction only, never representative sentiment.
@@ -1421,8 +1494,22 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 else:
                     text = str(val)
                 add(f"- **{key.replace('_', ' ')}:** {text} _(estimated)_")
+        # Peer-domain enrichments (audience-overlap set) — only peers whose
+        # artifact actually carries a visits estimate are listed (honest
+        # absence, never a fabricated number).
+        peer_bits = [
+            f"{p['domain']} ~{int(p['estimated_monthly_visits']):,}/mo"
+            for p in pkg.get("similarweb_peers") or []
+            if p.get("estimated_monthly_visits") is not None
+        ]
+        if peer_bits:
+            add(
+                "- **peer traffic (top-affinity audience-overlap set):** "
+                + ", ".join(peer_bits)
+                + " _(estimated)_"
+            )
 
-    # --- Buyer voice (reviews mining, REVIEWS contract; max 5 lines) -------
+    # --- Buyer voice (reviews mining, REVIEWS contract) ---------------------
     bv = pkg.get("buyer_voice") or {}
     if bv.get("n_reviews"):
         add(f"\n## Buyer voice — review pages mined ({bv['n_reviews']})\n")
@@ -1444,6 +1531,27 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                     f"{r['direction'].replace('_', ' ')} {r['theme']} ({r['n']})"
                     for r in bv["switching_triggers"][:3]
                 )
+            )
+        if bv.get("alternatives_considered"):
+            add(
+                "- **Also evaluated (no switch observed):** "
+                + ", ".join(f"{r['theme']} ({r['n']})" for r in bv["alternatives_considered"][:4])
+            )
+        # Message vs reality: buyer language that CONFIRMS or CONTRADICTS a
+        # marketing claim theme. Reviews were mined (n_reviews > 0), so an
+        # empty list is an honest finding, never a silent omission.
+        if bv.get("message_reality"):
+            add("- **Message vs reality (their claims, checked against buyer language):**")
+            for r in bv["message_reality"][:3]:
+                add(
+                    f"  - {str(r['theme']).replace('_', ' ')} — "
+                    f"**{str(r['relation']).upper()}** — "
+                    f"“{r.get('example_quote', '')}” ([source]({r.get('source_url', '')}))"
+                )
+        else:
+            add(
+                "- **Message vs reality:** no review language matched their "
+                "marketing claims either way."
             )
         add(f"  - _{bv.get('note', '')}_")
 

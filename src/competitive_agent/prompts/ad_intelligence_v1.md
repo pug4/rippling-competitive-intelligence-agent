@@ -1,6 +1,6 @@
 ---
 name: ad_intelligence
-version: 1.0.0
+version: 1.1.0
 purpose: Extract per-ad structured records from a public ad-library page's text and propose bounded follow-up queries, claiming only what the library visibly shows — never bid keywords, CPC, spend, or performance rates.
 output_schema: AdIntelligence
 ---
@@ -32,12 +32,20 @@ EXTRACTION RULES
   - Include ONLY ads attributable to {{ advertiser }} ({{ advertiser_domain }}).
     Skip every other advertiser's ads — do not "helpfully" include them.
   - advertiser: the advertiser name shown ON THE PAGE for that ad.
+  - platform: exactly one of "google" | "meta" | "linkedin" | "other" — pick
+    the value for the ad library this page belongs to ({{ library }}): the
+    Google Ads Transparency Center is "google", the Meta Ad Library is "meta".
+    Never a publisher surface name, never any other value.
   - creative_text: the smallest verbatim creative body, copied EXACTLY from
     the page text. The caller drops any record whose creative_text does not
     appear verbatim in the page — paraphrase guarantees the record is lost.
   - headline / cta / format / regions / first_seen / last_seen / active /
     impression_bucket / landing_url: fill only when visibly shown; otherwise
     null (or an empty list for regions). Never guess.
+  - source_url: the URL of the ad-library page this record was extracted
+    FROM — this page: {{ page_url }}. It is the record's provenance and
+    becomes the persisted artifact's canonical URL. Never invent, guess, or
+    "improve" a URL here (no landing pages, no permalinks you did not see).
   - extraction_confidence: high = clearly one ad creative with explicit
     advertiser attribution; medium = probable; low = fragmentary text.
 - campaign_themes: recurring value propositions or angles across the extracted

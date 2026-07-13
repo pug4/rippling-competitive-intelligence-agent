@@ -180,6 +180,14 @@ def _resume_job(job_id: str, run_id: str) -> None:
             _ACTIVE_RUNS.discard(run_id)
 
 
+def _count_artifacts(run_id: str) -> int:
+    """Real artifact count for a run, straight from the DB (never estimated)."""
+    repo = _open_repo()
+    return repo.conn.execute(
+        "SELECT COUNT(*) FROM artifacts WHERE run_id = ?", (run_id,)
+    ).fetchone()[0]
+
+
 def _research_job(
     job_id: str, run_id: str, focus: str, sources: list[str], execution_mode: str | None
 ) -> None:
@@ -187,11 +195,21 @@ def _research_job(
     from .conversation import research_in_place
 
     try:
+        # Snapshot the artifact count before/after driving so the completion
+        # note can state a REAL found/didn't-find delta (UI contract:
+        # artifacts_before / artifacts_added), on both end states.
+        artifacts_before = _count_artifacts(run_id)
         state = research_in_place(
             run_id, focus=focus, sources=sources, execution_mode=execution_mode
         )
+        artifacts_added = _count_artifacts(run_id) - artifacts_before
         with _JOBS_LOCK:
-            _JOBS[job_id].update(status=_job_end_status(state), stop_reason=state.stop_reason)
+            _JOBS[job_id].update(
+                status=_job_end_status(state),
+                stop_reason=state.stop_reason,
+                artifacts_before=artifacts_before,
+                artifacts_added=artifacts_added,
+            )
     except Exception as exc:  # surfaced to the UI, never crashes the server
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")

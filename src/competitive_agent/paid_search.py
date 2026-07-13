@@ -18,18 +18,27 @@ guards the model cannot override are applied after validation:
 Keyword intelligence (KEYWORDS contract + Gemini SERP addendum; seam in
 ``tools/keywords.py``):
 
-- PRIMARY — when ``GEMINI_API_KEY`` is present, each cluster's top seed
-  keyword(s) are enriched with OBSERVED live-SERP intelligence
-  (``cluster["serp_intel"]``: real People-Also-Ask questions, related
-  searches, ranking formats, SERP features, grounding-source URLs; capped at
-  12 Gemini calls per draft). This path attaches NO volumes and NO scores —
-  Gemini does not report search demand, and we never rank on invented
-  numbers. Envelope ``keyword_provider`` becomes ``"gemini_serp"``.
+- PRIMARY — when ``GEMINI_API_KEY`` is present, OBSERVED live-SERP
+  intelligence runs in TWO stages sharing ONE per-draft budget of
+  ``_MAX_SERP_KEYWORDS`` Gemini calls: (1) a PRE-FETCH of up to
+  ``_MAX_PROMPT_SERP_PHRASES`` humanized buying-trigger (CEP) phrases whose
+  observations feed the prompt's keyword-intelligence block (the model never
+  drafts blind while the block advertises live-SERP data), and (2) cluster
+  enrichment (``cluster["serp_intel"]``: real People-Also-Ask questions,
+  related searches, ranking formats, SERP features, grounding-source URLs)
+  which REUSES pre-fetched rows for matching seed keywords and spends only
+  the remaining allowance on new ones. This path attaches NO volumes and NO
+  scores — Gemini does not report search demand, and we never rank on
+  invented numbers.
 - Volume seam — when only ``SEMRUSH_API_KEY`` is present, seed keywords are
   batch-enriched with provider-reported volume/CPC/competition
   (``keyword_metrics``), an ``opportunity_score`` is computed (sum of known
-  volumes weighted by focal proof status) and clusters are sorted by it;
-  envelope ``keyword_provider`` is ``"semrush"``.
+  volumes weighted by focal proof status) and clusters are sorted by it.
+- Provenance (envelope ``keyword_provider`` + ``disclaimer``) reflects what
+  ACTUALLY attached: ``"gemini_serp"`` when SERP observations informed the
+  draft, ``"semrush"`` when real volumes did, ``"gemini_serp+semrush"`` (with
+  a combined disclaimer) when both did — a provider that produced nothing is
+  never claimed.
 - Neither -> ``keyword_provider`` null and NO metrics/scores attached —
   nothing is ever estimated.
 
@@ -45,11 +54,13 @@ views never re-spend model budget (``force=True`` regenerates).
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .config import get_config, get_settings
 from .schemas.common import utcnow
+from .schemas.keywords import SerpIntel
 from .schemas.paid_search import PaidSearchTargetingDraft
 
 TASK_NAME = "paid_search_targeting"
@@ -81,15 +92,26 @@ _DISCLAIMER_SERP = (
     "Keyword Planner / Search Console."
 )
 
-# Documented in method_note whenever SERP intelligence is attached. PAA
-# questions are real questions buyers ask — ad copy angles + landing-page H2s.
+# Variant used ONLY when BOTH real volume metrics AND live-SERP intelligence
+# informed the draft — each claim covers a provider that actually produced.
+_DISCLAIMER_COMBINED = (
+    "Search volume, CPC, and competition are provider-reported estimates "
+    "({provider}) and the SERP intelligence is observed live from Google "
+    "results at draft time; commercial ad spend remains not publicly "
+    "knowable — validate final bids in the live auction."
+)
+
+# Documented in method_note whenever SERP intelligence is attached. Counts
+# cover BOTH stages (prompt pre-fetch + cluster enrichment). PAA questions
+# are real questions buyers ask — ad copy angles + landing-page H2s.
 _SERP_NOTE = (
     "Live SERP intelligence via Google search grounding (gemini_serp): "
-    "{enriched} seed keyword(s) enriched, {skipped} skipped (per-draft call cap "
-    "/ rate limit / ungrounded answers discarded). People-Also-Ask questions "
-    "are real buyer questions observed on the results page — use them as ad "
-    "copy angles and landing-page H2s. No volumes and no scores are attached; "
-    "this provider observes the results page, not search demand."
+    "{enriched} keyword(s) enriched across the prompt pre-fetch and cluster "
+    "stages, {skipped} skipped (per-draft call cap / rate limit / ungrounded "
+    "answers discarded). People-Also-Ask questions are real buyer questions "
+    "observed on the results page — use them as ad copy angles and "
+    "landing-page H2s. No volumes and no scores are attached; this provider "
+    "observes the results page, not search demand."
 )
 
 # Opportunity-score formula (KEYWORDS contract) — documented verbatim in the
@@ -106,12 +128,18 @@ _SCORING_NOTE = (
 # Batch cap for cluster seed-keyword enrichment (deduped across clusters).
 _MAX_METRIC_KEYWORDS = 40
 
-# Per-draft cap on Gemini SERP calls (one call per seed keyword).
+# Per-draft cap on Gemini SERP calls (one call per keyword), shared by the
+# prompt pre-fetch AND cluster enrichment TOGETHER — never exceeded.
 _MAX_SERP_KEYWORDS = 12
 
 # Bounded number of observed buying-trigger (CEP) phrases looked up for the
 # prompt's real-metrics block.
 _MAX_PROMPT_PHRASES = 12
+
+# Bounded number of CEP phrases pre-fetched as live-SERP observations for the
+# prompt block — deliberately half the shared cap so cluster enrichment
+# always keeps an allowance.
+_MAX_PROMPT_SERP_PHRASES = 6
 
 _NO_KEYWORD_API = "(no keyword API configured)"
 
@@ -290,18 +318,30 @@ def _fmt_keyword_metric_line(metric: Any) -> str:
     return f'- "{metric.keyword}": volume {volume}, CPC {cpc}, competition {competition}'
 
 
-def _prompt_keyword_metrics(pkg: dict[str, Any]) -> str | None:
-    """Real provider metrics for the OBSERVED buying-trigger (CEP) phrases.
+@dataclass
+class _SerpBudget:
+    """Shared Gemini SERP state across the two enrichment stages of one draft.
 
-    Returns None when no keyword API is configured (``build_inputs`` then
-    renders the honest default). Provider failures degrade to an explicit
-    unavailability line — the model is never handed estimated numbers.
+    The prompt pre-fetch and post-generation cluster enrichment TOGETHER may
+    spend at most ``_MAX_SERP_KEYWORDS`` Gemini calls; rows fetched for the
+    prompt are cached here and reused for matching cluster seed keywords
+    instead of being re-fetched.
     """
-    from .tools import keywords as keywords_module
 
-    provider = keywords_module.active_keyword_provider()
-    if provider is None:
-        return None
+    # _norm(keyword) -> grounded row (from either stage).
+    rows: dict[str, SerpIntel] = field(default_factory=dict)
+    # _norm of every keyword we tried (or budget-capped out of) — the honest
+    # denominator for the method note's skipped count.
+    requested: set[str] = field(default_factory=set)
+    calls_used: int = 0
+    # The exact billing message once the first-call 429 degrade tripped —
+    # the post stage never re-spends the call.
+    quota_note: str | None = None
+
+
+def _cep_phrases(pkg: dict[str, Any], cap: int) -> list[str]:
+    """Humanized observed buying-trigger (CEP) phrases, deduped and capped —
+    the single phrase source for BOTH prompt-block lookups."""
     phrases: list[str] = []
     seen: set[str] = set()
     for row in pkg.get("category_entry_points") or []:
@@ -310,22 +350,114 @@ def _prompt_keyword_metrics(pkg: dict[str, Any]) -> str | None:
         if key and key not in seen:
             seen.add(key)
             phrases.append(phrase)
-        if len(phrases) >= _MAX_PROMPT_PHRASES:
+        if len(phrases) >= cap:
             break
+    return phrases
+
+
+def _prompt_keyword_metrics(pkg: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Real provider metrics for the OBSERVED buying-trigger (CEP) phrases.
+
+    Returns ``(block_text, provider_name)`` — ``provider_name`` is set ONLY
+    when real metrics actually came back, so the provenance label never
+    claims a provider that produced nothing. ``(None, None)`` when no volume
+    API is configured (``build_inputs`` then renders the honest default).
+    Provider failures degrade to an explicit unavailability line — the model
+    is never handed estimated numbers.
+    """
+    from .tools import keywords as keywords_module
+
+    provider = keywords_module.active_keyword_provider()
+    if provider is None:
+        return None, None
+    phrases = _cep_phrases(pkg, _MAX_PROMPT_PHRASES)
     if not phrases:
-        return f"(keyword API '{provider.name}' configured, but no observed buying triggers to look up)"
+        return (
+            f"(keyword API '{provider.name}' configured, but no observed buying triggers to look up)",
+            None,
+        )
     try:
         metrics = provider.fetch(phrases)
     except Exception:
-        return f"(keyword API '{provider.name}' configured but unreachable — metrics unavailable)"
+        return (
+            f"(keyword API '{provider.name}' configured but unreachable — metrics unavailable)",
+            None,
+        )
     if not metrics:
         return (
             f"(keyword API '{provider.name}' returned no data for the observed "
-            "buying-trigger phrases)"
+            "buying-trigger phrases)",
+            None,
         )
     lines = [f"Provider-reported metrics ({provider.name}) for observed buying triggers:"]
     lines.extend(_fmt_keyword_metric_line(m) for m in metrics)
+    return "\n".join(lines), provider.name
+
+
+def _prefetch_serp_observations(pkg: dict[str, Any], budget: _SerpBudget) -> str | None:
+    """OBSERVED live-SERP intelligence for the prompt's keyword block.
+
+    With only ``GEMINI_API_KEY`` set the model must not draft blind while the
+    prompt block advertises live-SERP observations: pre-fetch up to
+    ``_MAX_PROMPT_SERP_PHRASES`` humanized CEP phrases (the same phrase
+    source the volume block uses) and format them as observations — per
+    phrase the top PAA questions, related searches, and the intent note;
+    explicitly no volumes. Rows and spent calls land on ``budget`` so
+    ``_attach_serp_intel`` reuses them under the SHARED per-draft cap. A
+    first-call quota 429 records the exact billing note on ``budget`` and
+    returns None — the draft proceeds with the no-provider block.
+    """
+    from .tools import keywords as keywords_module
+
+    if keywords_module.active_serp_provider() is None:
+        return None
+    phrases = _cep_phrases(pkg, _MAX_PROMPT_SERP_PHRASES)
+    if not phrases:
+        return None
+    # Count the batch BEFORE the call: on a mid-batch failure we cannot know
+    # how many calls went out, and the shared cap must never be exceeded.
+    budget.requested.update(_norm(p) for p in phrases)
+    budget.calls_used += len(phrases)
+    try:
+        intel = keywords_module.fetch_serp_intel(phrases)
+    except keywords_module.GeminiSerpQuotaError as exc:
+        budget.quota_note = str(exc)  # exact billing message; envelope stays null
+        return None
+    except Exception:
+        return None  # provider unreachable — draft proceeds without observations
+    for row in intel or []:
+        budget.rows[_norm(row.keyword)] = row
+    if not intel:
+        return None
+    lines = [
+        "Live-SERP observations (gemini_serp) for observed buying triggers "
+        "(no volumes — observations only; never turn these into numbers):"
+    ]
+    for row in intel:
+        lines.append(f'- "{row.keyword}":')
+        lines.extend(f"  - People also ask: {q}" for q in row.paa_questions[:3])
+        if row.related_searches:
+            lines.append("  - Related searches: " + "; ".join(row.related_searches[:3]))
+        if row.intent_note:
+            lines.append(f"  - Intent: {row.intent_note}")
     return "\n".join(lines)
+
+
+def _build_prompt_keyword_intel(
+    pkg: dict[str, Any], budget: _SerpBudget
+) -> tuple[str | None, str | None]:
+    """The prompt's keyword-intelligence block: real volume metrics and/or
+    pre-fetched live-SERP observations — whatever the configured providers
+    actually supplied, never anything estimated.
+
+    Returns ``(block_text, volume_provider_name)``; ``(None, None)`` when
+    neither provider produced a block (``build_inputs`` renders the honest
+    no-provider default).
+    """
+    metrics_block, volume_provider = _prompt_keyword_metrics(pkg)
+    serp_block = _prefetch_serp_observations(pkg, budget)
+    parts = [part for part in (metrics_block, serp_block) if part]
+    return ("\n\n".join(parts) or None), volume_provider
 
 
 def _attach_keyword_metrics(clusters: list[dict[str, Any]]) -> str | None:
@@ -420,48 +552,72 @@ def _serp_seed_candidates(clusters: list[dict[str, Any]]) -> list[str]:
     return out
 
 
-def _attach_serp_intel(clusters: list[dict[str, Any]]) -> tuple[str | None, str | None]:
+def _attach_serp_intel(
+    clusters: list[dict[str, Any]], budget: _SerpBudget
+) -> tuple[str | None, str | None]:
     """Enrich clusters with OBSERVED live-SERP intelligence, in place.
 
-    Returns ``(provider_label, note)``: ``("gemini_serp", method-note)`` when
-    intelligence was attached; ``(None, billing-note)`` on the first-call
-    quota degrade (the exact spec message, envelope stays null); ``(None,
-    None)`` otherwise (no key / provider failed / nothing grounded) — in
-    every None case clusters are left untouched. This path NEVER attaches
-    volumes or scores and never re-sorts (no ranking on invented numbers).
+    Shares ``budget`` with the prompt pre-fetch: cached rows are REUSED for
+    matching cluster seed keywords, and only the remaining allowance
+    (``_MAX_SERP_KEYWORDS - calls_used``) is spent on new keywords — the two
+    stages together never exceed the per-draft cap.
+
+    Returns ``(provider_label, note)``: ``("gemini_serp", method-note with
+    both stages' enriched/skipped counts)`` when grounded observations
+    informed this draft (prompt block and/or cluster ``serp_intel``);
+    ``(None, billing-note)`` on the quota degrade — pre-fetch or first-call
+    here — carrying the exact spec message while the envelope stays null;
+    ``(None, None)`` otherwise (no key / provider failed / nothing grounded)
+    with clusters left untouched. This path NEVER attaches volumes or scores
+    and never re-sorts (no ranking on invented numbers).
     """
     from .tools import keywords as keywords_module
 
     if keywords_module.active_serp_provider() is None:
         return None, None
+    if budget.quota_note is not None:
+        # The pre-fetch already tripped the billing 429 — degrade exactly as
+        # a direct quota would (null provider, exact note), never call again.
+        return None, budget.quota_note
     candidates = _serp_seed_candidates(clusters)
-    if not candidates:
+    budget.requested.update(_norm(kw) for kw in candidates)
+    remaining = max(0, _MAX_SERP_KEYWORDS - budget.calls_used)
+    to_fetch = [kw for kw in candidates if _norm(kw) not in budget.rows][:remaining]
+    quota_suffix: str | None = None
+    if to_fetch:
+        # Count the batch BEFORE the call (see _prefetch_serp_observations).
+        budget.calls_used += len(to_fetch)
+        intel: list[SerpIntel] | None
+        try:
+            intel = keywords_module.fetch_serp_intel(to_fetch)
+        except keywords_module.GeminiSerpQuotaError as exc:
+            if not budget.rows:
+                return None, str(exc)  # exact billing message; envelope stays null
+            # Pre-fetched rows are real and already informed the prompt —
+            # keep them, attach what matches, and surface the billing note.
+            quota_suffix = str(exc)
+            intel = None
+        except Exception:
+            # Provider unreachable/failed: nothing new, but honest about what
+            # the pre-fetch DID observe (which may be nothing).
+            intel = None
+        for row in intel or []:
+            budget.rows[_norm(row.keyword)] = row
+    if not budget.rows:
         return None, None
-    try:
-        intel = keywords_module.fetch_serp_intel(candidates[:_MAX_SERP_KEYWORDS])
-    except keywords_module.GeminiSerpQuotaError as exc:
-        return None, str(exc)  # exact billing message; keyword_provider stays null
-    except Exception:
-        # Provider unreachable/failed: degrade honestly to the no-provider
-        # shape rather than shipping a provider label with nothing behind it.
-        return None, None
-    if not intel:
-        return None, None
-    by_keyword = {_norm(row.keyword): row for row in intel}
-    attached = 0
     for cluster in clusters:
         rows = [
-            by_keyword[_norm(kw)].model_dump(mode="json")
+            budget.rows[_norm(kw)].model_dump(mode="json")
             for kw in cluster.get("seed_keywords") or []
-            if isinstance(kw, str) and _norm(kw) in by_keyword
+            if isinstance(kw, str) and _norm(kw) in budget.rows
         ]
         if rows:
             cluster["serp_intel"] = rows
-            attached += 1
-    if attached == 0:
-        return None, None
-    enriched = len(by_keyword)
-    note = _SERP_NOTE.format(enriched=enriched, skipped=len(candidates) - enriched)
+    enriched = len(budget.rows)
+    skipped = sum(1 for key in budget.requested if key not in budget.rows)
+    note = _SERP_NOTE.format(enriched=enriched, skipped=skipped)
+    if quota_suffix:
+        note = f"{note} {quota_suffix}".strip()
     return "gemini_serp", note
 
 
@@ -513,11 +669,14 @@ async def generate_paid_search_targets(
     # Mode isolation: fixture drafts never touch provider networks unless a
     # test explicitly injected a provider into the keywords seam.
     enrichment_allowed = _provider_enrichment_allowed(execution_mode)
-    inputs = build_inputs(
-        run_id,
-        pkg,
-        keyword_metrics=_prompt_keyword_metrics(pkg) if enrichment_allowed else None,
-    )
+    # One SERP call budget for the whole draft: the prompt pre-fetch below and
+    # the post-generation cluster enrichment share it (and its row cache).
+    serp_budget = _SerpBudget()
+    prompt_block: str | None = None
+    prompt_volume_provider: str | None = None
+    if enrichment_allowed:
+        prompt_block, prompt_volume_provider = _build_prompt_keyword_intel(pkg, serp_budget)
+    inputs = build_inputs(run_id, pkg, keyword_metrics=prompt_block)
     user_content = prompt.render(**inputs)
     gateway = build_gateway(execution_mode, get_settings(), get_config())  # type: ignore[arg-type]
     result = await gateway.generate_structured(
@@ -539,23 +698,41 @@ async def generate_paid_search_targets(
     if enrichment_allowed:
         from .tools import keywords as keywords_module
 
+        serp_label: str | None = None
+        volume_label: str | None = None
         if keywords_module.active_serp_provider() is not None:
             # PRIMARY: live SERP intelligence (no volumes, no scores, no
-            # re-sort). A quota degrade keeps the envelope null and surfaces
-            # the exact billing note; there is NO silent fallback to volumes.
-            keyword_provider, serp_note = _attach_serp_intel(clusters)
+            # re-sort), reusing the pre-fetch cache under the shared cap. A
+            # quota degrade keeps the serp label null and surfaces the exact
+            # billing note; there is NO silent fallback to volumes.
+            serp_label, serp_note = _attach_serp_intel(clusters, serp_budget)
             if serp_note:
                 method_note = f"{method_note} {serp_note}".strip()
-            if keyword_provider is not None:
-                disclaimer = _DISCLAIMER_SERP
+            # Real volumes (when a volume key is ALSO configured) fed the
+            # prompt block only on this path — labeled ONLY if they came back.
+            volume_label = prompt_volume_provider
         else:
             # Volume seam (only a volume key configured): metrics + scores +
             # sort, exactly as verified.
-            keyword_provider = _attach_keyword_metrics(clusters)
-            if keyword_provider is not None:
-                scoring_note = _SCORING_NOTE.format(provider=keyword_provider)
+            volume_label = _attach_keyword_metrics(clusters)
+            if volume_label is not None:
+                scoring_note = _SCORING_NOTE.format(provider=volume_label)
                 method_note = f"{method_note} {scoring_note}".strip()
-                disclaimer = _DISCLAIMER_WITH_METRICS.format(provider=keyword_provider)
+            else:
+                # Cluster enrichment failed but real volumes may still have
+                # informed the prompt — label them, without a scoring note.
+                volume_label = prompt_volume_provider
+        # Provenance: label + disclaimer reflect what ACTUALLY attached — a
+        # provider that produced nothing is never claimed.
+        if serp_label and volume_label:
+            keyword_provider = f"{serp_label}+{volume_label}"
+            disclaimer = _DISCLAIMER_COMBINED.format(provider=volume_label)
+        elif serp_label:
+            keyword_provider = serp_label
+            disclaimer = _DISCLAIMER_SERP
+        elif volume_label:
+            keyword_provider = volume_label
+            disclaimer = _DISCLAIMER_WITH_METRICS.format(provider=volume_label)
     envelope: dict[str, Any] = {
         "run_id": run_id,
         "focal_company": inputs["focal_company"],

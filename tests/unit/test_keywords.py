@@ -712,7 +712,7 @@ async def test_tool_serp_partial_when_some_keywords_ungrounded(
 _RUN_ID = "RUN-kwtest"
 
 
-def _write_min_pkg(tmp_path: Path) -> None:
+def _write_min_pkg(tmp_path: Path, ceps: list[str] | None = None) -> None:
     pkg = {
         "companies": [
             {"company_id": "comp-1", "canonical_name": "Deel", "primary_domain": "deel.com"},
@@ -724,12 +724,13 @@ def _write_min_pkg(tmp_path: Path) -> None:
         ],
         "category_entry_points": [
             {
-                "cep": "consolidating_hr_tools",
+                "cep": cep,
                 "ownership": "competitor",
                 "ownership_basis": "pages",
                 "competitor_pages": 3,
                 "focal_pages": 1,
             }
+            for cep in (ceps or ["consolidating_hr_tools"])
         ],
         "theme_comparison": {},
         "classifications": [],
@@ -743,6 +744,31 @@ def _generate(force: bool = False) -> dict[str, Any]:
     from competitive_agent.paid_search import generate_paid_search_targets
 
     return asyncio.run(generate_paid_search_targets(_RUN_ID, execution_mode="fixture", force=force))
+
+
+def _capture_prompt(monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
+    """Spy on the gateway seam to capture the RENDERED user prompt — the only
+    way to assert what actually reached the model (fixture output unchanged)."""
+    from competitive_agent import model_gateway as gateway_module
+
+    captured: dict[str, str] = {}
+    real_build = gateway_module.build_gateway
+
+    def spy_build(*args: Any, **kwargs: Any) -> Any:
+        gateway = real_build(*args, **kwargs)
+        real_generate = gateway.generate_structured
+
+        async def wrapper(
+            task_name: str, system: str, user_content: str, output_model: Any, **kw: Any
+        ) -> Any:
+            captured["user_content"] = user_content
+            return await real_generate(task_name, system, user_content, output_model, **kw)
+
+        monkeypatch.setattr(gateway, "generate_structured", wrapper)
+        return gateway
+
+    monkeypatch.setattr(gateway_module, "build_gateway", spy_build)
+    return captured
 
 
 def test_no_provider_envelope_is_null_and_unscored(isolated_env: Path) -> None:
@@ -831,8 +857,9 @@ def test_serp_intel_attaches_observations_and_never_scores(
     isolated_env: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """PRIMARY path: serp_intel per cluster, envelope gemini_serp, the exact
-    SERP disclaimer, an enriched/skipped method note — and NO volumes, NO
-    opportunity_score, NO re-sort (never rank on invented numbers)."""
+    SERP disclaimer, an enriched/skipped method note covering BOTH stages —
+    and NO volumes, NO opportunity_score, NO re-sort (never rank on invented
+    numbers)."""
     _write_min_pkg(isolated_env)
     calls: list[list[str]] = []
     rows = [_serp_row("hr software consolidation"), _serp_row("deel vs rippling")]
@@ -859,28 +886,47 @@ def test_serp_intel_attaches_observations_and_never_scores(
         assert "keyword_metrics" not in cluster
         assert "opportunity_score" not in cluster
         assert cluster["validate_before_spend"] is True
-    # method_note: N enriched / M skipped + the provider name.
+    # method_note: N enriched / M skipped across BOTH stages (1 CEP pre-fetch
+    # phrase + 5 cluster seeds requested; the fake grounded 2 of them).
     assert "gemini_serp" in res["method_note"]
-    assert "2 seed keyword(s) enriched, 3 skipped" in res["method_note"]
+    assert (
+        "2 keyword(s) enriched across the prompt pre-fetch and cluster stages, 4 skipped"
+        in res["method_note"]
+    )
     # Hard guards unaffected by enrichment.
     assert conquest["legal_review_required"] is True
     assert conquest["evidence_basis"] == "inferred"  # fabricated quote still demoted
-    # One bounded batch: every cluster's top seed first, then depth, capped.
-    assert len(calls) == 1
-    assert calls[0][:2] == ["hr software consolidation", "deel vs rippling"]
-    assert len(calls[0]) <= 12
+    # Two bounded batches sharing ONE cap: the pre-fetch looks up the
+    # humanized CEP phrase for the prompt block, and the cluster stage then
+    # fetches ONLY seeds the pre-fetch did not already return (cached rows
+    # are reused, never re-fetched).
+    assert len(calls) == 2
+    assert calls[0] == ["consolidating hr tools"]
+    assert calls[1] == [
+        "replace multiple hr tools",
+        "deel alternatives",
+        "all in one hr platform",
+    ]
+    assert sum(len(batch) for batch in calls) <= 12  # shared per-draft cap
 
 
 def test_serp_quota_degrade_keeps_envelope_null_with_exact_note(
     isolated_env: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """A billing 429 now trips on the PROMPT PRE-FETCH: the draft proceeds
+    with the honest no-provider block, the exact billing note surfaces in the
+    method note, the envelope stays null — and the cluster stage never
+    re-spends the dead quota."""
     _write_min_pkg(isolated_env)
+    calls: list[list[str]] = []
 
     def raise_quota(keywords: list[str]) -> list[SerpIntel]:
+        calls.append(list(keywords))
         raise GeminiSerpQuotaError(GEMINI_BILLING_MESSAGE)
 
     monkeypatch.setattr(keywords_module, "active_serp_provider", lambda: object())
     monkeypatch.setattr(keywords_module, "fetch_serp_intel", raise_quota)
+    captured = _capture_prompt(monkeypatch)
     res = _generate()
     assert res["keyword_provider"] is None  # spec: envelope stays null
     assert GEMINI_BILLING_MESSAGE in res["method_note"]  # the typed degrade note
@@ -889,6 +935,159 @@ def test_serp_quota_degrade_keeps_envelope_null_with_exact_note(
         assert "serp_intel" not in cluster
         assert "keyword_metrics" not in cluster
         assert "opportunity_score" not in cluster
+    # Quota tripped on the pre-fetch's first call; the post-generation stage
+    # must not try again — exactly one fetch attempt for the whole draft.
+    assert calls == [["consolidating hr tools"]]
+    # The model drafted from the honest no-provider block, never a fabricated one.
+    assert "(no keyword API configured)" in captured["user_content"]
+
+
+def test_gemini_only_prefetch_feeds_prompt_and_shares_call_cap(
+    isolated_env: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With only the SERP provider active the PROMPT must carry live-SERP
+    observations (the model never drafts blind while the block advertises
+    them), and the pre-fetch + cluster stages spend ONE shared 12-call cap."""
+    _write_min_pkg(
+        isolated_env,
+        ceps=[f"buying_trigger_{i}" for i in range(8)],  # 8 CEPs > the 6-phrase pre-fetch cap
+    )
+    calls: list[list[str]] = []
+
+    def fake_fetch(keywords: list[str]) -> list[SerpIntel]:
+        calls.append(list(keywords))
+        return [_serp_row(kw) for kw in keywords]  # every requested keyword grounded
+
+    monkeypatch.setattr(keywords_module, "active_serp_provider", lambda: object())
+    monkeypatch.setattr(keywords_module, "fetch_serp_intel", fake_fetch)
+    captured = _capture_prompt(monkeypatch)
+    res = _generate()
+
+    # The rendered prompt carries real observations, explicitly number-free.
+    prompt = captured["user_content"]
+    assert "Live-SERP observations (gemini_serp) for observed buying triggers" in prompt
+    assert "no volumes — observations only" in prompt
+    assert '- "buying trigger 0":' in prompt  # humanized CEP label
+    assert "People also ask: What does it mean to consolidate HR systems?" in prompt
+    assert "Related searches: hr tech stack consolidation" in prompt
+    assert "Intent: Commercial investigation before a purchase." in prompt
+    assert "(no keyword API configured)" not in prompt
+
+    # Shared cap: pre-fetch takes at most 6 phrases, the cluster stage only
+    # what the pre-fetch didn't return — never more than 12 calls total.
+    assert len(calls) == 2
+    assert len(calls[0]) == 6  # capped pre-fetch despite 8 observed CEPs
+    assert calls[0][0] == "buying trigger 0"
+    assert len(calls[1]) == 5  # the 5 fixture cluster seeds, all uncached
+    assert sum(len(batch) for batch in calls) <= 12
+
+    assert res["keyword_provider"] == "gemini_serp"
+    assert res["disclaimer"].startswith("SERP intelligence is observed live")
+    assert (
+        "11 keyword(s) enriched across the prompt pre-fetch and cluster stages, 0 skipped"
+        in res["method_note"]
+    )
+    for cluster in res["clusters"]:
+        assert cluster["serp_intel"]
+        assert "keyword_metrics" not in cluster
+        assert "opportunity_score" not in cluster
+
+
+def test_attach_serp_intel_shared_budget_truncates_and_reuses_cache(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The cluster stage spends ONLY the allowance the pre-fetch left (12 -
+    calls_used) and reuses cached pre-fetch rows without re-fetching them."""
+    from competitive_agent.paid_search import _MAX_SERP_KEYWORDS, _attach_serp_intel, _SerpBudget
+
+    calls: list[list[str]] = []
+
+    def fake_fetch(keywords: list[str]) -> list[SerpIntel]:
+        calls.append(list(keywords))
+        return [_serp_row(kw) for kw in keywords]
+
+    monkeypatch.setattr(keywords_module, "active_serp_provider", lambda: object())
+    monkeypatch.setattr(keywords_module, "fetch_serp_intel", fake_fetch)
+
+    budget = _SerpBudget()
+    budget.calls_used = 10  # the pre-fetch already spent 10 of the 12
+    budget.requested.add("kw cached")
+    budget.rows["kw cached"] = _serp_row("kw cached")
+    clusters: list[dict[str, Any]] = [
+        {"seed_keywords": ["kw a"]},
+        {"seed_keywords": ["kw b"]},
+        {"seed_keywords": ["kw c"]},  # beyond the remaining budget — skipped
+        {"seed_keywords": ["kw cached"]},  # served from the pre-fetch cache
+    ]
+    label, note = _attach_serp_intel(clusters, budget)
+
+    assert label == "gemini_serp"
+    assert calls == [["kw a", "kw b"]]  # only the remaining 2 calls spent
+    assert budget.calls_used == _MAX_SERP_KEYWORDS  # never exceeded
+    assert clusters[0]["serp_intel"][0]["keyword"] == "kw a"
+    assert clusters[1]["serp_intel"][0]["keyword"] == "kw b"
+    assert "serp_intel" not in clusters[2]  # capped out, honestly skipped
+    assert clusters[3]["serp_intel"][0]["keyword"] == "kw cached"  # reused, no call
+    assert note is not None
+    assert "3 keyword(s) enriched across the prompt pre-fetch and cluster stages, 1 skipped" in note
+
+
+def test_both_keys_volumes_in_prompt_serp_on_clusters_combined_provenance(
+    isolated_env: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BOTH providers produced: real volumes feed the PROMPT (semrush), live
+    SERP intel lands on the CLUSTERS (gemini) — and the envelope says so with
+    the combined label + disclaimer instead of claiming no volumes came back."""
+    _write_min_pkg(isolated_env)
+    volumes = FakeProvider({"consolidating hr tools": 1300})
+    volumes.name = "semrush"  # both-keys scenario labels the real provider
+    monkeypatch.setattr(keywords_module, "active_keyword_provider", lambda: volumes)
+    calls: list[list[str]] = []
+    rows = [_serp_row("hr software consolidation"), _serp_row("deel vs rippling")]
+    _inject_serp(monkeypatch, rows, calls)
+    captured = _capture_prompt(monkeypatch)
+    res = _generate()
+
+    # Volumes AND observations both reached the prompt block.
+    prompt = captured["user_content"]
+    assert "Provider-reported metrics (semrush) for observed buying triggers:" in prompt
+    assert '- "consolidating hr tools": volume 1300/mo, CPC $1.50, competition 0.50' in prompt
+    assert "Live-SERP observations (gemini_serp) for observed buying triggers" in prompt
+    assert "(no keyword API configured)" not in prompt
+    assert len(volumes.calls) == 1  # volume API consulted once, for the prompt
+
+    # SERP intel on clusters; volumes stay prompt-only on the serp path (no
+    # scores, no re-sort — never rank on numbers the clusters don't carry).
+    grounded, conquest = res["clusters"]
+    assert [i["keyword"] for i in grounded["serp_intel"]] == ["hr software consolidation"]
+    assert [i["keyword"] for i in conquest["serp_intel"]] == ["deel vs rippling"]
+    for cluster in res["clusters"]:
+        assert "keyword_metrics" not in cluster
+        assert "opportunity_score" not in cluster
+
+    # Provenance reflects BOTH producing providers, with the combined disclaimer.
+    assert res["keyword_provider"] == "gemini_serp+semrush"
+    assert "provider-reported estimates (semrush)" in res["disclaimer"]
+    assert "observed live from Google results" in res["disclaimer"]
+    assert "not publicly knowable" in res["disclaimer"]
+    assert "validate final bids in the live auction" in res["disclaimer"]
+
+
+def test_both_keys_but_no_volume_data_never_claims_the_volume_provider(
+    isolated_env: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A configured volume provider that returned NOTHING is never claimed:
+    the envelope stays gemini_serp-only with the SERP disclaimer."""
+    _write_min_pkg(isolated_env)
+    volumes = FakeProvider({})  # configured, but no data for any phrase
+    volumes.name = "semrush"
+    monkeypatch.setattr(keywords_module, "active_keyword_provider", lambda: volumes)
+    rows = [_serp_row("hr software consolidation"), _serp_row("deel vs rippling")]
+    _inject_serp(monkeypatch, rows, [])
+    res = _generate()
+    assert res["keyword_provider"] == "gemini_serp"
+    assert res["disclaimer"].startswith("SERP intelligence is observed live")
+    assert "semrush" not in res["keyword_provider"]
 
 
 def test_fixture_mode_draft_skips_all_provider_network_enrichment(

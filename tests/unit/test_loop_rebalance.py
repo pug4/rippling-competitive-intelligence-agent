@@ -324,6 +324,70 @@ def test_peer_proposals_ignore_peer_artifacts_and_missing_metrics():
 
 
 # ---------------------------------------------------------------------------
+# Exa-Agent run cap (config exa_agent.max_exa_agent_runs — dead-knob fix)
+# ---------------------------------------------------------------------------
+
+
+def _exa_agent_backed(proposals):
+    return [p for p in proposals if p.action_type in ("enrich_similarweb", "research_linkedin")]
+
+
+def test_exa_agent_cap_blocks_new_proposals_at_cap():
+    """At the cap (default 6 EXECUTED exa-agent-backed runs), no NEW
+    enrich_similarweb / research_linkedin action — peer enrichments included —
+    may be proposed; every other proposal type is untouched."""
+    from competitive_agent.planner import action_key, propose_actions
+
+    repo = _PeerRepo([_similarweb_artifact([{"domain": "peer-a.com", "affinity": 0.9}])])
+    ctx = GraphContext(repository=repo, trace=None, config=_Cfg(), settings=None)
+    state = _crafted_state()
+    state.executed_action_keys = [
+        action_key("enrich_similarweb", {"domain": f"done-{i}.com", "peer": True}) for i in range(5)
+    ] + [action_key("research_linkedin", {"company": "X"})]
+    proposals = propose_actions(state, ctx)
+    assert _exa_agent_backed(proposals) == []
+    assert proposals  # only exa-agent-backed actions are capped
+
+
+def test_exa_agent_cap_below_cap_still_proposes_peers():
+    from competitive_agent.planner import action_key, propose_actions
+
+    repo = _PeerRepo([_similarweb_artifact([{"domain": "peer-a.com", "affinity": 0.9}])])
+    ctx = GraphContext(repository=repo, trace=None, config=_Cfg(), settings=None)
+    state = _crafted_state()
+    state.executed_action_keys = [
+        action_key("enrich_similarweb", {"domain": f"done-{i}.com", "peer": True}) for i in range(5)
+    ]  # 5 of 6 — one bounded run left
+    proposals = propose_actions(state, ctx)
+    peers = [
+        p
+        for p in proposals
+        if p.action_type == "enrich_similarweb" and p.parameters.get("peer") is True
+    ]
+    assert [p.parameters["domain"] for p in peers] == ["peer-a.com"]
+
+
+def test_exa_agent_cap_reads_config_knob():
+    from competitive_agent.planner import action_key, propose_actions
+
+    class _CfgCap(_Cfg):
+        exa_agent = {"max_exa_agent_runs": 1}
+
+    repo = _PeerRepo([_similarweb_artifact([{"domain": "peer-a.com", "affinity": 0.9}])])
+    state = _crafted_state()
+    state.executed_action_keys = [action_key("enrich_similarweb", {"domain": "x.com"})]
+    capped = propose_actions(
+        state, GraphContext(repository=repo, trace=None, config=_CfgCap(), settings=None)
+    )
+    assert _exa_agent_backed(capped) == []
+    # Same single executed run under the default cap (6): proposals still flow.
+    open_proposals = propose_actions(
+        state, GraphContext(repository=repo, trace=None, config=_Cfg(), settings=None)
+    )
+    assert _exa_agent_backed(open_proposals)
+
+
+# ---------------------------------------------------------------------------
 # Interactive fallback decisions (execute_action, invoked directly)
 # ---------------------------------------------------------------------------
 

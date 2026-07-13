@@ -3,15 +3,44 @@
 from __future__ import annotations
 
 from competitive_agent.report import build_json_package, render_markdown
+from competitive_agent.schemas.artifact import RawArtifact
+from competitive_agent.schemas.buyer_voice import (
+    BuyerVoiceSignals,
+    BuyerVoiceTheme,
+    MessageRealitySignal,
+)
 from competitive_agent.schemas.common import new_id, utcnow
 from competitive_agent.schemas.company import Company
 from competitive_agent.state import DirectorState
 
 
 class _Ctx:
-    def __init__(self):
-        self.repository = None
+    def __init__(self, repository=None):
+        self.repository = repository
         self.settings = None
+
+
+class _Repo:
+    """Minimal repository stand-in: stored artifacts + buyer_voice records."""
+
+    def __init__(self, artifacts=(), buyer_voice=()):
+        self._artifacts = list(artifacts)
+        self._buyer_voice = list(buyer_voice)
+
+    def list_artifacts(self, run_id=None):
+        return list(self._artifacts)
+
+    def list_classifications(self, run_id, family=None):
+        return list(self._buyer_voice) if family == "buyer_voice" else []
+
+    def list_claims(self, run_id=None):
+        return []
+
+    def list_opportunities(self, run_id=None):
+        return []
+
+    def list_runs(self, company=None):
+        return []
 
 
 def _state() -> DirectorState:
@@ -87,3 +116,138 @@ def test_markdown_leads_with_action_board_and_labels_fixture():
     assert "Limitations and missing data" in md
     assert "Similarweb unavailable" in md
     assert "not publicly knowable" in md.lower()
+
+
+# ---------------------------------------------------------------------------
+# Buyer voice: message_reality must reach BOTH human surfaces (pkg + brief)
+# ---------------------------------------------------------------------------
+
+
+def test_message_reality_renders_in_package_and_brief():
+    s = _state()
+    records = [
+        BuyerVoiceSignals(
+            artifact_id="ART-rev-1",
+            company_id="CO-1",
+            source_url="https://www.g2.com/products/deel/reviews",
+            praise=[BuyerVoiceTheme(theme="clean_ui", quote="the UI is clean")],
+            message_reality_signals=[
+                MessageRealitySignal(
+                    claim_theme="easy_setup",
+                    relation="contradicts",
+                    quote="onboarding was painful",
+                ),
+                MessageRealitySignal(
+                    claim_theme="global_coverage",
+                    relation="confirms",
+                    quote="payroll in 40 countries just works",
+                ),
+            ],
+        )
+    ]
+    pkg = build_json_package(s, _Ctx(repository=_Repo(buyer_voice=records)))
+    assert pkg["buyer_voice"]["message_reality"] == [
+        {
+            "theme": "easy_setup",
+            "relation": "contradicts",
+            "n": 1,
+            "example_quote": "onboarding was painful",
+            "source_url": "https://www.g2.com/products/deel/reviews",
+        },
+        {
+            "theme": "global_coverage",
+            "relation": "confirms",
+            "n": 1,
+            "example_quote": "payroll in 40 countries just works",
+            "source_url": "https://www.g2.com/products/deel/reviews",
+        },
+    ]
+    md = render_markdown(s, pkg)
+    assert "Message vs reality" in md
+    assert "**CONTRADICTS**" in md and "**CONFIRMS**" in md
+    assert "onboarding was painful" in md  # verbatim quote, never paraphrased
+    assert "https://www.g2.com/products/deel/reviews" in md  # source link
+
+
+def test_message_reality_honest_empty_when_reviews_were_mined():
+    s = _state()
+    records = [
+        BuyerVoiceSignals(
+            artifact_id="ART-rev-1",
+            company_id="CO-1",
+            source_url="https://g2.example/r1",
+            praise=[BuyerVoiceTheme(theme="clean_ui", quote="the UI is clean")],
+        )
+    ]
+    pkg = build_json_package(s, _Ctx(repository=_Repo(buyer_voice=records)))
+    assert pkg["buyer_voice"]["n_reviews"] == 1
+    assert pkg["buyer_voice"]["message_reality"] == []
+    md = render_markdown(s, pkg)
+    assert "no review language matched their marketing claims either way" in md
+
+
+# ---------------------------------------------------------------------------
+# Similarweb peers: peer artifacts surface as pkg["similarweb_peers"] + brief
+# ---------------------------------------------------------------------------
+
+
+def _similarweb_artifact(artifact_id, domain, metrics, peer=False) -> RawArtifact:
+    return RawArtifact(
+        artifact_id=artifact_id,
+        company_id="CO-1",
+        source_type="similarweb",
+        source_name="similarweb",
+        url=f"https://www.similarweb.com/website/{domain}/",
+        final_url=f"https://www.similarweb.com/website/{domain}/",
+        retrieved_at=utcnow(),
+        raw_text="similarweb estimates",
+        normalized_text="similarweb estimates",
+        content_hash=f"sw-{domain}",
+        collection_method="exa_similarweb",
+        metadata={"peer": peer, "domain": domain, "metrics": metrics},
+    )
+
+
+def test_similarweb_peers_rollup_exact_and_peer_skip_parity():
+    s = _state()
+    own = _similarweb_artifact(
+        "ART-sw-own",
+        "deel.com",
+        {
+            "estimated_monthly_visits": {"value": 5000000, "estimated": True},
+            "digital_competitors": {
+                "value": [
+                    {"domain": "deel.com", "affinity": 0.99},
+                    {"domain": "remote.com", "affinity": 0.92},
+                    {"domain": "gusto.com", "affinity": 0.81},
+                ],
+                "estimated": True,
+            },
+        },
+    )
+    peer_with_visits = _similarweb_artifact(
+        "ART-sw-p1",
+        "remote.com",
+        {"estimated_monthly_visits": {"value": 1200000, "estimated": True}},
+        peer=True,
+    )
+    peer_without_visits = _similarweb_artifact("ART-sw-p2", "gusto.com", {}, peer=True)
+    # Peer rows stored FIRST so parity with _similarweb_summary's peer-skip is
+    # actually exercised (the own-domain block must never be a peer's).
+    ctx = _Ctx(repository=_Repo(artifacts=[peer_with_visits, peer_without_visits, own]))
+    pkg = build_json_package(s, ctx)
+    assert pkg["similarweb_peers"] == [
+        {"domain": "remote.com", "estimated_monthly_visits": 1200000, "affinity": 0.92},
+        {"domain": "gusto.com", "estimated_monthly_visits": None, "affinity": 0.81},
+    ]
+    assert pkg["similarweb"]["domain"] == "deel.com"
+    assert pkg["similarweb"]["metrics"]["estimated_monthly_visits"]["value"] == 5000000
+    md = render_markdown(s, pkg)
+    assert "peer traffic" in md
+    assert "remote.com ~1,200,000/mo" in md
+    assert "gusto.com ~" not in md  # no fabricated visits for a peer without data
+
+
+def test_similarweb_peers_empty_when_no_peer_artifacts():
+    pkg = build_json_package(_state(), _Ctx())
+    assert pkg["similarweb_peers"] == []
