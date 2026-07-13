@@ -59,41 +59,56 @@ a file to open instead.
   render, and it says so. Absence is a finding, never hidden."*
 - *"ROAS, CAC, spend — banned. We never estimate what isn't public."*
 
-## 3. Depth: scorecard, verticals, LinkedIn, traffic (90s)
+## 3. Depth: bottom line, scorecard, messaging popups, LinkedIn, demand (100s)
 
-- **Overview** tab: the **strategic scorecard** — one glance shows who owns the
-  search intents, where Deel out-messages Rippling (share-of-corpus deltas),
-  theme momentum (emerging/expanding/stable), and the attack surface (how many
-  gaps say ATTACK vs INVESTIGATE vs AVOID). Every tile carries an action tag
-  and clicks through to its deep-dive tab.
-- Ask the grounded chat one question on camera (e.g. *"Which buying triggers
-  does Deel own vs Rippling after normalizing for corpus size?"*) — it answers
-  from this run's evidence only, cites sources, and can scope to one product
+- **Overview — start here**: read **"The bottom line"** aloud — *"this sentence
+  is composed only from the run's verified numbers: the ownership split, what's
+  moving, how many claims are clean attacks, and the top play — with a THIN
+  caveat when the play rests on few pages."* Then the **strategic scorecard**:
+  who owns the buying intents, message-investment deltas (CLOSE/PRESS tags),
+  momentum (**NEW / SHIFTED / STABLE** — count-based 'expanding' is
+  deliberately excluded because asymmetric windows guarantee raw growth), and
+  the attack surface. Point at the small **trust envelope** line: corpus sizes,
+  budget-bounded stop, what wasn't attempted.
+- **HOVER anything** — this is a headline beat: *"hover any classification —
+  a theme bar, a map dot, a buying trigger — and you get their ACTUAL verbatim
+  messaging with the source it came from. Click a LinkedIn theme and the real
+  posts open. No claim is more than one hover from its evidence."*
+- **Where to win** tab: the **attack/defend map** — numbered dots colored by
+  the recommended stance, quadrant chips, a legend with THIN n=X flags where a
+  verdict rests on too few pages; then gaps with ACTION tags and the Action
+  Board — every play has metric, guardrails, staged proceed/stop gates, kill
+  rule.
+- **LinkedIn signals** tab: *"30 individual employee posts — including the CEO
+  — each classified for theme, stance, and product vertical; click a theme to
+  read the actual posts."* (Collection is a toggle on new runs — on by
+  default, off to save Exa credits.)
+- **Demand & channels** tab: **search-intent ownership, share-normalized** —
+  *"Raw counts lie across corpus sizes. A 79-vs-16 page blowout is 'Deel
+  advantage' at a 4.6× share ratio; and where the sample is too thin to call,
+  it says 'insufficient sample' instead of asserting ownership — 12 of 23
+  triggers here."* Plus proof-vs-voice, the open-SERP affinity view, and
+  traffic estimates (labeled estimated).
+- Ask the grounded chat one question on camera (bottom of Overview — e.g.
+  *"Which buying triggers does Deel own vs Rippling after normalizing for
+  corpus size?"*): it answers in rich text from this run's evidence only,
+  shows the sources it grounded in as chips, and can scope to one product
   vertical with the Focus selector.
-- **Product marketing** tab: the **attack/defend quadrant** (each repeated
-  claim plotted by their proof vs ours), key topics side-by-side (counts AND
-  share-of-corpus), the vertical×theme heatmap, gaps with ACTION tags and
-  click-through to exact source pages, and the Action Board — every play has
-  an experiment plan: metric, guardrails, staged proceed/stop gates, kill rule.
-- **LinkedIn** tab: *"30 individual employee posts — including the CEO — each
-  classified for theme, stance, and product vertical, with the real post
-  link."*
-- **Performance marketing** tab: **search-intent ownership,
-  share-normalized** — *"Raw counts lie across corpus sizes. A 79-vs-16 page
-  blowout is 'Deel advantage' at a 4.6× share ratio; and where the sample is
-  too thin to call, it says 'insufficient sample' instead of asserting
-  ownership — 12 of 23 triggers here."* Plus Similarweb traffic (labeled
-  estimated) and audience-affinity competitors.
 
-## 4. Change over time — honestly (45s)
+## 4. Change over time — honestly, with YOUR windows (60s)
 
-- **Strategy changes** tab: *"The prior-window baseline shows what WAS there —
+- **Changes over time** tab: *"The prior-window baseline shows what WAS there —
   14 dated artifacts. Change events are detected mid-run and then RECONCILED
   against the final corpus, so the system can never claim a theme 'emerged'
   that its own baseline saw earlier: three of the five signals here were
   auto-relabeled from 'emerging' to 'expanding — present but rare in the prior
   window (e.g. 4 of 14)'. Every event keeps the coverage-asymmetry caveat —
   absence in the archive is not absence in the world."*
+- **Customize the windows live**: change History to 6 months / Recent to 30
+  days and hit Apply — *"the whole temporal story recounts instantly from the
+  already-collected corpus, deterministically, no model calls — and the banner
+  says the saved report keeps the run's original windows. Use it to test
+  whether a 'change' survives moving the line."* Reset afterwards.
 
 ## 5. Rippling-relative actions (45s)
 
@@ -113,6 +128,11 @@ a file to open instead.
 - Benchmark: *"Grounding and validity are objective and final. Classification
   accuracy is human-adjudicated on a held-out set — we don't ship an accuracy
   number we haven't earned."*
+- Optional niche-competitor beat: switch to the **RemoFirst vs Rippling** live
+  run — *"75 pages vs 116: everything stays share-normalized, and notice the
+  system flags its own #1 recommended play as THIN (3 competitor pages) and
+  tells you to verify before spending. It would rather caveat itself than
+  oversell."*
 
 ## Close (15s)
 
