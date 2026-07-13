@@ -22,17 +22,26 @@ with what's real and I own the gaps honestly — that's the whole pitch.
 
 ## 1. Architecture — a real agentic loop, not a script (90s)
 
-- Open `outputs/runs/RUN-b256fab1c1dd/trace.jsonl`. Scroll the `event_type`
-  stream: `coverage_assessed → actions_proposed → action_selected`. *"It
-  assesses what it knows, proposes candidate actions, and picks the next one."*
+> **Before recording — pick the demo run.** The polished flagship
+> `RUN-b256fab1c1dd` was collected *before* the LLM-in-loop landed, so its trace
+> uses the deterministic scorer. For the `decision_by: model` beat, grep a run
+> created *after* it — the best move is to **re-run `deel.com` live once** (needs
+> the Anthropic usage limit raised — see the handoff note) so ONE run has
+> everything: model decisions, real ad creatives, and the full corpus. If you
+> can't re-run live, grep `decision_by` on any post-loop run and show the
+> polished outputs on the flagship, noting the flagship predates the loop.
+
+- Open the demo run's `trace.jsonl`. Scroll the `event_type` stream:
+  `coverage_assessed → actions_proposed → action_selected`. *"It assesses what
+  it knows, proposes candidate actions, and picks the next one."*
 - **The key beat — the model is in the loop.** `grep '"decision_by"'
   trace.jsonl`: *"the next-action decision isn't a hardcoded score. A reasoning
   model gets the coverage state, the scored candidates, and what just
   succeeded or came back empty, and picks the next action with a written
   rationale — `decision_by: model`. When the model is unavailable it falls back
-  to the deterministic scorer, `decision_by: heuristic`. Point it at two
-  different competitors and the research paths genuinely diverge — I'll show
-  that live."*
+  to the deterministic scorer, `decision_by: heuristic`. Two different
+  competitors genuinely diverge — verified live on workday vs deel vs gusto:
+  the model chose news/wayback/comparison-page pulls the heuristic wouldn't."*
 - `grep tool_failed` / `grep source_skipped`: *"a provider failure or empty
   source is a typed result, not a crash — recorded, and the loop reacts to it."*
 - `grep stop_selected`: *"it stops for an explainable reason and the brief says

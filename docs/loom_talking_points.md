@@ -70,8 +70,8 @@ the flagship run (RUN-b256fab1c1dd) and the RemoFirst run (RUN-aa58e6d812da).
 
 - Flagship live run: 126 artifacts across 9 source classes, 123 classified,
   30 LinkedIn posts individually classified, 20/20 claims cited with 0 broken
-  evidence references, 19 planning cycles, ~$7 total spend, budget-bounded stop.
-- 257 automated tests; grounding/validity gates objective and final;
+  evidence references, 22 planning cycles, ~$7 total spend, budget-bounded stop.
+- 400+ automated tests; grounding/validity gates objective and final;
   classification accuracy human-adjudicated on a held-out set.
 - RemoFirst run: 75 vs 116 classified pages — the share-normalization proof;
   the system flags its own #1 play as THIN (3 competitor pages) and says
