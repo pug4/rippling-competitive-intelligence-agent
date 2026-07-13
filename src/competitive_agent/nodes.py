@@ -958,7 +958,11 @@ async def refresh_claims(state: DirectorState, ctx: GraphContext):
     remaining = [
         a for a in planner.propose_actions(state, ctx) if a.action_type != "search_wayback"
     ]
-    near_stop = ok or not remaining
+    # The reasoning model can end the loop on its own judgment
+    # (model_requested_stop, set this cycle in score_actions) BEFORE the
+    # deterministic near-stop fires. Treat that as near-stop too, or the model
+    # stopping "early" would render with an empty claims ledger.
+    near_stop = ok or not remaining or bool(ctx.scratch.get("model_requested_stop"))
     if not near_stop:
         return state, "check_contradictions"
     evidence = _evidence_records(ctx, state.run_id)

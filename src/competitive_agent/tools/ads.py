@@ -333,6 +333,22 @@ def _ad_record_artifact(
     ``AdRecord`` under ``ad_record``. Creative rows never carry
     ``is_discovery_pointer`` so ``is_junk_ads_artifact`` passes them through.
     """
+    # The artifact's stored text drives its content_hash (cross-artifact dedup).
+    # Image/text ad creatives are rendered images with EMPTY creative_text, so
+    # hashing on creative_text alone collapses every one of them into a single
+    # artifact. Anchor the stored text on the UNIQUE ad_creative_id (plus the
+    # real copy when present) so each real ad persists as its own artifact; the
+    # report/paid-search rollups read the creative from metadata, not this text.
+    _distinct_raw = "\n".join(
+        p
+        for p in [
+            record.creative_text or "",
+            f"[{record.format or 'ad'}] {record.advertiser} · creative "
+            f"{provenance.get('ad_creative_id') or record.source_url}",
+            f"shown {record.first_seen or '?'}–{record.last_seen or '?'} · {record.source_url}",
+        ]
+        if p.strip()
+    )
     return _public_ad_artifact(
         action,
         source_type=source_type,
@@ -342,6 +358,7 @@ def _ad_record_artifact(
         advertiser=record.advertiser,
         platform_or_surface=platform_surface,
         creative_body=record.creative_text,
+        raw_text=_distinct_raw,
         headline=record.headline,
         cta=record.cta,
         ad_format=record.format,
