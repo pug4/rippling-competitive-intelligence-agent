@@ -758,3 +758,163 @@ def test_product_focus_endpoints(isolated_env: Path):
         ).status_code
         == 400
     )
+
+
+# ---------------------------------------------------------------------------
+# Chat on-demand visualizations (contract: model chooses WHAT, Python computes
+# the numbers from REAL data; clicked-element context scopes the answer)
+# ---------------------------------------------------------------------------
+
+
+def test_chat_viz_request_returns_deterministic_visualizations(isolated_env: Path, monkeypatch):
+    """A monkeypatched gateway emits a viz_request; the chat surface computes the
+    chart from the stored package (no network) and the rendered numbers match an
+    INDEPENDENT hand-tally of the package. The clicked-element context is folded
+    into the prompt so the answer scopes to what the user clicked."""
+    import json as _json
+    from collections import Counter
+
+    from competitive_agent import chat as chat_mod
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.config import get_settings
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    pkg = _json.loads(
+        (Path(get_settings().outputs_dir) / "runs" / state.run_id / "data.json").read_text()
+    )
+
+    # Independent recompute of the competitor's theme distribution (mirrors the
+    # builder's competitor-scoping, but written separately as the oracle).
+    cls = pkg["classifications"]
+    cid = pkg["companies"][0]["company_id"]
+    if any(c.get("company_id") for c in cls):
+        cls = [c for c in cls if c.get("company_id") == cid] or cls
+    expected = Counter(c["primary_theme"] for c in cls if c.get("primary_theme"))
+    assert expected, "fixture run must have themed classifications"
+
+    resp = ChatResponse.model_validate(
+        {
+            "answer": "Here's how their message themes break down.",
+            "viz_request": {
+                "chart_type": "theme_distribution",
+                "params": {},
+                "why": "a distribution reads better as a bar than as prose",
+            },
+        }
+    )
+
+    class _FakeResult:
+        output = resp
+
+    class _FakeGateway:
+        async def generate_structured(self, task, system, user, output_model, **kw):
+            # The system prompt teaches the viz contract and lists chart types.
+            assert "viz_request" in system and "theme_distribution" in system
+            # The clicked-element pointer was folded into the user content.
+            assert "THE USER IS ASKING ABOUT THIS ELEMENT" in user
+            assert "consolidation bar" in user
+            return _FakeResult()
+
+    from competitive_agent import model_gateway as gw_mod
+
+    monkeypatch.setattr(gw_mod, "build_gateway", lambda *a, **k: _FakeGateway())
+
+    out = asyncio.run(
+        chat_mod.chat_about_run(
+            state.run_id,
+            "why do they lead with this theme?",
+            execution_mode="fixture",
+            context={
+                "label": "consolidation bar",
+                "kind": "chart_bar",
+                "value": "consolidation",
+                "page": "themes",
+            },
+        )
+    )
+
+    viz = out["visualizations"]
+    assert isinstance(viz, list) and len(viz) == 1
+    spec = viz[0]
+    assert spec["chart_type"] == "theme_distribution" and spec["type"] == "bar"
+    # EVERY rendered value equals the independent tally — computed, never faked.
+    for row in spec["data"]:
+        assert expected[row["label"].replace(" ", "_")] == row["value"]
+    assert f"{sum(expected.values())} classified pages" in spec["caption"]
+    # The request is echoed back for the UI (so it can show the "why").
+    assert out["viz_request"]["chart_type"] == "theme_distribution"
+
+
+def test_chat_viz_request_error_is_dropped_and_noted(isolated_env: Path, monkeypatch):
+    """When the requested chart can't be built (unknown type / empty data), the
+    surface DROPS it (never a fabricated spec) and says so honestly in the text."""
+    from competitive_agent import chat as chat_mod
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    resp = ChatResponse.model_validate(
+        {
+            "answer": "Base answer.",
+            "viz_request": {"chart_type": "nonexistent_chart", "params": {}, "why": "x"},
+        }
+    )
+
+    class _FakeResult:
+        output = resp
+
+    class _FakeGateway:
+        async def generate_structured(self, *a, **k):
+            return _FakeResult()
+
+    from competitive_agent import model_gateway as gw_mod
+
+    monkeypatch.setattr(gw_mod, "build_gateway", lambda *a, **k: _FakeGateway())
+
+    out = asyncio.run(chat_mod.chat_about_run(state.run_id, "chart it", execution_mode="fixture"))
+    assert out["visualizations"] == []  # error dropped — never a fake spec
+    assert "nonexistent_chart" in out["answer"]  # honestly noted
+    assert "couldn't" in out["answer"]
+
+
+def test_chat_response_visualizations_default_and_fixture_still_validates(isolated_env: Path):
+    """ChatResponse gains visualizations (default empty) and viz_request (default
+    None); the stored analysis_chat fixture — which has neither — still validates."""
+    import json as _json
+
+    from competitive_agent.chat import ChatResponse
+    from competitive_agent.config import get_settings
+
+    fixture_path = Path(get_settings().fixtures_dir) / "model" / "analysis_chat" / "default.json"
+    resp = ChatResponse.model_validate(_json.loads(fixture_path.read_text()))
+    assert resp.visualizations == []
+    assert resp.viz_request is None
+
+
+def test_chat_api_accepts_clicked_context(isolated_env: Path):
+    """The chat endpoint accepts a `context` (clicked-element) body and always
+    returns a `visualizations` list (empty when no chart was requested)."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.runner import run_analysis
+
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    client = TestClient(app)
+    r = client.post(
+        f"/api/runs/{state.run_id}/chat",
+        json={
+            "question": "what is this element?",
+            "execution_mode": "fixture",
+            "context": {
+                "label": "consolidation",
+                "kind": "chart_bar",
+                "value": "consolidation",
+                "page": "themes",
+            },
+        },
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert "visualizations" in body and isinstance(body["visualizations"], list)

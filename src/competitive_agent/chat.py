@@ -15,6 +15,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from .chat_viz import GROUP_BY_FIELDS, SUPPORTED_CHART_TYPES
+
 CHAT_TASK = "analysis_chat"
 
 CHAT_SYSTEM = (
@@ -48,6 +50,15 @@ CHAT_SYSTEM = (
     "Set needs_deeper_research=true whenever you emit research_request (backward compat). "
     "NEVER emit research_request when the stored data already answers the question — it "
     "triggers a paid research run. Leave it null otherwise. "
+    "VISUALIZE ON DEMAND: when a chart or table would answer better than prose (a "
+    "distribution, a ranking, an ownership split, a coverage matrix, a list of ad "
+    "creatives), request EXACTLY ONE visualization via viz_request. chart_type MUST be "
+    "one of: " + ", ".join(SUPPORTED_CHART_TYPES) + ". params is a small object — for "
+    'group_by set {"field": <one of ' + ", ".join(GROUP_BY_FIELDS) + ">}; other charts "
+    "usually need no params. why is one line on why the chart helps. Python computes the "
+    "chart DETERMINISTICALLY from this run's REAL data — you never fill in the numbers or "
+    "the visualizations list yourself, and you still give a short text answer alongside it. "
+    "Leave viz_request null when prose is enough. "
     "Respond ONLY via the structured tool."
 )
 
@@ -85,6 +96,25 @@ class ResearchRequest(BaseModel):
     reason: str = Field(description="Why the stored run data cannot answer this question.")
 
 
+class VizRequest(BaseModel):
+    """An optional request for ONE on-demand visualization. The model chooses
+    only WHAT to chart; Python computes the numbers deterministically from the
+    run package (see ``chat_viz.VIZ_BUILDERS``). Never carries data values."""
+
+    chart_type: str = Field(
+        description="One of the whitelisted chart types listed in the system prompt "
+        "(e.g. theme_distribution, cep_ownership, proof_gaps, ad_creatives, group_by)."
+    )
+    params: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Small params object, e.g. {'field': 'personas'} for group_by. Most "
+        "charts need none.",
+    )
+    why: str = Field(
+        default="", description="One line: why a chart/table answers better than prose here."
+    )
+
+
 class ChatResponse(BaseModel):
     answer: str = Field(description="The grounded answer, in the marketer's terms.")
     suggested_followups: list[str] = Field(
@@ -107,6 +137,16 @@ class ChatResponse(BaseModel):
         description="ONLY when the stored data cannot answer: a concrete deeper-research "
         "proposal (focus + canonical sources + reason). Null whenever the stored data "
         "answers the question. Set needs_deeper_research=true alongside it.",
+    )
+    viz_request: VizRequest | None = Field(
+        default=None,
+        description="Optional: request ONE on-demand chart/table when it answers better "
+        "than prose. Null when prose is enough. Python renders it from real data.",
+    )
+    visualizations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Server-computed rendered chart/table specs. Leave this EMPTY — Python "
+        "fills it from viz_request against the real run data; never populate it yourself.",
     )
 
 
@@ -418,16 +458,40 @@ def cross_competitor_summaries(current_run_id: str, competitor_id: str | None) -
     return "\n".join(lines)
 
 
+def _element_note(context: dict[str, Any] | None) -> str:
+    """Render a clicked-element pointer for the prompt. The user clicked a chart
+    bar / table row / metric in the report UI; we tell the model to SCOPE its
+    answer to that element while still using the broader run context."""
+    if not context:
+        return ""
+    parts = []
+    for key in ("label", "kind", "value", "page"):
+        val = context.get(key)
+        if val not in (None, "", []):
+            parts.append(f"  {key}: {val}")
+    if not parts:
+        return ""
+    return (
+        "THE USER IS ASKING ABOUT THIS ELEMENT they clicked in the report:\n"
+        + "\n".join(parts)
+        + "\nScope your answer to what they clicked, while still drawing on the broader "
+        "run context above.\n\n"
+    )
+
+
 async def chat_about_run(
     run_id: str,
     question: str,
     history: list[dict[str, str]] | None = None,
     execution_mode: str = "live",
     vertical: str | None = None,
+    context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Answer a follow-up question about a run, grounded in its findings.
     ``vertical`` scopes the grounded data to one product vertical (payroll,
-    it_device_management, ...) so per-offering questions get per-offering data."""
+    it_device_management, ...) so per-offering questions get per-offering data.
+    ``context`` is an optional clicked-element pointer (label/kind/value/page)
+    from the UI so answers scope to what the user clicked."""
     path = _package_path(run_id)
     if not path.exists():
         raise KeyError(f"run not found (no data.json): {run_id}")
@@ -435,13 +499,13 @@ async def chat_about_run(
     comps = pkg.get("companies", [])
     competitor_id = comps[0].get("company_id") if comps else None
     cross = cross_competitor_summaries(run_id, competitor_id)
-    context = build_context(pkg, cross=cross, vertical=vertical)
+    run_context = build_context(pkg, cross=cross, vertical=vertical)
     if vertical:
         by_artifact = (pkg.get("product_vertical_analysis") or {}).get("by_artifact") or {}
         unmapped = sum(
             1 for a in pkg.get("artifacts", []) if a.get("artifact_id") not in by_artifact
         )
-        context = (
+        run_context = (
             f"FOCUS: the user has scoped this conversation to the '{vertical}' product "
             "vertical — the sources/classifications/evidence/posts below are filtered to it. "
             "Gaps/opportunities/dominant-message remain corpus-wide; say so if you cite them. "
@@ -451,7 +515,7 @@ async def chat_about_run(
                 if unmapped
                 else "\n\n"
             )
-            + context
+            + run_context
         )
 
     from .config import get_config, get_settings
@@ -462,8 +526,9 @@ async def chat_about_run(
         f"{m.get('role', 'user')}: {m.get('content', '')}" for m in (history or [])[-8:]
     )
     user_content = (
-        f"RUN FINDINGS:\n{context}\n\n"
+        f"RUN FINDINGS:\n{run_context}\n\n"
         + (f"CONVERSATION SO FAR:\n{convo}\n\n" if convo else "")
+        + _element_note(context)
         + f"USER QUESTION: {question}"
     )
     try:
@@ -476,8 +541,25 @@ async def chat_about_run(
             prompt_version="v1",
         )
         out = result.output
+        # The model chooses WHAT to chart; Python computes it from the REAL
+        # package. Model-supplied visualizations are never trusted — we ignore
+        # out.visualizations and (re)build from viz_request against real data.
+        answer = out.answer
+        visualizations: list[dict[str, Any]] = []
+        if out.viz_request is not None:
+            from .chat_viz import build_visualization
+
+            spec = build_visualization(pkg, out.viz_request.chart_type, out.viz_request.params)
+            if "error" in spec:
+                # Drop on error, but stay honest: tell the user it couldn't render.
+                answer = answer.rstrip() + (
+                    f"\n\n(I tried to generate a '{out.viz_request.chart_type}' "
+                    f"visualization but couldn't: {spec['error']})"
+                )
+            else:
+                visualizations.append(spec)
         return {
-            "answer": out.answer,
+            "answer": answer,
             "suggested_followups": out.suggested_followups,
             "grounded_in": out.grounded_in,
             "needs_deeper_research": out.needs_deeper_research,
@@ -486,6 +568,8 @@ async def chat_about_run(
             "research_request": (
                 out.research_request.model_dump() if out.research_request else None
             ),
+            "viz_request": (out.viz_request.model_dump() if out.viz_request else None),
+            "visualizations": visualizations,
         }
     except Exception as exc:  # never crash the chat surface
         return {
@@ -497,6 +581,8 @@ async def chat_about_run(
             "needs_deeper_research": False,
             "confidence": "low",
             "research_request": None,
+            "viz_request": None,
+            "visualizations": [],
             "error": type(exc).__name__,
         }
 

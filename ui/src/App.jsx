@@ -1,7 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { HBar, Heatmap, ProofBar } from "./charts";
+import { HBar, Heatmap, ProofBar, VizSpec } from "./charts";
 
 const pill = (level) => <span className={`pill ${level}`}>{level}</span>;
+
+// Ask-AI wiring: App supplies { ask(context) } through context so ANY section
+// header / row can open the right-side panel without prop-drilling. A null
+// value (no run selected) makes every AskAIButton render nothing.
+const AskAIContext = React.createContext(null);
+
+// Small sparkle affordance placed on section headers and select data rows.
+// Emits a context object { label, kind, value, page } — `page` is filled by
+// the provider from the active tab when the call site omits it.
+function AskAIButton({ ctx, small }) {
+  const askAI = React.useContext(AskAIContext);
+  if (!askAI) return null;
+  const label = (ctx && ctx.label) || "this";
+  const kind = (ctx && ctx.kind) || "section";
+  return (
+    <button
+      type="button"
+      className={`askai-btn${small ? " small" : ""}`}
+      aria-label={`Ask AI about ${label}`}
+      data-tip={`Ask AI about "${label}" — opens a right-side chat seeded with this ${kind}; it answers only from this run's collected evidence and can return new charts and tables`}
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); askAI.ask(ctx || {}); }}
+    >
+      <span className="askai-spark" aria-hidden="true">✦</span>
+      <span className="askai-lbl">Ask AI</span>
+    </button>
+  );
+}
 
 // Hover explanation on every section header / metric (focusable for keyboard/
 // screen-reader users — the tip is load-bearing, not decoration).
@@ -77,20 +104,26 @@ function TooltipLayer() {
 function TabIntro({ q, why }) {
   return (
     <div className="tabintro">
-      <b>{q}</b>
+      <div className="tabintro-head">
+        <b>{q}</b>
+        <AskAIButton ctx={{ label: q, kind: "tab", value: why }} small />
+      </div>
       <div className="why">{why}</div>
     </div>
   );
 }
 
 // Section header with a number chip + a visible one-line justification.
-function Sec({ n, title, why, tip }) {
+// `askValue` (optional) is a short deterministic data summary carried into the
+// Ask-AI context so the panel opens already knowing the headline numbers.
+function Sec({ n, title, why, tip, askValue, askKind = "section" }) {
   return (
     <>
       <h2>
         {n != null && <span className="secno">{n}</span>}
         {title}
         {tip && <Info tip={tip} />}
+        <AskAIButton ctx={{ label: title, kind: askKind, value: askValue }} small />
       </h2>
       {why && <p className="secwhy">{why}</p>}
     </>
@@ -275,6 +308,98 @@ function SourceDrawer({ sources, label }) {
 
 /* ------------------------------ chat ---------------------------------- */
 
+// Single POST to the grounded chat endpoint, shared by the dock and the
+// Ask-AI panel. `context` (the clicked section/row) and `vertical` are both
+// optional and only sent when present. Returns the parsed response or an
+// error-shaped message object — never throws on a non-200.
+async function postChat(runId, { question, history, context, execution_mode, vertical }) {
+  const res = await fetch(`/api/runs/${runId}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question,
+      history,
+      execution_mode,
+      context: context || null,
+      vertical: vertical || null,
+    }),
+  });
+  return res.ok
+    ? await res.json()
+    : { answer: "Chat error: " + res.statusText, suggested_followups: [] };
+}
+
+// One rendered chat turn — shared by the dock and the Ask-AI panel so both
+// render the SAME message shape, including any agent-returned visualizations.
+// Pure React nodes throughout (renderRich / VizSpec) — no HTML injection.
+function ChatMessage({ m, artIdx, send, onResearch, researchActive, busy }) {
+  const isA = m.role === "assistant";
+  return (
+    <div className={`chatmsg ${m.role}`}>
+      {m.auto_briefing && (
+        <span className="autobrief"
+              data-tip="Composed automatically from this run's saved report the first time you open it — deterministic numbers, no model prose. Ask anything below to go deeper.">
+          auto-briefing
+        </span>
+      )}
+      {m.ask_context && m.ask_context.label && (
+        <span className="askctx-chip"
+              data-tip={`Asked from the ${m.ask_context.kind || "section"} "${m.ask_context.label}"${m.ask_context.page ? ` on the ${m.ask_context.page} view` : ""} — the answer was scoped to that context`}>
+          about: {m.ask_context.label}
+        </span>
+      )}
+      <div className={`chatbubble${m.system_note ? " sysnote" : ""}`}>
+        {isA ? renderRich(m.answer || m.content) : (m.answer || m.content)}
+      </div>
+      {isA && (m.visualizations || []).map((spec, vi) => <VizSpec key={vi} spec={spec} />)}
+      {isA && (m.grounded_in || []).length > 0 && (
+        <div className="chatsrc" data-tip="the parts of this run's evidence the answer was grounded in — the chat can only answer from collected data">
+          {m.confidence && <span className={`pill ${m.confidence}`}>{m.confidence} confidence</span>}
+          {m.grounded_in.slice(0, 6).map((gsrc, gi) => {
+            const hit = artIdx[gsrc];
+            return hit && hit.url
+              ? <a key={gi} className="chip" href={hit.url} target="_blank" rel="noreferrer">{String(gsrc).slice(0, 34)} ↗</a>
+              : <span key={gi} className="chip" style={{ cursor: "default" }}>{String(gsrc).slice(0, 44)}</span>;
+          })}
+        </div>
+      )}
+      {isA && m.clarifying_question && (
+        <div className="clarify">❓ {m.clarifying_question} <span className="clarifyhint">(reply below to refine)</span></div>
+      )}
+      {isA && m.research_request && (
+        <div className="rescard"
+             data-tip="The chat found the stored data can't answer this — it proposes a focused deep-dive ON THIS RUN. New evidence appends to the same run and every tab refreshes when it lands.">
+          <div className="resreason"><b>Deeper research suggested:</b> {m.research_request.reason}</div>
+          <div className="chipwrap">
+            <span className="clarifyhint" style={{ fontSize: 11 }}>focus: {m.research_request.focus}</span>
+            {(m.research_request.sources || []).map((s) => (
+              <span key={s} className="chip" style={{ cursor: "default" }}
+                    data-tip={`source the deep-dive would use: ${s}`}>{s}</span>
+            ))}
+          </div>
+          <button type="button" className="nr-btn resbtn" disabled={researchActive}
+                  onClick={() => onResearch && onResearch(m.research_request)}
+                  data-tip={researchActive
+                    ? "Research is already running on this run — watch the live strip above; one deep-dive at a time"
+                    : "Launch the deep-dive: adds budget + iterations to this run, collects from the listed sources, then refreshes every tab with the new evidence"}>
+            {researchActive ? "Research running…" : "Run deeper research"}
+          </button>
+        </div>
+      )}
+      {isA && m.needs_deeper_research && !m.research_request && (
+        <div className="chatnote">Needs deeper research — run a focused deep-dive.</div>
+      )}
+      {isA && (m.suggested_followups || []).length > 0 && (
+        <div className="chipwrap">
+          {m.suggested_followups.map((f, j) => (
+            <button key={j} className="chip" onClick={() => send && send(f)} disabled={busy}>{f}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Persistent, collapsible chat dock rendered above the tabs. Messages live in
 // App (per-run map) so they survive tab switches AND run switches; this
 // component is presentation + send only.
@@ -298,18 +423,12 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
     onMessages((ms) => [...ms, { role: "user", content: question }]);
     setBusy(true);
     try {
-      const res = await fetch(`/api/runs/${runId}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          history,
-          // Fixture runs chat against the fixture gateway (keyless deployments).
-          execution_mode: pkg.run?.execution_mode === "fixture" ? "fixture" : "live",
-          vertical: vertical || null,
-        }),
+      // Fixture runs chat against the fixture gateway (keyless deployments).
+      const data = await postChat(runId, {
+        question, history,
+        execution_mode: pkg.run?.execution_mode === "fixture" ? "fixture" : "live",
+        vertical: vertical || null,
       });
-      const data = res.ok ? await res.json() : { answer: "Chat error: " + res.statusText, suggested_followups: [] };
       onMessages((ms) => [...ms, { role: "assistant", ...data }]);
     } catch (e) {
       onMessages((ms) => [...ms, { role: "assistant", answer: "Could not reach the chat API.", suggested_followups: [] }]);
@@ -347,61 +466,8 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
           </div>
         )}
         {messages.map((m, i) => (
-          <div key={i} className={`chatmsg ${m.role}`}>
-            {m.auto_briefing && (
-              <span className="autobrief"
-                    data-tip="Composed automatically from this run's saved report the first time you open it — deterministic numbers, no model prose. Ask anything below to go deeper.">
-                auto-briefing
-              </span>
-            )}
-            <div className={`chatbubble${m.system_note ? " sysnote" : ""}`}>
-              {m.role === "assistant" ? renderRich(m.answer || m.content) : (m.answer || m.content)}
-            </div>
-            {m.role === "assistant" && (m.grounded_in || []).length > 0 && (
-              <div className="chatsrc" data-tip="the parts of this run's evidence the answer was grounded in — the chat can only answer from collected data">
-                {m.confidence && <span className={`pill ${m.confidence}`}>{m.confidence} confidence</span>}
-                {m.grounded_in.slice(0, 6).map((gsrc, gi) => {
-                  const hit = artIdx[gsrc];
-                  return hit && hit.url
-                    ? <a key={gi} className="chip" href={hit.url} target="_blank" rel="noreferrer">{String(gsrc).slice(0, 34)} ↗</a>
-                    : <span key={gi} className="chip" style={{ cursor: "default" }}>{String(gsrc).slice(0, 44)}</span>;
-                })}
-              </div>
-            )}
-            {m.role === "assistant" && m.clarifying_question && (
-              <div className="clarify">❓ {m.clarifying_question} <span className="clarifyhint">(reply below to refine)</span></div>
-            )}
-            {m.role === "assistant" && m.research_request && (
-              <div className="rescard"
-                   data-tip="The chat found the stored data can't answer this — it proposes a focused deep-dive ON THIS RUN. New evidence appends to the same run and every tab refreshes when it lands.">
-                <div className="resreason"><b>Deeper research suggested:</b> {m.research_request.reason}</div>
-                <div className="chipwrap">
-                  <span className="clarifyhint" style={{ fontSize: 11 }}>focus: {m.research_request.focus}</span>
-                  {(m.research_request.sources || []).map((s) => (
-                    <span key={s} className="chip" style={{ cursor: "default" }}
-                          data-tip={`source the deep-dive would use: ${s}`}>{s}</span>
-                  ))}
-                </div>
-                <button type="button" className="nr-btn resbtn" disabled={researchActive}
-                        onClick={() => onResearch && onResearch(m.research_request)}
-                        data-tip={researchActive
-                          ? "Research is already running on this run — watch the live strip above; one deep-dive at a time"
-                          : "Launch the deep-dive: adds budget + iterations to this run, collects from the listed sources, then refreshes every tab with the new evidence"}>
-                  {researchActive ? "Research running…" : "Run deeper research"}
-                </button>
-              </div>
-            )}
-            {m.role === "assistant" && m.needs_deeper_research && !m.research_request && (
-              <div className="chatnote">Needs deeper research — run a focused deep-dive.</div>
-            )}
-            {m.role === "assistant" && (m.suggested_followups || []).length > 0 && (
-              <div className="chipwrap">
-                {m.suggested_followups.map((f, j) => (
-                  <button key={j} className="chip" onClick={() => send(f)} disabled={busy}>{f}</button>
-                ))}
-              </div>
-            )}
-          </div>
+          <ChatMessage key={i} m={m} artIdx={artIdx} send={send}
+                       onResearch={onResearch} researchActive={researchActive} busy={busy} />
         ))}
         {busy && <div className="chatmsg assistant"><div className="chatbubble"><span className="spinner" /> thinking…</div></div>}
       </div>
@@ -413,6 +479,94 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
       </>
       )}
     </div>
+  );
+}
+
+// Right-side slide-in Ask-AI panel. Rendered at App level so it overlays any
+// tab. It shares the SAME per-run message store as the dock (messages /
+// onMessages are the run's chat), so a thread started here continues in the
+// dock and vice-versa. On open with a context it shows an "Asking about" chip
+// and seeds the composer, then POSTs to /chat with that context attached.
+function AskAIPanel({ runId, pkg, messages, onMessages, ctx, open, onClose, onResearch, researchActive }) {
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const artIdx = pkg ? artifactIndex(pkg) : {};
+  const execMode = pkg?.run?.execution_mode === "fixture" ? "fixture" : "live";
+  const competitor = pkg?.companies?.[0]?.canonical_name || "this competitor";
+  const logRef = React.useRef(null);
+  const seeded = React.useRef(null);
+
+  // Seed the composer with a starter question each time a NEW context arrives
+  // (never overwriting text the user is mid-way through typing for the same one).
+  React.useEffect(() => {
+    if (!open || !ctx || !ctx.label) return;
+    const key = `${ctx.page}|${ctx.kind}|${ctx.label}`;
+    if (seeded.current === key) return;
+    seeded.current = key;
+    setInput(`Tell me more about "${ctx.label}"`);
+  }, [ctx, open]);
+
+  // Keep the newest turn in view.
+  React.useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [messages, open, busy]);
+
+  const send = async (q) => {
+    const question = (q || input).trim();
+    if (!question || busy || !runId) return;
+    setInput("");
+    const history = messages
+      .filter((m) => !m.system_note)
+      .map((m) => ({ role: m.role, content: m.content || m.answer || "" }));
+    onMessages((ms) => [...ms, { role: "user", content: question, ask_context: ctx || null }]);
+    setBusy(true);
+    try {
+      const data = await postChat(runId, { question, history, context: ctx || null, execution_mode: execMode });
+      onMessages((ms) => [...ms, { role: "assistant", ...data }]);
+    } catch (e) {
+      onMessages((ms) => [...ms, { role: "assistant", answer: "Could not reach the chat API.", suggested_followups: [] }]);
+    }
+    setBusy(false);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <div className="askai-scrim" onClick={onClose} />
+      <aside className="askaipanel" role="dialog" aria-label="Ask AI panel">
+        <div className="askai-head">
+          <span className="askai-title"><span className="askai-spark" aria-hidden="true">✦</span> Ask AI</span>
+          <button type="button" className="askai-close" onClick={onClose} aria-label="Close Ask AI panel"
+                  data-tip="Close the Ask AI panel — your conversation is kept on this run and also shows in the chat dock">✕</button>
+        </div>
+        {ctx && ctx.label && (
+          <div className="askctx-bar">
+            <span className="askctx-chip"
+                  data-tip={`Seeded from the ${ctx.kind || "section"} "${ctx.label}"${ctx.page ? ` on the ${ctx.page} view` : ""} — your question is sent with this context so the grounded answer stays on-topic`}>
+              Asking about: {ctx.label}
+            </span>
+            {ctx.value && <div className="askctx-val" data-tip="the deterministic data summary carried in as context">{ctx.value}</div>}
+          </div>
+        )}
+        <div className="askai-log" ref={logRef}>
+          {messages.length === 0 && (
+            <div className="chathint">
+              Ask anything about {competitor} — grounded in this run's evidence. I can return charts and tables, and launch deeper research on demand.
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <ChatMessage key={i} m={m} artIdx={artIdx} send={send}
+                         onResearch={onResearch} researchActive={researchActive} busy={busy} />
+          ))}
+          {busy && <div className="chatmsg assistant"><div className="chatbubble"><span className="spinner" /> thinking…</div></div>}
+        </div>
+        <form className="chatform askaiform" onSubmit={(e) => { e.preventDefault(); send(); }}>
+          <input className="nr-in" placeholder={ctx && ctx.label ? `Ask about ${ctx.label}…` : `Ask about ${competitor}…`}
+                 value={input} onChange={(e) => setInput(e.target.value)} />
+          <button className="nr-btn" disabled={busy || !input.trim()}>Ask</button>
+        </form>
+      </aside>
+    </>
   );
 }
 
@@ -837,6 +991,10 @@ function GapsSection({ pkg, srcIdx, msgIdx }) {
             <div>
               <div className="gaplabel" data-tip={themeTip(msgIdx, g.short_label, `Their repeated claim: “${g.claim_text}”`)}>{g.short_label}</div>
               <ActionTag verb={gapVerb(g)} tip={`attackability ${g.attackability} → ${gapVerb(g)}`} />
+              <AskAIButton small ctx={{
+                label: g.short_label, kind: "message–proof gap",
+                value: `${competitor} claim "${g.short_label}" (${g.attackability} attackability); proof: ${competitor} ${g.proof_strength || "none"} vs ${focal} ${g.focal_proof_strength || "none"}`,
+              }} />
               {(g.outlier_flag === "thin_theme" || (g.theme_page_count != null && g.theme_page_count < 5) || (g.sample_sufficiency && g.sample_sufficiency !== "ok")) && (
                 <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
                       data-tip={`this verdict rests on ${g.theme_page_count ?? "too few"} competitor pages${g.outlier_flag === "thin_theme" ? " — below the ≥5-page/≥15% ATTACK floor" : ""} — disclosed, not asserted; verify before spending`}>
@@ -1106,12 +1264,18 @@ function LinkedInThemeBar({ pkg, msgIdx }) {
       <div className="card">
         {data.map((d) => (
           <div key={d.label}>
-            <div className="hbar-row" style={{ cursor: "pointer" }}
-                 onClick={() => setOpenTheme(openTheme === d.label ? null : d.label)}
-                 data-tip={themeTip(msgIdx, d.label, "click to open the posts")}>
-              <div className="hbar-label">{openTheme === d.label ? "▾ " : "▸ "}{d.label.replace(/_/g, " ")}</div>
-              <div className="hbar-track"><div className="hbar-fill" style={{ width: `${(d.value / max) * 100}%`, background: "var(--accent)" }} /></div>
-              <div className="hbar-val">{d.value}</div>
+            <div className="hbarline">
+              <div className="hbar-row" style={{ cursor: "pointer", flex: 1, minWidth: 0 }}
+                   onClick={() => setOpenTheme(openTheme === d.label ? null : d.label)}
+                   data-tip={themeTip(msgIdx, d.label, "click to open the posts")}>
+                <div className="hbar-label">{openTheme === d.label ? "▾ " : "▸ "}{d.label.replace(/_/g, " ")}</div>
+                <div className="hbar-track"><div className="hbar-fill" style={{ width: `${(d.value / max) * 100}%`, background: "var(--accent)" }} /></div>
+                <div className="hbar-val">{d.value}</div>
+              </div>
+              <AskAIButton small ctx={{
+                label: d.label.replace(/_/g, " "), kind: "LinkedIn post theme",
+                value: `${d.value} employee/company post(s) classified under "${d.label.replace(/_/g, " ")}"`,
+              }} />
             </div>
             {openTheme === d.label && (
               <div className="srclist">
@@ -1797,6 +1961,10 @@ function CepRow({ c, competitor, focal, artIdx, msgIdx }) {
         <div className="gaplabel" style={{ fontSize: 12 }} data-tip={cepTip(msgIdx, c.cep, c.ownership_basis)}>{String(c.cep).replace(/_/g, " ").slice(0, 60)}</div>
         <span className="pill" style={{ color: `var(${own[c.ownership] || "--border"})`, borderColor: `var(${own[c.ownership] || "--border"})` }}
               data-tip={c.ownership_basis || "who currently owns this buying intent"}>{String(c.ownership).replace(/_/g, " ")}</span>
+        <AskAIButton small ctx={{
+          label: String(c.cep).replace(/_/g, " ").slice(0, 60), kind: "search-intent",
+          value: `Ownership "${String(c.ownership).replace(/_/g, " ")}" — ${competitor}: ${clabel} vs ${focal}: ${flabel}`,
+        }} />
       </div>
       <div className="gapbars" data-tip={c.ownership_basis || `${competitor}: ${clabel} · ${focal}: ${flabel}`}>
         <HBar data={[
@@ -1958,6 +2126,10 @@ function PaidSearchTargets({ pkg, runId }) {
                 {c.legal_review_required && (
                   <span className="atag legal" data-tip={c.risk_note || "Bidding on competitor brand/trademark terms carries legal and ad-policy risk — route through legal before launch"}>LEGAL REVIEW</span>
                 )}
+                <AskAIButton small ctx={{
+                  label: c.cluster_label, kind: "paid-search cluster",
+                  value: `${String(c.cluster_type).replace(/_/g, " ")} · ${c.priority_tier} priority${c.opportunity_score != null ? ` · opp ${Number(c.opportunity_score).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : ""} · seeds: ${(c.seed_keywords || []).slice(0, 4).join(", ")}`,
+                }} />
               </div>
               <div className="pskws">
                 {(c.seed_keywords || []).map((kw) => kwChip(kw, metricByKw[kw]))}
@@ -2746,11 +2918,22 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState({});
   const appendChat = (runId, msg) =>
     setChats((prev) => ({ ...prev, [runId]: [...(prev[runId] || []), msg] }));
+  // Ask-AI right-side panel: an element's context + open flag. The panel reads
+  // the SAME per-run chat store (chats[selected]) as the dock.
+  const [askCtx, setAskCtx] = useState(null);
+  const [askOpen, setAskOpen] = useState(false);
+  // Opening from any section/row: stamp the active tab as `page` unless the
+  // call site already set one, then slide the panel in.
+  const askAI = React.useMemo(() => ({
+    ask: (ctx) => { setAskCtx({ ...ctx, page: (ctx && ctx.page) || tab }); setAskOpen(true); },
+  }), [tab]);
 
   useEffect(() => {
     if (runs && runs.length && !selected) setSelected(runs[0].run_id);
   }, [runs, selected]);
-  useEffect(() => { setTab("overview"); setWinOverlay(null); }, [selected]);
+  // Switching runs resets the tab AND the Ask-AI panel so a panel from run A
+  // never leaks its context onto run B.
+  useEffect(() => { setTab("overview"); setWinOverlay(null); setAskOpen(false); setAskCtx(null); }, [selected]);
 
   // Briefing seed: first time a reported run is opened with an empty chat,
   // fetch the deterministic briefing and plant it as the opening assistant
@@ -2938,6 +3121,7 @@ export default function App() {
   if (researchActive && selected) stripRuns.current.add(selected);
 
   return (
+    <AskAIContext.Provider value={pkg ? askAI : null}>
     <div className={`app ${menuOpen ? "menu-open" : ""}`}>
       <div className="topbar">
         <button className="hamburger" onClick={() => setMenuOpen((o) => !o)} aria-label="menu">☰</button>
@@ -3160,7 +3344,25 @@ export default function App() {
           </>
         )}
       </div>
+      {pkg && (
+        <AskAIPanel
+          runId={selected}
+          pkg={pkg}
+          messages={chats[selected] || []}
+          onMessages={(updater) =>
+            setChats((prev) => ({
+              ...prev,
+              [selected]: typeof updater === "function" ? updater(prev[selected] || []) : updater,
+            }))}
+          ctx={askCtx}
+          open={askOpen}
+          onClose={() => setAskOpen(false)}
+          onResearch={startResearch}
+          researchActive={researchActive}
+        />
+      )}
       <TooltipLayer />
     </div>
+    </AskAIContext.Provider>
   );
 }

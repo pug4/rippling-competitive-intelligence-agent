@@ -909,6 +909,9 @@ class ChatRequest(BaseModel):
     execution_mode: str = "live"
     # Scope the grounded data to one product vertical (payroll, hris_core_hr, ...)
     vertical: str | None = None
+    # Optional clicked-element pointer from the UI (label/kind/value/page) so the
+    # answer scopes to what the user clicked while still using broader context.
+    context: dict[str, Any] | None = None
 
 
 @app.post("/api/runs/{run_id}/chat")
@@ -926,6 +929,7 @@ async def chat(run_id: str, req: ChatRequest) -> dict[str, Any]:
         history=req.history,
         execution_mode=req.execution_mode,
         vertical=(req.vertical or None),
+        context=(req.context or None),
     )
 
 
