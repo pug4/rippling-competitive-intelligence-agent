@@ -1802,6 +1802,42 @@ def _short_id(artifact_id: str) -> str:
     return artifact_id[:10] if artifact_id else ""
 
 
+def _coerce_text(value: Any) -> str:
+    """Coerce an untrusted classifier/opportunity field to a plain string before
+    it is sliced or string-formatted inside :func:`build_assignment_answers`.
+
+    A schema types a field like ``primary_message`` as ``str | None``, but the
+    live pipeline can still hand render a non-string shape (a classifier that
+    emits ``primary_message`` as a wrapped object ``{"text": ...}`` /
+    ``{"label": ...}`` / ``{"statement": ...}``, or a list of fragments). Doing
+    ``value[:220]`` on a dict raises ``KeyError: slice(None, 220, None)`` — the
+    exact crash that took down ``render_outputs`` / ``run_focal_mirror_check``.
+    Routing every untrusted-string slice/format through this coercion makes the
+    render robust by construction: a non-string shape degrades honestly to text
+    instead of crashing.
+
+    - ``str``  -> passthrough.
+    - ``dict`` -> its ``text``/``label``/``statement`` value when that is a
+      string, else a compact JSON dump (never a fabricated summary).
+    - ``list``/``tuple`` -> the coerced items joined by a space.
+    - ``None`` -> ``""``.
+    - anything else -> ``str(value)``.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        for key in ("text", "label", "statement"):
+            inner = value.get(key)
+            if isinstance(inner, str):
+                return inner
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    if isinstance(value, (list, tuple)):
+        return " ".join(part for part in (_coerce_text(v) for v in value) if part)
+    return str(value)
+
+
 def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
     """The assignment's four questions, answered from the run's own evidence.
 
@@ -1839,7 +1875,11 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
                 continue
             c = cite(e.get("artifact_id"))
             if c:
-                c = {**c, "evidence_id": eid, "exact_excerpt": e.get("exact_excerpt", "")[:200]}
+                c = {
+                    **c,
+                    "evidence_id": eid,
+                    "exact_excerpt": _coerce_text(e.get("exact_excerpt"))[:200],
+                }
                 out.append(c)
             if len(out) >= limit:
                 break
@@ -1863,7 +1903,7 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
         """Normalize a theme label for matching: gap short_labels are the
         humanized form ('native platform breadth') of the snake_case taxonomy
         theme ('native_platform_breadth') classifications carry."""
-        return "_".join(str(t or "").strip().casefold().replace("-", " ").split())
+        return "_".join(_coerce_text(t).strip().casefold().replace("-", " ").split())
 
     def cites_from_theme(theme: str | None, limit: int = 2) -> list[dict[str, Any]]:
         """Highest-salience classified pages carrying the theme — the pages
@@ -1885,7 +1925,7 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
     # ---- Q1: messaging angles & themes they're running ----------------------
     by_theme: dict[str, list[dict[str, Any]]] = {}
     for c in cls:
-        theme = c.get("primary_theme")
+        theme = _coerce_text(c.get("primary_theme"))
         if theme:
             by_theme.setdefault(theme, []).append(c)
     theme_rows: list[dict[str, Any]] = []
@@ -1896,20 +1936,21 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
                 "theme": theme,
                 "pages": len(rows),
                 "share": round(len(rows) / n_cls, 4),
-                "example_message": (best.get("primary_message") or "")[:220],
+                "example_message": _coerce_text(best.get("primary_message"))[:220],
                 "citations": cites_from_theme(theme),
             }
         )
     posts = pkg.get("linkedin_posts") or []
     li_by_theme: dict[str, list[dict[str, Any]]] = {}
     for p in posts:
-        if p.get("theme"):
-            li_by_theme.setdefault(p["theme"], []).append(p)
+        theme = _coerce_text(p.get("theme"))
+        if theme:
+            li_by_theme.setdefault(theme, []).append(p)
     linkedin_rows = [
         {
             "theme": theme,
             "posts": len(rows),
-            "example_excerpt": (rows[0].get("excerpt") or "")[:180],
+            "example_excerpt": _coerce_text(rows[0].get("excerpt"))[:180],
             "citations": [
                 {
                     "url": rows[0].get("url") or rows[0].get("post_url"),
@@ -1935,7 +1976,7 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
 
     # ---- Q2: how they position their product(s) -----------------------------
     dom = pkg.get("dominant_message") or {}
-    dom_theme_rows = by_theme.get(dom.get("theme") or "", [])
+    dom_theme_rows = by_theme.get(_coerce_text(dom.get("theme")), [])
     dom_cites = [
         c
         for c in (
@@ -1947,7 +1988,8 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
     villain_rows: list[dict[str, Any]] = []
     seen_villains: set[str] = set()
     for c in cls:
-        for wording in c.get("villain_exact_wording") or []:
+        for raw_wording in c.get("villain_exact_wording") or []:
+            wording = _coerce_text(raw_wording)
             key = " ".join(wording.split()).casefold()
             if key and key not in seen_villains:
                 seen_villains.add(key)
@@ -2085,14 +2127,13 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
             gap_cites_by_id[str(g["claim_id"])] = g_cites
         gap_rows.append(
             {
-                "their_claim": (g.get("claim_text") or "")[:180],
+                "their_claim": _coerce_text(g.get("claim_text"))[:180],
                 "attackability": g.get("attackability"),
                 "their_proof": g.get("proof_strength"),
                 f"{focal.lower()}_proof": g.get("focal_proof_strength"),
-                "justification": (
+                "justification": _coerce_text(
                     (g.get("attackability_detail") or {}).get("rationale")
                     or g.get("actionable_interpretation")
-                    or ""
                 )[:220],
                 "citations": g_cites,
             }
@@ -2119,8 +2160,8 @@ def build_assignment_answers(pkg: dict[str, Any]) -> dict[str, Any]:
                 "target_personas": (o.get("target_personas") or [])[:3],
                 "primary_metric": o.get("primary_metric"),
                 "kill_rule": o.get("kill_rule"),
-                "justification": (
-                    o.get("competitor_pattern") or o.get("experiment_hypothesis") or ""
+                "justification": _coerce_text(
+                    o.get("competitor_pattern") or o.get("experiment_hypothesis")
                 )[:240],
                 "citations": o_cites,
             }

@@ -139,6 +139,15 @@ class BaseTool(abc.ABC):
     max_live_retries: ClassVar[int] = 2
     retry_base_delay: ClassVar[float] = 0.5
 
+    # Per-tool boundary override (P0 item 3). A tool whose internal poll/retry
+    # budget can legitimately exceed the run-level ``ToolContext.tool_timeout_seconds``
+    # default (e.g. an async agent poller) declares its OWN budget + headroom
+    # here, so the boundary fires on that budget instead of killing every live
+    # call at the shared default. ``None`` = use the context default. Set high
+    # enough that the tool's own give-up logic returns a typed result BEFORE this
+    # boundary ever fires (otherwise every live call dies at the boundary).
+    TOOL_TIMEOUT_SECONDS: ClassVar[int | None] = None
+
     # ---- adapter surface -------------------------------------------------
 
     @abc.abstractmethod
@@ -380,9 +389,25 @@ class BaseTool(abc.ABC):
             return result
 
     async def _live_once(self, action: ResearchAction, context: ToolContext) -> ToolResult:
+        # A tool may declare its own boundary (its internal poll/retry budget +
+        # headroom) via TOOL_TIMEOUT_SECONDS; otherwise the run-level default.
+        timeout_seconds = (
+            self.TOOL_TIMEOUT_SECONDS
+            if self.TOOL_TIMEOUT_SECONDS is not None
+            else context.tool_timeout_seconds
+        )
         try:
-            async with asyncio.timeout(context.tool_timeout_seconds):
+            async with asyncio.timeout(timeout_seconds) as timeout_cm:
                 return await self._execute_live(action, context)
+        except TimeoutError as exc:
+            # asyncio.timeout raises TimeoutError. When IT fired (``expired()``)
+            # this is the boundary self-timeout: the tool blew its own budget.
+            # Retrying just burns another full budget on the same doomed call
+            # (the 3x amplification), so a boundary timeout is NON-RETRYABLE
+            # within the run. A TimeoutError that is NOT ours (a provider
+            # read/connect timeout surfacing raw) stays retryable, matching the
+            # other transient network errors below.
+            return self._failure(action, exc, retryable=not timeout_cm.expired())
         except _RETRYABLE_EXCEPTIONS as exc:
             return self._failure(action, exc, retryable=True)
         except Exception as exc:  # noqa: BLE001 - provider exceptions stop here

@@ -122,6 +122,15 @@ class ExaAgentTool(BaseTool):
     source_flag_name: ClassVar[str] = "exa_linkedin"
     ACTION_TYPES: ClassVar[tuple[str, ...]] = tuple(_SOURCE_TYPE_BY_ACTION)
 
+    # P0 item 3: the async agent poller can run far longer than the 60s run-level
+    # default (a live research_linkedin call died at the boundary 13/13 times).
+    # Its own give-up budget is the initial POST plus one poll-interval sleep per
+    # poll: _POST_TIMEOUT (30) + _MAX_POLLS (30) * _POLL_INTERVAL (4) = 150s.
+    # Boundary = that budget + ~40s headroom so the tool returns a typed
+    # agent_incomplete result before the boundary ever fires. Kept in sync with
+    # the poll constants by tests/unit/test_tool_timeout.py.
+    TOOL_TIMEOUT_SECONDS: ClassVar[int | None] = 190
+
     def capabilities(self) -> ToolCapabilities:
         return ToolCapabilities(
             live_available=True,

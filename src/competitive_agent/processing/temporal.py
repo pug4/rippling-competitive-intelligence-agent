@@ -183,6 +183,108 @@ def detect_candidate_changes(
     return candidates
 
 
+# Evidence-block bounds. The judge must see the actual stored text (not bare
+# artifact ids), but the prompt must stay bounded: at most this many artifacts
+# per window, each excerpted to this many chars, with any omission stated
+# honestly in the block itself.
+_EVIDENCE_MAX_ARTIFACTS = 8
+_EVIDENCE_EXCERPT_CHARS = 300
+
+
+def _artifact_date(artifact: Any) -> str:
+    """Real artifact date, matching synthesis.assign_window's ordering
+    (archive capture first, then publish date), falling back to retrieval time
+    for undated live content. Rendered as an ISO date, never fabricated."""
+    dated = (
+        getattr(artifact, "archive_capture_at", None)
+        or getattr(artifact, "published_at", None)
+        or getattr(artifact, "retrieved_at", None)
+    )
+    if dated is None:
+        return "undated"
+    try:
+        return dated.date().isoformat()
+    except AttributeError:
+        return str(dated)[:10]
+
+
+def _artifact_excerpt(artifact: Any, limit: int = _EVIDENCE_EXCERPT_CHARS) -> tuple[str, bool]:
+    """Whitespace-collapsed leading excerpt of the artifact's stored normalized
+    text (raw_text fallback). Returns (text, was_truncated)."""
+    text = getattr(artifact, "normalized_text", "") or getattr(artifact, "raw_text", "") or ""
+    text = " ".join(text.split())
+    if not text:
+        return "", False
+    if len(text) > limit:
+        return text[:limit].rstrip(), True
+    return text, False
+
+
+def _render_evidence_block(
+    artifact_ids: list[str],
+    artifacts: dict[str, Any],
+    *,
+    role_note: str | None = None,
+    max_artifacts: int = _EVIDENCE_MAX_ARTIFACTS,
+    excerpt_chars: int = _EVIDENCE_EXCERPT_CHARS,
+) -> str:
+    """Render an evidence window as titled, dated, excerpted lines the judge can
+    actually verify against — never bare ``- ART-xxx`` id lines. Bounded to
+    ``max_artifacts``; any omission or truncation is stated in the block."""
+    lines: list[str] = []
+    if role_note:
+        lines.append(role_note)
+    ids = list(dict.fromkeys(artifact_ids))  # de-dup ids, preserve order
+    shown = ids[:max_artifacts]
+    for aid in shown:
+        artifact = artifacts.get(aid)
+        if artifact is None:
+            lines.append(f"- {aid}: (artifact text not available in the store)")
+            continue
+        title = (getattr(artifact, "title", None) or "untitled").strip() or "untitled"
+        source_type = getattr(artifact, "source_type", None) or "unknown"
+        date = _artifact_date(artifact)
+        excerpt, truncated = _artifact_excerpt(artifact, excerpt_chars)
+        if excerpt:
+            suffix = " […truncated]" if truncated else ""
+            lines.append(f"- [{title}] ({source_type}, {date}): {excerpt}{suffix}")
+        else:
+            lines.append(f"- [{title}] ({source_type}, {date}): (no stored text for this artifact)")
+    remaining = len(ids) - len(shown)
+    if remaining > 0:
+        lines.append(
+            f"- (+{remaining} more artifact(s) in this window not shown, to bound prompt size)"
+        )
+    if not lines:
+        return "(no evidence artifacts available for this window)"
+    return "\n".join(lines)
+
+
+def _candidate_key(candidate: dict[str, Any]) -> tuple[str, str, str, str]:
+    """Identity of a candidate change for dedup: identical (dimension, theme,
+    prior_state, current_state) candidates are the same event and must not reach
+    the judge — or be emitted — twice (red-team: 5 literal duplicate bullets)."""
+    return (
+        str(candidate.get("dimension") or ""),
+        str(candidate.get("theme") or ""),
+        str(candidate.get("prior_state") or ""),
+        str(candidate.get("current_state") or ""),
+    )
+
+
+def _dedup_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collapse identical candidate changes, keeping first occurrence/order."""
+    seen: set[tuple[str, str, str, str]] = set()
+    out: list[dict[str, Any]] = []
+    for candidate in candidates:
+        key = _candidate_key(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(candidate)
+    return out
+
+
 async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeEvent]:
     repository = ctx.repository
     gateway = ctx.gateway
@@ -206,7 +308,9 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
         if window in by_window:
             by_window[window].append(c)
 
-    candidates = detect_candidate_changes(by_window)
+    # Dedup identical candidates BEFORE judging so the judge never scores — and
+    # the brief never renders — the same change twice (red-team dedup gap).
+    candidates = _dedup_candidates(detect_candidate_changes(by_window))
     if not candidates:
         if ctx.trace:
             ctx.trace.append(
@@ -226,6 +330,7 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
     )
 
     events: list[ChangeEvent] = []
+    emitted_keys: set[tuple[str, str, str, str]] = set()
     for candidate in candidates:
         if ctx.trace:
             ctx.trace.append(
@@ -237,11 +342,24 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
                 },
             )
         prompt = prompts.get(JUDGE_PROMPT_NAME)
+        # When prior ids are a window SAMPLE (theme absent there), say so — else
+        # the judge would read the absence of the theme in these excerpts as the
+        # change failing verification rather than as the prior baseline.
+        prior_role_note = None
+        if candidate.get("prior_evidence_role") == "window_sample":
+            prior_role_note = (
+                "NOTE: these are a representative sample of the prior-window "
+                "artifacts, shown to establish what the prior window looked like. "
+                "The emerging theme is NOT expected to appear in them — its absence "
+                "here IS the prior state."
+            )
         rendered = prompt.render(
             candidate_change=f"{candidate['dimension']}: '{candidate['prior_state']}' -> '{candidate['current_state']}'",
-            prior_evidence_block="\n".join(f"- {aid}" for aid in candidate["prior_artifact_ids"]),
-            current_evidence_block="\n".join(
-                f"- {aid}" for aid in candidate["current_artifact_ids"]
+            prior_evidence_block=_render_evidence_block(
+                candidate["prior_artifact_ids"], artifacts, role_note=prior_role_note
+            ),
+            current_evidence_block=_render_evidence_block(
+                candidate["current_artifact_ids"], artifacts
             ),
             coverage_context=coverage_context,
         )
@@ -308,6 +426,12 @@ async def build_change_events(run_id: str, state: Any, ctx: Any) -> list[ChangeE
                 verdict.alternative_explanations.insert(0, asym)
 
         coverage = verdict.coverage if verdict.coverage in ("high", "medium", "low") else "low"
+        # Belt-and-braces: even though candidates were deduped pre-judge, never
+        # emit two events for the same (dimension, theme, prior, current).
+        event_key = _candidate_key(candidate)
+        if event_key in emitted_keys:
+            continue
+        emitted_keys.add(event_key)
         events.append(
             ChangeEvent(
                 change_id=new_id("CHG"),
@@ -500,4 +624,23 @@ def reconcile_change_events(
         else:
             reconciled.append(ev)
     del art_by_id
-    return reconciled, notes
+
+    # Final dedup: this list is rendered verbatim into the brief's
+    # Strategy-over-time section (report.py loops it with no dedup). Two events
+    # that reconcile to the same (dimension, theme, prior_state, current_state)
+    # would print as identical bullets (red-team: 5 literal duplicates), so make
+    # the render input unique here regardless of how the mid-run corpus produced
+    # or persisted them.
+    deduped: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str, str, str]] = set()
+    for ev in reconciled:
+        key = _candidate_key(ev)
+        if key in seen_keys:
+            notes.append(
+                f"{ev.get('change_id')} ({ev.get('dimension')}): dropped — duplicate of an "
+                "already-rendered change (same dimension/theme/prior/current)"
+            )
+            continue
+        seen_keys.add(key)
+        deduped.append(ev)
+    return deduped, notes

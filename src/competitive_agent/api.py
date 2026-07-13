@@ -110,6 +110,28 @@ def _validate_windows(lookback_days: int | None, current_days: int | None) -> No
         )
 
 
+def _persist_run_failure(run_id: str | None) -> None:
+    """Best-effort: record a crashed run as 'failed' in the DB so the failure
+    survives a server restart (the in-memory _JOBS 'error' status does not).
+
+    In-graph node crashes are already checkpointed 'failed' by the graph's own
+    error handler; this covers failures OUTSIDE the graph loop (e.g. context
+    build, or a raise before the first checkpoint). It never clobbers a run that
+    already reached a terminal status — a genuine 'complete' stays 'complete',
+    and an already-recorded 'failed' is left untouched (its honest stop_reason
+    in state_json is preserved)."""
+    if not run_id:
+        return
+    try:
+        repo = _open_repo()
+        row = repo.get_run(run_id)
+        if row is None or row["status"] in _TERMINAL_STATUSES:
+            return
+        repo.update_run_state(run_id, status="failed")
+    except Exception:
+        pass  # recording a failure must never crash the server thread
+
+
 def _run_job(job_id: str, req: NewRunRequest) -> None:
     import asyncio
 
@@ -138,6 +160,7 @@ def _run_job(job_id: str, req: NewRunRequest) -> None:
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="done", run_id=state.run_id, stop_reason=state.stop_reason)
     except Exception as exc:  # surfaced to the UI, never crashes the server
+        _persist_run_failure(run_id)  # durable: survives a server restart
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
     finally:
@@ -173,6 +196,7 @@ def _resume_job(job_id: str, run_id: str) -> None:
         with _JOBS_LOCK:
             _JOBS[job_id].update(status=_job_end_status(state), stop_reason=state.stop_reason)
     except Exception as exc:  # surfaced to the UI, never crashes the server
+        _persist_run_failure(run_id)  # durable: survives a server restart
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
     finally:
@@ -211,6 +235,7 @@ def _research_job(
                 artifacts_added=artifacts_added,
             )
     except Exception as exc:  # surfaced to the UI, never crashes the server
+        _persist_run_failure(run_id)  # durable: survives a server restart
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
     finally:
@@ -277,6 +302,29 @@ def _inflight_rows(conn) -> list[dict[str, Any]]:
                json_extract(state_json, '$.pending_user_question') AS pending_user_question
         FROM runs
         WHERE status NOT IN ('complete', 'failed')
+        ORDER BY updated_at DESC
+        """
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def _failed_rows(conn) -> list[dict[str, Any]]:
+    """Runs the DB records as terminally 'failed' (a node crashed mid-run).
+
+    Surfaced so a crashed run is reported truthfully instead of vanishing: one
+    with a salvaged report (data.json on disk) is listed like a completed run
+    but flagged failed; one without a report is listed in the in-flight section
+    with live_status='failed'."""
+    rows = conn.execute(
+        """
+        SELECT run_id, company, mode, status, current_node, execution_mode,
+               created_at, updated_at,
+               json_extract(state_json, '$.compare_to')   AS compare_to,
+               json_extract(state_json, '$.iteration')    AS iteration,
+               json_extract(state_json, '$.focal_run_id') AS focal_run_id,
+               json_extract(state_json, '$.stop_reason')  AS stop_reason
+        FROM runs
+        WHERE status = 'failed'
         ORDER BY updated_at DESC
         """
     ).fetchall()
@@ -378,6 +426,9 @@ def list_jobs() -> list[dict[str, Any]]:
 @app.get("/api/runs")
 def list_runs() -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
+    # run_id -> its failed DB row; lets the disk block below flag a salvaged
+    # report as failed. Populated only if the DB is reachable.
+    failed_meta: dict[str, dict[str, Any]] = {}
     # 1) In-flight runs from the DATABASE — they survive page refreshes and
     #    server restarts even though no report exists yet. Mirror children of
     #    an in-flight parent are folded into the parent's live view.
@@ -405,6 +456,32 @@ def list_runs() -> list[dict[str, Any]]:
                     "updated_at": r.get("updated_at"),
                 }
             )
+        # 1b) Runs the DB records as FAILED (a node crashed mid-run). Truthful
+        #     reporting, everywhere: a failed run WITHOUT a report is listed in
+        #     the in-flight section with live_status='failed' (existing badge
+        #     classes render it); a failed run WITH a report is left to the disk
+        #     block below, which flags it via failed_meta.
+        for r in _failed_rows(repo.conn):
+            failed_meta[r["run_id"]] = r
+            if r["run_id"] in inflight_focal_ids:
+                continue  # internal mirror run — shown inside the parent
+            if (_runs_dir() / r["run_id"] / "data.json").exists():
+                continue  # salvaged report on disk; the disk block lists it
+            out.append(
+                {
+                    "run_id": r["run_id"],
+                    "company_input": r["company"],
+                    "compare_to": r.get("compare_to"),
+                    "mode": r["mode"],
+                    "execution_mode": r["execution_mode"],
+                    "in_progress": True,
+                    "live_status": "failed",
+                    "stop_reason": r.get("stop_reason"),
+                    "phase": _phase_label(r.get("current_node")),
+                    "iteration": r.get("iteration"),
+                    "updated_at": r.get("updated_at"),
+                }
+            )
     except Exception:
         pass  # a missing/locked DB must never hide the completed reports
     # 2) Completed reports from disk (unchanged source of truth for results).
@@ -421,20 +498,28 @@ def list_runs() -> list[dict[str, Any]]:
             continue
         run = pkg.get("run", {})
         scope = pkg.get("scope", {})
-        out.append(
-            {
-                "run_id": run.get("run_id", d.name),
-                "company_input": scope.get("company_input"),
-                "compare_to": scope.get("compare_to"),
-                "mode": run.get("mode"),
-                "execution_mode": run.get("execution_mode"),
-                "generated_at": run.get("generated_at"),
-                "stop_reason": run.get("stop_reason"),
-                "opportunities": len(pkg.get("opportunities", [])),
-                "proof_gaps": len(pkg.get("proof_gaps", [])),
-                "change_events": len(pkg.get("change_events", [])),
-            }
-        )
+        run_id = run.get("run_id", d.name)
+        entry = {
+            "run_id": run_id,
+            "company_input": scope.get("company_input"),
+            "compare_to": scope.get("compare_to"),
+            "mode": run.get("mode"),
+            "execution_mode": run.get("execution_mode"),
+            "generated_at": run.get("generated_at"),
+            "stop_reason": run.get("stop_reason"),
+            "opportunities": len(pkg.get("opportunities", [])),
+            "proof_gaps": len(pkg.get("proof_gaps", [])),
+            "change_events": len(pkg.get("change_events", [])),
+        }
+        # A run the DB records as failed but that has a salvaged report on disk:
+        # list it like a completed run (its honest error stop_reason is already
+        # in the package) but flag it failed so the UI never presents a crashed
+        # run as a clean completion. Additive keys only.
+        failed = failed_meta.get(run_id) or failed_meta.get(d.name)
+        if failed is not None:
+            entry["failed"] = True
+            entry["stop_reason"] = entry.get("stop_reason") or failed.get("stop_reason")
+        out.append(entry)
     return out
 
 

@@ -156,6 +156,13 @@ class SimilarwebTool(BaseTool):
 
     ACTION_TYPES: ClassVar[tuple[str, ...]] = _ACTION_TYPES
 
+    # P0 item 3: same async-poller boundary problem as exa_agent — this adapter
+    # only survived the 60s default because its runs happen to finish in ~20s.
+    # Its own poll budget is _TIMEOUT_SECONDS (30 POST) + _POLL_MAX_ATTEMPTS (40)
+    # * _POLL_DELAY_SECONDS (3) = 150s, so the boundary is raised to match it
+    # instead of racing the default. Kept honest by tests/unit/test_tool_timeout.py.
+    TOOL_TIMEOUT_SECONDS: ClassVar[int | None] = 150
+
     def capabilities(self) -> ToolCapabilities:
         return ToolCapabilities(
             live_available=True,

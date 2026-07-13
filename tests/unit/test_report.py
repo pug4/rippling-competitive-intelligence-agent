@@ -582,3 +582,96 @@ def test_assignment_section_empty_run_renders_honest_oneliners():
     assert "Campaign plays: none survived the critics on this run." in section
     # never an empty table: no table header without data rows
     assert "| Theme |" not in section and "| Their claim |" not in section
+
+
+def _iter_assignment_text_fields(answers):
+    """The free-text fields build_assignment_answers slices/formats from
+    untrusted classification/opportunity input — every one must be a plain str."""
+    q1 = answers["q1_messaging_themes"]
+    for row in q1["themes"]:
+        yield "q1.example_message", row["example_message"]
+    for row in q1["linkedin_amplification"]:
+        yield "q1.example_excerpt", row["example_excerpt"]
+    for row in answers["q2_product_positioning"]["villain_wording"]:
+        yield "q2.verbatim", row["verbatim"]
+    q4 = answers["q4_gaps_and_opportunities"]
+    for row in q4["message_proof_gaps"]:
+        yield "q4.their_claim", row["their_claim"]
+        yield "q4.gap_justification", row["justification"]
+    for row in q4["campaign_plays"]:
+        yield "q4.play_justification", row["justification"]
+
+
+def test_assignment_answers_coerce_dict_shaped_fields_no_crash():
+    """Regression (P0 item 1): a classifier/opportunity field arriving as a DICT
+    (or list) rather than a string must not crash build_assignment_answers on the
+    ``[:220]``/``[:180]`` slices (the live ``KeyError: slice(None, 220, None)``);
+    ``_coerce_text`` degrades it to clean text and the brief still renders."""
+    from competitive_agent.report import build_assignment_answers
+
+    s = _state()
+    pkg = _assignment_pkg(s)
+    cls = pkg["classifications"]
+    # primary_message as a wrapped object — the exact shape that crashed render.
+    cls[0]["primary_message"] = {"text": "Run payroll in 150 countries from one platform"}
+    # primary_message dict with no known text key -> compact-JSON fallback.
+    cls[1]["primary_message"] = {"promise": "Compliance built-in", "detail": "everywhere"}
+    # villain wording items as dicts.
+    cls[0]["villain_exact_wording"] = [{"label": "a patchwork of local providers"}]
+    # an OPPORTUNITY field as a dict.
+    pkg["opportunities"][0]["competitor_pattern"] = {
+        "statement": "unproven compliance claims repeated on 2 pages"
+    }
+    # a proof-gap claim text as a dict.
+    pkg["proof_gaps"][0]["claim_text"] = {"text": "Compliance built-in, 150 countries, zero risk"}
+
+    # 1) build must not raise; every emitted text field must be a plain str.
+    aa = build_assignment_answers(pkg)
+    for path, value in _iter_assignment_text_fields(aa):
+        assert isinstance(value, str), f"{path} not coerced to str: {value!r}"
+
+    # 2) coercion extracted the inner string, never leaving a dict/list.
+    themes = aa["q1_messaging_themes"]["themes"]
+    payroll = next(r for r in themes if r["theme"] == "global_payroll")
+    assert payroll["example_message"] == "Run payroll in 150 countries from one platform"
+    play = aa["q4_gaps_and_opportunities"]["campaign_plays"][0]
+    assert play["justification"] == "unproven compliance claims repeated on 2 pages"
+    verbatim = aa["q2_product_positioning"]["villain_wording"][0]["verbatim"]
+    assert verbatim == "a patchwork of local providers"
+    gap = aa["q4_gaps_and_opportunities"]["message_proof_gaps"][0]
+    assert gap["their_claim"] == "Compliance built-in, 150 countries, zero risk"
+    li = aa["q1_messaging_themes"]["linkedin_amplification"][0]
+    assert li["example_excerpt"] == "we just launched payroll in 150 countries"  # str passthrough
+    # no-known-key dict -> compact JSON (double-quoted), never a Python dict repr.
+    compliance = next(r for r in themes if r["theme"] == "compliance")
+    assert compliance["example_message"].startswith("{")
+    assert "'" not in compliance["example_message"]
+
+    # 3) citations survive and the brief still renders the deliverable section.
+    assert sum(len(r.get("citations", [])) for r in themes) >= 1
+    pkg["assignment_answers"] = aa
+    md = render_markdown(s, pkg)
+    section = _assignment_section(md)
+    assert "### 1. What messaging angles and themes are they running?" in section
+    assert "Run payroll in 150 countries from one platform" in section
+
+
+def test_coerce_text_branches():
+    """_coerce_text contract: str passthrough, dict text/label/statement lookup,
+    compact-JSON fallback, list join, None -> '', scalar -> str."""
+    from competitive_agent.report import _coerce_text
+
+    assert _coerce_text("plain") == "plain"
+    assert _coerce_text(None) == ""
+    assert _coerce_text({"text": "t"}) == "t"
+    assert _coerce_text({"label": "l"}) == "l"
+    assert _coerce_text({"statement": "s"}) == "s"
+    # first matching key wins in priority order text > label > statement
+    assert _coerce_text({"label": "l", "text": "t"}) == "t"
+    # non-string inner value is ignored -> compact JSON fallback (double-quoted)
+    dumped = _coerce_text({"text": {"nested": 1}, "x": 2})
+    assert dumped.startswith("{") and "'" not in dumped
+    # list -> coerced items joined by a space, empties dropped
+    assert _coerce_text(["a", {"text": "b"}, None, ""]) == "a b"
+    # scalar fallback
+    assert _coerce_text(7) == "7"
