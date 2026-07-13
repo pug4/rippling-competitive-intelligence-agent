@@ -865,15 +865,25 @@ def test_stance_attack_floor_rejects_three_page_outlier():
     # RemoFirst case: n=3, share 4% -> was attack, must now be investigate
     # with the floor stated in the why-text.
     overall, level, why = _stance(
-        "RemoFirst", "Rippling", "automation", "weak", "strong",
-        n_pages=3, theme_share=0.04,
+        "RemoFirst",
+        "Rippling",
+        "automation",
+        "weak",
+        "strong",
+        n_pages=3,
+        theme_share=0.04,
     )
     assert overall == "investigate" and level == "medium"
     assert "floor" in why and "3 page(s)" in why
     # Niche case still attacks: 2 pages at 16.7% share clears the SHARE floor.
     overall2, level2, _ = _stance(
-        "Niche", "Rippling", "global_payroll", "weak", "strong",
-        n_pages=2, theme_share=2 / 12,
+        "Niche",
+        "Rippling",
+        "global_payroll",
+        "weak",
+        "strong",
+        n_pages=2,
+        theme_share=2 / 12,
     )
     assert overall2 == "attack" and level2 == "high"
     # 5 pages clears the PAGE floor even at low share.
@@ -888,12 +898,14 @@ def test_competitor_cap_syncs_stance_verb():
 
     # Tiny competitor corpus (n=12 < 15): a would-be attack must downgrade BOTH
     # attackability AND the stance verb (the map colors by verb).
-    comp_cls = [
-        _mk_cls("comp", f"a{i}", "global_payroll") for i in range(12)
-    ]
+    comp_cls = [_mk_cls("comp", f"a{i}", "global_payroll") for i in range(12)]
     focal_cls = [
-        _mk_cls("focal", f"b{i}", "global_payroll",
-                proof=["quantified_customer_outcome", "named_customer_story"])
+        _mk_cls(
+            "focal",
+            f"b{i}",
+            "global_payroll",
+            proof=["quantified_customer_outcome", "named_customer_story"],
+        )
         for i in range(20)
     ]
     repo = _StubRepo({"comp": comp_cls, "focal": focal_cls})
@@ -930,18 +942,40 @@ def test_cep_hit_list_requires_both_sides_and_exports_unopposed():
         *[_cls_ig(f"b{i}", "compliance", ceps=["trigger_b"]) for i in range(4)],
     ]
     focal_cls = [
-        *[_cls_ig(f"fa{i}", "compliance", ceps=["trigger_a"],
-                  proofs=["certification_or_compliance_record"]) for i in range(6)],
-        *[_cls_ig(f"fb{i}", "compliance", ceps=["trigger_b"],
-                  proofs=["certification_or_compliance_record"]) for i in range(4)],
+        *[
+            _cls_ig(
+                f"fa{i}",
+                "compliance",
+                ceps=["trigger_a"],
+                proofs=["certification_or_compliance_record"],
+            )
+            for i in range(6)
+        ],
+        *[
+            _cls_ig(
+                f"fb{i}",
+                "compliance",
+                ceps=["trigger_b"],
+                proofs=["certification_or_compliance_record"],
+            )
+            for i in range(4)
+        ],
     ]
     ceps = [
         {"cep": "trigger_a", "ownership": "focal_owns", "competitor_pages": 0, "focal_pages": 6},
         {"cep": "trigger_b", "ownership": "contested", "competitor_pages": 4, "focal_pages": 4},
     ]
     ig = insight_graphics(
-        comp_cls, [_art(c.artifact_id) for c in comp_cls], focal_cls,
-        ceps, {}, {}, {}, {}, "Comp", "Rippling",
+        comp_cls,
+        [_art(c.artifact_id) for c in comp_cls],
+        focal_cls,
+        ceps,
+        {},
+        {},
+        {},
+        {},
+        "Comp",
+        "Rippling",
     )
     cvr = ig["claim_vs_record"]
     hit = {h["cep"] for h in cvr["cep_hit_list"]}
@@ -980,15 +1014,16 @@ def test_planner_skips_linkedin_when_disabled_for_run():
         focal_company = {}
 
     def run(disabled):
-        state = DirectorState(
-            run_id="RUN-li", company_input="x.com", disabled_sources=disabled
-        )
+        state = DirectorState(run_id="RUN-li", company_input="x.com", disabled_sources=disabled)
         from competitive_agent.schemas.common import utcnow as _now
         from competitive_agent.schemas.company import Company
 
         state.company = Company(
-            company_id="CO-x", canonical_name="X", primary_domain="x.com",
-            resolved_at=_now(), resolution_confidence="high",
+            company_id="CO-x",
+            canonical_name="X",
+            primary_domain="x.com",
+            resolved_at=_now(),
+            resolution_confidence="high",
         )
         ctx = GraphContext(repository=None, trace=None, config=_Cfg(), settings=None)
         props = propose_actions(state, ctx)

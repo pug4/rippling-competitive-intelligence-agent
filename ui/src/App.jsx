@@ -1869,7 +1869,16 @@ function ClaimsLedger({ pkg }) {
 function useJson(url, refresh) {
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
+  const lastUrl = React.useRef(null);
   useEffect(() => {
+    // Clear stale data when the URL actually changes (switching runs must
+    // never keep showing the previous run's package) — but NOT on a refresh
+    // bump of the same URL, which would flash the whole page empty.
+    if (lastUrl.current !== url) {
+      lastUrl.current = url;
+      setData(null);
+      setErr(null);
+    }
     if (!url) return;
     let cancelled = false;
     fetch(url)
@@ -1975,7 +1984,7 @@ function NewRunForm({ onSubmit, focalDefault }) {
   );
 }
 
-function JobsList({ jobs }) {
+function JobsList({ jobs, onSelect }) {
   if (!jobs || jobs.length === 0) return null;
   const active = jobs.filter((j) => j.status === "pending" || j.status === "running");
   const recent = jobs.filter((j) => j.status === "error").slice(0, 3);
@@ -1983,15 +1992,196 @@ function JobsList({ jobs }) {
   return (
     <div className="jobs">
       {active.map((j) => (
-        <div className="jobrow" key={j.job_id}>
+        <div
+          className={`jobrow ${j.run_id ? "clickable" : ""}`}
+          key={j.job_id}
+          onClick={() => j.run_id && onSelect && onSelect(j.run_id)}
+          data-tip={j.run_id ? "Click to watch this run live — pages, sources, and themes stream in as it works" : undefined}
+        >
           <span className="spinner" /> {j.company}{j.compare_to ? ` vs ${j.compare_to}` : ""}
-          <span className="jobmeta">{j.execution_mode} · {j.status}</span>
+          <span className="jobmeta">
+            {j.phase || `${j.execution_mode} · ${j.status}`}
+            {j.classified != null && j.artifacts != null ? ` · ${j.classified}/${j.artifacts} pages classified` : ""}
+          </span>
         </div>
       ))}
       {recent.map((j) => (
         <div className="jobrow err" key={j.job_id}>✕ {j.company} — {String(j.error).slice(0, 60)}</div>
       ))}
     </div>
+  );
+}
+
+/* ------------------------------ live run view ---------------------------- */
+
+const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u || ""; } };
+
+// Streaming progress panel for an in-flight (or interrupted) run. Polls the
+// cheap /live snapshot every 4s — pure DB reads server-side, no model calls —
+// so the corpus, source mix, and early themes visibly GROW while the agent
+// works. Auto-hands off to the full dashboard when the report lands.
+function LiveRunView({ runId, onReady, onJobStarted, onDismissed }) {
+  const [live, setLive] = useState(null);
+  const [err, setErr] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const readyFired = React.useRef(false);
+  useEffect(() => {
+    readyFired.current = false;
+    let stop = false;
+    const load = () =>
+      fetch(`/api/runs/${runId}/live`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
+        .then((d) => {
+          if (stop) return;
+          setLive(d); setErr(null);
+          if (d.report_ready && !readyFired.current) { readyFired.current = true; onReady && onReady(); }
+        })
+        .catch((e) => { if (!stop) setErr(String(e)); });
+    load();
+    const t = setInterval(load, 4000);
+    return () => { stop = true; clearInterval(t); };
+  }, [runId]);
+
+  const resume = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/runs/${runId}/resume`, { method: "POST" });
+      if (res.ok) {
+        const job = await res.json();
+        onJobStarted && onJobStarted(job);
+        setLive((l) => (l ? { ...l, status: "running" } : l));
+      } else {
+        const e = await res.json().catch(() => ({}));
+        alert("Could not resume: " + (e.detail || res.statusText));
+      }
+    } catch { alert("Could not reach the API — is `make api` running?"); }
+    setBusy(false);
+  };
+  const dismiss = async () => {
+    if (!window.confirm("Remove this run from the queue? Collected data is kept, but the run won't be resumed.")) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/runs/${runId}/dismiss`, { method: "POST" });
+      if (res.ok) { onDismissed && onDismissed(); }
+      else { const e = await res.json().catch(() => ({})); alert("Could not dismiss: " + (e.detail || res.statusText)); }
+    } catch { alert("Could not reach the API — is `make api` running?"); }
+    setBusy(false);
+  };
+
+  if (err && !live) return <p className="empty">Could not load live progress ({err}) — is `make api` running?</p>;
+  if (!live) return <p className="empty">Connecting to the run…</p>;
+
+  const c = live.counts || {};
+  const spend = live.spend || {};
+  const spent = (Number(spend.tool_usd) || 0) + (Number(spend.model_usd) || 0);
+  const running = live.status === "running";
+  const maxSrc = Math.max(1, ...(live.source_mix || []).map((s) => s.n));
+  const maxTheme = Math.max(1, ...(live.top_themes || []).map((t) => t.n));
+  return (
+    <>
+      <h1>
+        {live.company} {live.compare_to ? `vs ${live.compare_to}` : ""}{" "}
+        <span className={`badge ${live.execution_mode}`}>{live.execution_mode}</span>
+        <span className={`badge lv-${live.status}`}>
+          {running ? "in progress" : live.status === "needs_input" ? "needs input" : live.status === "complete" ? "finishing up" : "interrupted"}
+        </span>
+      </h1>
+
+      {live.status === "interrupted" && (
+        <div className="banner warn" role="note">
+          This run's worker stopped (most likely a server restart) — all progress below is saved.
+          Resume it from the last checkpoint; nothing already collected is re-fetched or re-paid for.
+          <span style={{ marginLeft: 10 }}>
+            <button className="lvbtn" disabled={busy} onClick={resume}>{busy ? "…" : "Resume run"}</button>
+            <button className="lvbtn ghost" disabled={busy} onClick={dismiss}>Dismiss</button>
+          </span>
+        </div>
+      )}
+      {live.status === "needs_input" && (
+        <div className="banner warn" role="note">
+          The agent paused with a question{live.pending_question ? `: “${live.pending_question}”` : "."}{" "}
+          Resuming continues with the company name as given.
+          <span style={{ marginLeft: 10 }}>
+            <button className="lvbtn" disabled={busy} onClick={resume}>{busy ? "…" : "Continue run"}</button>
+            <button className="lvbtn ghost" disabled={busy} onClick={dismiss}>Dismiss</button>
+          </span>
+        </div>
+      )}
+
+      <div className="card liveview">
+        <div className="title">
+          {running && <span className="livedot running" />}
+          {live.status === "complete" ? "Analysis finished — writing the report" : live.phase}
+          {live.iteration != null && <span className="lvcycle"> · research cycle {live.iteration}</span>}
+          <Info tip="What the agent is doing right now, from its latest checkpoint. This page refreshes itself every few seconds — safe to leave and come back, the run keeps going server-side even if you close the tab." />
+        </div>
+        <div className="lvpills">
+          <span className="lvpill" data-tip="Pages, posts, and records collected so far — every one becomes classified evidence or is disclosed as excluded">{c.artifacts ?? 0} sources collected</span>
+          <span className="lvpill" data-tip="Sources fully classified so far (themes, personas, funnel stage, proof, buying triggers)">{c.classified ?? 0} classified</span>
+          <span className="lvpill" data-tip="Verbatim quotes extracted and containment-verified against their source pages">{c.evidence_quotes ?? 0} verified quotes</span>
+          {spend.budget_usd != null && (
+            <span className="lvpill" data-tip="Model + tool spend so far vs this run's research budget — the run stops for an explainable reason, budget included">
+              ${spent.toFixed(2)} of ${Number(spend.budget_usd).toFixed(2)} budget
+            </span>
+          )}
+        </div>
+        {live.mirror && (
+          <div className="lvmirror" data-tip="The focal company runs through the SAME pipeline in an isolated run, so every 'them vs us' number uses symmetric methodology">
+            ↳ Focal mirror ({live.mirror.company}): {live.mirror.phase} — {live.mirror.counts?.artifacts ?? 0} sources, {live.mirror.counts?.classified ?? 0} classified
+          </div>
+        )}
+      </div>
+
+      <div className="lvgrid">
+        <div className="card">
+          <div className="title">Coming in now <Info tip="The most recently collected sources — newest first. Each will be individually classified and quote-verified." /></div>
+          {(live.latest_artifacts || []).length === 0 && <p className="empty">No sources yet — collection starts after planning.</p>}
+          {(live.latest_artifacts || []).map((a, i) => (
+            <div className="lvfeedrow" key={i}>
+              <span className={`lvsrc ${a.source_type}`}>{a.source_type}</span>
+              <a href={a.url} target="_blank" rel="noreferrer" className="lvfeedtitle" data-tip={a.url}>
+                {a.title || hostOf(a.url) || "untitled"}
+              </a>
+            </div>
+          ))}
+        </div>
+        <div className="card">
+          <div className="title">Source mix so far <Info tip="Where the corpus is coming from. A healthy run mixes current website pages with archived history, news, and posts — imbalances are disclosed in the final report." /></div>
+          {(live.source_mix || []).map((s) => (
+            <div className="lvbarrow" key={s.source}>
+              <span className="lvbarlabel">{s.source}</span>
+              <span className="lvbartrack"><span className="lvbarfill" style={{ width: `${(s.n / maxSrc) * 100}%` }} /></span>
+              <span className="lvbarn">{s.n}</span>
+            </div>
+          ))}
+          {(live.source_mix || []).length === 0 && <p className="empty">Nothing collected yet.</p>}
+        </div>
+        <div className="card">
+          <div className="title">Early themes <Info tip="Live counts of each page's primary message theme, straight from the classifier. An early read — the final report normalizes these for corpus size and reconciles them against the focal company before any verdict." /></div>
+          {(live.top_themes || []).map((t) => (
+            <div className="lvbarrow" key={t.theme}>
+              <span className="lvbarlabel">{String(t.theme).replace(/_/g, " ")}</span>
+              <span className="lvbartrack"><span className="lvbarfill theme" style={{ width: `${(t.n / maxTheme) * 100}%` }} /></span>
+              <span className="lvbarn">{t.n}</span>
+            </div>
+          ))}
+          {(live.top_themes || []).length === 0 && <p className="empty">Themes appear once classification starts.</p>}
+        </div>
+        <div className="card">
+          <div className="title">Recent activity <Info tip="The agent's own decision trace, humanized — every step, alternative, failure, and skip is recorded in trace.jsonl" /></div>
+          {(live.recent_activity || []).map((ev, i) => (
+            <div className="lvactrow" key={i}>
+              <span className="lvts">{String(ev.ts).slice(11, 19)}</span> {ev.text}
+            </div>
+          ))}
+          {(live.recent_activity || []).length === 0 && <p className="empty">Waiting for the first trace events…</p>}
+        </div>
+      </div>
+      <p className="empty" style={{ fontSize: 12 }}>
+        Live numbers are checkpoint-fresh, not final — the report recomputes everything deterministically
+        when the run finishes, and this page switches to it automatically.
+      </p>
+    </>
   );
 }
 
@@ -2008,9 +2198,12 @@ const TABS = [
 
 export default function App() {
   const [refresh, setRefresh] = useState(0);
+  // Separate refresh counter for the (potentially large) package fetch — it
+  // must NOT re-download on every 3s jobs tick, only when a report lands.
+  const [pkgRefresh, setPkgRefresh] = useState(0);
   const [runs] = useJson("/api/runs", refresh);
   const [selected, setSelected] = useState(null);
-  const [pkg] = useJson(selected ? `/api/runs/${selected}` : null);
+  const [pkg] = useJson(selected ? `/api/runs/${selected}` : null, pkgRefresh);
   const [jobs, setJobs] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [tab, setTab] = useState("overview");
@@ -2033,7 +2226,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const active = jobs.some((j) => j.status === "pending" || j.status === "running");
+    const active =
+      jobs.some((j) => j.status === "pending" || j.status === "running") ||
+      (runs || []).some((r) => r.in_progress && r.live_status === "running");
     if (!active) return;
     const t = setInterval(() => {
       fetch("/api/jobs")
@@ -2042,6 +2237,19 @@ export default function App() {
         .catch(() => {});
     }, 3000);
     return () => clearInterval(t);
+  }, [jobs, runs]);
+
+  // After submitting a run, jump to its live view as soon as the run_id
+  // lands in the job (one poll tick) — the user watches it start immediately.
+  const followJob = React.useRef(null);
+  useEffect(() => {
+    if (!followJob.current) return;
+    const j = jobs.find((x) => x.job_id === followJob.current);
+    if (j?.run_id) {
+      followJob.current = null;
+      setSelected(j.run_id);
+      setRefresh((n) => n + 1);
+    }
   }, [jobs]);
 
   const submitRun = async (form) => {
@@ -2053,6 +2261,7 @@ export default function App() {
       });
       if (res.ok) {
         const job = await res.json();
+        followJob.current = job.job_id;
         setJobs((prev) => [job, ...prev]);
       } else {
         const e = await res.json().catch(() => ({ detail: res.statusText }));
@@ -2066,6 +2275,8 @@ export default function App() {
   const focalDefault = (runs && runs.find((r) => r.compare_to)?.compare_to) || "rippling.com";
   const srcIdx = pkg ? themeSourceIndex(pkg) : {};
   const msgIdx = pkg ? buildMessagingIndexes(pkg) : {};
+  const selEntry = (runs || []).find((r) => r.run_id === selected);
+  const showLive = !pkg && selEntry?.in_progress;
 
   return (
     <div className={`app ${menuOpen ? "menu-open" : ""}`}>
@@ -2076,11 +2287,34 @@ export default function App() {
       <div className="sidebar">
         <h1>Competitive Intel</h1>
         <NewRunForm onSubmit={submitRun} focalDefault={focalDefault} />
-        <JobsList jobs={jobs} />
+        <JobsList jobs={jobs} onSelect={(rid) => { setSelected(rid); setMenuOpen(false); }} />
         <p className="meta" style={{ color: "var(--muted)", fontSize: 12, marginTop: 12 }}>Runs</p>
         {!runs && <p className="empty">Loading…</p>}
         {runs && runs.length === 0 && <p className="empty">No runs yet — add one above.</p>}
-        {(runs || []).map((r) => (
+        {(runs || []).map((r) => r.in_progress ? (
+          <div
+            key={r.run_id}
+            className={`runitem inprogress ${selected === r.run_id ? "active" : ""}`}
+            onClick={() => { setSelected(r.run_id); setMenuOpen(false); }}
+            data-tip={r.live_status === "running"
+              ? "Running now — click to watch pages, sources, and themes stream in. Progress survives page refreshes and server restarts."
+              : r.live_status === "needs_input"
+                ? "The agent paused with a question — click to answer or resume"
+                : "This run's worker stopped but its progress is saved — click to resume from the last checkpoint"}
+          >
+            <div className="co">
+              <span className={`livedot ${r.live_status}`} />
+              {r.company_input} {r.compare_to ? `vs ${r.compare_to}` : ""}
+            </div>
+            <div className="meta">
+              <span className={`badge ${r.execution_mode}`}>{r.execution_mode}</span>
+              <span className={`badge lv-${r.live_status}`}>
+                {r.live_status === "running" ? "in progress" : r.live_status === "needs_input" ? "needs input" : "interrupted"}
+              </span>
+            </div>
+            <div className="meta">{r.phase}{r.iteration != null ? ` · cycle ${r.iteration}` : ""}</div>
+          </div>
+        ) : (
           <div
             key={r.run_id}
             className={`runitem ${selected === r.run_id ? "active" : ""}`}
@@ -2096,7 +2330,18 @@ export default function App() {
         ))}
       </div>
       <div className="main">
-        {!pkg && <p className="empty">Select a run, or add a new analysis from the panel.</p>}
+        {showLive && (
+          <LiveRunView
+            key={selected}
+            runId={selected}
+            onReady={() => { setRefresh((n) => n + 1); setPkgRefresh((n) => n + 1); }}
+            onJobStarted={(job) => { setJobs((prev) => [job, ...prev]); setRefresh((n) => n + 1); }}
+            onDismissed={() => { setSelected(null); setRefresh((n) => n + 1); }}
+          />
+        )}
+        {!pkg && !showLive && (
+          <p className="empty">{selected ? "Loading the report…" : "Select a run, or add a new analysis from the panel."}</p>
+        )}
         {pkg && (
           <>
             <h1>

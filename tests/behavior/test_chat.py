@@ -143,3 +143,117 @@ def test_new_run_request_validates_window_params(isolated_env: Path):
     )
     assert bad.status_code == 400
     assert "current_days" in bad.json()["detail"]
+
+
+def test_live_progress_snapshot_and_runs_list_persistence(isolated_env: Path):
+    """A run is visible from the DB alone — refresh/restart-proof (user req).
+
+    /api/runs/{id}/live returns checkpointed progress (phase, counts, source
+    mix, latest sources) from pure DB/trace reads; /api/runs lists a run with
+    no data.json yet as in_progress with a derived live_status.
+    """
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.config import get_settings
+    from competitive_agent.runner import run_analysis
+    from competitive_agent.storage.repository import Repository
+
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    client = TestClient(app)
+
+    live = client.get(f"/api/runs/{state.run_id}/live")
+    assert live.status_code == 200
+    snap = live.json()
+    assert snap["status"] == "complete" and snap["report_ready"] is True
+    assert snap["phase"]  # humanized, never a raw node id with underscores
+    assert "_" not in snap["phase"]
+    assert snap["counts"]["artifacts"] > 0
+    assert snap["counts"]["classified"] > 0
+    assert isinstance(snap["source_mix"], list) and snap["source_mix"]
+    assert isinstance(snap["latest_artifacts"], list) and snap["latest_artifacts"]
+    assert all("url" in a and "source_type" in a for a in snap["latest_artifacts"])
+    assert isinstance(snap["recent_activity"], list)
+
+    assert client.get("/api/runs/RUN-nope/live").status_code == 404
+
+    # Simulate an interrupted run: flip the DB row back to running with a
+    # stale heartbeat and hide the report — the list must still show it.
+    repo = Repository.open(get_settings().db_path)
+    repo.conn.execute(
+        "UPDATE runs SET status='running', current_node='execute_action', "
+        "updated_at='2020-01-01T00:00:00+00:00' WHERE run_id=?",
+        (state.run_id,),
+    )
+    repo.conn.commit()
+    data = Path(get_settings().outputs_dir) / "runs" / state.run_id / "data.json"
+    hidden = data.rename(data.with_suffix(".hidden"))
+    try:
+        rows = client.get("/api/runs").json()
+        mine = next(r for r in rows if r["run_id"] == state.run_id)
+        assert mine["in_progress"] is True
+        assert mine["live_status"] == "interrupted"  # stale heartbeat, no thread
+        assert mine["phase"] == "Collecting sources"
+        snap2 = client.get(f"/api/runs/{state.run_id}/live").json()
+        assert snap2["status"] == "interrupted" and snap2["report_ready"] is False
+    finally:
+        hidden.rename(data)
+
+
+def test_resume_endpoint_guards_and_dismiss(isolated_env: Path):
+    """Resume 404s on unknown runs, 409s when a report exists; dismiss
+
+    marks an orphaned run failed so it leaves the queue (data retained)."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+    from competitive_agent.config import get_settings
+    from competitive_agent.runner import run_analysis
+    from competitive_agent.storage.repository import Repository
+
+    state = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    client = TestClient(app)
+
+    assert client.post("/api/runs/RUN-nope/resume").status_code == 404
+    # Completed run with a report on disk: nothing to resume.
+    assert client.post(f"/api/runs/{state.run_id}/resume").status_code == 409
+
+    # Orphan the run (no report, stale running row) and resume it for real:
+    # the job thread drives it from the checkpoint back to a finished report.
+    repo = Repository.open(get_settings().db_path)
+    repo.conn.execute(
+        "UPDATE runs SET status='running', current_node='assess_coverage' WHERE run_id=?",
+        (state.run_id,),
+    )
+    repo.conn.commit()
+    data = Path(get_settings().outputs_dir) / "runs" / state.run_id / "data.json"
+    data.unlink()
+    res = client.post(f"/api/runs/{state.run_id}/resume")
+    assert res.status_code == 200
+    job = res.json()
+    assert job["run_id"] == state.run_id and job["resumed"] is True
+    import time
+
+    for _ in range(200):  # fixture runs finish in seconds
+        jobs = {j["job_id"]: j for j in client.get("/api/jobs").json()}
+        if jobs[job["job_id"]]["status"] in ("done", "error"):
+            break
+        time.sleep(0.1)
+    assert jobs[job["job_id"]]["status"] == "done", jobs[job["job_id"]].get("error")
+    assert data.exists()  # the resumed run re-rendered its report
+
+    # Dismiss: only for runs nobody is driving; status flip only, data kept.
+    state2 = run_analysis("deel.com", mode="snapshot", execution_mode="fixture")
+    repo.conn.execute(
+        "UPDATE runs SET status='running', updated_at='2020-01-01T00:00:00+00:00' WHERE run_id=?",
+        (state2.run_id,),
+    )
+    repo.conn.commit()
+    assert client.post(f"/api/runs/{state2.run_id}/dismiss").json()["status"] == "failed"
+    assert repo.get_run(state2.run_id)["status"] == "failed"
+    n_artifacts = repo.conn.execute(
+        "SELECT COUNT(*) FROM artifacts WHERE run_id=?", (state2.run_id,)
+    ).fetchone()[0]
+    assert n_artifacts > 0  # dismiss never deletes collected evidence

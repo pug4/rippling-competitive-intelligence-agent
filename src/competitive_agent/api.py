@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import threading
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,11 +32,56 @@ app.add_middleware(
 
 # In-memory job tracker for UI-launched runs. A run is driven in a background
 # thread (fixture is seconds; live is minutes) so the request returns at once
-# and the UI polls /api/jobs + /api/runs.
+# and the UI polls /api/jobs + /api/runs. The DB is the durable record: a run
+# survives page refreshes AND server restarts, and an orphaned run (its thread
+# died with a restart) is derived as "interrupted" and can be resumed from its
+# last checkpoint via POST /api/runs/{run_id}/resume.
 _JOBS: dict[str, dict[str, Any]] = {}
 _JOBS_LOCK = threading.Lock()
+# run_ids currently driven by a thread in THIS process (mutated under _JOBS_LOCK).
+_ACTIVE_RUNS: set[str] = set()
 _ALLOWED_MODES = {"snapshot", "longitudinal", "comparative"}
 _ALLOWED_EXEC = {"fixture", "cached", "live"}
+# A run not driven by this process is still "running" if its DB checkpoint is
+# this fresh — covers CLI-driven runs sharing the same database.
+_HEARTBEAT_SECONDS = 240
+_TERMINAL_STATUSES = {"complete", "failed"}
+
+# Humanized node names for progress display — the UI never shows raw node ids.
+_PHASE_LABELS = {
+    "initialize_run": "Setting up the run",
+    "resolve_companies": "Identifying the companies",
+    "load_or_create_time_windows": "Setting the time windows",
+    "load_focal_state": "Loading the focal company",
+    "assess_coverage": "Assessing what we know so far",
+    "identify_unresolved_questions": "Listing open questions",
+    "propose_actions": "Planning the next research step",
+    "score_actions": "Scoring candidate research steps",
+    "select_next_action": "Choosing the next research step",
+    "execute_action": "Collecting sources",
+    "normalize_and_deduplicate": "Cleaning and de-duplicating pages",
+    "extract_and_classify": "Classifying pages",
+    "validate_evidence": "Verifying quotes against sources",
+    "update_coverage": "Updating coverage",
+    "refresh_claims": "Re-judging strategic claims",
+    "check_contradictions": "Checking for contradictions",
+    "verify_temporal_changes": "Verifying changes over time",
+    "build_matrices": "Building the comparison matrices",
+    "run_focal_mirror_check": "Running the focal-company mirror",
+    "generate_opportunities": "Drafting marketing plays",
+    "critique_opportunities": "Stress-testing the plays",
+    "decide_continue_or_stop": "Deciding whether to keep digging",
+    "render_outputs": "Writing the report",
+    "render_outputs_done": "Report written",
+    "await_followup": "Waiting for follow-up",
+    "awaiting_user": "Needs your input",
+    "process_feedback_or_retry": "Processing feedback",
+    "stopped": "Stopped",
+}
+
+
+def _phase_label(node: str | None) -> str:
+    return _PHASE_LABELS.get(node or "", (node or "working").replace("_", " "))
 
 
 class NewRunRequest(BaseModel):
@@ -65,12 +111,17 @@ def _validate_windows(lookback_days: int | None, current_days: int | None) -> No
 
 
 def _run_job(job_id: str, req: NewRunRequest) -> None:
-    from .runner import run_analysis
+    import asyncio
+
+    from .runner import create_run, drive
 
     with _JOBS_LOCK:
         _JOBS[job_id]["status"] = "running"
+    run_id: str | None = None
     try:
-        state = run_analysis(
+        # create_run first so the run_id lands in the job (and the DB) right
+        # away — the UI can attach its live view before the first page lands.
+        state, ctx = create_run(
             req.company,
             mode=req.mode,
             execution_mode=req.execution_mode,  # type: ignore[arg-type]
@@ -79,11 +130,35 @@ def _run_job(job_id: str, req: NewRunRequest) -> None:
             current_days=req.current_days,
             include_linkedin=req.include_linkedin,
         )
+        run_id = state.run_id
+        with _JOBS_LOCK:
+            _JOBS[job_id]["run_id"] = run_id
+            _ACTIVE_RUNS.add(run_id)
+        state = asyncio.run(drive(state, ctx))
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="done", run_id=state.run_id, stop_reason=state.stop_reason)
     except Exception as exc:  # surfaced to the UI, never crashes the server
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
+    finally:
+        if run_id:
+            with _JOBS_LOCK:
+                _ACTIVE_RUNS.discard(run_id)
+
+
+def _resume_job(job_id: str, run_id: str) -> None:
+    from .runner import resume_run
+
+    try:
+        state = resume_run(run_id)
+        with _JOBS_LOCK:
+            _JOBS[job_id].update(status="done", stop_reason=state.stop_reason)
+    except Exception as exc:  # surfaced to the UI, never crashes the server
+        with _JOBS_LOCK:
+            _JOBS[job_id].update(status="error", error=f"{type(exc).__name__}: {exc}")
+    finally:
+        with _JOBS_LOCK:
+            _ACTIVE_RUNS.discard(run_id)
 
 
 @app.post("/api/runs")
@@ -114,19 +189,168 @@ def create_run(req: NewRunRequest) -> dict[str, Any]:
     return snapshot
 
 
+def _runs_dir() -> Path:
+    return Path(get_settings().outputs_dir) / "runs"
+
+
+def _open_repo():
+    from .storage.repository import Repository
+
+    return Repository.open(get_settings().db_path)
+
+
+def _parse_ts(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _inflight_rows(conn) -> list[dict[str, Any]]:
+    """Non-terminal runs from the DB, with the state fields the UI needs."""
+    rows = conn.execute(
+        """
+        SELECT run_id, company, mode, status, current_node, execution_mode,
+               created_at, updated_at,
+               json_extract(state_json, '$.compare_to')            AS compare_to,
+               json_extract(state_json, '$.iteration')             AS iteration,
+               json_extract(state_json, '$.focal_run_id')          AS focal_run_id,
+               json_extract(state_json, '$.pending_user_question') AS pending_user_question
+        FROM runs
+        WHERE status NOT IN ('complete', 'failed')
+        ORDER BY updated_at DESC
+        """
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def _derive_live_status(row: dict[str, Any], active_or_child: set[str]) -> str:
+    """running | needs_input | interrupted — from thread ownership + heartbeat.
+
+    A run is "running" if a thread in this process drives it (or drives its
+    parent — the focal mirror is executed inside the parent's thread), or if
+    its DB checkpoint is fresh (a CLI process sharing the database). Otherwise
+    its thread is gone and it is resumable from the last checkpoint.
+    """
+    if (row.get("current_node") or "") == "awaiting_user":
+        return "needs_input"
+    if row["run_id"] in active_or_child:
+        return "running"
+    updated = _parse_ts(row.get("updated_at"))
+    if updated is not None and (utcnow() - updated).total_seconds() < _HEARTBEAT_SECONDS:
+        return "running"
+    return "interrupted"
+
+
+def _active_and_children(rows: list[dict[str, Any]]) -> set[str]:
+    with _JOBS_LOCK:
+        active = set(_ACTIVE_RUNS)
+    by_id = {r["run_id"]: r for r in rows}
+    for run_id in list(active):
+        focal = (by_id.get(run_id) or {}).get("focal_run_id")
+        if focal:
+            active.add(focal)
+    return active
+
+
+def _progress_counts(conn, run_id: str) -> dict[str, int]:
+    n_artifacts = conn.execute(
+        "SELECT COUNT(*) FROM artifacts WHERE run_id = ?", (run_id,)
+    ).fetchone()[0]
+    n_classified = conn.execute(
+        "SELECT COUNT(DISTINCT artifact_id) FROM classifications "
+        "WHERE run_id = ? AND family = 'message'",
+        (run_id,),
+    ).fetchone()[0]
+    n_quotes = conn.execute(
+        "SELECT COUNT(*) FROM classifications WHERE run_id = ? AND family = 'evidence'",
+        (run_id,),
+    ).fetchone()[0]
+    return {"artifacts": n_artifacts, "classified": n_classified, "evidence_quotes": n_quotes}
+
+
 @app.get("/api/jobs")
 def list_jobs() -> list[dict[str, Any]]:
     with _JOBS_LOCK:
-        return sorted(_JOBS.values(), key=lambda j: j["started_at"], reverse=True)[:20]
-
-
-def _runs_dir() -> Path:
-    return Path(get_settings().outputs_dir) / "runs"
+        jobs = [dict(j) for j in _JOBS.values()]
+    # Enrich in-flight jobs with checkpointed progress so the sidebar can say
+    # WHAT the run is doing, not just that it exists.
+    running = [j for j in jobs if j.get("status") == "running" and j.get("run_id")]
+    if running:
+        try:
+            repo = _open_repo()
+            for j in running:
+                row = repo.get_run(j["run_id"])
+                if row is None:
+                    continue
+                node = row["current_node"]
+                phase = _phase_label(node)
+                iteration = None
+                counts_run = j["run_id"]
+                if node == "run_focal_mirror_check":
+                    # The parent is blocked while the mirror drives — show the
+                    # mirror's progress, which is what is actually happening.
+                    focal_id = repo.conn.execute(
+                        "SELECT json_extract(state_json, '$.focal_run_id') FROM runs "
+                        "WHERE run_id = ?",
+                        (j["run_id"],),
+                    ).fetchone()[0]
+                    if focal_id:
+                        mirror = repo.get_run(focal_id)
+                        if mirror is not None:
+                            phase = f"Mirror: {_phase_label(mirror['current_node'])}"
+                            counts_run = focal_id
+                iter_row = repo.conn.execute(
+                    "SELECT json_extract(state_json, '$.iteration') FROM runs WHERE run_id = ?",
+                    (j["run_id"],),
+                ).fetchone()
+                iteration = iter_row[0] if iter_row else None
+                j.update(
+                    phase=phase, iteration=iteration, **_progress_counts(repo.conn, counts_run)
+                )
+        except Exception:
+            pass  # enrichment is best-effort; the raw job rows still render
+    by_id = {j["job_id"]: j for j in jobs}
+    for j in running:
+        by_id[j["job_id"]] = j
+    return sorted(by_id.values(), key=lambda j: j["started_at"], reverse=True)[:20]
 
 
 @app.get("/api/runs")
 def list_runs() -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
+    # 1) In-flight runs from the DATABASE — they survive page refreshes and
+    #    server restarts even though no report exists yet. Mirror children of
+    #    an in-flight parent are folded into the parent's live view.
+    try:
+        repo = _open_repo()
+        rows = _inflight_rows(repo.conn)
+        active = _active_and_children(rows)
+        inflight_focal_ids = {r["focal_run_id"] for r in rows if r.get("focal_run_id")}
+        for r in rows:
+            if r["run_id"] in inflight_focal_ids:
+                continue  # internal mirror run — shown inside the parent
+            if (_runs_dir() / r["run_id"] / "data.json").exists():
+                continue  # report already on disk; the block below lists it
+            out.append(
+                {
+                    "run_id": r["run_id"],
+                    "company_input": r["company"],
+                    "compare_to": r.get("compare_to"),
+                    "mode": r["mode"],
+                    "execution_mode": r["execution_mode"],
+                    "in_progress": True,
+                    "live_status": _derive_live_status(r, active),
+                    "phase": _phase_label(r.get("current_node")),
+                    "iteration": r.get("iteration"),
+                    "updated_at": r.get("updated_at"),
+                }
+            )
+    except Exception:
+        pass  # a missing/locked DB must never hide the completed reports
+    # 2) Completed reports from disk (unchanged source of truth for results).
     runs = _runs_dir()
     if not runs.exists():
         return out
@@ -163,6 +387,216 @@ def get_run(run_id: str) -> dict[str, Any]:
     if not data.exists():
         raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
     return json.loads(data.read_text())
+
+
+def _humanize_trace_tail(run_id: str, limit: int = 8) -> list[dict[str, str]]:
+    """Last few trace events as plain-language activity lines (newest first)."""
+    trace = _runs_dir() / run_id / "trace.jsonl"
+    if not trace.exists():
+        return []
+    try:
+        lines = trace.read_text().splitlines()[-250:]
+    except OSError:
+        return []
+    out: list[dict[str, str]] = []
+    for line in reversed(lines):
+        if len(out) >= limit:
+            break
+        try:
+            ev = json.loads(line)
+        except Exception:
+            continue
+        etype = ev.get("event_type")
+        p = ev.get("payload") or {}
+        text: str | None = None
+        if etype == "action_selected":
+            text = f"Chose next step: {p.get('action_type', '?')} via {p.get('source', '?')}"
+        elif etype == "tool_completed":
+            n = p.get("artifact_count")
+            status = p.get("status", "done")
+            text = f"{p.get('tool_name', 'tool')}: {status}" + (
+                f" — {n} item(s) collected" if n is not None else ""
+            )
+        elif etype == "tool_failed":
+            text = f"{p.get('tool_name', 'tool')} failed — recorded, moving on"
+        elif etype == "classification_completed":
+            text = f"Classified {p.get('url') or p.get('artifact_id', 'a page')}"
+        elif etype == "evidence_extracted":
+            text = f"Extracted {p.get('evidence_items', '?')} verbatim quotes"
+        elif etype == "coverage_assessed":
+            text = "Assessed coverage across dimensions"
+        elif etype == "source_skipped":
+            text = f"Skipped a source: {p.get('source', p.get('reason', ''))}".strip()
+        elif etype == "temporal_change_verified":
+            text = "Verified a change-over-time candidate"
+        elif etype == "company_pipeline_created":
+            text = "Started the focal-company mirror analysis"
+        elif etype == "stop_selected":
+            text = f"Stopping: {p.get('reason', 'done')}"
+        if text:
+            out.append({"ts": ev.get("ts", ""), "text": text})
+    return out
+
+
+def _live_snapshot(repo, run_id: str, *, include_mirror: bool = True) -> dict[str, Any]:
+    row = repo.get_run(run_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    conn = repo.conn
+    st = conn.execute(
+        """
+        SELECT json_extract(state_json, '$.iteration')             AS iteration,
+               json_extract(state_json, '$.compare_to')            AS compare_to,
+               json_extract(state_json, '$.focal_run_id')          AS focal_run_id,
+               json_extract(state_json, '$.pending_user_question') AS pending_user_question,
+               json_extract(state_json, '$.spent_usd')             AS spent_usd,
+               json_extract(state_json, '$.model_cost_usd')        AS model_cost_usd,
+               json_extract(state_json, '$.budget_usd')            AS budget_usd,
+               json_extract(state_json, '$.stop_reason')           AS stop_reason
+        FROM runs WHERE run_id = ?
+        """,
+        (run_id,),
+    ).fetchone()
+    st = dict(st) if st is not None else {}
+    if row["status"] in _TERMINAL_STATUSES:
+        live_status = row["status"] if row["status"] == "failed" else "complete"
+    else:
+        rows = _inflight_rows(conn)
+        live_status = _derive_live_status(
+            {
+                "run_id": run_id,
+                "current_node": row["current_node"],
+                "updated_at": row["updated_at"],
+            },
+            _active_and_children(rows),
+        )
+    source_mix = [
+        {"source": r[0] or "unknown", "n": r[1]}
+        for r in conn.execute(
+            "SELECT source_type, COUNT(*) FROM artifacts WHERE run_id = ? "
+            "GROUP BY source_type ORDER BY 2 DESC",
+            (run_id,),
+        ).fetchall()
+    ]
+    top_themes = [
+        {"theme": r[0], "n": r[1]}
+        for r in conn.execute(
+            "SELECT json_extract(payload_json, '$.primary_theme') AS t, COUNT(*) "
+            "FROM classifications WHERE run_id = ? AND family = 'message' "
+            "GROUP BY t ORDER BY 2 DESC LIMIT 8",
+            (run_id,),
+        ).fetchall()
+        if r[0]
+    ]
+    latest = [
+        {
+            "url": r[0],
+            "title": r[1],
+            "source_type": r[2] or "unknown",
+            "created_at": r[3],
+        }
+        for r in conn.execute(
+            "SELECT url, json_extract(payload_json, '$.title'), source_type, created_at "
+            "FROM artifacts WHERE run_id = ? ORDER BY created_at DESC LIMIT 8",
+            (run_id,),
+        ).fetchall()
+    ]
+    snap: dict[str, Any] = {
+        "run_id": run_id,
+        "company": row["company"],
+        "compare_to": st.get("compare_to"),
+        "mode": row["mode"],
+        "execution_mode": row["execution_mode"],
+        "status": live_status,
+        "current_node": row["current_node"],
+        "phase": _phase_label(row["current_node"]),
+        "iteration": st.get("iteration"),
+        "updated_at": row["updated_at"],
+        "created_at": row["created_at"],
+        "pending_question": st.get("pending_user_question"),
+        "spend": {
+            "tool_usd": st.get("spent_usd"),
+            "model_usd": st.get("model_cost_usd"),
+            "budget_usd": st.get("budget_usd"),
+        },
+        "counts": _progress_counts(conn, run_id),
+        "source_mix": source_mix,
+        "top_themes": top_themes,
+        "latest_artifacts": latest,
+        "recent_activity": _humanize_trace_tail(run_id),
+        "report_ready": (_runs_dir() / run_id / "data.json").exists(),
+        "mirror": None,
+    }
+    focal_id = st.get("focal_run_id")
+    if include_mirror and focal_id and repo.get_run(focal_id) is not None:
+        mirror = _live_snapshot(repo, focal_id, include_mirror=False)
+        # Only surface the mirror while it is itself in flight — once done it
+        # is an internal detail of the parent's report.
+        if mirror["status"] in ("running", "interrupted", "needs_input"):
+            snap["mirror"] = mirror
+    return snap
+
+
+@app.get("/api/runs/{run_id}/live")
+def get_live(run_id: str) -> dict[str, Any]:
+    """Cheap progress snapshot of an in-flight run — pure DB/trace reads.
+
+    The UI polls this every few seconds while a run works, so users watch the
+    corpus, source mix, and early themes GROW instead of staring at a spinner.
+    No LLM calls, no writes; numbers are checkpoint-fresh, not final — the
+    report's deterministic render remains the source of truth.
+    """
+    return _live_snapshot(_open_repo(), run_id)
+
+
+@app.post("/api/runs/{run_id}/resume")
+def resume_run_endpoint(run_id: str) -> dict[str, Any]:
+    """Resume an interrupted run from its last checkpoint in a background job."""
+    repo = _open_repo()
+    row = repo.get_run(run_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    if (_runs_dir() / run_id / "data.json").exists():
+        raise HTTPException(status_code=409, detail="run already has a report")
+    with _JOBS_LOCK:
+        if run_id in _ACTIVE_RUNS:
+            raise HTTPException(status_code=409, detail="run is already being driven")
+        job_id = "job-" + uuid.uuid4().hex[:12]
+        _JOBS[job_id] = {
+            "job_id": job_id,
+            "company": row["company"],
+            "compare_to": None,
+            "mode": row["mode"],
+            "execution_mode": row["execution_mode"],
+            "status": "running",
+            "run_id": run_id,
+            "resumed": True,
+            "started_at": utcnow().isoformat(),
+        }
+        _ACTIVE_RUNS.add(run_id)
+        snapshot = dict(_JOBS[job_id])
+    threading.Thread(target=_resume_job, args=(job_id, run_id), daemon=True).start()
+    return snapshot
+
+
+@app.post("/api/runs/{run_id}/dismiss")
+def dismiss_run(run_id: str) -> dict[str, Any]:
+    """Mark an interrupted/stuck run as failed so it leaves the queue.
+
+    Refused while a thread is driving the run. Reversible in the DB (status
+    field only); collected artifacts and the trace are never deleted.
+    """
+    repo = _open_repo()
+    row = repo.get_run(run_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
+    with _JOBS_LOCK:
+        if run_id in _ACTIVE_RUNS:
+            raise HTTPException(status_code=409, detail="run is actively being driven")
+    if row["status"] in _TERMINAL_STATUSES:
+        return {"run_id": run_id, "status": row["status"]}
+    repo.update_run_state(run_id, status="failed")
+    return {"run_id": run_id, "status": "failed"}
 
 
 class ChatRequest(BaseModel):

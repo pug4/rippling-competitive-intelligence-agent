@@ -151,6 +151,17 @@ def resume_run(run_id: str) -> DirectorState:
     ctx = _build_context(run_id, execution_mode=execution_mode)
     state = load_state(ctx.repository, run_id)
     state.pending_user_question = None
-    if state.current_node in ("awaiting_user", "render_outputs_done", "stopped"):
-        state.current_node = "assess_coverage"
+    if state.current_node in ("awaiting_user", "stopped"):
+        # A run paused before company resolution must re-resolve, not jump
+        # into coverage with company=None (it re-asks if still ambiguous).
+        state.current_node = "assess_coverage" if state.company else "resolve_companies"
+        # The graph loop exits immediately while is_complete is set — clear it
+        # so the resumed run actually continues (it re-decides its own stop).
+        state.is_complete = False
+    elif state.is_complete or state.current_node == "render_outputs_done":
+        # Research already concluded, or the run died between the stop
+        # decision and the report write: replay only the deterministic render
+        # so the report lands. Idempotent — reads stored data only.
+        state.current_node = "render_outputs"
+        state.is_complete = False
     return asyncio.run(drive(state, ctx))
