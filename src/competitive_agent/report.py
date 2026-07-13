@@ -1145,11 +1145,15 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
                 f"defend what {focal} owns**"
             )
         if gaps:
-            _atk_action = (
-                "start where they claim what they can't prove"
-                if _verbs["attack"]
-                else "no clean attack this run — build proof on the INVESTIGATE list first"
-            )
+            if _verbs["attack"]:
+                _atk_action = "start where they claim what they can't prove"
+            elif _verbs["investigate"]:
+                _atk_action = "no clean attack this run — build proof on the INVESTIGATE list first"
+            else:
+                _atk_action = (
+                    "no proof-gap openings this run — out-prove or reframe "
+                    "(they prove the claims they repeat)"
+                )
             add(
                 f"- **Attack surface ({len(gaps)} repeated claims):** {_verbs['attack']} ATTACK · "
                 f"{_verbs['investigate']} INVESTIGATE · {_verbs['reframe']} AVOID/REFRAME → "

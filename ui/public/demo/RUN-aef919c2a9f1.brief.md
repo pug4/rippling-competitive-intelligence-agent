@@ -1,6 +1,6 @@
 # Competitive Marketing Intelligence Brief — Deel
 
-*Run `RUN-aef919c2a9f1` · mode `comparative` · execution `live` · generated 2026-07-13T21:23:57.382910+00:00*
+*Run `RUN-aef919c2a9f1` · mode `comparative` · execution `live` · generated 2026-07-13T21:57:11.937087+00:00*
 
 ## Executive summary
 
@@ -25,7 +25,7 @@ _Inferred from a sample of Deel's observed themes/messages — a positioning rea
 ### Scorecard
 
 - **Search intents (19):** 4 Deel-owned · 5 contested · 4 Rippling-owned · 6 too thin to call → **target the contested set; defend what Rippling owns**
-- **Attack surface (6 repeated claims):** 0 ATTACK · 0 INVESTIGATE · 6 AVOID/REFRAME → **no clean attack this run — build proof on the INVESTIGATE list first**
+- **Attack surface (6 repeated claims):** 0 ATTACK · 0 INVESTIGATE · 6 AVOID/REFRAME → **no proof-gap openings this run — out-prove or reframe (they prove the claims they repeat)**
 - **Theme momentum:** 0 emerging · 5 expanding · 16 stable → **counter the moving themes before they harden**
 
 ## The assignment deliverable — four questions, answered from the evidence
