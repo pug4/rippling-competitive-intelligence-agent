@@ -1,0 +1,29 @@
+# Render blueprint for the hosted public-demo backend.
+#
+# Deploys the FastAPI app (competitive_agent.api:app) from the repo-root
+# Dockerfile. The public demo is READ-ONLY: DEMO_PUBLIC=1 makes every expensive
+# live-analysis POST return a friendly 403, so the public can browse the three
+# bundled demo runs and chat/ask-AI against them WITHOUT spending the owner's
+# provider keys. The three API keys are declared here as `sync: false` secrets —
+# Render prompts the owner to set their real values in the dashboard (they are
+# never committed to the repo). A Vercel-hosted UI points at this service's URL.
+services:
+  - type: web
+    name: competitive-campaign-agent-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      # Engage the read-only public-demo gate for the hosted instance.
+      - key: DEMO_PUBLIC
+        value: "1"
+      # Provider secrets — owner sets the real values in the Render dashboard.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: EXA_API_KEY
+        sync: false
+      - key: SERPAPI_API_KEY
+        sync: false

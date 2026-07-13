@@ -1071,3 +1071,116 @@ def test_chat_response_spawn_run_defaults_none_and_fixture_validates(isolated_en
     fixture_path = Path(get_settings().fixtures_dir) / "model" / "analysis_chat" / "default.json"
     resp = ChatResponse.model_validate(_json.loads(fixture_path.read_text()))
     assert resp.spawn_run is None
+
+
+# ---------------------------------------------------------------------------
+# Hosted public-demo gate (DEMO_PUBLIC): the backend can be hosted so a Vercel
+# UI chats/browses against it, WITHOUT letting the public trigger the ~$7 live
+# analyses that spend the owner's keys. Expensive POSTs 403; reads + chat +
+# ask-AI stay live. Env is toggled hermetically via setenv (never delenv).
+# ---------------------------------------------------------------------------
+
+
+def test_health_endpoint_reports_ok(isolated_env: Path, monkeypatch):
+    """GET /api/health is the host liveness probe and reports the gate state."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+
+    client = TestClient(app)
+
+    monkeypatch.setenv("DEMO_PUBLIC", "")  # hermetic: gate OFF
+    r = client.get("/api/health")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["demo_public"] is False
+
+    monkeypatch.setenv("DEMO_PUBLIC", "1")  # gate ON
+    body2 = client.get("/api/health").json()
+    assert body2["status"] == "ok"
+    assert body2["demo_public"] is True
+
+
+def test_demo_public_gate_blocks_expensive_writes_but_keeps_reads_and_chat_live(
+    isolated_env: Path, monkeypatch
+):
+    """With DEMO_PUBLIC on, the expensive live-analysis POSTs (new run / spawn /
+    research) return a friendly 403, while GET /api/runs and POST chat stay
+    fully live against the already-collected fixture run."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import _DEMO_BLOCK_DETAIL, app
+    from competitive_agent.runner import run_analysis
+
+    # A REAL fixture run exists BEFORE the gate is engaged — the demo corpus the
+    # public browses and chats against (no live analysis needed to serve it).
+    state = run_analysis(
+        "deel.com", mode="comparative", execution_mode="fixture", compare_to="rippling.com"
+    )
+    client = TestClient(app)
+
+    monkeypatch.setenv("DEMO_PUBLIC", "1")  # engage the hosted public-demo gate
+
+    # 1) New run is refused with the exact friendly 403 detail — and no
+    #    background job is started (the gate raises before any work).
+    r_new = client.post("/api/runs", json={"company": "gusto.com", "execution_mode": "fixture"})
+    assert r_new.status_code == 403
+    assert r_new.json()["detail"] == _DEMO_BLOCK_DETAIL
+
+    # 2) Deeper in-place research on an existing run is refused (even with a
+    #    valid body / real run_id — the gate fires first).
+    r_research = client.post(
+        f"/api/runs/{state.run_id}/research",
+        json={"focus": "How do they position?", "sources": ["web"]},
+    )
+    assert r_research.status_code == 403
+    assert r_research.json()["detail"] == _DEMO_BLOCK_DETAIL
+
+    # 3) Spawning a new run for a different company is refused.
+    r_spawn = client.post(f"/api/runs/{state.run_id}/spawn", json={"company": "gusto.com"})
+    assert r_spawn.status_code == 403
+    assert r_spawn.json()["detail"] == _DEMO_BLOCK_DETAIL
+
+    # Paid-search and product-focus drafts (bounded model calls) are refused too.
+    assert (
+        client.post(
+            f"/api/runs/{state.run_id}/paid-search", json={"execution_mode": "fixture"}
+        ).status_code
+        == 403
+    )
+    assert (
+        client.post(
+            f"/api/runs/{state.run_id}/product-focus", json={"execution_mode": "fixture"}
+        ).status_code
+        == 403
+    )
+
+    # LIVE in demo mode: browsing the runs list still works and lists the run.
+    r_list = client.get("/api/runs")
+    assert r_list.status_code == 200
+    assert any(e.get("run_id") == state.run_id for e in r_list.json())
+
+    # LIVE in demo mode: the grounded chat still answers from stored findings.
+    r_chat = client.post(
+        f"/api/runs/{state.run_id}/chat",
+        json={"question": "What changed recently?", "execution_mode": "fixture"},
+    )
+    assert r_chat.status_code == 200
+    assert r_chat.json()["answer"]
+
+
+def test_demo_public_off_allows_new_run(isolated_env: Path, monkeypatch):
+    """Guard: with DEMO_PUBLIC unset (hermetically forced empty), POST /api/runs
+    behaves exactly as before — the gate is a no-op when off."""
+    from fastapi.testclient import TestClient
+
+    from competitive_agent.api import app
+
+    monkeypatch.setenv("DEMO_PUBLIC", "")  # hermetic: gate OFF (never delenv)
+    client = TestClient(app)
+    r = client.post("/api/runs", json={"company": "gusto.com", "execution_mode": "fixture"})
+    assert r.status_code == 200
+    job = r.json()
+    assert job["job_id"] and job["company"] == "gusto.com"
+    assert job["status"] == "pending"

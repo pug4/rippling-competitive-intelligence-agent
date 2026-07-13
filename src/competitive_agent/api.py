@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .config import get_settings
+from .config import get_settings, secret_from_env_or_settings
 from .schemas.common import utcnow
 
 app = FastAPI(title="Competitive Marketing Intelligence Director", version="0.1.0")
@@ -82,6 +82,48 @@ _PHASE_LABELS = {
 
 def _phase_label(node: str | None) -> str:
     return _PHASE_LABELS.get(node or "", (node or "working").replace("_", " "))
+
+
+# ---------------------------------------------------------------------------
+# Public-demo gate (§ hosted demo). DEMO_PUBLIC lets the backend be safely
+# HOSTED so a Vercel UI can chat/browse against it, WITHOUT letting the public
+# trigger the ~$7 live analyses that spend the owner's provider keys. When the
+# gate is on, the expensive POST endpoints (new run / spawn / research /
+# paid-search / product-focus) return a friendly 403; every cheap read, chat,
+# ask-AI, and the deterministic rewindow stay live. When it is off (the default,
+# and always locally), behavior is unchanged.
+# ---------------------------------------------------------------------------
+_DEMO_BLOCK_DETAIL = (
+    "Live analysis is disabled in the hosted public demo — clone the repo and "
+    "run locally (make api) to trigger new runs. Chat, Ask-AI, and browsing are live."
+)
+_DEMO_TRUTHY = {"1", "true", "yes", "on"}
+
+
+def _demo_public_enabled() -> bool:
+    """True when DEMO_PUBLIC is set to a truthy value ("1"/"true"/"yes"/"on").
+
+    Read at request time (never cached at import) so the container's env var
+    governs the gate; the process environment wins over .env/settings via
+    secret_from_env_or_settings, and a present-but-empty value reads as off.
+    """
+    return secret_from_env_or_settings("DEMO_PUBLIC").strip().lower() in _DEMO_TRUTHY
+
+
+def _demo_block() -> None:
+    """Refuse an expensive live-analysis endpoint while the public-demo gate is
+    on. A no-op (endpoint runs unchanged) when DEMO_PUBLIC is off."""
+    if _demo_public_enabled():
+        raise HTTPException(status_code=403, detail=_DEMO_BLOCK_DETAIL)
+
+
+@app.get("/api/health")
+def health() -> dict[str, Any]:
+    """Liveness probe for the host (Render/Railway healthCheckPath).
+
+    Also reports whether the public-demo gate is engaged so an operator can
+    confirm the hosted instance is in read-only demo mode."""
+    return {"status": "ok", "demo_public": _demo_public_enabled()}
 
 
 class NewRunRequest(BaseModel):
@@ -245,6 +287,7 @@ def _research_job(
 
 @app.post("/api/runs")
 def create_run(req: NewRunRequest) -> dict[str, Any]:
+    _demo_block()  # expensive live analysis — refused in the hosted public demo
     company = (req.company or "").strip()
     if not company:
         raise HTTPException(status_code=400, detail="company is required")
@@ -291,6 +334,7 @@ def spawn_run(run_id: str, req: SpawnBody) -> dict[str, Any]:
     400 on missing company. Returns the new job (job_id now; run_id once the
     background thread has created the run).
     """
+    _demo_block()  # expensive live analysis — refused in the hosted public demo
     repo = _open_repo()
     parent = repo.get_run(run_id)
     if parent is None:
@@ -799,6 +843,7 @@ def research_endpoint(run_id: str, req: ResearchBody) -> dict[str, Any]:
     job; new artifacts append to the run and its report is rewritten in place.
     The existing jobs poller + /live endpoint stream progress to the UI.
     """
+    _demo_block()  # expensive live analysis — refused in the hosted public demo
     from .conversation import expand_sources
 
     if not (req.focus or "").strip():
@@ -1074,6 +1119,7 @@ async def draft_paid_search(run_id: str, req: PaidSearchRequest) -> dict[str, An
     never estimated (not publicly knowable) and every cluster ships with
     validate-before-spend forced on. Cached — repeats are free unless force.
     """
+    _demo_block()  # bounded model call spends the owner's keys — refused in demo
     from .paid_search import generate_paid_search_targets
 
     if req.execution_mode not in _ALLOWED_EXEC:
@@ -1126,6 +1172,7 @@ async def draft_product_focus(run_id: str, req: ProductFocusRequest) -> dict[str
     over deterministic in-category evidence; quotes are containment-verified
     and unverifiable items flagged. Cached — repeats are free unless force.
     """
+    _demo_block()  # bounded model call spends the owner's keys — refused in demo
     from .product_focus import generate_product_focus
 
     if req.execution_mode not in _ALLOWED_EXEC:

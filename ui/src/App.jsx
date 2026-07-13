@@ -17,6 +17,22 @@ const pill = (level) => <span className={`pill ${level}`}>{level}</span>;
 // array, DEMO_MODE stays false, and behavior is byte-for-byte unchanged.
 let DEMO_MODE = false;
 
+// Build-time hosted-backend base. Vite bakes VITE_-prefixed env vars into the
+// bundle at build (import.meta.env.VITE_API_BASE), so a Vercel build can be
+// pointed at a HOSTED FastAPI (e.g. VITE_API_BASE=https://your-api.onrender.com)
+// and become fully interactive cross-origin — server CORS is open. Trailing
+// slashes are stripped so buildUrl never emits `//`. When it is UNSET the value
+// is "" (falsy) and buildUrl returns the path untouched: local dev keeps using
+// the vite proxy (/api -> :8000), and a static build with no backend falls to
+// DEMO_MODE. buildUrl is applied to the probe and EVERY /api request (fetchData
+// passthrough + the direct-fetch endpoints: chat, jobs, live, research, new
+// run, …) so all of them reach the hosted backend. The bundled /demo/* static
+// twins live on the UI's own origin, so DEMO_MODE reads deliberately BYPASS it.
+const API_BASE = String(import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
+function buildUrl(path) {
+  return API_BASE ? API_BASE + path : path;
+}
+
 // Map an /api GET path to its bundled static file, or null when none exists
 // (jobs, live, briefing, paid-search, and every POST have no static twin).
 function demoPathFor(path) {
@@ -33,12 +49,12 @@ function demoPathFor(path) {
 // to its bundled file — or rejected when there is no static twin — and every
 // write is rejected: the static demo is strictly read-only.
 function fetchData(path, opts) {
-  if (!DEMO_MODE) return fetch(path, opts);
+  if (!DEMO_MODE) return fetch(buildUrl(path), opts);
   const isGet = !opts || !opts.method || opts.method === "GET";
   if (!isGet) return Promise.reject(new Error("read-only demo — writes are disabled"));
   const dp = demoPathFor(path);
   if (!dp) return Promise.reject(new Error("unavailable in the static demo"));
-  return fetch(dp);
+  return fetch(dp); // static twin — same-origin on the UI host, never buildUrl'd
 }
 
 // Probe the backend exactly once. On a static host /api/runs is rewritten to
@@ -46,7 +62,7 @@ function fetchData(path, opts) {
 // fetch rejects; either way we go read-only.
 async function probeBackend() {
   try {
-    const r = await fetch("/api/runs", { method: "GET" });
+    const r = await fetch(buildUrl("/api/runs"), { method: "GET" });
     if (!r.ok) throw new Error("api not ok");
     const d = await r.json();
     if (!Array.isArray(d)) throw new Error("not the api");
@@ -58,6 +74,18 @@ async function probeBackend() {
 
 // Shared read-only note text (also used as a tooltip, so plain text only).
 const DEMO_LOCAL_HINT = "available when running locally (make api && make ui-dev)";
+
+// A HOSTED public demo (backend DEMO_PUBLIC=on) is reachable — so DEMO_MODE
+// stays FALSE and chat / Ask-AI / browse all work — but it answers the
+// expensive write endpoints (new run, deeper research, paid-search generate)
+// with 403 + a { detail } explaining why. Given a response's status and its
+// already-parsed body, return that detail as a friendly note so callers can
+// show it inline instead of crashing; null for any non-403 so normal error
+// handling is untouched. (Sync + body-in so no Response body is read twice.)
+function gateDetail(status, body) {
+  if (status !== 403) return null;
+  return (body && body.detail) || "This action is disabled in the public demo.";
+}
 
 // Ask-AI wiring: App supplies { ask(context) } through context so ANY section
 // header / row can open the right-side panel without prop-drilling. A null
@@ -369,7 +397,7 @@ function SourceDrawer({ sources, label }) {
 // optional and only sent when present. Returns the parsed response or an
 // error-shaped message object — never throws on a non-200.
 async function postChat(runId, { question, history, context, execution_mode, vertical }) {
-  const res = await fetch(`/api/runs/${runId}/chat`, {
+  const res = await fetch(buildUrl(`/api/runs/${runId}/chat`), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -659,7 +687,7 @@ function PendingDecision({ runId, decision, onAnswered }) {
   const answer = async (choice) => {
     setBusy(true); setErr(null);
     try {
-      const res = await fetch(`/api/runs/${runId}/answer`, {
+      const res = await fetch(buildUrl(`/api/runs/${runId}/answer`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ choice }),
@@ -702,7 +730,7 @@ function LiveStrip({ runId, onJobStarted }) {
     let stop = false;
     setLive(null);
     const load = () =>
-      fetch(`/api/runs/${runId}/live`)
+      fetch(buildUrl(`/api/runs/${runId}/live`))
         .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
         .then((d) => { if (!stop) setLive(d); })
         .catch(() => {});
@@ -948,8 +976,8 @@ function TopActions({ pkg, onOpenBoard }) {
 function DeliverablesBar({ runId }) {
   // In the static demo the real backend endpoints are gone; point the (still
   // genuine) downloads at the bundled report files instead.
-  const briefHref = DEMO_MODE ? `/demo/${runId}.brief.md` : `/api/runs/${runId}/brief`;
-  const jsonHref = DEMO_MODE ? `/demo/${runId}.json` : `/api/runs/${runId}`;
+  const briefHref = DEMO_MODE ? `/demo/${runId}.brief.md` : buildUrl(`/api/runs/${runId}/brief`);
+  const jsonHref = DEMO_MODE ? `/demo/${runId}.json` : buildUrl(`/api/runs/${runId}`);
   return (
     <div className="card dlbar" role="region" aria-label="Required deliverables — download">
       <div className="dlbar-title">
@@ -1390,7 +1418,7 @@ function WindowPicker({ runId, overlay, onOverlay }) {
     if (DEMO_MODE) return;
     setBusy(true); setErr(null);
     try {
-      const res = await fetch(`/api/runs/${runId}/rewindow`, {
+      const res = await fetch(buildUrl(`/api/runs/${runId}/rewindow`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lookback_days: lookback, current_days: currentDays }),
@@ -2126,7 +2154,7 @@ const TIER_ORDER = { high: 0, medium: 1, low: 2 };
 // Live SERP blocks (gemini_serp) are observed from the real results page;
 // volume/CPC chips appear only when a volume API returned them. Nothing is
 // ever estimated client-side.
-function PaidSearchTargets({ pkg, runId }) {
+function PaidSearchTargets({ pkg, runId, onGate }) {
   const [draft, setDraft] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -2145,13 +2173,18 @@ function PaidSearchTargets({ pkg, runId }) {
     if (DEMO_MODE) return;
     setBusy(true); setErr(null);
     try {
-      const r = await fetch(`/api/runs/${runId}/paid-search`, {
+      const r = await fetch(buildUrl(`/api/runs/${runId}/paid-search`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ execution_mode: "live", force: !!force }),
       });
       const d = await r.json().catch(() => ({}));
+      // Hosted public demo gates this write with 403 — surface the detail as a
+      // friendly inline note (never a crash) and bubble it up so the whole UI
+      // (the New-analysis form) reflects the public-demo state too.
+      const gate = gateDetail(r.status, d);
       if (r.ok && d.generated) setDraft(d);
+      else if (gate) { setErr(gate); onGate && onGate(gate); }
       else setErr(d.detail || "generation failed");
     } catch { setErr("Could not reach the API — is `make api` running?"); }
     setBusy(false);
@@ -2820,7 +2853,7 @@ function LiveRunView({ runId, onReady, onJobStarted, onDismissed }) {
     readyFired.current = false;
     let stop = false;
     const load = () =>
-      fetch(`/api/runs/${runId}/live`)
+      fetch(buildUrl(`/api/runs/${runId}/live`))
         .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
         .then((d) => {
           if (stop) return;
@@ -2836,7 +2869,7 @@ function LiveRunView({ runId, onReady, onJobStarted, onDismissed }) {
   const resume = async () => {
     setBusy(true);
     try {
-      const res = await fetch(`/api/runs/${runId}/resume`, { method: "POST" });
+      const res = await fetch(buildUrl(`/api/runs/${runId}/resume`), { method: "POST" });
       if (res.ok) {
         const job = await res.json();
         onJobStarted && onJobStarted(job);
@@ -2852,7 +2885,7 @@ function LiveRunView({ runId, onReady, onJobStarted, onDismissed }) {
     if (!window.confirm("Remove this run from the queue? Collected data is kept, but the run won't be resumed.")) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/runs/${runId}/dismiss`, { method: "POST" });
+      const res = await fetch(buildUrl(`/api/runs/${runId}/dismiss`), { method: "POST" });
       if (res.ok) { onDismissed && onDismissed(); }
       else { const e = await res.json().catch(() => ({})); alert("Could not dismiss: " + (e.detail || res.statusText)); }
     } catch { alert("Could not reach the API — is `make api` running?"); }
@@ -3008,6 +3041,9 @@ export default function App() {
   // banner / disabled composers appear once the probe resolves.
   const [ready, setReady] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  // Set once a gated write (new run / research / paid-search) returns 403 from a
+  // hosted public demo — flips the New-analysis form to a disabled note.
+  const [gateNote, setGateNote] = useState(null);
   useEffect(() => {
     let cancelled = false;
     probeBackend().finally(() => {
@@ -3078,7 +3114,7 @@ export default function App() {
   // No live jobs exist in the static demo, so skip it (no backend to poll).
   useEffect(() => {
     if (!ready || DEMO_MODE) return; // wait for the probe, then skip if no backend
-    fetch("/api/jobs")
+    fetch(buildUrl("/api/jobs"))
       .then((r) => (r.ok ? r.json() : []))
       .then((js) => { if (Array.isArray(js) && js.length) setJobs(js); })
       .catch(() => {});
@@ -3091,7 +3127,7 @@ export default function App() {
       (runs || []).some((r) => r.in_progress && r.live_status === "running");
     if (!active) return;
     const t = setInterval(() => {
-      fetch("/api/jobs")
+      fetch(buildUrl("/api/jobs"))
         .then((r) => r.json())
         .then((js) => { setJobs(js); setRefresh((n) => n + 1); })
         .catch(() => {});
@@ -3163,12 +3199,16 @@ export default function App() {
     const runId = selected;
     if (!runId || !rr) return;
     try {
-      const res = await fetch(`/api/runs/${runId}/research`, {
+      const res = await fetch(buildUrl(`/api/runs/${runId}/research`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ focus: rr.focus, sources: rr.sources || [] }),
       });
       const data = await res.json().catch(() => ({}));
+      // Hosted public demo gates deeper research with 403 — its detail already
+      // rides the existing chat line below; also flip the New-analysis form.
+      const gate = gateDetail(res.status, data);
+      if (gate) setGateNote(gate);
       if (res.ok) {
         setJobs((prevJobs) => [data, ...prevJobs]);
         appendChat(runId, {
@@ -3180,7 +3220,9 @@ export default function App() {
         appendChat(runId, {
           role: "assistant",
           system_note: true,
-          answer: `Could not start research: ${data.detail || res.statusText}`,
+          answer: gate
+            ? `Deeper research is disabled here: ${gate}`
+            : `Could not start research: ${data.detail || res.statusText}`,
         });
       }
     } catch {
@@ -3207,7 +3249,7 @@ export default function App() {
 
   const submitRun = async (form) => {
     try {
-      const res = await fetch("/api/runs", {
+      const res = await fetch(buildUrl("/api/runs"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -3218,7 +3260,12 @@ export default function App() {
         setJobs((prev) => [job, ...prev]);
       } else {
         const e = await res.json().catch(() => ({ detail: res.statusText }));
-        alert("Error: " + (e.detail || res.statusText));
+        // Hosted public demo gates new runs with 403 — show the detail as a
+        // friendly inline note and keep the New-analysis form disabled with it,
+        // rather than popping a scary alert.
+        const gate = gateDetail(res.status, e);
+        if (gate) setGateNote(gate);
+        else alert("Error: " + (e.detail || res.statusText));
       }
     } catch (e) {
       alert("Could not reach the API — is `make api` running?");
@@ -3256,6 +3303,14 @@ export default function App() {
               <code>make api &amp;&amp; make ui-dev</code> to start your own analysis —
               this shareable link is a read-only demo of completed runs.
             </div>
+          </div>
+        ) : gateNote ? (
+          // Hosted public demo: the backend is live (chat / Ask-AI / browse all
+          // work), but new runs are gated — show the server's reason inline and
+          // keep the form disabled instead of letting the click 403 repeatedly.
+          <div className="newrun demo-newrun">
+            <div className="nr-title">+ New analysis</div>
+            <div className="nr-help" role="note">{gateNote}</div>
           </div>
         ) : (
           <NewRunForm onSubmit={submitRun} focalDefault={focalDefault} />
@@ -3462,7 +3517,7 @@ export default function App() {
                 {(pkg.insight_graphics || {}).affinity_defense
                   ? <AffinityDefense pkg={pkg} />
                   : <AffinityBar pkg={pkg} />}
-                <PaidSearchTargets pkg={pkg} runId={selected} />
+                <PaidSearchTargets pkg={pkg} runId={selected} onGate={setGateNote} />
                 <Similarweb pkg={pkg} />
                 <CommercialMotion pkg={pkg} />
                 <BuyerVoice pkg={pkg} />
