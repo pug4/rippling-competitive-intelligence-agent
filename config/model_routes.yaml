@@ -18,6 +18,9 @@ routes:
   # Per-review-artifact buyer-voice mining (bounded structured extraction).
   mine_reviews: tier1
   resolve_company: tier1
+  # Reasoning model IN the planning loop: decides the next action from the
+  # deterministically-scored candidate set, or decides to stop (planner.
+  # llm_plan_selection -> nodes.score_actions). Ambiguous planning -> tier2.
   plan_research: tier2
   build_claims: tier2
   judge_claim: tier2

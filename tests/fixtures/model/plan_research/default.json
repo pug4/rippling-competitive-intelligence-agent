@@ -1,0 +1,9 @@
+{
+  "chosen_index": 0,
+  "chosen_action_type": null,
+  "chosen_source": null,
+  "model_rationale": "Coverage is still thin on the highest-value gaps, so I am taking the top-ranked candidate next: it closes the dimension the competitive read most depends on right now, and the recent tool outcomes give me no reason to pivot away from it yet. I am holding the optional breadth sources (ads, events, out-of-home) for later since they add color but not the core positioning and pricing picture the brief needs first.",
+  "should_stop": false,
+  "stop_rationale": "",
+  "deprioritized": ["search_meta_ads", "search_ooh"]
+}

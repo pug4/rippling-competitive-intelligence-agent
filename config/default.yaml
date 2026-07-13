@@ -36,9 +36,15 @@ execution:
   render_html: true
   persist_raw_content: true
   refresh_rippling: false
+  # Reasoning model IN the planning loop (§37.16): after the rules PROPOSE and
+  # score candidate actions, the plan_research model DECIDES the next candidate
+  # (in its own words) or decides to stop, reacting to what recent tool calls
+  # returned. It may only choose from the supplied candidates. Set false to fall
+  # back to the deterministic top scorer on every turn (rules-only behavior).
+  llm_in_the_loop: true
 
 budgets:
-  research_budget_usd: 10.00
+  research_budget_usd: 3.00
   max_runtime_seconds: 3600
   max_iterations: 90
   max_tool_calls: 200

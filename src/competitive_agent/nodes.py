@@ -309,15 +309,62 @@ async def propose_actions(state: DirectorState, ctx: GraphContext):
     return state, "score_actions"
 
 
+# Top-K deterministically-scored candidates handed to the reasoning model.
+_LLM_CANDIDATE_K = 6
+
+
 async def score_actions(state: DirectorState, ctx: GraphContext):
     proposals = ctx.scratch.get("proposed_actions") or []
     best, trace_rows = planner.score_and_select(state, proposals)
     ctx.scratch["selected_action"] = best
     ctx.scratch["action_score_trace"] = trace_rows
+    # Reset per-cycle selection metadata (the LLM path sets these when it acts).
+    ctx.scratch["selection_decision_by"] = "heuristic"
+    ctx.scratch["selection_model_rationale"] = None
+    ctx.scratch["model_requested_stop"] = False
+    ctx.scratch["model_stop_rationale"] = None
+    ctx.scratch.pop("model_stop_deferred", None)
+
+    # Reasoning model IN the loop (§37.16): the rules PROPOSE + score; the model
+    # DECIDES the next candidate (in its own words) or decides to stop. It may
+    # only choose from the supplied candidates; on any failure/invalid output it
+    # returns None and we keep the deterministic winner (decision_by=heuristic).
+    if best is not None and ctx.gateway is not None:
+        candidates = planner.ranked_candidates(state, proposals, k=_LLM_CANDIDATE_K)
+        decision = await planner.llm_plan_selection(
+            state, candidates, planner.recent_tool_outcomes(state, ctx), ctx
+        )
+        if decision is not None and decision.should_stop:
+            # Honor a model stop ONLY when no REQUIRED dimension still needs its
+            # public fallbacks exhausted (accuracy #1 — the model cannot waive a
+            # required dimension). Otherwise defer: keep collecting with the
+            # deterministic winner and record why the stop was deferred.
+            if not planner.required_dims_needing_exhaustion(state):
+                ctx.scratch["model_requested_stop"] = True
+                ctx.scratch["model_stop_rationale"] = (
+                    decision.stop_rationale or decision.model_rationale
+                )
+                ctx.scratch["selection_model_rationale"] = decision.model_rationale
+                ctx.scratch["selection_decision_by"] = "model"
+            else:
+                ctx.scratch["model_stop_deferred"] = (
+                    decision.stop_rationale or decision.model_rationale
+                )
+        elif decision is not None and decision.action is not None:
+            ctx.scratch["selected_action"] = decision.action
+            ctx.scratch["selection_decision_by"] = "model"
+            ctx.scratch["selection_model_rationale"] = decision.model_rationale
+            ctx.scratch["model_deprioritized"] = decision.deprioritized
     return state, "select_next_action"
 
 
 async def select_next_action(state: DirectorState, ctx: GraphContext):
+    # The reasoning model judged the research complete: route to the stop
+    # decision (which records the model's rationale, still subject to the
+    # required-dimension exhaustion floor). No action is executed.
+    if ctx.scratch.get("model_requested_stop"):
+        return state, "decide_continue_or_stop"
+
     action: ResearchAction | None = ctx.scratch.get("selected_action")
     if action is None:
         return state, "decide_continue_or_stop"
@@ -327,16 +374,31 @@ async def select_next_action(state: DirectorState, ctx: GraphContext):
             for r in ctx.scratch.get("action_score_trace", [])
             if r["action_type"] != action.action_type
         ]
-        ctx.trace.append(
-            "action_selected",
-            {
-                "action_type": action.action_type,
-                "source": action.source_name,
-                "rationale": action.rationale,
-                "alternatives_considered": [a["action_type"] for a in alternatives],
-                "scores": ctx.scratch.get("action_score_trace", []),
-            },
-        )
+        decision_by = ctx.scratch.get("selection_decision_by", "heuristic")
+        payload: dict[str, Any] = {
+            "action_type": action.action_type,
+            "source": action.source_name,
+            "rationale": action.rationale,
+            # Who decided this action: the reasoning model ("model") or the
+            # deterministic top scorer ("heuristic", the rules-only fallback).
+            "decision_by": decision_by,
+            "alternatives_considered": [a["action_type"] for a in alternatives],
+            "scores": ctx.scratch.get("action_score_trace", []),
+        }
+        # The model's OWN-WORDS reasoning for this next step (never a template);
+        # present only when the model made the call.
+        model_rationale = ctx.scratch.get("selection_model_rationale")
+        if decision_by == "model" and model_rationale:
+            payload["model_rationale"] = model_rationale
+            deprioritized = ctx.scratch.get("model_deprioritized")
+            if deprioritized:
+                payload["deprioritized"] = deprioritized
+        # The model wanted to stop but a required dimension still needs its
+        # fallbacks — record the deferred stop reasoning for transparency.
+        deferred = ctx.scratch.get("model_stop_deferred")
+        if deferred:
+            payload["model_stop_deferred"] = deferred
+        ctx.trace.append("action_selected", payload)
     return state, "execute_action"
 
 
@@ -369,6 +431,21 @@ async def execute_action(state: DirectorState, ctx: GraphContext):
     state.executed_action_keys.append(planner.action_key(action.action_type, action.parameters))
     ctx.scratch["last_result"] = result
     ctx.scratch["last_action"] = action
+
+    # Rolling buffer of recent tool outcomes so the reasoning planner can react
+    # to what actually worked or came back empty (the "I could not find Meta
+    # ads, pivot" signal). Derived from the real ToolResult — never fabricated.
+    outcomes = ctx.scratch.setdefault(planner.RECENT_OUTCOMES_SCRATCH_KEY, [])
+    outcomes.append(
+        {
+            "source": action.source_name or result.tool_name,
+            "action_type": action.action_type,
+            "status": result.status,
+            "artifact_count": len(result.artifacts),
+        }
+    )
+    if len(outcomes) > 10:
+        del outcomes[:-10]
 
     # Deciding what to SKIP is part of the agentic loop (§39.6): a disabled or
     # unavailable source is recorded as a deliberate skip-with-reason, not a
@@ -1113,12 +1190,22 @@ async def decide_continue_or_stop(state: DirectorState, ctx: GraphContext):
         ok, missing = cov.sufficient(state.coverage, state.mode, state.focal_company is not None)
         remaining = planner.propose_actions(state, ctx)
         needing = planner.required_dims_needing_exhaustion(state)
-        if needing and remaining:
+        # Reasoning model IN the loop chose to STOP (§37.16). score_actions only
+        # sets this flag once no REQUIRED dimension still needs its fallbacks, so
+        # honoring it here can never waive a required dimension (accuracy #1). It
+        # heads a single if/elif chain so a model stop short-circuits the
+        # deterministic continue branches below.
+        if ctx.scratch.get("model_requested_stop") and not needing:
+            model_stop = (
+                ctx.scratch.get("model_stop_rationale") or "model judged coverage sufficient"
+            )
+            reason = "model_judged_complete: " + model_stop
+        elif needing and remaining:
             # A required dimension still has an untried public fallback: keep
             # going — never stop for "low expected value" with a required
             # dimension unattempted (feedback #6).
             return state, "assess_coverage"
-        if needing and not remaining:
+        elif needing and not remaining:
             # Fallbacks exhausted: mark the dimensions unavailable-after-
             # exhaustion (a finding), don't pretend they were never required.
             for dim in needing:
@@ -1143,14 +1230,20 @@ async def decide_continue_or_stop(state: DirectorState, ctx: GraphContext):
     if reason:
         state.stop_reason = reason
         if ctx.trace:
-            ctx.trace.append(
-                "stop_selected",
-                {
-                    "reason": reason,
-                    "iteration": state.iteration,
-                    "remaining_gaps": ctx.scratch.get("coverage_missing", []),
-                },
-            )
+            stop_payload: dict[str, Any] = {
+                "reason": reason,
+                "iteration": state.iteration,
+                "remaining_gaps": ctx.scratch.get("coverage_missing", []),
+            }
+            # A model-decided stop carries the model's own-words rationale.
+            if ctx.scratch.get("model_requested_stop") and reason.startswith(
+                "model_judged_complete"
+            ):
+                stop_payload["decision_by"] = "model"
+                stop_payload["model_rationale"] = ctx.scratch.get(
+                    "selection_model_rationale"
+                ) or ctx.scratch.get("model_stop_rationale")
+            ctx.trace.append("stop_selected", stop_payload)
         return state, "render_outputs"
     return state, "assess_coverage"
 
