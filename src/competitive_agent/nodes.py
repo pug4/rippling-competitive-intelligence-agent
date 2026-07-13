@@ -363,10 +363,17 @@ async def score_actions(state: DirectorState, ctx: GraphContext):
 
 
 async def select_next_action(state: DirectorState, ctx: GraphContext):
-    # The reasoning model judged the research complete: route to the stop
-    # decision (which records the model's rationale, still subject to the
-    # required-dimension exhaustion floor). No action is executed.
+    # The reasoning model judged the research complete. Route through
+    # refresh_claims FIRST (not straight to the stop) so the final claim ledger
+    # is built against the full corpus before rendering — the deterministic
+    # near-stop never fired, so this is the only place claims can build on a
+    # model-decided stop. refresh_claims -> ... -> decide_continue_or_stop still
+    # honors the stop (model_requested_stop persists this cycle). No action is
+    # executed. Guarded so it runs the finalize chain exactly once.
     if ctx.scratch.get("model_requested_stop"):
+        if not ctx.scratch.get("model_stop_finalized"):
+            ctx.scratch["model_stop_finalized"] = True
+            return state, "refresh_claims"
         return state, "decide_continue_or_stop"
 
     action: ResearchAction | None = ctx.scratch.get("selected_action")
