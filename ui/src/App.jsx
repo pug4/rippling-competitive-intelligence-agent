@@ -466,6 +466,13 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
   const [vertical, setVertical] = useState("");
   const competitor = pkg.companies?.[0]?.canonical_name || "this competitor";
   const verticals = (pkg.product_vertical_analysis?.verticals || []).map((v) => v.vertical);
+  const logRef = React.useRef(null);
+
+  // Always keep the newest turn in view — the user's message and the reply
+  // land at the bottom the instant they're added (also follows the spinner).
+  React.useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [messages, busy, open]);
 
   const send = async (q) => {
     const question = (q || input).trim();
@@ -515,7 +522,7 @@ function ChatPanel({ runId, pkg, messages, onMessages, open, onToggle, onResearc
           ))}
         </select>
       </div>
-      <div className="chatlog">
+      <div className="chatlog" ref={logRef}>
         {messages.length === 0 && (
           <div className="chathint">
             Try: “What's their most attackable gap?” · “What are employees posting on LinkedIn?” · “How do they position payroll vs IT?”
