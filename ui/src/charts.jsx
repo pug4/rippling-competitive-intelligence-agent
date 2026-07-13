@@ -9,7 +9,7 @@ export function HBar({ data, unit = "", colorVar = "--accent" }) {
     <div className="hbar">
       {rows.map((d) => (
         <div className="hbar-row" key={d.label}>
-          <div className="hbar-label" title={d.label}>{d.label}</div>
+          <div className="hbar-label" data-tip={d.label}>{d.label}</div>
           <div className="hbar-track">
             <div
               className="hbar-fill"
@@ -29,7 +29,7 @@ export function ProofBar({ strength, label }) {
   const level = PROOF_LEVEL[(strength || "none").toLowerCase()] ?? 0;
   const color = level >= 3 ? "--good" : level === 2 ? "--warn" : level >= 1 ? "--bad" : "--border";
   return (
-    <span className="proofbar" title={`${label || ""} ${strength || "none"}`}>
+    <span className="proofbar" data-tip={`${label || ""} ${strength || "none"}`}>
       {label && <span className="proofbar-tag">{label}</span>}
       {[1, 2, 3].map((i) => (
         <span
@@ -50,12 +50,12 @@ export function Heatmap({ personas, channels, cells }) {
   personas.forEach((p) => channels.forEach((c) => { max = Math.max(max, (cells[p] || {})[c] || 0); }));
   return (
     <div className="heatmap-wrap">
-      <div className="heatmap" style={{ gridTemplateColumns: `140px repeat(${channels.length}, minmax(64px, 1fr))` }}>
+      <div className="heatmap" style={{ gridTemplateColumns: `160px repeat(${channels.length}, minmax(64px, 1fr))` }}>
         <div className="hm-corner" />
-        {channels.map((c) => <div className="hm-col" key={c} title={c}>{c}</div>)}
+        {channels.map((c) => <div className="hm-col" key={c} data-tip={c}>{c}</div>)}
         {personas.map((p) => (
           <React.Fragment key={p}>
-            <div className="hm-rowlabel" title={p}>{p.replace(/_/g, " ")}</div>
+            <div className="hm-rowlabel" data-tip={p}>{p.replace(/_/g, " ")}</div>
             {channels.map((c) => {
               const v = (cells[p] || {})[c] || 0;
               const a = v ? 0.12 + 0.88 * (v / max) : 0;
@@ -64,7 +64,7 @@ export function Heatmap({ personas, channels, cells }) {
                   className="hm-cell"
                   key={c}
                   style={{ background: v ? `rgba(110,168,254,${a})` : "transparent" }}
-                  title={`${p} × ${c}: ${v}`}
+                  data-tip={`${p} × ${c}: ${v}`}
                 >
                   {v || ""}
                 </div>

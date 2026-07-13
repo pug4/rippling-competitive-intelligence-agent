@@ -228,7 +228,11 @@ async def resolve_companies(state: DirectorState, ctx: GraphContext):
 async def load_or_create_time_windows(state: DirectorState, ctx: GraphContext):
     if not state.time_windows:
         now = utcnow()
-        current_days = int(ctx.config.windows.get("current_days", 90)) if ctx.config else 90
+        default_current = int(ctx.config.windows.get("current_days", 90)) if ctx.config else 90
+        current_days = state.current_days or default_current
+        # Defensive: the comparison window must be non-empty.
+        if current_days >= state.lookback_days:
+            current_days = max(1, state.lookback_days // 2)
         state.time_windows = [
             TimeWindow(
                 window_id=new_id("TW"),

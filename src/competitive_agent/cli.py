@@ -25,6 +25,9 @@ def analyze(
     ),
     include_longitudinal: bool = typer.Option(False, "--include-longitudinal"),
     lookback_days: int = typer.Option(None, "--lookback-days"),
+    current_days: int = typer.Option(
+        None, "--current-days", help="Recent-window size in days (rest of lookback = prior)"
+    ),
     focus: list[str] = typer.Option(None, "--focus", help="Repeatable focus dimension"),
 ) -> None:
     """Analyze one company's public marketing strategy."""
@@ -39,6 +42,7 @@ def analyze(
             execution_mode=execution_mode,
             compare_to=compare,
             lookback_days=lookback_days,
+            current_days=current_days,
             user_focus=list(focus or []),
         )
     except Exception as exc:
@@ -381,6 +385,9 @@ def portfolio(
     execution_mode: str = EXEC_OPT,
     compare: str = typer.Option(None, "--compare", help="Focal company domain"),
     lookback_days: int = typer.Option(None, "--lookback-days"),
+    current_days: int = typer.Option(
+        None, "--current-days", help="Recent-window size in days (rest of lookback = prior)"
+    ),
 ) -> None:
     """Analyze several competitors in isolated pipelines, then synthesize across them."""
     import json as _json
@@ -394,6 +401,7 @@ def portfolio(
             execution_mode=execution_mode,
             compare_to=compare,
             lookback_days=lookback_days,
+            current_days=current_days,
         )
     except Exception as exc:
         typer.echo(f"error: {type(exc).__name__}: {exc}", err=True)

@@ -6,8 +6,96 @@ const pill = (level) => <span className={`pill ${level}`}>{level}</span>;
 // Hover explanation on every section header / metric (focusable for keyboard/
 // screen-reader users — the tip is load-bearing, not decoration).
 const Info = ({ tip }) => (
-  <span className="info" title={tip} tabIndex={0} role="img" aria-label={tip}>ⓘ</span>
+  <span className="info" data-tip={tip} tabIndex={0} role="img" aria-label={tip}>ⓘ</span>
 );
+
+// Instant tooltip layer: one fixed div driven by delegated listeners over
+// every [data-tip] element — shows immediately (no native-title delay), 13px
+// readable text, follows the cursor, viewport-clamped. textContent ONLY (tips
+// carry package-derived strings — never innerHTML).
+function TooltipLayer() {
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const tip = ref.current;
+    let anchor = null, raf = 0, lastXY = [0, 0];
+    const place = () => {
+      raf = 0;
+      const [x, y] = lastXY, pad = 12;
+      const { width, height } = tip.getBoundingClientRect();
+      let left = x + pad, top = y + pad;
+      if (left + width > window.innerWidth - 6) left = Math.max(6, x - width - pad);
+      if (top + height > window.innerHeight - 6) top = Math.max(6, y - height - pad);
+      tip.style.transform = `translate(${left}px, ${top}px)`;
+    };
+    const show = (el, x, y) => {
+      const text = el.getAttribute("data-tip");
+      if (!text) return; // conditional tips can be empty strings
+      anchor = el;
+      tip.textContent = text;
+      tip.style.display = "block";
+      lastXY = [x, y];
+      place();
+    };
+    const hide = () => { anchor = null; tip.style.display = "none"; };
+    const over = (e) => {
+      const el = e.target.closest?.("[data-tip]");
+      if (el !== anchor) el ? show(el, e.clientX, e.clientY) : hide();
+    };
+    const move = (e) => {
+      if (!anchor) return;
+      lastXY = [e.clientX, e.clientY];
+      if (!raf) raf = requestAnimationFrame(place);
+    };
+    const out = (e) => { if (anchor && !anchor.contains(e.relatedTarget)) hide(); };
+    const focus = (e) => {
+      const el = e.target.closest?.("[data-tip]");
+      if (el) { const r = el.getBoundingClientRect(); show(el, r.left, r.bottom + 6); }
+    };
+    document.addEventListener("mouseover", over);
+    document.addEventListener("mousemove", move, { passive: true });
+    document.addEventListener("mouseout", out);
+    document.addEventListener("focusin", focus);
+    document.addEventListener("focusout", hide);
+    document.addEventListener("click", hide);
+    document.addEventListener("scroll", hide, { capture: true, passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("mouseover", over);
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseout", out);
+      document.removeEventListener("focusin", focus);
+      document.removeEventListener("focusout", hide);
+      document.removeEventListener("click", hide);
+      document.removeEventListener("scroll", hide, { capture: true });
+    };
+  }, []);
+  return <div id="tooltip" ref={ref} role="tooltip" style={{ display: "none" }} />;
+}
+
+// Visible tab intro: the question this tab answers + why it matters — always
+// on screen, never hidden behind a hover (PM feedback: justify every screen).
+function TabIntro({ q, why }) {
+  return (
+    <div className="tabintro">
+      <b>{q}</b>
+      <div className="why">{why}</div>
+    </div>
+  );
+}
+
+// Section header with a number chip + a visible one-line justification.
+function Sec({ n, title, why, tip }) {
+  return (
+    <>
+      <h2>
+        {n != null && <span className="secno">{n}</span>}
+        {title}
+        {tip && <Info tip={tip} />}
+      </h2>
+      {why && <p className="secwhy">{why}</p>}
+    </>
+  );
+}
 
 const normTheme = (s) => String(s || "").toLowerCase().replace(/[\s_-]+/g, " ").trim();
 
@@ -79,7 +167,7 @@ function SourceDrawer({ sources, label }) {
       <button
         type="button"
         className="srcbtn"
-        title="Click to see the exact source pages and verbatim excerpts behind this finding"
+        data-tip="Click to see the exact source pages and verbatim excerpts behind this finding"
         onClick={() => setOpen((o) => !o)}
       >
         {open ? "▾" : "▸"} {label || `see exact sources (${sources.length})`}
@@ -88,7 +176,7 @@ function SourceDrawer({ sources, label }) {
         <div className="srclist">
           {sources.slice(0, 8).map((s, i) => (
             <div className="srcrow" key={i}>
-              <span className="srcq" title="source quality band">{s.quality}</span>{" "}
+              <span className="srcq" data-tip="source quality band">{s.quality}</span>{" "}
               <a href={s.url} target="_blank" rel="noreferrer">
                 {(s.url || "").replace(/^https?:\/\/(www\.)?/, "").slice(0, 52)} ↗
               </a>
@@ -146,7 +234,7 @@ function ChatPanel({ runId, pkg }) {
         <Info tip="Grounded analysis chatbot: answers ONLY from this run's collected data (every source, excerpt, claim + justification). Cites sources, asks a clarifying question back when your question is ambiguous, and flags when it needs deeper research." />
       </div>
       <div className="chatscope">
-        <label className="chatscope-label" title="Scope the chat's grounded data to one product vertical — per-offering questions get per-offering answers">
+        <label className="chatscope-label" data-tip="Scope the chat's grounded data to one product vertical — per-offering questions get per-offering answers">
           Focus:
         </label>
         <select className="nr-sel" value={vertical} onChange={(e) => setVertical(e.target.value)}>
@@ -207,11 +295,11 @@ function gapVerb(g) {
     (g.attackability === "high" ? "attack" : g.attackability === "medium" ? "investigate" : "reframe")
   );
 }
-function ActionTag({ verb, title }) {
+function ActionTag({ verb, tip }) {
   const [label, color] = ACTION_VERB[verb] || [String(verb || "REVIEW").toUpperCase(), "--border"];
   return (
     <span className="atag" style={{ color: `var(${color})`, borderColor: `var(${color})` }}
-          title={title || `recommended stance: ${verb}`}>{label}</span>
+          data-tip={tip || `recommended stance: ${verb}`}>{label}</span>
   );
 }
 
@@ -263,13 +351,15 @@ function StrategicScorecard({ pkg, go }) {
   if (ceps.length === 0 && gaps.length === 0 && changes.length === 0) return null;
   return (
     <>
-      <h2>Strategic scorecard <Info tip="The whole analysis at a glance — who owns the buying intents (share-normalized), where message investment diverges, what's moving, and how many openings say ATTACK. Every tile clicks through to its deep-dive tab with sources." /></h2>
+      <Sec n={1} title="Strategic scorecard"
+           why="The whole analysis in four tiles: who owns the buying intents, where they out-message you, what's moving, and how many openings say ATTACK. Click any tile to jump to its deep-dive with sources."
+           tip="Ownership is share-normalized (page counts ÷ each company's classified corpus) so corpus size can't fabricate a verdict." />
       <div className="grid2">
-        <div className="card sctile" onClick={() => go("performance")} title="open Performance marketing → full ownership map with contributing pages">
+        <div className="card sctile" onClick={() => go("performance")} data-tip="open Performance marketing → full ownership map with contributing pages">
           <div className="title">Search-intent ownership ({ceps.length} triggers)</div>
           <div className="scstack">
             {OWN_META.map(([k, color]) => own[k] > 0 && (
-              <div key={k} className="scseg" style={{ width: `${(own[k] / ownTotal) * 100}%`, background: `var(${color})` }} title={`${own[k]} ${k.replace(/_/g, " ")}`} />
+              <div key={k} className="scseg" style={{ width: `${(own[k] / ownTotal) * 100}%`, background: `var(${color})` }} data-tip={`${own[k]} ${k.replace(/_/g, " ")}`} />
             ))}
           </div>
           <div className="sclegend">
@@ -281,18 +371,18 @@ function StrategicScorecard({ pkg, go }) {
         </div>
 
         {hasFocalThemes && (
-          <div className="card sctile" onClick={() => go("product")} title="open Product marketing → full key-topics comparison">
+          <div className="card sctile" onClick={() => go("product")} data-tip="open Product marketing → full key-topics comparison">
             <div className="title">Message-investment deltas (share of corpus)</div>
             {theyLead.map(({ t, d }) => (
               <div className="scdelta" key={t}>
-                <span className="sclabel" title={t}>{t.replace(/_/g, " ")}</span>
+                <span className="sclabel" data-tip={t}>{t.replace(/_/g, " ")}</span>
                 <div className="scbarwrap"><div className="scbar comp" style={{ width: `${(d / maxD) * 100}%` }} /></div>
                 <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>CLOSE GAP +{Math.round(d * 100)}pt</span>
               </div>
             ))}
             {weLead.map(({ t, d }) => (
               <div className="scdelta" key={t}>
-                <span className="sclabel" title={t}>{t.replace(/_/g, " ")}</span>
+                <span className="sclabel" data-tip={t}>{t.replace(/_/g, " ")}</span>
                 <div className="scbarwrap"><div className="scbar focal" style={{ width: `${(-d / maxD) * 100}%` }} /></div>
                 <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>PRESS +{Math.round(-d * 100)}pt</span>
               </div>
@@ -301,7 +391,7 @@ function StrategicScorecard({ pkg, go }) {
           </div>
         )}
 
-        <div className="card sctile" onClick={() => go("changes")} title="open Strategy changes → reconciled events + prior-window baseline">
+        <div className="card sctile" onClick={() => go("changes")} data-tip="open Strategy changes → reconciled events + prior-window baseline">
           <div className="title">Theme momentum</div>
           <div className="scmomentum">
             <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>{nEmerging} EMERGING</span>
@@ -315,7 +405,7 @@ function StrategicScorecard({ pkg, go }) {
           </div>
         </div>
 
-        <div className="card sctile" onClick={() => go("product")} title="open Product marketing → gaps with sources + Action Board">
+        <div className="card sctile" onClick={() => go("product")} data-tip="open Product marketing → gaps with sources + Action Board">
           <div className="title">Attack surface ({gaps.length} repeated claims)</div>
           <div className="scmomentum">
             <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>{verbs.attack || 0} ATTACK</span>
@@ -341,7 +431,9 @@ function TopActions({ pkg, onOpenBoard }) {
   if (opps.length === 0) return null;
   return (
     <>
-      <h2>Top actions for {focal} <Info tip="The engine's top-ranked defensible plays — full experiment plans (metrics, guardrails, staged gates) on the Product marketing tab's Action Board." /></h2>
+      <Sec n={2} title={`Top actions for ${focal}`}
+           why="The three highest-ranked plays this run surfaced — each already carries a metric and a kill rule, so it can go on a campaign board as-is. The full experiment plans live on the Where-to-win tab."
+           tip="Ranking blends structural defensibility, proof status, and product comparability — not just gap size." />
       <div className="card">
         {opps.map((o) => (
           <div className="tarow" key={o.opportunity_id}>
@@ -353,7 +445,7 @@ function TopActions({ pkg, onOpenBoard }) {
           </div>
         ))}
         <button type="button" className="srcbtn" onClick={onOpenBoard}
-                title="Full Action Board: proof status, backfire risk, experiment plans, staged gates">
+                data-tip="Full Action Board: proof status, backfire risk, experiment plans, staged gates">
           open the full Action Board →
         </button>
       </div>
@@ -392,7 +484,9 @@ function DataVisuals({ pkg }) {
   const themeTitle = allThemes.length > 8 ? `Top message themes (8 of ${allThemes.length})` : "Top message themes";
   return (
     <>
-      <h2>Data at a glance <Info tip="Where the evidence came from, which message themes dominate, and how openly they position against competitors. Counts are observed artifacts, never population claims." /></h2>
+      <Sec n={4} title="Data at a glance"
+           why="What this analysis is built on: the source mix, their loudest themes, and how openly they attack competitors. If a finding surprises you, start here to judge the evidence behind it."
+           tip="Counts are observed artifacts from this run — never population claims." />
       <div className="grid2">
         <div className="card"><div className="title">Source mix ({total} artifacts) <Info tip="Every collected source by type — websites, archives, news, reviews, ads, LinkedIn. Click Sources & evidence for each URL." /></div><HBar data={srcData} /></div>
         <div className="card"><div className="title">{themeTitle} <Info tip="What the competitor talks about most, classified per page/post by the message classifier." /></div><HBar data={themeData} colorVar="--good" /></div>
@@ -409,7 +503,9 @@ function Positioning({ pkg }) {
   cls.forEach((c) => (c.villain_normalized || []).forEach((v) => villains.add(v)));
   return (
     <>
-      <h2>Current public positioning <Info tip="The company-level dominant message — chosen by page authority × prominence (homepage/platform outrank a blog post), only when repeated across ≥2 source classes." /></h2>
+      <Sec n={3} title="Current public positioning"
+           why="Their company-level story in one line — what they lead with and who they attack. Use it to know the narrative you're up against before reading anything else."
+           tip="Dominant message = authority-weighted (homepage/platform pages outrank blog posts) and only asserted when repeated across ≥2 source classes." />
       <div className="card">
         {dom.label && <div className="row"><b>Dominant message:</b> {dom.label}</div>}
         {dom.theme && <div className="row"><b>Theme:</b> {dom.theme} <span className="pill">{dom.is_company_level ? "company-level" : "corpus-level"}</span></div>}
@@ -428,22 +524,24 @@ function GapsSection({ pkg, srcIdx }) {
   if (gaps.length === 0) return <p className="empty">No repeated competitor claim with a proof gap observed.</p>;
   return (
     <>
-      <h2>Message–proof gaps <Info tip={`Claims ${competitor} repeats but proves weakly — vs how strongly ${focal} could prove the equivalent. Pill = attackability: green attack · yellow investigate · red don't (reframe/concede). Click a row's sources to see the exact pages.`} /></h2>
+      <Sec n={4} title="Message–proof gaps"
+           why={`Every claim ${competitor} repeats, scored on how well they prove it vs how well ${focal} could. The verb tag on each row is the recommended move; click into a row's sources for the exact pages behind the verdict.`}
+           tip="Proof strength is the modal per-page rating for the theme (one strong page can't inflate it); THIN SAMPLE flags verdicts on too few pages." />
       <div className="card">
         {gaps.map((g) => (
           <div className="gaprow" key={g.claim_id}>
             <div>
-              <div className="gaplabel" title={g.claim_text}>{g.short_label}</div>
-              <ActionTag verb={gapVerb(g)} title={`attackability ${g.attackability} → ${gapVerb(g)}`} />
+              <div className="gaplabel" data-tip={g.claim_text}>{g.short_label}</div>
+              <ActionTag verb={gapVerb(g)} tip={`attackability ${g.attackability} → ${gapVerb(g)}`} />
               {g.sample_sufficiency && g.sample_sufficiency !== "ok" && (
                 <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
-                      title="sample too small for a confident verdict — disclosed, not asserted">THIN SAMPLE</span>
+                      data-tip="sample too small for a confident verdict — disclosed, not asserted">THIN SAMPLE</span>
               )}
             </div>
             <div className="gapbars">
               <ProofBar strength={g.proof_strength} label={competitor} />
               <ProofBar strength={g.focal_proof_strength} label={focal} />
-              <div className="gapclaim" title="What proof is missing, and how specific the claim is">
+              <div className="gapclaim" data-tip="What proof is missing, and how specific the claim is">
                 Missing: {(g.missing_proof || []).join(", ") || "—"} · specificity {g.claim_specificity}
               </div>
               <div className="gapclaim">{g.actionable_interpretation}</div>
@@ -464,7 +562,9 @@ function Opportunities({ pkg, srcIdx }) {
   if (opps.length === 0) return <p className="empty">No opportunity survived generation.</p>;
   return (
     <>
-      <h2>{focal}-relative recommended actions <Info tip={`Defensible marketing plays generated from the gaps — each with proof status, backfire risk, an experiment hypothesis, and a kill rule. 'Already-saying-it' = whether ${focal} currently uses this angle.`} /></h2>
+      <Sec n={5} title={`Action Board — plays for ${focal}`}
+           why="The gaps turned into runnable plays, ranked P1–P3. Each card has the full experiment design (metric, guardrails, staged proceed/stop gates, kill rule) — expand it and hand it to the team."
+           tip="Every play passed genericness and superiority critics; backfire risk and legal-review flags are stated per card." />
       {opps.map((o, i) => {
         const gap = (o.supporting_claim_ids || []).map((id) => gapsById[id]).find(Boolean);
         const sources = gap ? srcIdx[normTheme(gap.short_label)] : null;
@@ -472,21 +572,21 @@ function Opportunities({ pkg, srcIdx }) {
           <div className="card" key={o.opportunity_id}>
             <div className="title">
               <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
-                    title="priority = the engine's overall ranking (defensibility, proof status, comparability)">P{i + 1}</span>{" "}
-              {o.title} <span className="pill" title="deliverable type">{o.deliverable_type}</span>{" "}
-              <span title="structural defensibility — how hard this is for the competitor to copy">{pill(o.structural_defensibility)}</span>
+                    data-tip="priority = the engine's overall ranking (defensibility, proof status, comparability)">P{i + 1}</span>{" "}
+              {o.title} <span className="pill" data-tip="deliverable type">{o.deliverable_type}</span>{" "}
+              <span data-tip="structural defensibility — how hard this is for the competitor to copy">{pill(o.structural_defensibility)}</span>
             </div>
             <div className="row"><b>Angle:</b> {o.message_angle}</div>
             <div className="row">
-              <b title={`${focal}'s own publishable proof for this angle`}>Focal proof:</b> {o.focal_proof_status} ·{" "}
-              <b title={`is ${focal} already using this angle?`}>already-saying-it:</b> {o.focal_current_usage} ·{" "}
+              <b data-tip={`${focal}'s own publishable proof for this angle`}>Focal proof:</b> {o.focal_proof_status} ·{" "}
+              <b data-tip={`is ${focal} already using this angle?`}>already-saying-it:</b> {o.focal_current_usage} ·{" "}
               <b>legal review:</b> {String(o.legal_review_required)}
             </div>
             <div className="row"><b>Why it could backfire:</b> {o.why_this_could_backfire}</div>
             <div className="row"><b>Experiment:</b> {o.experiment_hypothesis}</div>
             <div className="row"><b>Kill rule:</b> {o.kill_rule}</div>
             <details className="expplan">
-              <summary title="The full experiment design an IC needs to run this: metrics, guardrails, sample floor, iterate/scale rules, and per-stage proceed/stop gates">
+              <summary data-tip="The full experiment design an IC needs to run this: metrics, guardrails, sample floor, iterate/scale rules, and per-stage proceed/stop gates">
                 Experiment plan (metrics, guardrails, staged gates)
               </summary>
               <div className="row"><b>Primary metric:</b> {o.primary_metric || "—"}</div>
@@ -521,7 +621,9 @@ function AttackDefendMatrix({ pkg }) {
   const attCol = { high: "--good", medium: "--warn", low: "--bad" };
   return (
     <>
-      <h2>Attack / defend quadrant <Info tip={`Each repeated ${competitor} claim plotted by their observed proof strength (→) vs ${focal}'s (↑). Top-left = ATTACK (they claim it, can't prove it, you can). Bottom-left = BUILD PROOF (whitespace). Bottom-right = AT RISK (fund proof here). Dot color = attackability.`} /></h2>
+      <Sec n={1} title="Attack / defend map"
+           why={`Each repeated ${competitor} claim, plotted by how well THEY prove it (→) vs how well ${focal} could (↑). The quadrant a dot lands in IS the action: attack, differentiate, build proof, or shore up risk. Numbers match the legend below.`}
+           tip="Dot color = attackability (green attack · yellow investigate · red avoid). Positions use each side's observed proof strength from the classified corpus." />
       <div className="card">
         <div className="admwrap">
           <div className="admy">{focal} proof →</div>
@@ -533,19 +635,28 @@ function AttackDefendMatrix({ pkg }) {
             {gaps.map((g, i) => {
               const cx = (PROOF_LVL[String(g.proof_strength || "none").toLowerCase()] || 0) / 3 * 100;
               const cy = (PROOF_LVL[String(g.focal_proof_strength || "none").toLowerCase()] || 0) / 3 * 100;
-              const x = Math.min(94, Math.max(6, cx + ((i % 3) - 1) * 4));
-              const y = Math.min(92, Math.max(8, cy + ((Math.floor(i / 3) % 3) - 1) * 4));
+              const x = Math.min(94, Math.max(6, cx + ((i % 3) - 1) * 5));
+              const y = Math.min(92, Math.max(8, cy + ((Math.floor(i / 3) % 3) - 1) * 6));
               return (
                 <div key={g.claim_id} className="admdot"
                      style={{ left: `${x}%`, bottom: `${y}%`, background: `var(${attCol[g.attackability] || "--border"})` }}
-                     title={`${g.short_label}: ${competitor} ${g.proof_strength} · ${focal} ${g.focal_proof_strength} → ${gapVerb(g).toUpperCase()}`}>
-                  <span>{g.short_label}</span>
+                     data-tip={`${i + 1}. ${g.short_label}: ${competitor} ${g.proof_strength} · ${focal} ${g.focal_proof_strength} → ${gapVerb(g).toUpperCase()}`}>
+                  {i + 1}
                 </div>
               );
             })}
           </div>
         </div>
         <div className="admx">{competitor} proof →</div>
+        <ol className="admlegend">
+          {gaps.map((g, i) => (
+            <li key={g.claim_id}>
+              <span className="admnum" style={{ background: `var(${attCol[g.attackability] || "--border"})` }}>{i + 1}</span>
+              <b>{g.short_label}</b> <ActionTag verb={gapVerb(g)} />
+              <span className="admproof">{competitor} {g.proof_strength} · {focal} {g.focal_proof_strength}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     </>
   );
@@ -574,21 +685,21 @@ function KeyTopicsComparison({ pkg }) {
   const lbl = (t, sh, n) => (useShares ? `${n[t] || 0} (${Math.round((sh[t] || 0) * 100)}%)` : String(n[t] || 0));
   return (
     <>
-      <h2>Key topics — {competitor} vs {focalName}
-        <Info tip={`Message themes each company leads with. Bars compare each theme's SHARE of that company's classified corpus (raw counts alongside) — share-normalized so different corpus sizes stay comparable. Themes outside one side's top-10 carry their TRUE count, never a fabricated zero.`} />
-      </h2>
+      <Sec n={6} title={`Key topics — ${competitor} vs ${focalName}`}
+           why="Reference: the share of each company's site that each theme occupies, side by side. Big share gaps are message-investment gaps — the scorecard's CLOSE GAP / PRESS tags come from here."
+           tip="Bars compare SHARE of each company's classified corpus (raw counts alongside), so different corpus sizes stay comparable; themes outside one side's top-10 carry their true count, never a fabricated zero." />
       <div className="card">
         {themes.map((t) => (
           <div className="ktrow" key={t}>
-            <div className="ktlabel" title={t}>{t.replace(/_/g, " ")}</div>
+            <div className="ktlabel" data-tip={t}>{t.replace(/_/g, " ")}</div>
             <div className="ktbars">
               <div className="ktbar comp" style={{ width: `${(w(t, compSh, comp) / max) * 100}%` }}
-                   title={`${competitor}: ${lbl(t, compSh, comp)}`} />
+                   data-tip={`${competitor}: ${lbl(t, compSh, comp)}`} />
               <span className="ktnum">{lbl(t, compSh, comp)}</span>
             </div>
             <div className="ktbars">
               <div className="ktbar focal" style={{ width: `${(w(t, focalSh, focal) / max) * 100}%` }}
-                   title={`${focalName}: ${lbl(t, focalSh, focal)}`} />
+                   data-tip={`${focalName}: ${lbl(t, focalSh, focal)}`} />
               <span className="ktnum">{lbl(t, focalSh, focal)}</span>
             </div>
           </div>
@@ -614,9 +725,9 @@ function VerticalThemeHeatmap({ pkg }) {
   verts.forEach((v) => { cells[v.vertical] = v.theme_counts || {}; });
   return (
     <>
-      <h2>Themes by product vertical
-        <Info tip="Which message themes dominate INSIDE each product vertical — intensity = classified pages/posts. A theme strong in one vertical and absent in another is a per-offering positioning choice you can counter vertical-by-vertical." />
-      </h2>
+      <Sec n={7} title="Themes by product vertical"
+           why="Reference: what they say INSIDE each product line. A theme that's loud in one vertical and silent in another is a per-offering choice you can counter vertical-by-vertical."
+           tip="Cell intensity = classified pages/posts carrying that theme in that vertical (deterministic keyword mapping, method in the JSON)." />
       <div className="card">
         <Heatmap personas={verts.map((v) => v.vertical)} channels={themes} cells={cells} />
       </div>
@@ -634,9 +745,68 @@ function LinkedInThemeBar({ pkg }) {
   if (data.length === 0) return null;
   return (
     <>
-      <h2>Post themes <Info tip="Message themes across the collected employee/company LinkedIn posts — what the org actually amplifies." /></h2>
+      <Sec n={2} title="Post themes"
+           why="What the org actually amplifies in the feed — employee posts are the unofficial roadmap and often move before the website does."
+           tip="Counted across the collected employee/company posts, each individually classified." />
       <div className="card"><HBar data={data} colorVar="--accent" /></div>
     </>
+  );
+}
+
+// STRATEGY CHANGES — customize the comparison windows for THIS run and see
+// the temporal story recomputed live (deterministic server recount; the saved
+// report always keeps the run's original windows).
+function WindowPicker({ runId, overlay, onOverlay }) {
+  const [lookback, setLookback] = useState(365);
+  const [currentDays, setCurrentDays] = useState(90);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const apply = async () => {
+    setBusy(true); setErr(null);
+    try {
+      const res = await fetch(`/api/runs/${runId}/rewindow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lookback_days: lookback, current_days: currentDays }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+      onOverlay(await res.json());
+    } catch (e) {
+      setErr(String(e.message || e));
+    }
+    setBusy(false);
+  };
+  return (
+    <div className="card">
+      <div className="title">Customize the comparison windows
+        <Info tip="Re-slices this run's already-collected artifacts by date and recounts the baseline + change events — pure counting, instant, nothing is re-fetched. Use it to test whether a 'change' depends on where the line is drawn." />
+      </div>
+      <div className="winpick">
+        <div className="nr-field">
+          <label data-tip="How far back the 'before' period reaches">History to compare against</label>
+          <select className="nr-sel" value={lookback} onChange={(e) => setLookback(Number(e.target.value))}>
+            {LOOKBACK_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <div className="nr-field">
+          <label data-tip="How many trailing days count as 'now'">Recent window</label>
+          <select className="nr-sel" value={currentDays} onChange={(e) => setCurrentDays(Number(e.target.value))}>
+            {CURRENT_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <button type="button" className="nr-btn" disabled={busy || currentDays >= lookback} onClick={apply}>
+          {busy ? "Recounting…" : "Apply windows"}
+        </button>
+        {overlay && (
+          <button type="button" className="nr-btn reset" onClick={() => onOverlay(null)}
+                  data-tip="Back to the windows this run was analyzed and saved with">
+            Reset to run windows
+          </button>
+        )}
+      </div>
+      {currentDays >= lookback && <div className="nr-warn">recent window must be shorter than the history range</div>}
+      {err && <div className="nr-warn">could not recount: {err}</div>}
+    </div>
   );
 }
 
@@ -652,9 +822,9 @@ function TemporalBaseline({ pkg }) {
   const max = Math.max(1, ...themes.map((t) => Math.max(pw.themes?.[t] || 0, cw.themes?.[t] || 0)));
   return (
     <>
-      <h2>Prior vs current window
-        <Info tip={`What WAS observed in the prior window (${pw.start} → ${pw.end}: ${pw.n_artifacts} artifacts with real archive/publish dates) vs the current window — not just the emergences. Stable themes persist across both; receded themes appeared prior but not now.`} />
-      </h2>
+      <Sec n={1} title="Prior vs current window"
+           why={`What their story looked like THEN (${pw.start} → ${pw.end}, ${pw.n_artifacts} dated artifacts) vs now — the baseline every 'change' below is checked against. Stable themes = their spine; don't expect those to move.`}
+           tip="Theme counts = artifacts carrying the theme as primary OR supporting (same rule as the change events); windows have different sample sizes, so compare shares." />
       <div className="card">
         <div className="ktlegend" style={{ marginBottom: 8 }}>
           <span><span className="ktbar comp" style={{ width: 14, display: "inline-block", height: 8 }} /> prior ({pw.n_artifacts} artifacts, {pw.start} → {pw.end})</span>
@@ -662,7 +832,7 @@ function TemporalBaseline({ pkg }) {
         </div>
         {themes.map((t) => (
           <div className="ktrow" key={t}>
-            <div className="ktlabel" title={t}>{t.replace(/_/g, " ")}</div>
+            <div className="ktlabel" data-tip={t}>{t.replace(/_/g, " ")}</div>
             <div className="ktbars">
               <div className="ktbar comp" style={{ width: `${((pw.themes?.[t] || 0) / max) * 100}%` }} />
               <span className="ktnum">{pw.themes?.[t] || 0}</span>
@@ -692,7 +862,9 @@ function ChangesTimeline({ pkg }) {
   const themeOf = (c) => ((String(c.current_state || "").match(/[“"']([a-z_]+)[”"']/) || [])[1] || c.dimension || "change").replace(/_/g, " ");
   return (
     <>
-      <h2>Change timeline <Info tip="Each emerging theme: prior-window presence (left) vs current-window artifact count (bar). Low confidence = signal, not fact — caveats on each card below." /></h2>
+      <Sec n={2} title="Change timeline"
+           why="Each moving theme at a glance: how present it was before (left) vs now (bar). EMERGING = genuinely new; EXPANDING = present before, louder now."
+           tip="Prior counts are reconciled against the full corpus at render — an event can never claim 'not observed' about a theme the baseline saw." />
       <div className="card">
         {changes.map((c) => {
           // Real reconciled prior counts — never a hardcoded "not observed"
@@ -711,8 +883,8 @@ function ChangesTimeline({ pkg }) {
             : `prior window: ${(c.prior_evidence_ids || []).length} artifacts sampled`;
           return (
             <div className="tlrow2" key={c.change_id}>
-              <div className="tllabel" title={c.current_state}>{themeOf(c)} {pill(c.confidence)} <span className="pill">{c.lifecycle}</span></div>
-              <div className="tlprior2" title={priorTitle}>{priorLabel}</div>
+              <div className="tllabel" data-tip={c.current_state}>{themeOf(c)} {pill(c.confidence)} <span className="pill">{c.lifecycle}</span></div>
+              <div className="tlprior2" data-tip={priorTitle}>{priorLabel}</div>
               <div className="tltrack2">
                 <div className="tlbar2" style={{ width: `${((c.current_evidence_ids || []).length / max) * 100}%` }} />
                 <span className="ktnum">{(c.current_evidence_ids || []).length} now</span>
@@ -739,9 +911,9 @@ function AffinityBar({ pkg }) {
   }));
   return (
     <>
-      <h2>Audience-affinity competitors (Similarweb, estimated)
-        <Info tip="Sites this competitor's web audience also visits, by Similarweb's affinity INDEX (0–1, normalized to the top competitor = 1.00). It is a rank index, NOT a percentage audience overlap. Where the focal company ranks here is a demand-side competitive signal." />
-      </h2>
+      <Sec n={3} title="Audience-affinity competitors (Similarweb, estimated)"
+           why="Who their audience actually shops against — a demand-side reality check on the competitor set."
+           tip="Affinity is a rank INDEX (0–1, top-normalized), not a percentage audience overlap; all values estimated." />
       <div className="card">
         <HBar data={data} />
         <p className="empty" style={{ fontSize: 11, marginBottom: 0 }}>affinity index (0–1, top-normalized) — not % overlap · all values estimated</p>
@@ -760,19 +932,21 @@ function VerticalAnalysis({ pkg }) {
   const pct = (x) => `${Math.round((x || 0) * 100)}%`;
   return (
     <>
-      <h2>Positioning by product vertical <Info tip={`How the competitor positions in EACH product category (payroll, EOR, HRIS, IT, spend…). Keyword-derived mapping over products/themes/messages/URLs — deterministic, method disclosed in the JSON. ${hasFocal ? `Share columns divide by each company's classified corpus so a niche competitor's per-product investment compares fairly against ${focalName}'s.` : ""}`} /></h2>
+      <Sec n={8} title="Positioning by product vertical"
+           why="Reference table: pages, LinkedIn posts, themes, and personas per product line — with share columns so even a niche competitor's per-product investment compares fairly. Scope the Overview chat to a vertical for follow-ups."
+           tip={`Keyword-derived mapping over products/themes/messages/URLs — deterministic, method disclosed in the JSON.${hasFocal ? " Share columns divide by each company's classified corpus." : ""}`} />
       <div className="card">
         <div className="heatmap-wrap">
           <table className="vtable">
             <thead><tr>
-              <th>Vertical</th><th title="pages + posts mapped to this vertical">Pages</th><th>LinkedIn</th>
-              {hasFocal && <th title={`${focalName} pages mapped to this vertical (from the focal mirror run)`}>{focalName} pages</th>}
-              {hasFocal && <th title="share of each company's classified corpus — corpus-size-normalized">Share (comp / focal)</th>}
+              <th>Vertical</th><th data-tip="pages + posts mapped to this vertical">Pages</th><th>LinkedIn</th>
+              {hasFocal && <th data-tip={`${focalName} pages mapped to this vertical (from the focal mirror run)`}>{focalName} pages</th>}
+              {hasFocal && <th data-tip="share of each company's classified corpus — corpus-size-normalized">Share (comp / focal)</th>}
               <th>Top themes</th><th>Personas</th><th>Example</th>
             </tr></thead>
             <tbody>
               {verts.map((v) => (
-                <tr key={v.vertical} title={v.sample_message ? `sample message: ${v.sample_message}` : ""}>
+                <tr key={v.vertical} data-tip={v.sample_message ? `sample message: ${v.sample_message}` : ""}>
                   <td><b>{v.vertical.replace(/_/g, " ")}</b></td>
                   <td>{v.n_artifacts}</td>
                   <td>{v.n_linkedin_posts}</td>
@@ -801,25 +975,29 @@ const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 // Dumbbell row: two dots on a 0-100% track, n labels. The distance IS the story.
 function Dumbbell({ label, aPct, bPct, aLabel, bLabel, aColor = "--bad", bColor = "--good", note }) {
   return (
-    <div className="dbrow" title={note || `${aLabel} vs ${bLabel}`}>
+    <div className="dbrow" data-tip={note || `${aLabel} vs ${bLabel}`}>
       <div className="dblabel">{label}</div>
       <div className="dbtrack">
         <div className="dbline" style={{ left: `${Math.min(aPct, bPct)}%`, width: `${Math.abs(aPct - bPct)}%` }} />
-        <div className="dbdot" style={{ left: `${aPct}%`, background: `var(${aColor})` }} title={aLabel} />
-        <div className="dbdot" style={{ left: `${bPct}%`, background: `var(${bColor})` }} title={bLabel} />
+        <div className="dbdot" style={{ left: `${aPct}%`, background: `var(${aColor})` }} data-tip={aLabel} />
+        <div className="dbdot" style={{ left: `${bPct}%`, background: `var(${bColor})` }} data-tip={bLabel} />
       </div>
       <div className="dbvals">{aLabel} · {bLabel}</div>
     </div>
   );
 }
 
-function InsightHeader({ block, boardTip }) {
+function InsightHeader({ block, n, boardTip }) {
   return (
-    <h2>
-      <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}>{block.board_column}</span>{" "}
-      {block.title}
-      <Info tip={`${block.read_in_5s} — ${boardTip || "EDA-derived: deterministic cross-cutting join over this run's classified corpus; every number carries its denominator."}`} />
-    </h2>
+    <>
+      <h2>
+        {n != null && <span className="secno">{n}</span>}
+        <span className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}>{block.board_column}</span>{" "}
+        {block.title}
+        <Info tip={boardTip || "EDA-derived: a deterministic cross-cutting join over this run's classified corpus; every number carries its denominator. Full series in the JSON."} />
+      </h2>
+      <p className="secwhy"><b>Read it in 5s:</b> {block.read_in_5s}</p>
+    </>
   );
 }
 
@@ -832,7 +1010,7 @@ function ClaimVsRecord({ pkg }) {
   const c = b.competitor, f = b.focal;
   return (
     <>
-      <InsightHeader block={b} />
+      <InsightHeader block={b} n={2} />
       <div className="card">
         <Dumbbell label={`${comp} (n=${c.n_classified})`} aPct={c.voice_share * 100} bPct={c.cert_rate * 100}
                   aLabel={`voiced ${c.voice_n}/${c.n_classified} = ${pct(c.voice_share)}`}
@@ -851,7 +1029,7 @@ function ClaimVsRecord({ pkg }) {
             <b>Cert hit list (buy these intents):</b>{" "}
             {b.cep_hit_list.map((h) => (
               <span key={h.cep} className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}
-                    title={`${focal} ${pct(h.focal.rate)} (n=${h.focal.n}) vs ${comp} ${pct(h.competitor.rate)} (n=${h.competitor.n})${h.competitor.n < 10 ? " — small cell" : ""}`}>
+                    data-tip={`${focal} ${pct(h.focal.rate)} (n=${h.focal.n}) vs ${comp} ${pct(h.competitor.rate)} (n=${h.competitor.n})${h.competitor.n < 10 ? " — small cell" : ""}`}>
                 {h.cep.replace(/_/g, " ")} {pct(h.focal.rate)} vs {pct(h.competitor.rate)}
               </span>
             ))}
@@ -862,7 +1040,7 @@ function ClaimVsRecord({ pkg }) {
             <b>Guardrail (do NOT attack):</b>{" "}
             {b.guardrail.map((h) => (
               <span key={h.cep} className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
-                    title={`no record edge: ${comp} ${pct(h.competitor.rate)} vs ${focal} ${pct(h.focal.rate)}`}>
+                    data-tip={`no record edge: ${comp} ${pct(h.competitor.rate)} vs ${focal} ${pct(h.focal.rate)}`}>
                 {h.cep.replace(/_/g, " ")} — no edge
               </span>
             ))}
@@ -882,7 +1060,7 @@ function ProofVsVoice({ pkg }) {
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
   return (
     <>
-      <InsightHeader block={b} />
+      <InsightHeader block={b} n={2} />
       <div className="card">
         {b.rows.map((r) => (
           <Dumbbell key={r.cep}
@@ -915,7 +1093,7 @@ function FunnelVoids({ pkg }) {
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
   return (
     <>
-      <InsightHeader block={b} />
+      <InsightHeader block={b} n={3} />
       <div className="card">
         {b.rows.slice(0, 8).map((r) => {
           const c = r.competitor, f = r.focal;
@@ -923,14 +1101,14 @@ function FunnelVoids({ pkg }) {
           const fRate = f ? f.decision_n / Math.max(1, f.n) : null;
           return (
             <div className="ktrow" key={r.vertical}>
-              <div className="ktlabel" title={`evaluation depth: ${comp} ${c.evaluation_n}/${c.n}`}>
+              <div className="ktlabel" data-tip={`evaluation depth: ${comp} ${c.evaluation_n}/${c.n}`}>
                 {r.vertical.replace(/_/g, " ")} {r.void && <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>VOID</span>}
               </div>
-              <div className="ktbars" title={`${comp}: ${c.decision_n}/${c.n} decision-stage pages`}>
+              <div className="ktbars" data-tip={`${comp}: ${c.decision_n}/${c.n} decision-stage pages`}>
                 <div className="ktbar comp" style={{ width: `${cRate * 400}%`, maxWidth: "100%" }} />
                 <span className="ktnum">{c.decision_n}/{c.n}</span>
               </div>
-              <div className="ktbars" title={f ? `${focal}: ${f.decision_n}/${f.n} decision-stage pages` : "no focal mirror"}>
+              <div className="ktbars" data-tip={f ? `${focal}: ${f.decision_n}/${f.n} decision-stage pages` : "no focal mirror"}>
                 {f ? (<><div className="ktbar focal" style={{ width: `${(fRate || 0) * 400}%`, maxWidth: "100%" }} /><span className="ktnum">{f.decision_n}/{f.n}</span></>) : <span className="ktnum">—</span>}
               </div>
             </div>
@@ -955,11 +1133,11 @@ function AffinityDefense({ pkg }) {
   const max = Math.max(0.01, ...b.rows.map((r) => r.affinity));
   return (
     <>
-      <InsightHeader block={b} />
+      <InsightHeader block={b} n={3} />
       <div className="card">
         {b.rows.map((r) => (
           <div className="ktrow" key={r.domain} style={{ gridTemplateColumns: "150px 1fr auto" }}>
-            <div className="ktlabel" title={`${r.mentions} mention(s) in ${comp}'s classified corpus`}>{r.domain}</div>
+            <div className="ktlabel" data-tip={`${r.mentions} mention(s) in ${comp}'s classified corpus`}>{r.domain}</div>
             <div className="ktbars">
               <div className="ktbar" style={{ width: `${(r.affinity / max) * 100}%`, background: r.defended ? "var(--accent)" : "var(--muted)", opacity: r.defended ? 0.9 : 0.55 }} />
               <span className="ktnum">{r.affinity.toFixed(2)}</span>
@@ -967,7 +1145,7 @@ function AffinityDefense({ pkg }) {
             <span className="atag" style={r.defended
               ? { color: "var(--accent)", borderColor: "var(--accent)" }
               : { color: "var(--good)", borderColor: "var(--good)" }}
-              title={r.defended ? `${comp} has a vs-page for this domain` : "no comparison page — this SERP is open"}>
+              data-tip={r.defended ? `${comp} has a vs-page for this domain` : "no comparison page — this SERP is open"}>
               {r.defended ? "DEFENDED" : "OPEN SERP"}
             </span>
           </div>
@@ -998,7 +1176,7 @@ function ChannelProofSplit({ pkg }) {
   ];
   return (
     <>
-      <InsightHeader block={b} />
+      <InsightHeader block={b} n={1} />
       <div className="card">
         <div className="ktrow" style={{ fontWeight: 600, fontSize: 11, color: "var(--muted)" }}>
           <div className="ktlabel">proof type</div><div>LinkedIn feed</div><div>indexed website</div>
@@ -1006,10 +1184,10 @@ function ChannelProofSplit({ pkg }) {
         {rows.map((r) => (
           <div className="ktrow" key={r.label}>
             <div className="ktlabel">{r.label}</div>
-            <div className="ktbars" title={`${r.liN} of LinkedIn posts`}>
+            <div className="ktbars" data-tip={`${r.liN} of LinkedIn posts`}>
               <div className="ktbar comp" style={{ width: `${r.li * 100}%` }} /><span className="ktnum">{r.liN} = {pct(r.li)}</span>
             </div>
-            <div className="ktbars" title={`${r.webN} of website pages`}>
+            <div className="ktbars" data-tip={`${r.webN} of website pages`}>
               <div className="ktbar focal" style={{ width: `${r.web * 100}%` }} /><span className="ktnum">{r.webN} = {pct(r.web)}</span>
             </div>
           </div>
@@ -1042,16 +1220,18 @@ function LinkedInPosts({ pkg }) {
   }
   return (
     <>
-      <h2>{competitor} LinkedIn employee posts (showing {Math.min(20, posts.length)} of {posts.length}) <Info tip="Individual public posts by the company + its employees (Exa-extracted text + real post link), each run through the full classifier — theme, stance, audience, product vertical. Login-wall boilerplate is stripped from excerpts; click 'view post' to review the post on LinkedIn." /></h2>
+      <Sec n={3} title={`${competitor} LinkedIn employee posts (showing ${Math.min(20, posts.length)} of ${posts.length})`}
+           why="The individual posts, each classified for theme, stance, and product vertical — click through to verify any of them on LinkedIn."
+           tip="Exa-extracted post text + real post link; login-wall boilerplate is stripped from excerpts." />
       <div className="card">
         {posts.slice(0, 20).map((p) => (
           <div className="gaprow" key={p.artifact_id} style={{ gridTemplateColumns: "1fr" }}>
             <div className="row">
               <b>{p.author || "?"}</b>{p.author_role ? ` · ${p.author_role}` : ""}{" "}
-              <span className="pill" title="classified message theme">{p.theme || "—"}</span>
-              <span className="pill" title="competitive stance">{p.competitive_stance || "—"}</span>
+              <span className="pill" data-tip="classified message theme">{p.theme || "—"}</span>
+              <span className="pill" data-tip="competitive stance">{p.competitive_stance || "—"}</span>
               {(p.verticals || []).map((v) => (
-                <span className="pill vert" key={v} title="product vertical this post touches">{v.replace(/_/g, " ")}</span>
+                <span className="pill vert" key={v} data-tip="product vertical this post touches">{v.replace(/_/g, " ")}</span>
               ))}{" "}
               <a href={p.post_url} target="_blank" rel="noreferrer">view post ↗</a>
             </div>
@@ -1068,7 +1248,9 @@ function PersonaChannelHeatmap({ pkg }) {
   if (!m.personas?.length) return null;
   return (
     <>
-      <h2>Persona × channel coverage <Info tip="Which buyer personas the competitor reaches on which channels — intensity = number of classified artifacts. Empty cells are content whitespace you can own." /></h2>
+      <Sec n={4} title="Persona × channel coverage"
+           why="Who they talk to, where. Empty cells are audiences no channel is serving — content whitespace you can own first."
+           tip="Cell intensity = number of classified artifacts; an empty cell means not observed, not proof of absence." />
       <div className="card"><Heatmap personas={m.personas} channels={m.channels} cells={m.cells || {}} /></div>
     </>
   );
@@ -1082,7 +1264,9 @@ function StrategyOverTime({ pkg, srcIdx }) {
   const evIdx = evidenceIndex(pkg);
   return (
     <>
-      <h2>Strategy over time ({changes.length}) <Info tip="Temporal changes reconciled against the FULL final corpus (mid-run detections are re-checked at render, so an event can never contradict the baseline above). Emerging/expanding themes stay low-confidence with a coverage-asymmetry caveat — archive absence is not real-world absence." /></h2>
+      <Sec n={3} title={`Change events, with evidence (${changes.length})`}
+           why="The full story per change: prior state, current state, honest alternative explanations, and the exact evidence pages. Read the alternatives before acting — archive absence is not real-world absence."
+           tip="Events are reconciled against the full corpus; emerging/expanding signals stay low-confidence by design." />
       {changes.length === 0 && (
         <p className="empty">No temporal change met the both-periods evidence bar on this run.</p>
       )}
@@ -1106,8 +1290,8 @@ function StrategyOverTime({ pkg, srcIdx }) {
         return (
           <div className="card" key={c.change_id}>
             <div className="title">
-              {c.dimension} <span title="confidence — low means treat as a signal, not a fact">{pill(c.confidence)}</span>{" "}
-              <span className="pill" title="lifecycle state">{c.lifecycle}</span>
+              {c.dimension} <span data-tip="confidence — low means treat as a signal, not a fact">{pill(c.confidence)}</span>{" "}
+              <span className="pill" data-tip="lifecycle state">{c.lifecycle}</span>
             </div>
             <div className="row"><b>Prior:</b> {c.prior_state}</div>
             <div className="row"><b>Current:</b> {c.current_state}</div>
@@ -1115,7 +1299,7 @@ function StrategyOverTime({ pkg, srcIdx }) {
               <b>Evidence:</b> {evidenceLine}
             </div>
             {c.alternative_explanations?.length > 0 && (
-              <div className="row" title="honest alternative readings of this signal"><b>Alt. explanations:</b> {c.alternative_explanations.join("; ")}</div>
+              <div className="row" data-tip="honest alternative readings of this signal"><b>Alt. explanations:</b> {c.alternative_explanations.join("; ")}</div>
             )}
             {exact.length > 0
               ? <SourceDrawer sources={exact} label={c.prior_evidence_role === "window_sample" ? `current evidence pages (${exact.length})` : `exact evidence pages (${exact.length})`} />
@@ -1149,9 +1333,9 @@ function CepRow({ c, competitor, focal, artIdx }) {
       <div>
         <div className="gaplabel" style={{ fontSize: 12 }}>{String(c.cep).replace(/_/g, " ").slice(0, 60)}</div>
         <span className="pill" style={{ color: `var(${own[c.ownership] || "--border"})`, borderColor: `var(${own[c.ownership] || "--border"})` }}
-              title={c.ownership_basis || "who currently owns this buying intent"}>{String(c.ownership).replace(/_/g, " ")}</span>
+              data-tip={c.ownership_basis || "who currently owns this buying intent"}>{String(c.ownership).replace(/_/g, " ")}</span>
       </div>
-      <div className="gapbars" title={c.ownership_basis || `${competitor}: ${clabel} · ${focal}: ${flabel}`}>
+      <div className="gapbars" data-tip={c.ownership_basis || `${competitor}: ${clabel} · ${focal}: ${flabel}`}>
         <HBar data={[
           { label: competitor, value: cs != null ? cs : c.competitor_pages, display: clabel },
           { label: focal, value: fs != null ? fs : c.focal_pages, display: flabel },
@@ -1159,7 +1343,7 @@ function CepRow({ c, competitor, focal, artIdx }) {
         {pages.length > 0 && (
           <>
             <button type="button" className="srcbtn" onClick={() => setOpen((o) => !o)}
-                    title="The pages that carry this buying trigger (up to 5 competitor + 3 focal examples)">
+                    data-tip="The pages that carry this buying trigger (up to 5 competitor + 3 focal examples)">
               {open ? "▾" : "▸"} contributing pages ({pages.length})
             </button>
             {open && (
@@ -1190,11 +1374,13 @@ function CepOwnership({ pkg }) {
   const legacy = ceps.filter((c) => !CEP_GROUPS.includes(c.ownership));
   return (
     <>
-      <h2>Search-intent ownership (category entry points) <Info tip={`Buying triggers ("opening a new country", "consolidating HR tools") and who owns them. Ownership is SHARE-normalized (pages ÷ that company's classified corpus) so corpus size can't fabricate a verdict: contested needs <2x share ratio, an ownership call needs ≥2x AND ≥3 pages, thinner reads are disclosed as insufficient sample. All ${ceps.length} triggers shown, grouped.`} /></h2>
+      <Sec n={1} title="Search-intent ownership"
+           why={`The buying triggers ("opening a new country", "consolidating HR tools") and who owns the content for each. Target the contested group; defend what you own; ignore what's too thin to call. All ${ceps.length} triggers shown, grouped by verdict.`}
+           tip="Ownership is SHARE-normalized (pages ÷ each company's classified corpus): contested needs <2x share ratio, an ownership call needs ≥2x AND ≥3 pages; thinner reads say 'insufficient sample' instead of asserting." />
       <div className="card">
         {groups.map(([g, rows]) => (
           <div key={g}>
-            <div className="cepgroup" title={
+            <div className="cepgroup" data-tip={
               g === "insufficient_sample"
                 ? "too few pages on either side to call ownership — disclosed, not asserted"
                 : `${rows.length} trigger(s) where the share test says: ${g.replace(/_/g, " ")}`
@@ -1219,7 +1405,9 @@ function Similarweb({ pkg }) {
   const label = sw.data_source === "similarweb" ? "Similarweb" : "public-web estimate";
   return (
     <>
-      <h2>Traffic & channel mix ({label}) <Info tip="Estimated demand-side view via Exa's Similarweb partner (or a labeled public-web estimate when the partner is unavailable). Every value is an estimate — never presented as measured analytics." /></h2>
+      <Sec n={4} title={`Traffic & channel mix (${label})`}
+           why="The demand behind the content: estimated visits and where their traffic comes from — sizing context for every play on this tab."
+           tip="Estimated via Exa's Similarweb partner (or a labeled public-web estimate). Every value is an estimate — never measured analytics." />
       <div className="card">
         {/* digital_competitors is an array of objects — String() renders
             "[object Object]"; the AffinityBar above is its real rendering. */}
@@ -1250,10 +1438,12 @@ function CommercialMotion({ pkg }) {
   if (!cm.primary_motion) return null;
   return (
     <>
-      <h2>Commercial motion <Info tip="Public-signal inference of how they sell: CTA mix (demo vs free-trial), pricing disclosure (best-evidence: the most-open level observed on ≥2 pages), segment focus. Never CAC/conversion/spend — those aren't publicly knowable." /></h2>
+      <Sec n={5} title="Commercial motion"
+           why="How they sell, read from public signals: demo-led vs self-serve CTAs, how openly they price, which segments they chase. Mismatches with your motion are positioning openings."
+           tip="Pricing disclosure = the most-open level observed on ≥2 pages (noise-guarded). Never CAC/conversion/spend — those aren't publicly knowable." />
       <div className="card">
         <div className="row"><b>Primary motion:</b> {cm.primary_motion} <span className="pill">{cm.confidence}</span></div>
-        <div className="row"><b title="most-disclosing pricing level observed (noise-guarded)">Pricing disclosure:</b> {cm.pricing_disclosure}</div>
+        <div className="row"><b data-tip="most-disclosing pricing level observed (noise-guarded)">Pricing disclosure:</b> {cm.pricing_disclosure}</div>
         {cm.dominant_ctas && <div className="row"><b>Dominant CTAs:</b> {Object.entries(cm.dominant_ctas).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(" · ")}</div>}
         {cm.segment_focus && <div className="row"><b>Segment focus:</b> {Object.entries(cm.segment_focus).map(([k, v]) => `${k} (${v})`).join(" · ")}</div>}
         <div className="row" style={{ color: "var(--muted)", fontSize: 12 }}>{cm.basis}</div>
@@ -1268,7 +1458,9 @@ function Evidence({ pkg }) {
   const arts = pkg.artifacts || [];
   return (
     <>
-      <h2>Evidence explorer ({arts.length} artifacts) <Info tip="Every collected source: URL, retrieval timestamp (archive capture date for Wayback), and the extracted text. Everything in the analysis traces back here." /></h2>
+      <Sec n={4} title={`Evidence explorer (${arts.length} artifacts)`}
+           why="Every source this run collected — URL, timestamp, extracted text. Everything above traces back to a row here."
+           tip="Wayback rows carry their real archive capture dates; normalized text is truncated for size (full text in the run store)." />
       {arts.map((a) => (
         <details key={a.artifact_id}>
           <summary>
@@ -1290,11 +1482,13 @@ function Coverage({ pkg }) {
   const entries = Object.entries(cov);
   return (
     <>
-      <h2>Coverage & limitations <Info tip="Which research dimensions reached which coverage level, and every disclosed limitation — absences are findings, never hidden. 'not attempted' = this run never collected for that dimension (absence of collection, not absence of activity)." /></h2>
+      <Sec n={1} title="Coverage & limitations"
+           why="How much ground this run actually covered, dimension by dimension — read this before trusting any verdict. 'Not attempted' means we never looked, not that nothing exists."
+           tip="Coverage levels are recomputed from the collected corpus at render; every limitation is disclosed, never hidden." />
       <div className="cov">
         {entries.map(([k, v]) => (
           <div className={`cell ${v === "not_attempted" ? "na" : ""}`} key={k}
-               title={v === "not_attempted"
+               data-tip={v === "not_attempted"
                  ? `${k.replace(/_/g, " ")}: not attempted this run — absence of collection, not absence of activity`
                  : `research dimension: ${k.replace(/_/g, " ")}`}>
             <span>{k}</span><span>{v === "not_attempted" ? "not attempted" : v}</span>
@@ -1321,7 +1515,9 @@ function DataHonesty({ pkg }) {
   if (negs.length + fails.length + uncls.length + recon.length === 0) return null;
   return (
     <>
-      <h2>Data honesty — disclosed absences <Info tip="What was ATTEMPTED but returned nothing, what failed, and what couldn't be classified. Negative observations are findings: 'searched X, found nothing' is different from 'never looked'. Annotations mark negatives superseded by later successful calls." /></h2>
+      <Sec n={3} title="Data honesty — disclosed absences"
+           why="What we tried and found nothing, what failed, and what we excluded — so you know the analysis isn't hiding its misses. 'Searched and found nothing' is itself a finding."
+           tip="Annotations mark negatives superseded by later successful calls; excluded junk is counted and disclosed." />
       <div className="card">
         {negs.length > 0 && (
           <>
@@ -1366,7 +1562,9 @@ function ClaimsLedger({ pkg }) {
   const evIdx = evidenceIndex(pkg);
   return (
     <>
-      <h2>Claims ledger ({claims.length}) <Info tip="Every strategic claim with its status, confidence reasoning, alternative explanations, and the exact evidence rows (verbatim excerpts + source links) that support or contradict it. This is the auditable spine of the analysis." /></h2>
+      <Sec n={2} title={`Claims ledger (${claims.length})`}
+           why="The auditable spine: every strategic claim with why we believe it, what would change our mind, and the verbatim evidence behind it. Expand any claim to check it yourself."
+           tip="Claims are judged against their cited evidence; performance metrics (ROAS/CAC/spend) are banned — never estimated." />
       <div className="card">
         {claims.map((c) => {
           const support = resolveIds(c.evidence_ids || [], artIdx, evIdx);
@@ -1375,7 +1573,7 @@ function ClaimsLedger({ pkg }) {
             <details key={c.claim_id}>
               <summary>
                 <span className={`pill ${c.claim_confidence}`}>{c.claim_confidence}</span>{" "}
-                <span className="pill" title="claim status after the evidence judge">{c.status}</span>{" "}
+                <span className="pill" data-tip="claim status after the evidence judge">{c.status}</span>{" "}
                 {String(c.statement || "").slice(0, 110)}
               </summary>
               <div className="row" style={{ fontSize: 12 }}><b>Statement:</b> {c.statement}</div>
@@ -1431,12 +1629,26 @@ function useJson(url, refresh) {
   return [data, err];
 }
 
-const MODES = ["comparative", "snapshot", "longitudinal"];
+// One button runs EVERYTHING (comparative mode already includes the current
+// snapshot, the time comparison, the focal mirror, LinkedIn, and traffic) —
+// the old mode dropdown just made people choose between subsets.
+const LOOKBACK_CHOICES = [
+  [180, "6 months of history"],
+  [365, "1 year of history"],
+  [730, "2 years of history"],
+];
+const CURRENT_CHOICES = [
+  [30, "last 30 days"],
+  [60, "last 60 days"],
+  [90, "last 90 days"],
+];
+
 function NewRunForm({ onSubmit, focalDefault }) {
   const [company, setCompany] = useState("");
   const [compareTo, setCompareTo] = useState("");
-  const [mode, setMode] = useState("comparative");
   const [exec, setExec] = useState("live"); // live by default — real data
+  const [lookback, setLookback] = useState(365);
+  const [currentDays, setCurrentDays] = useState(90);
   const [busy, setBusy] = useState(false);
   const submit = async (e) => {
     e.preventDefault();
@@ -1445,8 +1657,10 @@ function NewRunForm({ onSubmit, focalDefault }) {
     await onSubmit({
       company: company.trim(),
       compare_to: compareTo.trim() || null,
-      mode,
+      mode: "comparative", // the full analysis — subsumes snapshot + longitudinal
       execution_mode: exec,
+      lookback_days: lookback,
+      current_days: currentDays,
     });
     setBusy(false);
     setCompany("");
@@ -1457,26 +1671,46 @@ function NewRunForm({ onSubmit, focalDefault }) {
       <div className="nr-title">+ New analysis</div>
       <input className="nr-in" placeholder="competitor name or domain" value={company}
              onChange={(e) => setCompany(e.target.value)} />
-      <input className="nr-in" placeholder={`compare to (default ${focalDefault || "rippling.com"})`}
-             value={compareTo} onChange={(e) => setCompareTo(e.target.value)} />
-      <div className="nr-opts">
-        <select className="nr-sel" value={mode} onChange={(e) => setMode(e.target.value)}>
-          {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-        <select className="nr-sel" value={exec} onChange={(e) => setExec(e.target.value)}>
-          <option value="live">live (real data)</option>
-          <option value="cached">cached</option>
-          <option value="fixture">fixture (synthetic test)</option>
-        </select>
-      </div>
-      {exec !== "live" && (
-        <div className="nr-warn">
-          {exec === "fixture" ? "⚠ synthetic test data — not real public info" : "replays previously fetched data"}
-        </div>
-      )}
       <button className="nr-btn" disabled={busy || !company.trim()}>
-        {busy ? "Starting…" : exec === "live" ? "Run live analysis (a few min)" : "Run analysis"}
+        {busy ? "Starting…" : "Run full analysis (a few min)"}
       </button>
+      <div className="nr-help">
+        Runs everything in one go: current positioning, changes over time, the
+        comparison vs {compareTo.trim() || focalDefault || "rippling.com"}, LinkedIn posts, and traffic.
+      </div>
+      <details className="nr-adv">
+        <summary>Advanced options</summary>
+        <div className="nr-field">
+          <label data-tip="Which company to benchmark the competitor against — every ownership and proof verdict is relative to this company">Compare against</label>
+          <input className="nr-in" placeholder={`default: ${focalDefault || "rippling.com"}`}
+                 value={compareTo} onChange={(e) => setCompareTo(e.target.value)} />
+        </div>
+        <div className="nr-field">
+          <label data-tip="How far back the 'before' period reaches — archived pages, old posts, and news inside this range become the prior window">History to compare against</label>
+          <select className="nr-sel" value={lookback} onChange={(e) => setLookback(Number(e.target.value))}>
+            {LOOKBACK_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <div className="nr-field">
+          <label data-tip="How many trailing days count as 'now' — everything newer than this is the current window, everything older (within the history range) is the prior window">Recent window</label>
+          <select className="nr-sel" value={currentDays} onChange={(e) => setCurrentDays(Number(e.target.value))}>
+            {CURRENT_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <div className="nr-field">
+          <label data-tip="live fetches real public data; fixture is a deterministic synthetic test run">Data source</label>
+          <select className="nr-sel" value={exec} onChange={(e) => setExec(e.target.value)}>
+            <option value="live">live (real data)</option>
+            <option value="cached">cached</option>
+            <option value="fixture">fixture (synthetic test)</option>
+          </select>
+        </div>
+        {exec !== "live" && (
+          <div className="nr-warn">
+            {exec === "fixture" ? "⚠ synthetic test data — not real public info" : "replays previously fetched data"}
+          </div>
+        )}
+      </details>
     </form>
   );
 }
@@ -1504,12 +1738,12 @@ function JobsList({ jobs }) {
 /* --------------------------------- app --------------------------------- */
 
 const TABS = [
-  { id: "overview", label: "Overview", tip: "Executive summary: chat, top actions, and the data at a glance" },
-  { id: "product", label: "Product marketing", tip: "Message–proof gaps, recommended plays, per-vertical positioning" },
-  { id: "linkedin", label: "LinkedIn", tip: "Individual employee/company posts, classified, with links" },
-  { id: "changes", label: "Strategy changes", tip: "What changed between the prior and current windows — honestly labeled" },
-  { id: "performance", label: "Performance marketing", tip: "Search-intent ownership, traffic estimates, commercial motion" },
-  { id: "sources", label: "Sources & evidence", tip: "Every source URL, timestamp, and extracted text" },
+  { id: "overview", label: "Overview — start here", tip: "The scorecard, the top plays, and a chat grounded in this run's evidence" },
+  { id: "product", label: "Where to win", tip: "Their claims vs their proof — the attack/defend map, the gaps, and the runnable plays" },
+  { id: "linkedin", label: "LinkedIn signals", tip: "What their people amplify in the feed — often before the website catches up" },
+  { id: "changes", label: "Changes over time", tip: "Did their strategy actually move? Reconciled changes with customizable windows" },
+  { id: "performance", label: "Demand & channels", tip: "Which buying intents each side owns, plus traffic and how they sell" },
+  { id: "sources", label: "Evidence & trust", tip: "Coverage, the claim ledger, disclosed absences, and every raw source" },
 ];
 
 export default function App() {
@@ -1520,11 +1754,14 @@ export default function App() {
   const [jobs, setJobs] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [tab, setTab] = useState("overview");
+  // Custom-window overlay for the Changes-over-time tab (exploratory; the
+  // saved report always keeps the run's original windows).
+  const [winOverlay, setWinOverlay] = useState(null);
 
   useEffect(() => {
     if (runs && runs.length && !selected) setSelected(runs[0].run_id);
   }, [runs, selected]);
-  useEffect(() => { setTab("overview"); }, [selected]);
+  useEffect(() => { setTab("overview"); setWinOverlay(null); }, [selected]);
 
   // Seed jobs on mount — without this, a page refresh mid-run showed nothing
   // until the user started ANOTHER run (the poller only armed on submit).
@@ -1606,7 +1843,7 @@ export default function App() {
               {" "}
               <span className={`badge ${pkg.run?.execution_mode}`}>{pkg.run?.execution_mode}</span>
               {(pkg.run?.stop_reason_label || pkg.run?.stop_reason) && (
-                <span className="badge" title={`raw stop reason: ${pkg.run?.stop_reason}`}>
+                <span className="badge" data-tip={`raw stop reason: ${pkg.run?.stop_reason}`}>
                   {pkg.run?.stop_reason_label || pkg.run?.stop_reason}
                 </span>
               )}
@@ -1622,7 +1859,7 @@ export default function App() {
                   role="tab"
                   aria-selected={tab === t.id}
                   className={`tab ${tab === t.id ? "active" : ""}`}
-                  title={t.tip}
+                  data-tip={t.tip}
                   onClick={() => setTab(t.id)}
                 >
                   {t.label}
@@ -1632,53 +1869,82 @@ export default function App() {
 
             {tab === "overview" && (
               <>
-                <ChatPanel key={selected} runId={selected} pkg={pkg} />
+                <TabIntro q="What did we find, and what should Rippling do about it?"
+                          why="Start with the scorecard (the whole analysis as actions), take the top plays, then ask the chat anything — it answers only from this run's collected evidence and cites its sources." />
                 <StrategicScorecard pkg={pkg} go={setTab} />
                 <TopActions pkg={pkg} onOpenBoard={() => setTab("product")} />
+                <ChatPanel key={selected} runId={selected} pkg={pkg} />
                 <Positioning pkg={pkg} />
                 <DataVisuals pkg={pkg} />
               </>
             )}
             {tab === "product" && (
               <>
+                <TabIntro q="Where can we beat them — and where should we not try?"
+                          why="Follow the numbers: the map shows where their claims outrun their proof (1), the EDA joins turn that into specific openings (2–3), the gaps score every repeated claim (4), and the Action Board turns the best ones into runnable plays (5). Sections 6–8 are the reference detail behind them." />
                 <AttackDefendMatrix pkg={pkg} />
                 <ClaimVsRecord pkg={pkg} />
                 <FunnelVoids pkg={pkg} />
-                <KeyTopicsComparison pkg={pkg} />
-                <VerticalThemeHeatmap pkg={pkg} />
                 <GapsSection pkg={pkg} srcIdx={srcIdx} />
                 <Opportunities pkg={pkg} srcIdx={srcIdx} />
+                <KeyTopicsComparison pkg={pkg} />
+                <VerticalThemeHeatmap pkg={pkg} />
                 <VerticalAnalysis pkg={pkg} />
               </>
             )}
             {tab === "linkedin" && (
               <>
+                <TabIntro q="What are their people saying that their website isn't?"
+                          why="Employee posts are the leading indicator — launches, demos, and themes show up here first. Use this tab to catch the story early and to see which audiences their feed serves that yours doesn't." />
                 <ChannelProofSplit pkg={pkg} />
                 <LinkedInThemeBar pkg={pkg} />
                 <LinkedInPosts pkg={pkg} />
                 <PersonaChannelHeatmap pkg={pkg} />
               </>
             )}
-            {tab === "changes" && (
-              <>
-                <TemporalBaseline pkg={pkg} />
-                <ChangesTimeline pkg={pkg} />
-                <StrategyOverTime pkg={pkg} srcIdx={srcIdx} />
-              </>
-            )}
+            {tab === "changes" && (() => {
+              // Shim the package with the custom-window recount when active —
+              // the three components read only these two fields.
+              const shim = winOverlay
+                ? { ...pkg, temporal_baseline: winOverlay.temporal_baseline, change_events: winOverlay.change_events }
+                : pkg;
+              return (
+                <>
+                  <TabIntro q="Did their strategy actually change — and when?"
+                            why="Every 'change' here survives a reconciliation against the full corpus: real archive/publish dates, both windows checked, honest caveats. Adjust the windows below to test how sensitive the story is to where you draw the line." />
+                  <WindowPicker runId={selected} overlay={winOverlay} onOverlay={setWinOverlay} />
+                  {winOverlay && (
+                    <div className="banner" role="note">
+                      Exploring custom windows ({String(winOverlay.time_windows[1].start_at).slice(0, 10)} →{" "}
+                      {String(winOverlay.time_windows[0].end_at).slice(0, 10)}) — the saved report uses the run's
+                      original windows.
+                      {(winOverlay.reconciliation_notes || []).length > 0 &&
+                        ` ${winOverlay.reconciliation_notes.length} event(s) re-reconciled under these windows.`}
+                    </div>
+                  )}
+                  <TemporalBaseline pkg={shim} />
+                  <ChangesTimeline pkg={shim} />
+                  <StrategyOverTime pkg={shim} srcIdx={srcIdx} />
+                </>
+              );
+            })()}
             {tab === "performance" && (
               <>
+                <TabIntro q="Which buying moments do they own — and where is the demand?"
+                          why="Work top to bottom: who owns each buying intent (1), whether that ownership is backed by proof or just page volume (2), which comparison SERPs are undefended (3), then the traffic and sales-motion context behind it all (4–5)." />
+                <CepOwnership pkg={pkg} />
+                <ProofVsVoice pkg={pkg} />
                 {(pkg.insight_graphics || {}).affinity_defense
                   ? <AffinityDefense pkg={pkg} />
                   : <AffinityBar pkg={pkg} />}
-                <CepOwnership pkg={pkg} />
-                <ProofVsVoice pkg={pkg} />
                 <Similarweb pkg={pkg} />
                 <CommercialMotion pkg={pkg} />
               </>
             )}
             {tab === "sources" && (
               <>
+                <TabIntro q="Why should you trust any of this?"
+                          why="Everything above traces to here: what we covered (and honestly didn't), every claim with its evidence and counter-evidence, what we tried and found nothing, and every raw source with its timestamp." />
                 <Coverage pkg={pkg} />
                 <ClaimsLedger pkg={pkg} />
                 <DataHonesty pkg={pkg} />
@@ -1688,6 +1954,7 @@ export default function App() {
           </>
         )}
       </div>
+      <TooltipLayer />
     </div>
   );
 }

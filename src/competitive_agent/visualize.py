@@ -171,21 +171,33 @@ def _pm_matrix(pkg: dict[str, Any], competitor: str, focal: str) -> str:
     if not gaps:
         return "<p class='empty'>No proof gaps to plot.</p>"
     dots = []
+    legend = []
     for i, g in enumerate(gaps):
         cx = _PROOF_LEVEL.get(str(g.get("proof_strength", "none")).lower(), 0) / 3 * 100
         cy = _PROOF_LEVEL.get(str(g.get("focal_proof_strength", "none")).lower(), 0) / 3 * 100
         # jitter overlapping points deterministically
-        jx = (i % 3 - 1) * 3.5
-        jy = ((i // 3) % 3 - 1) * 3.5
-        x = min(96, max(4, cx + jx))
-        y = min(96, max(4, cy + jy))
+        jx = (i % 3 - 1) * 5
+        jy = ((i // 3) % 3 - 1) * 6
+        x = min(94, max(6, cx + jx))
+        y = min(92, max(8, cy + jy))
         att = str(g.get("attackability", "low"))
         col = _ATTACK_COLOR.get(att, "#9aa3b2")
         label = _esc(g.get("short_label", ""))
+        verb = (g.get("attackability_detail") or {}).get("overall") or {
+            "high": "attack",
+            "medium": "investigate",
+        }.get(att, "reframe")
+        # Numbered dots + a legend below — labels never overlap (red-team UI fix).
         dots.append(
             f"<div class='pmdot' style='left:{x:.0f}%;bottom:{y:.0f}%;background:{col}' "
-            f"title='{label}: {competitor} proof {_esc(g.get('proof_strength'))} · {focal} proof "
-            f"{_esc(g.get('focal_proof_strength'))} · attackability {att}'><span>{label}</span></div>"
+            f"title='{i + 1}. {label}: {competitor} {_esc(g.get('proof_strength'))} · {focal} "
+            f"{_esc(g.get('focal_proof_strength'))} → {_esc(str(verb).upper())}'>{i + 1}</div>"
+        )
+        legend.append(
+            f"<li><span class='pmnum' style='background:{col}'>{i + 1}</span> <b>{label}</b> "
+            f"<span class='pmverb' style='color:{col};border-color:{col}'>{_esc(str(verb).upper())}</span> "
+            f"<span class='pmproof'>{competitor} {_esc(g.get('proof_strength'))} · "
+            f"{focal} {_esc(g.get('focal_proof_strength'))}</span></li>"
         )
     return (
         "<div class='pmwrap'>"
@@ -197,6 +209,7 @@ def _pm_matrix(pkg: dict[str, Any], competitor: str, focal: str) -> str:
         "<div class='pmq br'>AT RISK<br><i>they're strong, we're weak</i></div>"
         f"{''.join(dots)}</div></div>"
         f"<div class='pmxaxis'>{_esc(competitor)} proof →</div>"
+        f"<ol class='pmlegend'>{''.join(legend)}</ol>"
     )
 
 
@@ -551,7 +564,9 @@ def _scorecard(pkg: dict[str, Any], competitor: str, focal: str) -> str:
             if g.get("attackability") == "medium"
             else "reframe"
         )
-        verbs["reframe" if v == "concede" else v] = verbs.get("reframe" if v == "concede" else v, 0) + 1
+        verbs["reframe" if v == "concede" else v] = (
+            verbs.get("reframe" if v == "concede" else v, 0) + 1
+        )
     changes = pkg.get("change_events") or []
     n_emerging = sum(1 for c in changes if c.get("lifecycle") == "emerging")
     n_expanding = sum(1 for c in changes if c.get("lifecycle") == "expanding")
@@ -608,7 +623,11 @@ def _insights(pkg: dict[str, Any], competitor: str, focal: str) -> str:
         cards.append(
             f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(cvr['board_column'])}</span> {_esc(cvr['title'])}</div>"
             f"<div class='abrow'>{_esc(competitor)}: voiced {c['voice_n']}/{c['n_classified']} ({c['voice_share']:.0%}) → record {c['cert_rate']:.0%}"
-            + (f" · {_esc(focal)}: voiced {f.get('voice_share', 0):.0%} → record {f.get('cert_rate', 0):.0%}" if f else "")
+            + (
+                f" · {_esc(focal)}: voiced {f.get('voice_share', 0):.0%} → record {f.get('cert_rate', 0):.0%}"
+                if f
+                else ""
+            )
             + "</div>"
             + (f"<div class='abrow'><b>Cert hit list:</b> {_esc(hit)}</div>" if hit else "")
             + f"<div class='abrow'><b>Play:</b> {_esc(cvr['action'])}</div></div>"
@@ -635,15 +654,25 @@ def _insights(pkg: dict[str, Any], competitor: str, focal: str) -> str:
         )
         cards.append(
             f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(fv['board_column'])}</span> {_esc(fv['title'])}</div>"
-            + (f"<div class='abrow'><b>Decision voids ({_esc(competitor)} vs {_esc(focal)}):</b> {_esc(voids)}</div>" if voids else "")
+            + (
+                f"<div class='abrow'><b>Decision voids ({_esc(competitor)} vs {_esc(focal)}):</b> {_esc(voids)}</div>"
+                if voids
+                else ""
+            )
             + f"<div class='abrow'><b>Play:</b> {_esc(fv['action'])}</div></div>"
         )
     ad = ig.get("affinity_defense")
     if ad:
-        open_serps = ", ".join(f"{r['domain']} ({r['affinity']:.2f})" for r in ad["rows"] if not r["defended"])
+        open_serps = ", ".join(
+            f"{r['domain']} ({r['affinity']:.2f})" for r in ad["rows"] if not r["defended"]
+        )
         cards.append(
             f"<div class='ab'><div class='abtitle'><span class='atag'>{_esc(ad['board_column'])}</span> {_esc(ad['title'])}</div>"
-            + (f"<div class='abrow'><b>Open SERPs (no vs-page):</b> {_esc(open_serps)}</div>" if open_serps else "")
+            + (
+                f"<div class='abrow'><b>Open SERPs (no vs-page):</b> {_esc(open_serps)}</div>"
+                if open_serps
+                else ""
+            )
             + (
                 f"<div class='abrow'><b>vs-pages outside the audience:</b> {_esc(', '.join(ad.get('orphan_comparison_slugs') or []))}</div>"
                 if ad.get("orphan_comparison_slugs")
@@ -762,8 +791,15 @@ h1 {{ font-size:20px; }} h2 {{ font-size:15px; color:var(--accent); border-botto
 .pmq {{ border:1px dashed var(--border); font-size:10px; color:var(--muted); padding:6px; text-align:center; }}
 .pmq i {{ font-size:9px; }}
 .pmq.tl {{ color:#4ade80; }} .pmq.br {{ color:#f87171; }}
-.pmdot {{ position:absolute; width:9px; height:9px; border-radius:50%; transform:translate(-50%,50%); }}
-.pmdot span {{ position:absolute; left:11px; top:-4px; font-size:9px; color:var(--text); white-space:nowrap; }}
+.pmdot {{ position:absolute; width:16px; height:16px; border-radius:50%; transform:translate(-50%,50%);
+  display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#0b1020; }}
+.pmlegend {{ list-style:none; margin:10px 0 0; padding:8px 0 0; border-top:1px dashed var(--border);
+  display:flex; flex-direction:column; gap:5px; font-size:12px; }}
+.pmnum {{ display:inline-flex; width:16px; height:16px; border-radius:50%; align-items:center;
+  justify-content:center; font-size:10px; font-weight:700; color:#0b1020; margin-right:6px; }}
+.pmverb {{ font-size:10px; font-weight:700; letter-spacing:.05em; padding:1px 6px; border-radius:4px;
+  border:1px solid var(--border); margin:0 4px; }}
+.pmproof {{ color:var(--muted); font-size:11px; }}
 .pmxaxis {{ text-align:center; font-size:11px; color:var(--muted); padding:4px; }}
 .hooks {{ font-size:12px; color:var(--muted); margin-top:10px; border-top:1px solid var(--border); padding-top:8px; }}
 .hooks b {{ color:var(--text); }}

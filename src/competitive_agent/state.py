@@ -47,6 +47,9 @@ class DirectorState(VersionedModel):
     mode: ResearchMode = "snapshot"
     execution_mode: Literal["live", "cached", "fixture"] = "fixture"
     lookback_days: int = 365
+    # None -> config windows.current_days (90). Set per-run from the UI/API
+    # so users can choose how the comparison is split.
+    current_days: int | None = None
     user_focus: list[str] = Field(default_factory=list)
     retry_mode: str | None = None
     # Retry mode that re-analyzes a parent's evidence without collecting anew:

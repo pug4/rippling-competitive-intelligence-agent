@@ -350,8 +350,7 @@ def test_honest_coverage_classification_derived_dims_not_false_absences():
     data = {
         "artifacts": [],
         "classifications": [
-            {"funnel_stages": ["awareness"], "proof_types": ["customer_logo"]}
-            for _ in range(25)
+            {"funnel_stages": ["awareness"], "proof_types": ["customer_logo"]} for _ in range(25)
         ],
         "proof_gaps": [{"focal_proof_strength": "none"}] * 3,
     }
@@ -458,11 +457,13 @@ def test_is_junk_ads_artifact_predicate():
     # Label-boundary domain match: wheeldeel.com is NOT deel.com; subdomain is.
     assert is_junk_ads_artifact(
         "https://adstransparency.google.com/advertiser/AR123?domain=wheeldeel.com",
-        meta, "deel.com",
+        meta,
+        "deel.com",
     )
     assert not is_junk_ads_artifact(
         "https://adstransparency.google.com/advertiser/AR123?domain=app.deel.com",
-        meta, "deel.com",
+        meta,
+        "deel.com",
     )
 
 
@@ -662,16 +663,31 @@ def test_gap_shares_populated_for_normal_corpora():
 # ---------------------------------------------------------------------------
 
 
-def _cls_ig(aid, theme=None, supporting=None, proofs=None, funnel=None, ceps=None,
-            named=None, pricing=None, cta=None):
+def _cls_ig(
+    aid,
+    theme=None,
+    supporting=None,
+    proofs=None,
+    funnel=None,
+    ceps=None,
+    named=None,
+    pricing=None,
+    cta=None,
+):
     from competitive_agent.schemas.classification import MarketingClassification as MC
 
     return MC(
-        classification_id="c-" + aid, artifact_id=aid, company_id="c1",
-        primary_theme=theme, supporting_themes=supporting or [],
-        proof_types=proofs or [], funnel_stages=funnel or [],
-        category_entry_points=ceps or [], named_competitors=named or [],
-        pricing_disclosure_level=pricing or "unknown", cta=cta,
+        classification_id="c-" + aid,
+        artifact_id=aid,
+        company_id="c1",
+        primary_theme=theme,
+        supporting_themes=supporting or [],
+        proof_types=proofs or [],
+        funnel_stages=funnel or [],
+        category_entry_points=ceps or [],
+        named_competitors=named or [],
+        pricing_disclosure_level=pricing or "unknown",
+        cta=cta,
     )
 
 
@@ -681,7 +697,9 @@ def test_insight_graphics_claim_vs_record_and_channel_split():
     comp_cls = [
         _cls_ig("w1", "compliance", proofs=["certification_or_compliance_record"]),
         _cls_ig("w2", "compliance", proofs=["quantified_customer_outcome"]),
-        _cls_ig("w3", "automation", supporting=["compliance"], proofs=["quantified_customer_outcome"]),
+        _cls_ig(
+            "w3", "automation", supporting=["compliance"], proofs=["quantified_customer_outcome"]
+        ),
         _cls_ig("w4", "compliance", proofs=["quantified_customer_outcome"], pricing="hidden"),
         _cls_ig("li1", "automation", proofs=["product_demonstration"]),
         _cls_ig("li2", "automation"),
@@ -714,19 +732,31 @@ def test_insight_graphics_funnel_voids_and_proof_vs_voice():
     from competitive_agent.synthesis import insight_graphics
 
     comp_cls = [
-        *[_cls_ig(f"a{i}", "automation", funnel=["evaluation"], ceps=["big_trigger"],
-                  proofs=["quantified_customer_outcome"]) for i in range(12)],
+        *[
+            _cls_ig(
+                f"a{i}",
+                "automation",
+                funnel=["evaluation"],
+                ceps=["big_trigger"],
+                proofs=["quantified_customer_outcome"],
+            )
+            for i in range(12)
+        ],
         *[_cls_ig(f"b{i}", "automation", funnel=["awareness"]) for i in range(6)],
     ]
     comp_arts = [_art(a.artifact_id) for a in comp_cls]
     focal_cls = [
-        *[_cls_ig(f"f{i}", "automation", funnel=["decision"], ceps=["big_trigger"]) for i in range(8)],
+        *[
+            _cls_ig(f"f{i}", "automation", funnel=["decision"], ceps=["big_trigger"])
+            for i in range(8)
+        ],
         *[_cls_ig(f"g{i}", "automation") for i in range(4)],
     ]
     comp_vmap = {a.artifact_id: ["benefits"] for a in comp_cls}
     focal_vmap = {c.artifact_id: ["benefits"] for c in focal_cls}
-    ceps = [{"cep": "big_trigger", "ownership": "contested",
-             "competitor_pages": 12, "focal_pages": 8}]
+    ceps = [
+        {"cep": "big_trigger", "ownership": "contested", "competitor_pages": 12, "focal_pages": 8}
+    ]
     ig = insight_graphics(
         comp_cls, comp_arts, focal_cls, ceps, {}, comp_vmap, focal_vmap, {}, "Deel", "Rippling"
     )
@@ -748,14 +778,28 @@ def test_insight_graphics_affinity_defense_census():
         {"url": "https://x.com/vs/gusto/", "category": "comparison"},
         {"url": "https://x.com/products/payroll", "category": "product"},
     ]
-    similarweb = {"metrics": {"digital_competitors": {"value": [
-        {"domain": "remote.com", "affinity": 1.0},
-        {"domain": "rippling.com", "affinity": 0.88},
-    ]}}}
+    similarweb = {
+        "metrics": {
+            "digital_competitors": {
+                "value": [
+                    {"domain": "remote.com", "affinity": 1.0},
+                    {"domain": "rippling.com", "affinity": 0.88},
+                ]
+            }
+        }
+    }
     comp_cls = [_cls_ig("w1", "automation", named=["Rippling"])]
     ig = insight_graphics(
-        comp_cls, [sitemap, _art("w1")], [_cls_ig("f1", "automation")],
-        [], similarweb, {}, {}, {}, "Deel", "Rippling"
+        comp_cls,
+        [sitemap, _art("w1")],
+        [_cls_ig("f1", "automation")],
+        [],
+        similarweb,
+        {},
+        {},
+        {},
+        "Deel",
+        "Rippling",
     )
     ad = ig["affinity_defense"]
     rows = {r["domain"]: r for r in ad["rows"]}
@@ -772,3 +816,39 @@ def test_insight_graphics_honest_without_focal():
     ig = insight_graphics(comp_cls, [_art("w1")], [], [], {}, {}, {}, {}, "X", "Rippling")
     assert "focal" not in ig["claim_vs_record"]  # competitor-only, no fabricated zeros
     assert "proof_vs_voice" not in ig
+
+
+# ---------------------------------------------------------------------------
+# Custom time windows: per-run current_days + the rewindow endpoint
+# ---------------------------------------------------------------------------
+
+
+def test_time_windows_honor_state_current_days():
+    import asyncio
+
+    from competitive_agent.graph import GraphContext
+    from competitive_agent.nodes import load_or_create_time_windows
+    from competitive_agent.state import DirectorState
+
+    state = DirectorState(run_id="RUN-w", company_input="x.com", lookback_days=365, current_days=30)
+    ctx = GraphContext(repository=None, trace=None, config=None, settings=None)
+    asyncio.run(load_or_create_time_windows(state, ctx))
+    cur = next(w for w in state.time_windows if w.purpose == "current")
+    comp = next(w for w in state.time_windows if w.purpose == "comparison")
+    assert (cur.end_at - cur.start_at).days == 30
+    assert comp.end_at == cur.start_at
+
+
+def test_time_windows_clamp_inverted_current_days():
+    import asyncio
+
+    from competitive_agent.graph import GraphContext
+    from competitive_agent.nodes import load_or_create_time_windows
+    from competitive_agent.state import DirectorState
+
+    # current >= lookback would make the comparison window empty — clamp.
+    state = DirectorState(run_id="RUN-w2", company_input="x.com", lookback_days=60, current_days=90)
+    ctx = GraphContext(repository=None, trace=None, config=None, settings=None)
+    asyncio.run(load_or_create_time_windows(state, ctx))
+    cur = next(w for w in state.time_windows if w.purpose == "current")
+    assert (cur.end_at - cur.start_at).days == 30  # lookback // 2

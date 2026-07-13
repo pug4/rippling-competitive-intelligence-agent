@@ -470,9 +470,7 @@ def reconcile_change_events(
                 # explicitly marked as such. Persisted mid-run ids are only
                 # trusted if the FINAL predicate still puts them in the prior
                 # window (they were exactly the stale-id failure mode).
-                stale_ids = [
-                    a for a in (ev.get("prior_evidence_ids") or []) if a in prior_id_set
-                ]
+                stale_ids = [a for a in (ev.get("prior_evidence_ids") or []) if a in prior_id_set]
                 out["prior_evidence_ids"] = stale_ids or prior_sample[:5]
                 out["prior_evidence_role"] = "window_sample"
                 out["alternative_explanations"] = [

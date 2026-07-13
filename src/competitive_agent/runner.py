@@ -85,6 +85,7 @@ def create_run(
     execution_mode: ExecutionMode | None = None,
     compare_to: str | None = None,
     lookback_days: int | None = None,
+    current_days: int | None = None,
     user_focus: list[str] | None = None,
     parent_run_id: str | None = None,
     retry_mode: str | None = None,
@@ -102,6 +103,9 @@ def create_run(
         mode=mode,  # type: ignore[arg-type]
         execution_mode=execution_mode or settings.default_run_mode,
         lookback_days=lookback_days or settings.default_lookback_days,
+        # None -> config windows.current_days; nodes resolves the default so
+        # config stays the single source of truth.
+        current_days=current_days,
         user_focus=user_focus or [],
         retry_mode=retry_mode,
         reuse_evidence_only=reuse_evidence_only,

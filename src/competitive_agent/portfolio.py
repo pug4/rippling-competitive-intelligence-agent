@@ -33,6 +33,7 @@ def run_portfolio(
     execution_mode: str | None = None,
     compare_to: str | None = None,
     lookback_days: int | None = None,
+    current_days: int | None = None,
 ) -> dict[str, Any]:
     """Run every company through its own pipeline and synthesize across them."""
     if not companies:
@@ -44,6 +45,7 @@ def run_portfolio(
             execution_mode=execution_mode,
             compare_to=compare_to,
             lookback_days=lookback_days,
+            current_days=current_days,
         )
     )
 
@@ -55,6 +57,7 @@ async def _run_portfolio_async(
     execution_mode: str | None,
     compare_to: str | None,
     lookback_days: int | None,
+    current_days: int | None,
 ) -> dict[str, Any]:
     from .config import get_config
 
@@ -87,6 +90,7 @@ async def _run_portfolio_async(
                     ),
                     compare_to=compare_to,
                     lookback_days=lookback_days,
+                    current_days=current_days,
                 )
                 state = await drive(state, ctx)
                 return company, state, ctx, None

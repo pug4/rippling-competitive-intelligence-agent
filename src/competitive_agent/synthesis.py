@@ -1152,7 +1152,11 @@ def insight_graphics(
     if has_focal and ceps:
         rows = []
         eligible = sorted(
-            (r for r in ceps if (r.get("competitor_pages") or 0) + (r.get("focal_pages") or 0) >= 20),
+            (
+                r
+                for r in ceps
+                if (r.get("competitor_pages") or 0) + (r.get("focal_pages") or 0) >= 20
+            ),
             key=lambda r: -((r.get("competitor_pages") or 0) + (r.get("focal_pages") or 0)),
         )
         ranked = eligible[:5]
@@ -1171,7 +1175,11 @@ def insight_graphics(
                 {
                     "cep": key,
                     "ownership": row.get("ownership"),
-                    "competitor": {"quant_n": cq, "n": len(cp), "rate": round(cq / max(1, len(cp)), 4)},
+                    "competitor": {
+                        "quant_n": cq,
+                        "n": len(cp),
+                        "rate": round(cq / max(1, len(cp)), 4),
+                    },
                     "focal": {"quant_n": fq, "n": len(fp), "rate": round(fq / max(1, len(fp)), 4)},
                 }
             )
@@ -1185,7 +1193,9 @@ def insight_graphics(
         focal_names = sum(
             1
             for c in focal_cls
-            if any(_brand_token(competitor_name) in str(x).lower() for x in (c.named_competitors or []))
+            if any(
+                _brand_token(competitor_name) in str(x).lower() for x in (c.named_competitors or [])
+            )
         )
         if rows:
             out["proof_vs_voice"] = {
@@ -1197,7 +1207,11 @@ def insight_graphics(
                 ),
                 "rows": rows,
                 "overall": {
-                    "competitor": {"quant_n": cq_all, "n": nc, "rate": round(cq_all / max(1, nc), 4)},
+                    "competitor": {
+                        "quant_n": cq_all,
+                        "n": nc,
+                        "rate": round(cq_all / max(1, nc), 4),
+                    },
                     "focal": {"quant_n": fq_all, "n": nf, "rate": round(fq_all / max(1, nf), 4)},
                 },
                 "naming": {
@@ -1254,9 +1268,7 @@ def insight_graphics(
         frows.sort(key=lambda r: (not bool(r["void"]), -int(r["competitor"]["n"])))
         rows = frows
         voids = [str(r["vertical"]) for r in rows if r["void"]]
-        comp_dec_total = sum(
-            1 for c in competitor_cls if "decision" in (c.funnel_stages or [])
-        )
+        comp_dec_total = sum(1 for c in competitor_cls if "decision" in (c.funnel_stages or []))
         dec_verticals = sorted(
             {
                 v
@@ -1300,6 +1312,7 @@ def insight_graphics(
                     if slug and "vs" not in slug.split("-"):
                         comparison_slugs.append(slug)
     if isinstance(aff_rows, list) and aff_rows and comparison_slugs is not None:
+
         def defended(domain: str) -> bool:
             base = str(domain).split(".")[0].lower()
             for slug in comparison_slugs:
@@ -1326,11 +1339,16 @@ def insight_graphics(
             for r in aff_rows[:8]
             if isinstance(r, dict)
         ]
-        matched = {s for s in comparison_slugs if any(
-            s.replace("-", "") in str(r.get("domain", "")).split(".")[0]
-            or str(r.get("domain", "")).split(".")[0] in s.replace("-", "")
-            for r in aff_rows[:20] if isinstance(r, dict)
-        )}
+        matched = {
+            s
+            for s in comparison_slugs
+            if any(
+                s.replace("-", "") in str(r.get("domain", "")).split(".")[0]
+                or str(r.get("domain", "")).split(".")[0] in s.replace("-", "")
+                for r in aff_rows[:20]
+                if isinstance(r, dict)
+            )
+        }
         orphan_slugs = sorted(set(comparison_slugs) - matched)
         undefended_top = [r for r in rows if not r["defended"]]
         if rows:
@@ -1368,6 +1386,7 @@ def insight_graphics(
     li = [c for c in competitor_cls if src_of.get(c.artifact_id) == "linkedin_post"]
     web = [c for c in competitor_cls if src_of.get(c.artifact_id) == "webpage"]
     if li and web:
+
         def split_side(li_c: list[Any], web_c: list[Any]) -> dict[str, Any]:
             d_li, _ = _proof_rate(li_c, "product_demonstration")
             d_web, _ = _proof_rate(web_c, "product_demonstration")

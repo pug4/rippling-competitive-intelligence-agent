@@ -5,7 +5,7 @@
     "parent_run_id": null,
     "mode": "comparative",
     "execution_mode": "live",
-    "generated_at": "2026-07-13T02:41:34.751912+00:00",
+    "generated_at": "2026-07-13T03:34:24.722846+00:00",
     "stop_reason": "runtime_exhausted",
     "stop_reason_label": "budget-bounded (hit the research-time cap)",
     "iterations": 19,
@@ -1226,6 +1226,22 @@
       ]
     },
     {
+      "cep": "expanding_globally_safely",
+      "competitor_pages": 0,
+      "focal_pages": 1,
+      "competitor_share": 0.0,
+      "focal_share": 0.0088,
+      "share_ratio": null,
+      "share_delta": -0.0088,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [],
+      "focal_example_artifact_ids": [
+        "ART-9e8697e401cd"
+      ],
+      "top_verticals": []
+    },
+    {
       "cep": "rapid_growth_scaling_employees",
       "competitor_pages": 0,
       "focal_pages": 1,
@@ -1256,76 +1272,6 @@
         "ART-7f6216118cf8"
       ],
       "top_verticals": []
-    },
-    {
-      "cep": "expanding_globally_safely",
-      "competitor_pages": 0,
-      "focal_pages": 1,
-      "competitor_share": 0.0,
-      "focal_share": 0.0088,
-      "share_ratio": null,
-      "share_delta": -0.0088,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [],
-      "focal_example_artifact_ids": [
-        "ART-9e8697e401cd"
-      ],
-      "top_verticals": []
-    },
-    {
-      "cep": "paying_contractors_and_employees_globally",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-4c5c195d76a3"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": []
-    },
-    {
-      "cep": "consolidating_fragmented_regional_workforce_providers",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-39db3bdefb26"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
-    },
-    {
-      "cep": "expanding_into_complex_field_markets",
-      "competitor_pages": 1,
-      "focal_pages": 0,
-      "competitor_share": 0.0081,
-      "focal_share": 0.0,
-      "share_ratio": null,
-      "share_delta": 0.0081,
-      "ownership": "insufficient_sample",
-      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-      "competitor_example_artifact_ids": [
-        "ART-39db3bdefb26"
-      ],
-      "focal_example_artifact_ids": [],
-      "top_verticals": [
-        "payroll",
-        "global_eor_contractors"
-      ]
     },
     {
       "cep": "replacing_traditional_cross_border_payment_rails",
@@ -1362,6 +1308,25 @@
       ]
     },
     {
+      "cep": "consolidating_fragmented_regional_workforce_providers",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
       "cep": "expanding_service_offerings",
       "competitor_pages": 1,
       "focal_pages": 0,
@@ -1373,6 +1338,41 @@
       "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
       "competitor_example_artifact_ids": [
         "ART-22cb144808e1"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": [
+        "payroll",
+        "global_eor_contractors"
+      ]
+    },
+    {
+      "cep": "paying_contractors_and_employees_globally",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-4c5c195d76a3"
+      ],
+      "focal_example_artifact_ids": [],
+      "top_verticals": []
+    },
+    {
+      "cep": "expanding_into_complex_field_markets",
+      "competitor_pages": 1,
+      "focal_pages": 0,
+      "competitor_share": 0.0081,
+      "focal_share": 0.0,
+      "share_ratio": null,
+      "share_delta": 0.0081,
+      "ownership": "insufficient_sample",
+      "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+      "competitor_example_artifact_ids": [
+        "ART-39db3bdefb26"
       ],
       "focal_example_artifact_ids": [],
       "top_verticals": [
@@ -68377,60 +68377,60 @@
   },
   "theme_comparison": {
     "competitor_themes": {
-      "cost_reduction": 5,
-      "employee_experience": 4,
-      "speed_to_value": 7,
-      "integration_ecosystem": 8,
       "automation": 14,
-      "consolidation": 39,
-      "data_unification": 6,
-      "native_platform_breadth": 5,
-      "global_hiring": 7,
-      "status": 0,
       "all_in_one": 1,
-      "compliance": 10
+      "cost_reduction": 5,
+      "data_unification": 6,
+      "status": 0,
+      "consolidation": 39,
+      "compliance": 10,
+      "integration_ecosystem": 8,
+      "global_hiring": 7,
+      "native_platform_breadth": 5,
+      "employee_experience": 4,
+      "speed_to_value": 7
     },
     "focal_themes": {
-      "cost_reduction": 1,
-      "employee_experience": 2,
-      "speed_to_value": 2,
-      "integration_ecosystem": 4,
       "automation": 15,
-      "consolidation": 28,
-      "data_unification": 35,
-      "native_platform_breadth": 3,
-      "global_hiring": 2,
-      "status": 4,
       "all_in_one": 2,
-      "compliance": 3
+      "cost_reduction": 1,
+      "data_unification": 35,
+      "status": 4,
+      "consolidation": 28,
+      "compliance": 3,
+      "integration_ecosystem": 4,
+      "global_hiring": 2,
+      "native_platform_breadth": 3,
+      "employee_experience": 2,
+      "speed_to_value": 2
     },
     "competitor_shares": {
-      "cost_reduction": 0.0407,
-      "employee_experience": 0.0325,
-      "speed_to_value": 0.0569,
-      "integration_ecosystem": 0.065,
       "automation": 0.1138,
-      "consolidation": 0.3171,
-      "data_unification": 0.0488,
-      "native_platform_breadth": 0.0407,
-      "global_hiring": 0.0569,
-      "status": 0.0,
       "all_in_one": 0.0081,
-      "compliance": 0.0813
+      "cost_reduction": 0.0407,
+      "data_unification": 0.0488,
+      "status": 0.0,
+      "consolidation": 0.3171,
+      "compliance": 0.0813,
+      "integration_ecosystem": 0.065,
+      "global_hiring": 0.0569,
+      "native_platform_breadth": 0.0407,
+      "employee_experience": 0.0325,
+      "speed_to_value": 0.0569
     },
     "focal_shares": {
-      "cost_reduction": 0.0088,
-      "employee_experience": 0.0175,
-      "speed_to_value": 0.0175,
-      "integration_ecosystem": 0.0351,
       "automation": 0.1316,
-      "consolidation": 0.2456,
-      "data_unification": 0.307,
-      "native_platform_breadth": 0.0263,
-      "global_hiring": 0.0175,
-      "status": 0.0351,
       "all_in_one": 0.0175,
-      "compliance": 0.0263
+      "cost_reduction": 0.0088,
+      "data_unification": 0.307,
+      "status": 0.0351,
+      "consolidation": 0.2456,
+      "compliance": 0.0263,
+      "integration_ecosystem": 0.0351,
+      "global_hiring": 0.0175,
+      "native_platform_breadth": 0.0263,
+      "employee_experience": 0.0175,
+      "speed_to_value": 0.0175
     },
     "competitor_n_classified": 123,
     "focal_n_classified": 114,
@@ -82446,6 +82446,22 @@
           ]
         },
         {
+          "cep": "expanding_globally_safely",
+          "competitor_pages": 0,
+          "focal_pages": 1,
+          "competitor_share": 0.0,
+          "focal_share": 0.0088,
+          "share_ratio": null,
+          "share_delta": -0.0088,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [],
+          "focal_example_artifact_ids": [
+            "ART-9e8697e401cd"
+          ],
+          "top_verticals": []
+        },
+        {
           "cep": "rapid_growth_scaling_employees",
           "competitor_pages": 0,
           "focal_pages": 1,
@@ -82476,76 +82492,6 @@
             "ART-7f6216118cf8"
           ],
           "top_verticals": []
-        },
-        {
-          "cep": "expanding_globally_safely",
-          "competitor_pages": 0,
-          "focal_pages": 1,
-          "competitor_share": 0.0,
-          "focal_share": 0.0088,
-          "share_ratio": null,
-          "share_delta": -0.0088,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (0 vs 1) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [],
-          "focal_example_artifact_ids": [
-            "ART-9e8697e401cd"
-          ],
-          "top_verticals": []
-        },
-        {
-          "cep": "paying_contractors_and_employees_globally",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-4c5c195d76a3"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": []
-        },
-        {
-          "cep": "consolidating_fragmented_regional_workforce_providers",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-39db3bdefb26"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
-        },
-        {
-          "cep": "expanding_into_complex_field_markets",
-          "competitor_pages": 1,
-          "focal_pages": 0,
-          "competitor_share": 0.0081,
-          "focal_share": 0.0,
-          "share_ratio": null,
-          "share_delta": 0.0081,
-          "ownership": "insufficient_sample",
-          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
-          "competitor_example_artifact_ids": [
-            "ART-39db3bdefb26"
-          ],
-          "focal_example_artifact_ids": [],
-          "top_verticals": [
-            "payroll",
-            "global_eor_contractors"
-          ]
         },
         {
           "cep": "replacing_traditional_cross_border_payment_rails",
@@ -82582,6 +82528,25 @@
           ]
         },
         {
+          "cep": "consolidating_fragmented_regional_workforce_providers",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
           "cep": "expanding_service_offerings",
           "competitor_pages": 1,
           "focal_pages": 0,
@@ -82593,6 +82558,41 @@
           "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
           "competitor_example_artifact_ids": [
             "ART-22cb144808e1"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": [
+            "payroll",
+            "global_eor_contractors"
+          ]
+        },
+        {
+          "cep": "paying_contractors_and_employees_globally",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-4c5c195d76a3"
+          ],
+          "focal_example_artifact_ids": [],
+          "top_verticals": []
+        },
+        {
+          "cep": "expanding_into_complex_field_markets",
+          "competitor_pages": 1,
+          "focal_pages": 0,
+          "competitor_share": 0.0081,
+          "focal_share": 0.0,
+          "share_ratio": null,
+          "share_delta": 0.0081,
+          "ownership": "insufficient_sample",
+          "ownership_basis": "too few pages to call (1 vs 0) \u2014 disclosed, not asserted",
+          "competitor_example_artifact_ids": [
+            "ART-39db3bdefb26"
           ],
           "focal_example_artifact_ids": [],
           "top_verticals": [

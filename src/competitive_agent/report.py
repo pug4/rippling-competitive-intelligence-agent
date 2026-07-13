@@ -392,9 +392,7 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         "focal_themes": {t: _focal_themes.get(t, 0) for t in _selected} if _has_focal else {},
         "competitor_shares": {t: round(_comp_themes.get(t, 0) / _nc, 4) for t in _selected},
         "focal_shares": (
-            {t: round(_focal_themes.get(t, 0) / _nf, 4) for t in _selected}
-            if _has_focal
-            else {}
+            {t: round(_focal_themes.get(t, 0) / _nf, 4) for t in _selected} if _has_focal else {}
         ),
         "competitor_n_classified": len(data["classification_models"]),
         "focal_n_classified": len(focal_cls_models),
@@ -746,15 +744,22 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
     # --- Scorecard: the whole analysis as action counts (exec feedback:
     # findings must read as verbs, not prose) --------------------------------
     _sc_ceps = pkg.get("category_entry_points") or []
-    _own = {k: sum(1 for r in _sc_ceps if r.get("ownership") == k) for k in
-            ("competitor_advantage", "contested", "focal_owns", "insufficient_sample")}
+    _own = {
+        k: sum(1 for r in _sc_ceps if r.get("ownership") == k)
+        for k in ("competitor_advantage", "contested", "focal_owns", "insufficient_sample")
+    }
     _verbs = {"attack": 0, "investigate": 0, "reframe": 0}
     for g in gaps:
         v = (g.get("attackability_detail") or {}).get("overall") or (
-            "attack" if g.get("attackability") == "high"
-            else "investigate" if g.get("attackability") == "medium" else "reframe"
+            "attack"
+            if g.get("attackability") == "high"
+            else "investigate"
+            if g.get("attackability") == "medium"
+            else "reframe"
         )
-        _verbs["reframe" if v == "concede" else v] = _verbs.get("reframe" if v == "concede" else v, 0) + 1
+        _verbs["reframe" if v == "concede" else v] = (
+            _verbs.get("reframe" if v == "concede" else v, 0) + 1
+        )
     _n_emerging = sum(1 for c in changes if c.get("lifecycle") == "emerging")
     _n_expanding = sum(1 for c in changes if c.get("lifecycle") == "expanding")
     _n_stable = len((pkg.get("temporal_baseline") or {}).get("stable_themes") or [])
