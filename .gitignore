@@ -12,3 +12,13 @@ outputs/*
 dist/
 .vercel
 .env*
+
+# Internal prep / strategy docs — not for the shared repo
+docs/loom_script.md
+docs/loom_talking_points.md
+docs/HANDOFF.md
+docs/improvement_log.md
+docs/eval_harness_issues.md
+docs/demo_runbook.md
+docs/decision_log.md
+IMPLEMENTATION_STATUS.md

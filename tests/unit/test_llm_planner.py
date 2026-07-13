@@ -283,8 +283,13 @@ def test_model_stop_routes_to_stop_path_and_records_rationale():
     asyncio.run(nodes.score_actions(state, ctx))
     assert ctx.scratch["model_requested_stop"] is True
 
+    # A model-decided stop first routes through refresh_claims (so the final
+    # claim ledger is built against the full corpus before rendering), then to
+    # the stop decision. The finalize hop runs exactly once.
     _, nxt = asyncio.run(nodes.select_next_action(state, ctx))
-    assert nxt == "decide_continue_or_stop"
+    assert nxt == "refresh_claims"
+    _, nxt_again = asyncio.run(nodes.select_next_action(state, ctx))
+    assert nxt_again == "decide_continue_or_stop"
 
     trace = _Trace()
     ctx.trace = trace
