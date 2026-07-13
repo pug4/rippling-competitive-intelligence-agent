@@ -324,6 +324,65 @@ def source_distribution(artifacts: list[RawArtifact]) -> dict[str, int]:
     return labels
 
 
+# Fixed adversarial-context news buckets (mirrors tools/news.categorize_news).
+_MARKET_CONTEXT_CATEGORIES = (
+    "litigation",
+    "funding",
+    "m_and_a",
+    "launch",
+    "comparison",
+    "other",
+)
+
+
+def market_context(artifacts: list[RawArtifact]) -> dict[str, Any]:
+    """Deterministic rollup of adversarial-context news (``news_market``
+    artifacts) — WHAT IS HAPPENING TO the competitor — grouped by the category
+    each dated item was bucketed into (litigation / funding / m_and_a / launch /
+    comparison / other).
+
+    Pure counting over stored artifacts: never a model call, never an inference
+    beyond each snippet's own metadata. Returns the flat item list (newest
+    first), the same items grouped ``by_category``, a per-category ``counts``
+    map, and a ``total``. Each item is ``{category, title, url, published_at}``.
+    An empty result is an honest coverage gap, never an assertion that nothing
+    is happening to the competitor."""
+    items: list[dict[str, Any]] = []
+    for a in artifacts:
+        if a.source_type != "news_market":
+            continue
+        meta = a.metadata or {}
+        category = str(meta.get("category") or "other")
+        if category not in _MARKET_CONTEXT_CATEGORIES:
+            category = "other"
+        items.append(
+            {
+                "category": category,
+                "title": meta.get("title") or a.title or a.url or "(untitled)",
+                "url": meta.get("url") or a.url or "",
+                "published_at": meta.get("published_at")
+                or (a.published_at.isoformat() if a.published_at else None),
+            }
+        )
+    # Newest first (published_at desc; unknown dates sort last) so the report
+    # leads with the most recent development.
+    items.sort(key=lambda it: it.get("published_at") or "", reverse=True)
+    by_category: dict[str, list[dict[str, Any]]] = {}
+    for it in items:
+        by_category.setdefault(it["category"], []).append(it)
+    return {
+        "items": items,
+        "by_category": by_category,
+        "counts": {cat: len(rows) for cat, rows in by_category.items()},
+        "total": len(items),
+        "note": (
+            "Dated public news about the competitor, deterministically bucketed "
+            "by keyword; absence of an item is a coverage gap, not evidence that "
+            "nothing happened."
+        ),
+    }
+
+
 def proof_distribution(proof_type_lists: list[list[str]]) -> ProofDistribution:
     """Aggregate per-page proof-type lists into an honest distribution
     (feedback #16): counts per type + an overall assessment that a single

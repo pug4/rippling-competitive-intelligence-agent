@@ -1,0 +1,22 @@
+{
+  "industry": "security & compliance automation",
+  "sub_category": "SOC 2 / ISO 27001 continuous compliance",
+  "key_terminology": [
+    "continuous compliance",
+    "SOC 2",
+    "ISO 27001",
+    "trust center",
+    "evidence collection",
+    "audit readiness",
+    "GRC"
+  ],
+  "primary_buyer_personas": [
+    "Head of Security / CISO",
+    "Compliance Manager",
+    "IT / GRC lead",
+    "Founder at an early-stage SaaS company"
+  ],
+  "how_focal_competes_here": "Based on the focal company's multi-product platform positioning, it shows up in this category as the system of record for identity, devices, and access that a compliance program depends on, rather than as a standalone GRC point tool; the relevant angle is that a unified platform already holds the access and device evidence auditors ask for. This is a positioning read from public marketing, not a claim about market share, product depth, or win rates.",
+  "positioning_frame": "Frame the focal company as the workforce and access platform that continuous-compliance buyers already run on: reduce the number of point tools an audit touches, and speak to security/compliance owners in their own evidence-and-audit-readiness terms.",
+  "note": null
+}

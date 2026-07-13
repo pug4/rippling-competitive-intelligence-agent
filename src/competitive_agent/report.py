@@ -545,6 +545,9 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     dom = synthesis.dominant_message(data["classification_models"], data["artifact_models"])
     skew = synthesis.corpus_skew(data["artifact_models"])
     dist = synthesis.source_distribution(data["artifact_models"])
+    # Adversarial-context news rollup: what is happening TO the competitor
+    # (litigation/funding/M&A/launches), grouped by category. Pure counting.
+    market_ctx = synthesis.market_context(data["artifact_models"])
     motion = synthesis.commercial_motion(data["classification_models"])
     positioning = synthesis.product_positioning(
         data["classification_models"],
@@ -923,6 +926,16 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
             if c is not None
         ],
         "dominant_message": dom,
+        # Adversarial-context news (red-team "lawsuit blind spot"): what is
+        # happening TO the competitor, grouped by category with dates + links.
+        "market_context": market_ctx,
+        # Industry adaptivity: the inferred competitor-industry lens (terminology,
+        # personas, how the focal company competes here). None until inferred.
+        "industry_context": state.industry_context,
+        # False-premise gate output: per detected "focal lacks X" assertion,
+        # the verdict + focal evidence. "contradicted" recommendations were
+        # dropped/softened upstream; this ledger discloses that honestly.
+        "focal_gate_findings": list(state.focal_gate_findings),
         "source_distribution": dist,
         "focal_source_distribution": synthesis.source_distribution(focal_artifact_models)
         if focal_artifact_models
@@ -1072,6 +1085,33 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
         # when it may not (QA finding #6).
         add(f"- **Top-ranked {focal} opening:** {opps[0]['title']}.")
     add(f"- **Largest uncertainty:** {_largest_uncertainty(pkg)}.")
+
+    # --- Industry lens (adapts the brief to the competitor's category) ------
+    # Red-team "industry-adaptivity": the terminology/personas/frame are read
+    # from THIS competitor's observed themes, so a compliance/payroll/EOR rival
+    # no longer gets a generic HR-default lens. Skipped honestly when the
+    # inference was unavailable (never a fabricated industry).
+    ind = pkg.get("industry_context") or {}
+    if ind.get("industry"):
+        add("\n## Industry lens\n")
+        add(
+            f"- **Category:** {ind['industry']}"
+            + (f" — {ind['sub_category']}" if ind.get("sub_category") else "")
+        )
+        _terms = [str(t) for t in (ind.get("key_terminology") or []) if t][:8]
+        if _terms:
+            add(f"- **Buyer terminology in this category:** {', '.join(_terms)}")
+        _personas = [str(p) for p in (ind.get("primary_buyer_personas") or []) if p][:6]
+        if _personas:
+            add(f"- **Who buys here:** {', '.join(_personas)}")
+        if ind.get("how_focal_competes_here"):
+            add(f"- **How {focal} competes in this category:** {ind['how_focal_competes_here']}")
+        if ind.get("positioning_frame"):
+            add(f"- **Positioning frame for {focal}:** {ind['positioning_frame']}")
+        add(
+            f"\n_Inferred from a sample of {company}'s observed themes/messages — a "
+            "positioning read, not a claim of market share, revenue, or win rates._"
+        )
 
     # --- Scorecard: the whole analysis as action counts (exec feedback:
     # findings must read as verbs, not prose) --------------------------------
@@ -1769,6 +1809,45 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             "increasing; whether API/automation language is broadening."
         )
 
+    # --- Market context: what is happening TO the competitor ---------------
+    # Red-team "lawsuit blind spot": the rest of the brief crawls what the
+    # competitor SAYS; this section is what is happening TO it (litigation,
+    # funding, M&A, launches, competitor-vs-focal framing) from dated news.
+    mc = pkg.get("market_context") or {}
+    add(f"\n## Market context — what is happening TO {company}\n")
+    _mc_labels = {
+        "litigation": "Litigation & disputes",
+        "funding": "Funding & valuation",
+        "m_and_a": "M&A",
+        "launch": "Launches & partnerships",
+        "comparison": f"{company}-vs-{focal} framing",
+        "other": "Other developments",
+    }
+    if mc.get("total"):
+        add(
+            f"Dated public news about {company} — the litigation, funding, M&A and launch "
+            "signals the site/ads/jobs crawl never sees. Absence of an item is a coverage gap, "
+            f"not evidence that nothing is happening to {company}.\n"
+        )
+        by_cat = mc.get("by_category") or {}
+        for cat in ("litigation", "funding", "m_and_a", "launch", "comparison", "other"):
+            rows = by_cat.get(cat) or []
+            if not rows:
+                continue
+            add(f"**{_mc_labels.get(cat, cat)}** ({len(rows)})\n")
+            for it in rows:
+                date = str(it.get("published_at") or "")[:10] or "undated"
+                title = str(it.get("title") or "(untitled)")
+                url = str(it.get("url") or "")
+                add(f"- {date} — {title}" + (f" ({_md_url(url)})" if url else ""))
+            add("")
+    else:
+        add(
+            f"No adversarial-context news collected for {company} this run — a coverage gap "
+            "(no Exa news key configured, or the sweep returned nothing), not evidence that "
+            f"nothing is happening to {company}."
+        )
+
     # --- Scope, coverage, sources (feedback #7, #8, #9, #36) ---------------
     add("\n## Research scope and coverage\n")
     add(
@@ -1812,6 +1891,27 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
             add(f"- {item}")
     else:
         add("- No blocking limitations recorded.")
+    # Focal-claims gate disclosure (red-team "false-premise recommendations"):
+    # plays that assumed the focal company LACKS something its OWN corpus shows
+    # it HAS were dropped/softened upstream — surface that honestly here.
+    _contra = [
+        f for f in (pkg.get("focal_gate_findings") or []) if f.get("verdict") == "contradicted"
+    ]
+    if _contra:
+        _phrases = sorted(
+            {str(f.get("x_phrase") or "").strip() for f in _contra if f.get("x_phrase")}
+        )
+        add(
+            f"- **Focal-claims gate — {len(_contra)} recommendation(s) withdrawn or softened:** "
+            f"they rested on a false premise that {focal} lacks "
+            + (
+                ", ".join(f"“{p}”" for p in _phrases)
+                if _phrases
+                else "a claimed-missing capability"
+            )
+            + f", but {focal}'s own corpus shows it HAS it — so the play was not surfaced as an "
+            "attack opening (see JSON `focal_gate_findings`)."
+        )
     # Negative observations ("searched X, found nothing / provider empty") are
     # findings — a brief-only reader must see them, not just the trace (audit).
     negs = list(dict.fromkeys(pkg.get("negative_observations") or []))[:10]

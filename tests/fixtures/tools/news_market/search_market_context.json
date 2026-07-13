@@ -1,0 +1,85 @@
+{
+  "action_id": "ACT-fixture-news-market",
+  "tool_name": "news_market",
+  "status": "success",
+  "artifacts": [
+    {
+      "artifact_id": "ART-fxmkt-lit01",
+      "company_id": "example-competitor",
+      "source_type": "news_market",
+      "source_name": "news_market",
+      "url": "https://news.example.com/example-competitor-faces-class-action",
+      "final_url": "https://news.example.com/example-competitor-faces-class-action",
+      "title": "Example Competitor faces class action lawsuit over data practices",
+      "published_at": "2026-05-14T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "A proposed class action lawsuit was filed against Example Competitor this week, alleging the company mishandled customer data. The complaint seeks damages and an injunction; the company said it will contest the claims.",
+      "normalized_text": "A proposed class action lawsuit was filed against Example Competitor this week, alleging the company mishandled customer data. The complaint seeks damages and an injunction; the company said it will contest the claims.",
+      "content_hash": "fxmkt00000000000000000000000000000000000000000000000000000000lit1",
+      "metadata": {
+        "category": "litigation",
+        "published_at": "2026-05-14T00:00:00Z",
+        "title": "Example Competitor faces class action lawsuit over data practices",
+        "query": "Example Competitor lawsuit OR \"class action\" OR settlement OR \"trade secret\" OR injunction",
+        "url": "https://news.example.com/example-competitor-faces-class-action"
+      },
+      "collection_method": "news_market_exa",
+      "is_partial": true,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxmkt-fund01",
+      "company_id": "example-competitor",
+      "source_type": "news_market",
+      "source_name": "news_market",
+      "url": "https://news.example.com/example-competitor-raises-series-c",
+      "final_url": "https://news.example.com/example-competitor-raises-series-c",
+      "title": "Example Competitor raises $120M Series C at a higher valuation",
+      "published_at": "2026-04-02T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Example Competitor raised $120M in a Series C round led by a growth investor, pushing its valuation higher as it expands into new markets.",
+      "normalized_text": "Example Competitor raised $120M in a Series C round led by a growth investor, pushing its valuation higher as it expands into new markets.",
+      "content_hash": "fxmkt0000000000000000000000000000000000000000000000000000000fund1",
+      "metadata": {
+        "category": "funding",
+        "published_at": "2026-04-02T00:00:00Z",
+        "title": "Example Competitor raises $120M Series C at a higher valuation",
+        "query": "Example Competitor raised OR \"series\" OR valuation OR IPO OR \"went public\"",
+        "url": "https://news.example.com/example-competitor-raises-series-c"
+      },
+      "collection_method": "news_market_exa",
+      "is_partial": true,
+      "is_fixture": true
+    },
+    {
+      "artifact_id": "ART-fxmkt-launch01",
+      "company_id": "example-competitor",
+      "source_type": "news_market",
+      "source_name": "news_market",
+      "url": "https://news.example.com/example-competitor-launches-new-product",
+      "final_url": "https://news.example.com/example-competitor-launches-new-product",
+      "title": "Example Competitor launches new product and announces a partnership",
+      "published_at": "2026-06-18T00:00:00Z",
+      "retrieved_at": "2026-07-11T00:00:00Z",
+      "time_window_ids": [],
+      "raw_text": "Example Competitor launches a new product this month and announces a partnership with a channel vendor to broaden distribution.",
+      "normalized_text": "Example Competitor launches a new product this month and announces a partnership with a channel vendor to broaden distribution.",
+      "content_hash": "fxmkt000000000000000000000000000000000000000000000000000000launch1",
+      "metadata": {
+        "category": "launch",
+        "published_at": "2026-06-18T00:00:00Z",
+        "title": "Example Competitor launches new product and announces a partnership",
+        "query": "Example Competitor launches OR \"new product\" OR announces OR partnership",
+        "url": "https://news.example.com/example-competitor-launches-new-product"
+      },
+      "collection_method": "news_market_exa",
+      "is_partial": true,
+      "is_fixture": true
+    }
+  ],
+  "negative_observations": [],
+  "latency_ms": 0,
+  "cost_usd": 0.0
+}

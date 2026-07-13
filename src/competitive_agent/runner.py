@@ -22,6 +22,7 @@ def _build_registry():
     from .tools.exa_search import ExaSearchTool
     from .tools.jobs import JobsTool
     from .tools.keywords import KeywordsTool
+    from .tools.news import NewsTool
     from .tools.ooh import OOHTool
     from .tools.registry import ToolRegistry
     from .tools.reviews import ReviewsTool
@@ -44,6 +45,9 @@ def _build_registry():
         JobsTool(),
         EventsTool(),
         OOHTool(),
+        # Adversarial-context news (what is happening TO the competitor):
+        # litigation/funding/M&A/launch sweep — closes the "lawsuit blind spot".
+        NewsTool(),
         GoogleAdsTool(),
         MetaAdsTool(),
         LinkedInAdsTool(),

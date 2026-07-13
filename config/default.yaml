@@ -27,6 +27,9 @@ sources:
   jobs: true
   events: true
   ooh: true
+  # Adversarial-context news sweep (what is happening TO the competitor:
+  # litigation/funding/M&A/launches). Keyless -> typed unsupported (Exa key).
+  news_market: true
   monitors: true
 
 execution:

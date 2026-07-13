@@ -29,6 +29,9 @@ routes:
   infer_product_motion: tier2
   generate_opportunities: tier2
   critique_opportunities: tier2
+  # Competitor-industry inference: one call over a sample of observed
+  # themes/messages to adapt the brief's lens to the competitor's category.
+  infer_industry_context: tier2
   challenge_conclusion: tier2
   synthesize_portfolio: tier2
   # Independent eval answer-key labeler: deliberately a STRONGER tier than the

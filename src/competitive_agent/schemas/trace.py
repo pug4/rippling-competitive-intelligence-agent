@@ -45,6 +45,11 @@ TRACE_EVENT_TYPES: frozenset[str] = frozenset(
         "focal_mirror_completed",
         "opportunity_generated",
         "opportunity_rejected",
+        # industry adaptivity + false-premise (focal-claims) gate
+        "industry_context_inferred",
+        "industry_context_failed",
+        "focal_gate_applied",
+        "focal_gate_failed",
         "stop_selected",
         "report_rendered",
         "feedback_received",

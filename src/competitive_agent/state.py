@@ -115,6 +115,16 @@ class DirectorState(VersionedModel):
     # Append {"question": ..., "choice": option_id, "via": "user"|"auto"}.
     decision_log: list[dict[str, Any]] = Field(default_factory=list)
 
+    # Industry adaptivity: the inferred competitor-industry lens (dict from
+    # industry.infer_industry_context — industry/terminology/personas/positioning
+    # frame). None until inferred; a typed-fallback dict on inference failure.
+    # Additive, persistence-safe default so old checkpointed runs keep loading.
+    industry_context: dict[str, Any] | None = None
+    # Focal-claims gate findings: one row per detected "focal lacks X" assertion
+    # {source, id, claim_excerpt, x_phrase, verdict, focal_evidence}. A
+    # "contradicted" verdict drops/softens the offending recommendation. Additive.
+    focal_gate_findings: list[dict[str, Any]] = Field(default_factory=list)
+
     def total_spend_usd(self) -> float:
         return self.spent_usd + self.model_cost_usd
 

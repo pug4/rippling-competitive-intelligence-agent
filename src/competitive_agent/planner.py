@@ -35,6 +35,9 @@ LEVEL_B_ACTION_DIMENSIONS: dict[str, str] = {
     "search_google_ads": "paid_media",
     "search_meta_ads": "paid_media",
     "search_linkedin_ads": "paid_media",
+    # Adversarial-context news (what is happening TO the competitor). Optional
+    # breadth: it must never delay the focal mirror / opportunity generation.
+    "search_market_context": "market_context",
 }
 
 # Synthetic/analysis sources that a source_allowlist never filters out.
@@ -649,6 +652,23 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
         "out_of_home",
         {"company": name, "num_results": 4},
         "OOH discovery (low coverage by nature) can reveal category-building spend.",
+    )
+    # Adversarial-context news: what is happening TO the competitor (litigation,
+    # funding, M&A, launches, competitor-vs-focal framing) — the "lawsuit blind
+    # spot" the rest of the pipeline (which crawls what the competitor SAYS)
+    # never sees. Proposed once; keyless live degrades to a typed unsupported.
+    _optional(
+        "news_market",
+        "news_market",
+        "search_market_context",
+        "market_context",
+        {
+            "company": name,
+            "domain": company.primary_domain,
+            "focal": _focal_label(state, ctx),
+        },
+        "Adversarial-context news sweep: litigation/funding/M&A/launch signals "
+        "about the competitor — what is happening TO it, not what it says.",
     )
     _optional(
         "google_ads",

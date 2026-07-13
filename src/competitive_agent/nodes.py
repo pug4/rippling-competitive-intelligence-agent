@@ -95,6 +95,10 @@ _ACTION_COVERAGE_EVIDENCED = {
     # evidence also establishes launches_current (was permanently
     # not_attempted in the loop despite collected news artifacts).
     "search_news_launches": [("launches_current", "low")],
+    # Adversarial-context news (what is happening TO the competitor). Raised
+    # only when real dated news artifacts land — an empty sweep is a coverage
+    # gap, never evidence that nothing is happening to the competitor.
+    "search_market_context": [("market_context", "medium")],
 }
 
 _ADS_ACTION_TYPES = ("search_google_ads", "search_meta_ads", "search_linkedin_ads")
@@ -1060,8 +1064,67 @@ async def verify_temporal_changes(state: DirectorState, ctx: GraphContext):
     return state, "build_matrices"
 
 
+async def _infer_industry_context(state: DirectorState, ctx: GraphContext) -> None:
+    """Adapt the brief's lens to the competitor's category (red-team
+    'industry-adaptivity'). Runs ONCE, over a SAMPLE of the competitor's observed
+    themes/messages, after the competitor corpus is collected. Any failure leaves
+    ``state.industry_context`` unchanged (None) — the run never crashes and the
+    lens degrades honestly. Fixture mode serves the deterministic fixture."""
+    if state.industry_context is not None or ctx.scratch.get("industry_done"):
+        return
+    if state.company is None or ctx.gateway is None or not state.classification_ids:
+        return
+    # A reasonable sample means the competitor's OWN required coverage is in —
+    # don't characterize an industry off a single homepage. Deliberately exclude
+    # the focal_* dimensions: those are raised by the mirror, which runs AFTER
+    # build_matrices, so requiring them here would deadlock the inference (it
+    # would never fire before the run stops). The industry sample is the
+    # COMPETITOR's corpus, so competitor coverage is the right readiness signal.
+    competitor_dims = [
+        d for d in cov.required_dimensions(state.mode, compare=False) if not d.startswith("focal")
+    ]
+    ready = all(
+        cov.level_at_least(state.coverage, d, "medium") or state.coverage.get(d) == "unavailable"
+        for d in competitor_dims
+    )
+    if not ready:
+        return
+    try:
+        from . import industry
+        from .prompt_registry import PromptRegistry
+        from .schemas.classification import MarketingClassification
+
+        prompts = ctx.scratch.get("_prompt_registry")
+        if prompts is None:
+            prompts = PromptRegistry()
+            ctx.scratch["_prompt_registry"] = prompts
+        cls = [
+            m
+            for m in ctx.repository.list_classifications(state.run_id, family="merged")
+            if isinstance(m, MarketingClassification)
+        ]
+        themes = [c.primary_theme for c in cls if c.primary_theme]
+        messages = [c.primary_message for c in cls if c.primary_message]
+        result = await industry.infer_industry_context(
+            state.company.canonical_name, themes, messages, ctx.gateway, prompts
+        )
+        state.industry_context = result
+        if ctx.trace:
+            ctx.trace.append("industry_context_inferred", {"industry": result.get("industry")})
+    except Exception as exc:  # noqa: BLE001 - honest degrade, never crash the run
+        if ctx.trace:
+            ctx.trace.append("industry_context_failed", {"error": type(exc).__name__})
+    finally:
+        # Attempted once per run regardless of outcome (a fresh scratch on a
+        # resumed run re-arms it only if industry_context is still None).
+        ctx.scratch["industry_done"] = True
+
+
 async def build_matrices(state: DirectorState, ctx: GraphContext):
     # Phase 3 builds the persona × channel × funnel cube.
+    # Industry adaptivity: infer the competitor's category lens from a sample of
+    # its observed themes/messages once the competitor corpus is collected.
+    await _infer_industry_context(state, ctx)
     return state, "run_focal_mirror_check"
 
 
@@ -1163,9 +1226,133 @@ async def generate_opportunities(state: DirectorState, ctx: GraphContext):
     return state, "critique_opportunities"
 
 
+async def _run_focal_claims_gate(state: DirectorState, ctx: GraphContext) -> None:
+    """False-premise gate (red-team 'false-premise recommendations').
+
+    Scans the run's opportunities + proof-gaps for assertions that the FOCAL
+    company LACKS something, and checks the focal (Rippling) corpus for evidence
+    it actually HAS it. A ``contradicted`` verdict means the recommendation rests
+    on a false premise: DROP a contradicted opportunity (a play on a false
+    premise is worse than no play) and SOFTEN a contradicted proof-gap so it is
+    no longer presented as an attack opening. Findings are recorded on
+    ``state.focal_gate_findings`` so the report can disclose the withdrawals
+    honestly. Runs after the focal mirror + opportunities (focal
+    classifications/artifacts available); pure/deterministic; never crashes."""
+    import json as _json
+
+    from . import focal_gate
+    from .report import _focal_artifact_models, _focal_classifications
+    from .schemas.opportunity import MarketingOpportunity, MessageProofGap
+
+    if ctx.repository is None:
+        return
+    records = ctx.repository.list_opportunities(state.run_id)
+    opportunities = [m for m in records if isinstance(m, MarketingOpportunity)]
+    proof_gaps = [m for m in records if isinstance(m, MessageProofGap)]
+    if not opportunities and not proof_gaps:
+        return
+
+    focal_name = _focal_name(ctx, state)
+    focal_domain = ""
+    if state.focal_company is not None:
+        focal_domain = state.focal_company.primary_domain
+    elif ctx.config is not None:
+        focal_domain = getattr(ctx.config.focal_company, "domain", "") or ""
+    pkg = {
+        "focal_company": focal_name,
+        "focal_domain": focal_domain,
+        "opportunities": [_json.loads(o.model_dump_json()) for o in opportunities],
+        "proof_gaps": [_json.loads(g.model_dump_json()) for g in proof_gaps],
+    }
+    focal_cls = [_json.loads(m.model_dump_json()) for m in _focal_classifications(ctx, state)]
+    focal_arts = [_json.loads(m.model_dump_json()) for m in _focal_artifact_models(ctx, state)]
+
+    try:
+        findings = focal_gate.verify_focal_claims(pkg, focal_cls, focal_arts)
+    except Exception as exc:  # noqa: BLE001 - the gate must never crash the run
+        if ctx.trace:
+            ctx.trace.append("focal_gate_failed", {"error": type(exc).__name__})
+        return
+
+    state.focal_gate_findings = findings
+    contradicted = [f for f in findings if f.get("verdict") == "contradicted"]
+    if not contradicted:
+        return
+
+    dropped_ids = {
+        f.get("id") for f in contradicted if f.get("source") == "opportunity" and f.get("id")
+    }
+    softened_ids = {
+        f.get("id") for f in contradicted if f.get("source") == "proof_gap" and f.get("id")
+    }
+    if not dropped_ids and not softened_ids:
+        return
+
+    _WITHDRAWN = "[withdrawn by focal-claims gate:"
+    kept_opportunities = [o for o in opportunities if o.opportunity_id not in dropped_ids]
+    dropped = [o for o in opportunities if o.opportunity_id in dropped_ids]
+    phrase_by_id = {(f.get("source"), f.get("id")): f.get("x_phrase", "") for f in contradicted}
+
+    # Idempotent: opportunities are REGENERATED against a fuller corpus across
+    # breadth cycles, so the gate re-runs every critique pass — but it must not
+    # double-annotate a proof-gap it already softened on an earlier pass.
+    changed = bool(dropped)
+    for g in proof_gaps:
+        if g.claim_id in softened_ids and not str(g.actionable_interpretation).startswith(
+            _WITHDRAWN
+        ):
+            # Soften IN PLACE: drop attackability to low, flip the stance to
+            # concede, prepend an honest withdrawal note — the row stays for
+            # transparency but is no longer sold as a clean attack.
+            x = phrase_by_id.get(("proof_gap", g.claim_id), "")
+            g.attackability = "low"
+            if g.attackability_detail is not None:
+                g.attackability_detail.overall = "concede"
+            g.actionable_interpretation = (
+                f"{_WITHDRAWN} {focal_name} demonstrably has '{x}' in its own corpus "
+                "— not an attack opening] " + g.actionable_interpretation
+            )
+            changed = True
+    if not changed:
+        return
+
+    # REPLACE the persisted set (opportunities + proof-gaps share one table):
+    # gaps first (matching generate_opportunities' insertion order), then the
+    # surviving opportunities, so ordering — hence the 'top play' — stays stable.
+    ctx.repository.delete_opportunities(state.run_id)
+    for g in proof_gaps:
+        ctx.repository.save_opportunity(state.run_id, g)
+    for o in kept_opportunities:
+        ctx.repository.save_opportunity(state.run_id, o)
+    state.opportunity_ids = [oid for oid in state.opportunity_ids if oid not in dropped_ids]
+
+    for o in dropped:
+        phrase = phrase_by_id.get(("opportunity", o.opportunity_id), "")
+        limitation = (
+            f"Recommendation withdrawn by the focal-claims gate: “{o.title}” "
+            f"rested on a false premise ({focal_name} already has '{phrase}')."
+        )
+        if limitation not in state.limitations:
+            state.limitations.append(limitation)
+    if ctx.trace:
+        ctx.trace.append(
+            "focal_gate_applied",
+            {
+                "dropped": sorted(i for i in dropped_ids if i),
+                "softened": sorted(i for i in softened_ids if i),
+                "contradicted": len(contradicted),
+            },
+        )
+
+
 async def critique_opportunities(state: DirectorState, ctx: GraphContext):
     # Phase 5 adds the adversarial critic pass; Phase 1 opportunities carry
     # backfire risk fields from generation.
+    # False-premise gate: drop/soften any recommendation that assumes the focal
+    # company LACKS something its own corpus shows it HAS. Re-run every pass
+    # (opportunities are regenerated against a fuller corpus across breadth
+    # cycles) — the gate is idempotent, so a clean pass is a no-op.
+    await _run_focal_claims_gate(state, ctx)
     return state, "decide_continue_or_stop"
 
 
