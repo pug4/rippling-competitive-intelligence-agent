@@ -388,8 +388,15 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
     _nc = max(1, len(data["classification_models"]))
     _nf = max(1, len(focal_cls_models))
     _has_focal = bool(focal_cls_models)
-    _selected = {t for t, _ in _comp_themes.most_common(10)} | {
-        t for t, _ in _focal_themes.most_common(10)
+    # Outlier floor: a theme with a single page on BOTH sides is an anecdote,
+    # not a chart row.
+    _selected = {
+        t
+        for t in (
+            {t for t, _ in _comp_themes.most_common(10)}
+            | {t for t, _ in _focal_themes.most_common(10)}
+        )
+        if _comp_themes.get(t, 0) >= 2 or _focal_themes.get(t, 0) >= 2
     }
     # With no focal mirror the focal side is EMPTY, not zero — emitting 0s
     # fabricates a measured absence (verifier: snapshot runs rendered
@@ -421,6 +428,8 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         _suff = "insufficient_focal_sample"
     elif _nc < 15:
         _suff = "insufficient_competitor_sample"
+    from .comparison import ATTACK_MIN_PAGES, ATTACK_MIN_SHARE
+
     for g in data["proof_gaps"]:
         theme_key = str(g.get("short_label", "")).replace(" ", "_")
         if g.get("competitor_theme_share") is None and theme_key in _comp_themes:
@@ -429,6 +438,19 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
             g["focal_theme_share"] = round(_focal_themes[theme_key] / _nf, 4)
         if g.get("sample_sufficiency", "ok") == "ok" and _suff != "ok":
             g["sample_sufficiency"] = _suff
+        # Outlier annotation for PERSISTED verdicts (render never re-runs the
+        # comparison — the verdict stays, the display gains a caution): a HIGH
+        # attackability resting on fewer pages than the ATTACK floor gets
+        # flagged and the UI shows a visible 'THIN n=X' tag.
+        if theme_key in _comp_themes:
+            g["theme_page_count"] = _comp_themes[theme_key]
+        if (
+            g.get("attackability") == "high"
+            and g.get("theme_page_count") is not None
+            and g["theme_page_count"] < ATTACK_MIN_PAGES
+            and (g.get("competitor_theme_share") or 0) < ATTACK_MIN_SHARE
+        ):
+            g["outlier_flag"] = "thin_theme"
     # Corpus-size normalization context: with a niche competitor (12-page site)
     # vs a large focal corpus, raw counts fabricate verdicts — every consumer
     # (UI banner, dashboard, brief callout) shares this ONE rule.
@@ -588,8 +610,54 @@ def build_json_package(state: DirectorState, ctx: GraphContext) -> dict[str, Any
         if a["artifact_id"] not in classified_ids
     ]
 
+    # THE BOTTOM LINE — 2-3 sentences composed ONLY from verified numbers
+    # (top play, ownership split, momentum). Deterministic template, no model
+    # prose: every clause traces to a chart in the package.
+    def _bottom_line() -> str | None:
+        comp_name = state.company.canonical_name if state.company else state.company_input
+        focal_name = state.focal_company.canonical_name if state.focal_company else "Rippling"
+        bits: list[str] = []
+        own = {
+            k: sum(1 for r in ceps if r.get("ownership") == k)
+            for k in ("competitor_advantage", "contested", "focal_owns")
+        }
+        if ceps and (own["competitor_advantage"] or own["contested"] or own["focal_owns"]):
+            bits.append(
+                f"{comp_name} owns {own['competitor_advantage']} buying intents to "
+                f"{focal_name}'s {own['focal_owns']}, with {own['contested']} contested"
+            )
+        n_moving = sum(
+            1 for c in change_events if c.get("lifecycle") in ("emerging", "expanding")
+        )
+        if n_moving:
+            bits.append(f"{n_moving} theme(s) are gaining ground in their messaging")
+        elif change_events is not None:
+            bits.append("their core story is static")
+        verbs = [
+            (g.get("attackability_detail") or {}).get("overall")
+            or ("attack" if g.get("attackability") == "high" else "investigate")
+            for g in data["proof_gaps"]
+        ]
+        n_attack = sum(1 for v in verbs if v == "attack")
+        if data["proof_gaps"]:
+            bits.append(
+                f"{n_attack} of {len(data['proof_gaps'])} repeated claims are clean attack "
+                "openings" + ("" if n_attack else " — build proof before attacking")
+            )
+        if not bits:
+            return None
+        line = f"{'; '.join(bits)}."
+        if data["opportunities"]:
+            top = data["opportunities"][0]
+            line += (
+                f" Start with “{top.get('title')}” (metric: "
+                f"{top.get('primary_metric') or top.get('kill_rule') or 'see Action Board'})."
+            )
+        return line
+
     return {
         "schema_version": JSON_SCHEMA_VERSION,
+        "bottom_line": _bottom_line(),
         "run": {
             "run_id": state.run_id,
             "parent_run_id": state.parent_run_id,
@@ -714,6 +782,8 @@ def render_markdown(state: DirectorState, pkg: dict[str, Any]) -> str:
 
     # --- Executive summary (feedback #27) -----------------------------------
     add("\n## Executive summary\n")
+    if pkg.get("bottom_line"):
+        add(f"> **The bottom line:** {pkg['bottom_line']}\n")
     if dom.get("theme"):
         label = (
             "Dominant company message"

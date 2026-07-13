@@ -86,6 +86,7 @@ def create_run(
     compare_to: str | None = None,
     lookback_days: int | None = None,
     current_days: int | None = None,
+    include_linkedin: bool = True,
     user_focus: list[str] | None = None,
     parent_run_id: str | None = None,
     retry_mode: str | None = None,
@@ -106,6 +107,7 @@ def create_run(
         # None -> config windows.current_days; nodes resolves the default so
         # config stays the single source of truth.
         current_days=current_days,
+        disabled_sources=([] if include_linkedin else ["exa_linkedin"]),
         user_focus=user_focus or [],
         retry_mode=retry_mode,
         reuse_evidence_only=reuse_evidence_only,

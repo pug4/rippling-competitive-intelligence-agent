@@ -44,7 +44,7 @@ export function ProofBar({ strength, label }) {
 }
 
 // Personas × channels coverage heatmap; intensity scales with cell count.
-export function Heatmap({ personas, channels, cells }) {
+export function Heatmap({ personas, channels, cells, rowTip, colTip, cellTip }) {
   if (!personas?.length || !channels?.length) return <p className="empty">No matrix data.</p>;
   let max = 1;
   personas.forEach((p) => channels.forEach((c) => { max = Math.max(max, (cells[p] || {})[c] || 0); }));
@@ -52,10 +52,10 @@ export function Heatmap({ personas, channels, cells }) {
     <div className="heatmap-wrap">
       <div className="heatmap" style={{ gridTemplateColumns: `160px repeat(${channels.length}, minmax(64px, 1fr))` }}>
         <div className="hm-corner" />
-        {channels.map((c) => <div className="hm-col" key={c} data-tip={c}>{c}</div>)}
+        {channels.map((c) => <div className="hm-col" key={c} data-tip={colTip ? colTip(c) : c}>{c}</div>)}
         {personas.map((p) => (
           <React.Fragment key={p}>
-            <div className="hm-rowlabel" data-tip={p}>{p.replace(/_/g, " ")}</div>
+            <div className="hm-rowlabel" data-tip={rowTip ? rowTip(p) : p}>{p.replace(/_/g, " ")}</div>
             {channels.map((c) => {
               const v = (cells[p] || {})[c] || 0;
               const a = v ? 0.12 + 0.88 * (v / max) : 0;
@@ -64,7 +64,7 @@ export function Heatmap({ personas, channels, cells }) {
                   className="hm-cell"
                   key={c}
                   style={{ background: v ? `rgba(110,168,254,${a})` : "transparent" }}
-                  data-tip={`${p} × ${c}: ${v}`}
+                  data-tip={cellTip ? cellTip(p, c, v) : `${p} × ${c}: ${v}`}
                 >
                   {v || ""}
                 </div>

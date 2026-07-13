@@ -99,6 +99,42 @@ function Sec({ n, title, why, tip }) {
 
 const normTheme = (s) => String(s || "").toLowerCase().replace(/[\s_-]+/g, " ").trim();
 
+// Minimal rich-text renderer for chat answers — pure React nodes, NO HTML
+// injection path: supports **bold**, bullet/numbered lines, and [text](url)
+// links (https only).
+function renderInline(text, keyBase) {
+  const out = [];
+  let rest = String(text);
+  let k = 0;
+  const rx = /\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
+  while (rest) {
+    const m = rest.match(rx);
+    if (!m) { out.push(rest); break; }
+    if (m.index > 0) out.push(rest.slice(0, m.index));
+    if (m[1] != null) out.push(<b key={`${keyBase}-${k++}`}>{m[1]}</b>);
+    else out.push(<a key={`${keyBase}-${k++}`} href={m[3]} target="_blank" rel="noreferrer">{m[2]}</a>);
+    rest = rest.slice(m.index + m[0].length);
+  }
+  return out;
+}
+
+function renderRich(text) {
+  const lines = String(text || "").split("\n");
+  return lines.map((line, i) => {
+    const bullet = line.match(/^\s*(?:[-•*]|\d+[.)])\s+(.*)$/);
+    if (bullet) {
+      return (
+        <div key={i} style={{ display: "flex", gap: 6, margin: "2px 0" }}>
+          <span style={{ color: "var(--accent)" }}>•</span>
+          <span>{renderInline(bullet[1], i)}</span>
+        </div>
+      );
+    }
+    if (line.trim() === "") return <div key={i} style={{ height: 6 }} />;
+    return <div key={i}>{renderInline(line, i)}</div>;
+  });
+}
+
 // artifact_id -> {url, title} across BOTH companies' corpora (change events
 // carry ART- ids; claims carry EV- ids resolved via evidenceIndex below).
 function artifactIndex(pkg) {
@@ -161,25 +197,27 @@ function themeSourceIndex(pkg) {
 // theme -> [{msg, url, st}] — the competitor's ACTUAL verbatim messaging per
 // theme, for the hover popup on any classification (user ask: see the real
 // wording + sources without leaving the chart).
-function themeMessagingIndex(pkg) {
+function buildMessagingIndexes(pkg) {
   const art = {};
   (pkg.artifacts || []).forEach((a) => { art[a.artifact_id] = { url: a.url, st: a.source_type }; });
-  const idx = {};
+  const byArtVert = (pkg.product_vertical_analysis || {}).by_artifact || {};
+  const theme = {}, cep = {}, vertical = {}, persona = {};
+  const push = (map, key, row) => { if (key) (map[key] = map[key] || []).push(row); };
   (pkg.classifications || []).forEach((c) => {
-    if (!c.primary_theme || !c.primary_message) return;
-    const t = normTheme(c.primary_theme);
+    if (!c.primary_message) return;
     const a = art[c.artifact_id] || {};
-    (idx[t] = idx[t] || []).push({ msg: c.primary_message, url: a.url, st: a.st });
+    const row = { msg: c.primary_message, url: a.url, st: a.st };
+    if (c.primary_theme) push(theme, normTheme(c.primary_theme), row);
+    (c.category_entry_points || []).forEach((x) => push(cep, normTheme(x), row));
+    (byArtVert[c.artifact_id] || []).forEach((v) => push(vertical, normTheme(v), row));
+    (c.personas || []).forEach((pp) => push(persona, normTheme(pp), row));
   });
-  return idx;
+  return { theme, cep, vertical, persona };
 }
 
-// Multi-line hover popup: the theme's real messaging excerpts + where each
-// comes from. Plain text only (rendered via textContent; pre-line CSS).
-function themeTip(msgIdx, theme, extra) {
-  const rows = (msgIdx || {})[normTheme(theme)] || [];
-  const name = String(theme || "").replace(/_/g, " ");
-  if (rows.length === 0) return extra || name;
+// Multi-line hover popup body shared by every classification type.
+function msgTipRows(rows, name, extra) {
+  if (!rows || rows.length === 0) return extra || name;
   const lines = rows.slice(0, 4).map((r) => {
     const host = (r.url || "").replace(/^https?:\/\/(www\.)?/, "").split("/")[0] || "source";
     const chan = r.st === "linkedin_post" ? " · LinkedIn" : r.st === "wayback" ? " · archived" : r.st === "news" ? " · news" : "";
@@ -187,6 +225,20 @@ function themeTip(msgIdx, theme, extra) {
   });
   const more = rows.length > 4 ? `\n…+${rows.length - 4} more (open the section's sources for all)` : "";
   return `${name.toUpperCase()} — their actual messaging (${rows.length} classified pages/posts):\n${lines.join("\n")}${more}${extra ? `\n\n${extra}` : ""}`;
+}
+
+const cepTip = (mi, cepName, extra) =>
+  msgTipRows(((mi || {}).cep || {})[normTheme(cepName)], String(cepName || "").replace(/_/g, " "), extra);
+const verticalTip = (mi, vert, extra) =>
+  msgTipRows(((mi || {}).vertical || {})[normTheme(vert)], String(vert || "").replace(/_/g, " "), extra);
+const personaTip = (mi, per, extra) =>
+  msgTipRows(((mi || {}).persona || {})[normTheme(per)], String(per || "").replace(/_/g, " "), extra);
+
+// Multi-line hover popup: the theme's real messaging excerpts + where each
+// comes from. Plain text only (rendered via textContent; pre-line CSS).
+function themeTip(msgIdx, theme, extra) {
+  const rows = ((msgIdx || {}).theme ? msgIdx.theme : msgIdx || {})[normTheme(theme)] || [];
+  return msgTipRows(rows, String(theme || "").replace(/_/g, " "), extra);
 }
 
 // Click-through: expand any finding to the exact excerpts + links behind it.
@@ -225,6 +277,7 @@ function SourceDrawer({ sources, label }) {
 
 function ChatPanel({ runId, pkg }) {
   const [messages, setMessages] = useState([]);
+  const artIdx = artifactIndex(pkg);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [vertical, setVertical] = useState("");
@@ -283,7 +336,20 @@ function ChatPanel({ runId, pkg }) {
         )}
         {messages.map((m, i) => (
           <div key={i} className={`chatmsg ${m.role}`}>
-            <div className="chatbubble">{m.answer || m.content}</div>
+            <div className="chatbubble">
+              {m.role === "assistant" ? renderRich(m.answer || m.content) : (m.answer || m.content)}
+            </div>
+            {m.role === "assistant" && (m.grounded_in || []).length > 0 && (
+              <div className="chatsrc" data-tip="the parts of this run's evidence the answer was grounded in — the chat can only answer from collected data">
+                {m.confidence && <span className={`pill ${m.confidence}`}>{m.confidence} confidence</span>}
+                {m.grounded_in.slice(0, 6).map((gsrc, gi) => {
+                  const hit = artIdx[gsrc];
+                  return hit && hit.url
+                    ? <a key={gi} className="chip" href={hit.url} target="_blank" rel="noreferrer">{String(gsrc).slice(0, 34)} ↗</a>
+                    : <span key={gi} className="chip" style={{ cursor: "default" }}>{String(gsrc).slice(0, 44)}</span>;
+                })}
+              </div>
+            )}
             {m.role === "assistant" && m.clarifying_question && (
               <div className="clarify">❓ {m.clarifying_question} <span className="clarifyhint">(reply below to refine)</span></div>
             )}
@@ -363,8 +429,11 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
         .map((t) => ({ t, d: (tc.competitor_shares[t] || 0) - ((tc.focal_shares || {})[t] || 0) }))
         .sort((a, b) => b.d - a.d)
     : [];
-  const theyLead = deltas.filter((x) => x.d > 0.02).slice(0, 3);
-  const weLead = deltas.filter((x) => x.d < -0.02).slice(-3).reverse();
+  // Outlier gate: a delta needs >=4pt of corpus share AND >=3 pages on the
+  // leading side — 1-page themes can't drive a CLOSE/PRESS call.
+  const leadN = (t, d) => (d > 0 ? (tc.competitor_themes || {})[t] || 0 : (tc.focal_themes || {})[t] || 0);
+  const theyLead = deltas.filter((x) => x.d >= 0.04 && leadN(x.t, x.d) >= 3).slice(0, 3);
+  const weLead = deltas.filter((x) => x.d <= -0.04 && leadN(x.t, x.d) >= 3).slice(-3).reverse();
   const maxD = Math.max(0.01, ...deltas.map((x) => Math.abs(x.d)));
 
   const changes = pkg.change_events || [];
@@ -408,7 +477,7 @@ function StrategicScorecard({ pkg, go, msgIdx }) {
               <div className="scdelta" key={t}>
                 <span className="sclabel" data-tip={themeTip(msgIdx, t)}>{t.replace(/_/g, " ")}</span>
                 <div className="scbarwrap"><div className="scbar comp" style={{ width: `${(d / maxD) * 100}%` }} /></div>
-                <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>CLOSE GAP +{Math.round(d * 100)}pt</span>
+                <span className="atag" style={{ color: "var(--warn)", borderColor: "var(--warn)" }}>CLOSE +{Math.round(d * 100)}pt</span>
               </div>
             ))}
             {weLead.map(({ t, d }) => (
@@ -527,11 +596,18 @@ function DataVisuals({ pkg, msgIdx }) {
   );
 }
 
-function Positioning({ pkg }) {
+function Positioning({ pkg, msgIdx }) {
   const dom = pkg.dominant_message || {};
   const cls = pkg.classifications || [];
   const villains = new Set();
-  cls.forEach((c) => (c.villain_normalized || []).forEach((v) => villains.add(v)));
+  const villainWording = [];
+  cls.forEach((c) => {
+    (c.villain_normalized || []).forEach((v) => villains.add(v));
+    (c.villain_exact_wording || []).forEach((w) => { if (w && villainWording.length < 5 && !villainWording.includes(w)) villainWording.push(w); });
+  });
+  const villainTip = villainWording.length
+    ? `their exact villain wording:\n${villainWording.map((w) => `• “${String(w).slice(0, 120)}”`).join("\n")}`
+    : "the status-quo enemies their copy attacks";
   return (
     <>
       <Sec n={3} title="Current public positioning"
@@ -540,7 +616,12 @@ function Positioning({ pkg }) {
       <div className="card">
         {dom.label && <div className="row"><b>Dominant message:</b> {dom.label}</div>}
         {dom.theme && <div className="row"><b>Theme:</b> {dom.theme} <span className="pill">{dom.is_company_level ? "company-level" : "corpus-level"}</span></div>}
-        {villains.size > 0 && <div className="row"><b>Villains attacked:</b> {[...villains].join(", ")}</div>}
+        {villains.size > 0 && (
+          <div className="row">
+            <b data-tip={villainTip}>Villains attacked:</b>{" "}
+            <span data-tip={villainTip} style={{ borderBottom: "1px dotted var(--border)" }}>{[...villains].join(", ")}</span>
+          </div>
+        )}
       </div>
     </>
   );
@@ -564,9 +645,11 @@ function GapsSection({ pkg, srcIdx, msgIdx }) {
             <div>
               <div className="gaplabel" data-tip={themeTip(msgIdx, g.short_label, `Their repeated claim: “${g.claim_text}”`)}>{g.short_label}</div>
               <ActionTag verb={gapVerb(g)} tip={`attackability ${g.attackability} → ${gapVerb(g)}`} />
-              {g.sample_sufficiency && g.sample_sufficiency !== "ok" && (
+              {(g.outlier_flag === "thin_theme" || (g.sample_sufficiency && g.sample_sufficiency !== "ok")) && (
                 <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
-                      data-tip="sample too small for a confident verdict — disclosed, not asserted">THIN SAMPLE</span>
+                      data-tip={`this verdict rests on ${g.theme_page_count ?? "too few"} competitor pages${g.outlier_flag === "thin_theme" ? " — below the ≥5-page/≥15% ATTACK floor" : ""} — disclosed, not asserted; verify before spending`}>
+                  THIN{g.theme_page_count != null ? ` n=${g.theme_page_count}` : " SAMPLE"}
+                </span>
               )}
             </div>
             <div className="gapbars">
@@ -644,12 +727,28 @@ function Opportunities({ pkg, srcIdx }) {
 // PRODUCT MARKETING — attack/defend quadrant: each repeated claim plotted by
 // THEIR proof (x) vs OUR proof (y). The quadrant IS the action.
 const PROOF_LVL = { none: 0, weak: 1, moderate: 2, medium: 2, strong: 3, high: 3 };
-function AttackDefendMatrix({ pkg }) {
+function AttackDefendMatrix({ pkg, msgIdx }) {
   const gaps = pkg.proof_gaps || [];
   if (gaps.length === 0) return null;
   const competitor = pkg.companies?.[0]?.canonical_name || "Competitor";
   const focal = pkg.companies?.[1]?.canonical_name || "Rippling";
-  const attCol = { high: "--good", medium: "--warn", low: "--bad" };
+  // Color = the STANCE VERB (attack/investigate/avoid) so color, legend tag,
+  // and recommendation can never disagree (user: "map doesn't show stances").
+  const verbCol = { attack: "--good", investigate: "--warn", reframe: "--bad", concede: "--bad" };
+  const dotCol = (g) => `var(${verbCol[gapVerb(g)] || "--border"})`;
+  const whyOf = (g) => String(g.actionable_interpretation || "").split(". ")[0];
+  const thin = (g) => g.outlier_flag === "thin_theme" || (g.sample_sufficiency && g.sample_sufficiency !== "ok");
+  // Quadrant membership from proof positions (matches dot placement).
+  const quad = (g) => {
+    const x = PROOF_LVL[String(g.proof_strength || "none").toLowerCase()] || 0;
+    const y = PROOF_LVL[String(g.focal_proof_strength || "none").toLowerCase()] || 0;
+    return x <= 1 ? (y >= 2 ? "ATTACK" : "BUILD PROOF") : y >= 2 ? "DIFFERENTIATE" : "AT RISK";
+  };
+  const quadCounts = {};
+  gaps.forEach((g) => {
+    const q = quad(g);
+    (quadCounts[q] = quadCounts[q] || []).push(gapVerb(g).toUpperCase());
+  });
   return (
     <>
       <Sec n={1} title="Attack / defend map"
@@ -670,8 +769,9 @@ function AttackDefendMatrix({ pkg }) {
               const y = Math.min(92, Math.max(8, cy + ((Math.floor(i / 3) % 3) - 1) * 6));
               return (
                 <div key={g.claim_id} className="admdot"
-                     style={{ left: `${x}%`, bottom: `${y}%`, background: `var(${attCol[g.attackability] || "--border"})` }}
-                     data-tip={`${i + 1}. ${g.short_label}: ${competitor} ${g.proof_strength} · ${focal} ${g.focal_proof_strength} → ${gapVerb(g).toUpperCase()}`}>
+                     style={{ left: `${x}%`, bottom: `${y}%`, background: dotCol(g) }}
+                     data-tip={themeTip(msgIdx, g.short_label,
+                       `${i + 1}. ${gapVerb(g).toUpperCase()}${thin(g) ? ` (THIN — n=${g.theme_page_count ?? "?"} pages)` : ""}: ${competitor} ${g.proof_strength} · ${focal} ${g.focal_proof_strength}. ${whyOf(g)}.`)}>
                   {i + 1}
                 </div>
               );
@@ -679,11 +779,24 @@ function AttackDefendMatrix({ pkg }) {
           </div>
         </div>
         <div className="admx">{competitor} proof →</div>
+        <div className="row" style={{ fontSize: 12, color: "var(--muted)" }}>
+          {Object.entries(quadCounts).map(([q, verbs]) => (
+            <span key={q} className="atag" data-tip={`claims whose proof positions land in the ${q} quadrant — the tag on each shows the recommended stance after thin-sample and strong-page checks`}>
+              {q}: {verbs.length} ({[...new Set(verbs)].join("/")})
+            </span>
+          ))}
+        </div>
         <ol className="admlegend">
           {gaps.map((g, i) => (
             <li key={g.claim_id}>
-              <span className="admnum" style={{ background: `var(${attCol[g.attackability] || "--border"})` }}>{i + 1}</span>
-              <b>{g.short_label}</b> <ActionTag verb={gapVerb(g)} />
+              <span className="admnum" style={{ background: dotCol(g) }}>{i + 1}</span>
+              <b data-tip={themeTip(msgIdx, g.short_label)}>{g.short_label}</b> <ActionTag verb={gapVerb(g)} tip={whyOf(g)} />
+              {thin(g) && (
+                <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
+                      data-tip={`this verdict rests on ${g.theme_page_count ?? "few"} competitor pages — below the ≥5-page/≥15%-of-corpus floor; treat as a lead to verify, not a call`}>
+                  THIN n={g.theme_page_count ?? "?"}
+                </span>
+              )}
               <span className="admproof">{competitor} {g.proof_strength} · {focal} {g.focal_proof_strength}</span>
             </li>
           ))}
@@ -694,7 +807,8 @@ function AttackDefendMatrix({ pkg }) {
 }
 
 // PRODUCT MARKETING — key related topics per company (side-by-side theme bars).
-function KeyTopicsComparison({ pkg, msgIdx }) {
+function KeyTopicsComparison({ pkg, msgIdx, srcIdx }) {
+  const [openTheme, setOpenTheme] = useState(null);
   const tc = pkg.theme_comparison || {};
   // No focal mirror = no cross-company comparison — rendering 0-bars would
   // fabricate a measured absence (competitor themes live in Data at a glance).
@@ -721,8 +835,9 @@ function KeyTopicsComparison({ pkg, msgIdx }) {
            tip="Bars compare SHARE of each company's classified corpus (raw counts alongside), so different corpus sizes stay comparable; themes outside one side's top-10 carry their true count, never a fabricated zero." />
       <div className="card">
         {themes.map((t) => (
-          <div className="ktrow" key={t}>
-            <div className="ktlabel" data-tip={themeTip(msgIdx, t)}>{t.replace(/_/g, " ")}</div>
+          <div key={t}>
+          <div className="ktrow" style={{ cursor: "pointer" }} onClick={() => setOpenTheme(openTheme === t ? null : t)}>
+            <div className="ktlabel" data-tip={themeTip(msgIdx, t, "click to open the exact source pages")}>{openTheme === t ? "▾ " : ""}{t.replace(/_/g, " ")}</div>
             <div className="ktbars">
               <div className="ktbar comp" style={{ width: `${(w(t, compSh, comp) / max) * 100}%` }}
                    data-tip={`${competitor}: ${lbl(t, compSh, comp)}`} />
@@ -733,6 +848,18 @@ function KeyTopicsComparison({ pkg, msgIdx }) {
                    data-tip={`${focalName}: ${lbl(t, focalSh, focal)}`} />
               <span className="ktnum">{lbl(t, focalSh, focal)}</span>
             </div>
+          </div>
+          {openTheme === t && (
+            <div className="srclist">
+              {(srcIdx[normTheme(t)] || []).slice(0, 8).map((sr, i) => (
+                <div className="srcrow" key={i}>
+                  <a href={sr.url} target="_blank" rel="noreferrer">{(sr.url || "").replace(/^https?:\/\/(www\.)?/, "").slice(0, 56)} ↗</a>
+                  {sr.excerpt && <div className="srcex">“{String(sr.excerpt).slice(0, 180)}”</div>}
+                </div>
+              ))}
+              {(srcIdx[normTheme(t)] || []).length === 0 && <div className="srcrow empty">competitor-side sources index this theme only via the focal corpus</div>}
+            </div>
+          )}
           </div>
         ))}
         <div className="ktlegend">
@@ -747,7 +874,7 @@ function KeyTopicsComparison({ pkg, msgIdx }) {
 }
 
 // PRODUCT MARKETING — vertical × theme heatmap (a graph per topic per vertical).
-function VerticalThemeHeatmap({ pkg }) {
+function VerticalThemeHeatmap({ pkg, msgIdx }) {
   const verts = (pkg.product_vertical_analysis?.verticals || []).filter((v) => v.theme_counts);
   if (verts.length === 0) return null;
   const themes = [...new Set(verts.flatMap((v) => Object.keys(v.theme_counts || {})))].slice(0, 8);
@@ -760,7 +887,10 @@ function VerticalThemeHeatmap({ pkg }) {
            why="Reference: what they say INSIDE each product line. A theme that's loud in one vertical and silent in another is a per-offering choice you can counter vertical-by-vertical."
            tip="Cell intensity = classified pages/posts carrying that theme in that vertical (deterministic keyword mapping, method in the JSON)." />
       <div className="card">
-        <Heatmap personas={verts.map((v) => v.vertical)} channels={themes} cells={cells} />
+        <Heatmap personas={verts.map((v) => v.vertical)} channels={themes} cells={cells}
+                 rowTip={(v) => verticalTip(msgIdx, v)}
+                 colTip={(t) => themeTip(msgIdx, t)}
+                 cellTip={(v, t, n) => themeTip(msgIdx, t, `${String(v).replace(/_/g, " ")} × ${String(t).replace(/_/g, " ")}: ${n} classified pages/posts`)} />
       </div>
     </>
   );
@@ -769,17 +899,42 @@ function VerticalThemeHeatmap({ pkg }) {
 // LINKEDIN — what employees post about (theme bar).
 function LinkedInThemeBar({ pkg, msgIdx }) {
   const posts = pkg.linkedin_posts || [];
+  const [openTheme, setOpenTheme] = useState(null);
   if (posts.length === 0) return null;
   const c = {};
   posts.forEach((p) => { if (p.theme) c[p.theme] = (c[p.theme] || 0) + 1; });
-  const data = Object.entries(c).map(([label, value]) => ({ label, value, tip: themeTip(msgIdx, label) })).sort((a, b) => b.value - a.value);
+  const data = Object.entries(c).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
   if (data.length === 0) return null;
+  const max = Math.max(1, ...data.map((d) => d.value));
   return (
     <>
-      <Sec n={2} title="Post themes"
-           why="What the org actually amplifies in the feed — employee posts are the unofficial roadmap and often move before the website does."
-           tip="Counted across the collected employee/company posts, each individually classified." />
-      <div className="card"><HBar data={data} colorVar="--accent" /></div>
+      <Sec n={2} title="Post themes — click a theme to read the posts"
+           why="What the org actually amplifies in the feed — employee posts are the unofficial roadmap and often move before the website does. Click any bar to see exactly what they're saying and who's saying it."
+           tip="Counted across the collected employee/company posts, each individually classified. Hover a bar for the wording; click for the full posts with links." />
+      <div className="card">
+        {data.map((d) => (
+          <div key={d.label}>
+            <div className="hbar-row" style={{ cursor: "pointer" }}
+                 onClick={() => setOpenTheme(openTheme === d.label ? null : d.label)}
+                 data-tip={themeTip(msgIdx, d.label, "click to open the posts")}>
+              <div className="hbar-label">{openTheme === d.label ? "▾ " : "▸ "}{d.label.replace(/_/g, " ")}</div>
+              <div className="hbar-track"><div className="hbar-fill" style={{ width: `${(d.value / max) * 100}%`, background: "var(--accent)" }} /></div>
+              <div className="hbar-val">{d.value}</div>
+            </div>
+            {openTheme === d.label && (
+              <div className="srclist">
+                {posts.filter((pp) => pp.theme === d.label).map((pp) => (
+                  <div className="srcrow" key={pp.artifact_id}>
+                    <b>{pp.author || "?"}</b>{pp.author_role ? ` · ${pp.author_role}` : ""}{" "}
+                    <a href={pp.post_url} target="_blank" rel="noreferrer">view post ↗</a>
+                    <div className="srcex">“{String(pp.excerpt || pp.primary_message || "").slice(0, 220)}”</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </>
   );
 }
@@ -790,6 +945,7 @@ function LinkedInThemeBar({ pkg, msgIdx }) {
 function WindowPicker({ runId, overlay, onOverlay }) {
   const [lookback, setLookback] = useState(365);
   const [currentDays, setCurrentDays] = useState(90);
+  const [includeLinkedin, setIncludeLinkedin] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const apply = async () => {
@@ -953,7 +1109,7 @@ function AffinityBar({ pkg }) {
   );
 }
 
-function VerticalAnalysis({ pkg }) {
+function VerticalAnalysis({ pkg, msgIdx }) {
   const pva = pkg.product_vertical_analysis || {};
   const verts = pva.verticals || [];
   if (verts.length === 0) return null;
@@ -983,7 +1139,13 @@ function VerticalAnalysis({ pkg }) {
                   <td>{v.n_linkedin_posts}</td>
                   {hasFocal && <td>{v.focal_n_artifacts || 0}</td>}
                   {hasFocal && <td>{pct(v.competitor_share)} / {pct(v.focal_share)}</td>}
-                  <td>{(v.top_themes || []).join(", ") || "—"}</td>
+                  <td>{(v.top_themes || []).length
+                    ? v.top_themes.map((t, ti) => (
+                        <span key={t} data-tip={themeTip(msgIdx, t)} style={{ borderBottom: "1px dotted var(--border)" }}>
+                          {t}{ti < v.top_themes.length - 1 ? ", " : ""}
+                        </span>
+                      ))
+                    : "—"}</td>
                   <td>{(v.personas || []).map((p) => p.replace(/_/g, " ")).join(", ") || "—"}</td>
                   <td>{(v.example_urls || [])[0] ? <a href={v.example_urls[0]} target="_blank" rel="noreferrer">page ↗</a> : "—"}</td>
                 </tr>
@@ -1004,10 +1166,16 @@ function VerticalAnalysis({ pkg }) {
 const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 
 // Dumbbell row: two dots on a 0-100% track, n labels. The distance IS the story.
-function Dumbbell({ label, aPct, bPct, aLabel, bLabel, aColor = "--bad", bColor = "--good", note }) {
+function Dumbbell({ label, aPct, bPct, aLabel, bLabel, aColor = "--bad", bColor = "--good", note, tip, thin }) {
   return (
-    <div className="dbrow" data-tip={note || `${aLabel} vs ${bLabel}`}>
-      <div className="dblabel">{label}</div>
+    <div className="dbrow" data-tip={tip || note || `${aLabel} vs ${bLabel}`}>
+      <div className="dblabel">
+        {label}
+        {thin && (
+          <span className="atag" style={{ color: "var(--muted)", borderColor: "var(--border)" }}
+                data-tip={`small sample (${thin}) — rates on this row are coin-flip territory; verify before acting`}>THIN</span>
+        )}
+      </div>
       <div className="dbtrack">
         <div className="dbline" style={{ left: `${Math.min(aPct, bPct)}%`, width: `${Math.abs(aPct - bPct)}%` }} />
         <div className="dbdot" style={{ left: `${aPct}%`, background: `var(${aColor})` }} data-tip={aLabel} />
@@ -1033,7 +1201,7 @@ function InsightHeader({ block, n, boardTip }) {
 }
 
 // [ATTACK] compliance voiced vs certification shown, + CEP hit list/guardrail.
-function ClaimVsRecord({ pkg }) {
+function ClaimVsRecord({ pkg, msgIdx }) {
   const b = (pkg.insight_graphics || {}).claim_vs_record;
   if (!b) return null;
   const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
@@ -1060,8 +1228,19 @@ function ClaimVsRecord({ pkg }) {
             <b>Cert hit list (buy these intents):</b>{" "}
             {b.cep_hit_list.map((h) => (
               <span key={h.cep} className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}
-                    data-tip={`${focal} ${pct(h.focal.rate)} (n=${h.focal.n}) vs ${comp} ${pct(h.competitor.rate)} (n=${h.competitor.n})${h.competitor.n < 10 ? " — small cell" : ""}`}>
-                {h.cep.replace(/_/g, " ")} {pct(h.focal.rate)} vs {pct(h.competitor.rate)}
+                    data-tip={cepTip(msgIdx, h.cep, `${focal} record rate ${pct(h.focal.rate)} (n=${h.focal.n}) vs ${comp} ${pct(h.competitor.rate)} (n=${h.competitor.n})`)}>
+                {h.cep.replace(/_/g, " ")} {pct(h.focal.rate)} vs {pct(h.competitor.rate)}{h.competitor.n < 10 || h.focal.n < 10 ? ` (n=${h.competitor.n}/${h.focal.n})` : ""}
+              </span>
+            ))}
+          </div>
+        )}
+        {(b.unopposed || []).length > 0 && (
+          <div className="row" style={{ fontSize: 12 }}>
+            <b data-tip="triggers where the focal side has certification content but the competitor has fewer than 3 pages AT ALL — there is no rate to compare; the ground is simply uncontested">Uncontested ground (no competing content):</b>{" "}
+            {b.unopposed.map((h) => (
+              <span key={h.cep} className="atag" style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
+                    data-tip={cepTip(msgIdx, h.cep, `${focal}: ${pct(h.focal.rate)} record rate (n=${h.focal.n}); competitor has only ${h.competitor.n} page(s) on this trigger — no rate comparison possible`)}>
+                {h.cep.replace(/_/g, " ")} — competitor: {h.competitor.n} page{h.competitor.n === 1 ? "" : "s"}
               </span>
             ))}
           </div>
@@ -1084,7 +1263,7 @@ function ClaimVsRecord({ pkg }) {
 }
 
 // [DEFEND] quantified-outcome rate per owned trigger — voice vs proof inversion.
-function ProofVsVoice({ pkg }) {
+function ProofVsVoice({ pkg, msgIdx }) {
   const b = (pkg.insight_graphics || {}).proof_vs_voice;
   if (!b) return null;
   const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
@@ -1095,6 +1274,8 @@ function ProofVsVoice({ pkg }) {
       <div className="card">
         {b.rows.map((r) => (
           <Dumbbell key={r.cep}
+                    tip={cepTip(msgIdx, r.cep)}
+                    thin={r.competitor.n < 10 || r.focal.n < 10 ? `n=${r.competitor.n}/${r.focal.n}` : null}
                     label={`${r.cep.replace(/_/g, " ")} (${String(r.ownership).replace(/_/g, " ")})`}
                     aPct={r.focal.rate * 100} bPct={r.competitor.rate * 100}
                     aLabel={`${focal} ${r.focal.quant_n}/${r.focal.n} = ${pct(r.focal.rate)}`}
@@ -1117,7 +1298,7 @@ function ProofVsVoice({ pkg }) {
 }
 
 // [INTERCEPT] decision-stage voids per vertical.
-function FunnelVoids({ pkg }) {
+function FunnelVoids({ pkg, msgIdx }) {
   const b = (pkg.insight_graphics || {}).funnel_voids;
   if (!b) return null;
   const comp = pkg.companies?.[0]?.canonical_name || "Competitor";
@@ -1132,7 +1313,7 @@ function FunnelVoids({ pkg }) {
           const fRate = f ? f.decision_n / Math.max(1, f.n) : null;
           return (
             <div className="ktrow" key={r.vertical}>
-              <div className="ktlabel" data-tip={`evaluation depth: ${comp} ${c.evaluation_n}/${c.n}`}>
+              <div className="ktlabel" data-tip={verticalTip(msgIdx, r.vertical, `evaluation depth: ${comp} ${c.evaluation_n}/${c.n}`)}>
                 {r.vertical.replace(/_/g, " ")} {r.void && <span className="atag" style={{ color: "var(--good)", borderColor: "var(--good)" }}>VOID</span>}
               </div>
               <div className="ktbars" data-tip={`${comp}: ${c.decision_n}/${c.n} decision-stage pages`}>
@@ -1274,7 +1455,7 @@ function LinkedInPosts({ pkg }) {
   );
 }
 
-function PersonaChannelHeatmap({ pkg }) {
+function PersonaChannelHeatmap({ pkg, msgIdx }) {
   const m = pkg.persona_channel_matrix || {};
   if (!m.personas?.length) return null;
   return (
@@ -1282,7 +1463,8 @@ function PersonaChannelHeatmap({ pkg }) {
       <Sec n={4} title="Persona × channel coverage"
            why="Who they talk to, where. Empty cells are audiences no channel is serving — content whitespace you can own first."
            tip="Cell intensity = number of classified artifacts; an empty cell means not observed, not proof of absence." />
-      <div className="card"><Heatmap personas={m.personas} channels={m.channels} cells={m.cells || {}} /></div>
+      <div className="card"><Heatmap personas={m.personas} channels={m.channels} cells={m.cells || {}}
+        rowTip={(p) => personaTip(msgIdx, p, "how they talk to this buyer — the actual wording")} /></div>
     </>
   );
 }
@@ -1347,7 +1529,7 @@ function StrategyOverTime({ pkg, srcIdx }) {
 const CEP_PLACEHOLDER = /^(not[_ ]observed|\(?unspecified\)?|unknown|none|n\/?a|unclassified)/i;
 const CEP_GROUPS = ["competitor_advantage", "contested", "focal_owns", "insufficient_sample", "not_compared", "neither"];
 
-function CepRow({ c, competitor, focal, artIdx }) {
+function CepRow({ c, competitor, focal, artIdx, msgIdx }) {
   const [open, setOpen] = useState(false);
   const own = { focal_owns: "--good", contested: "--warn", competitor_advantage: "--bad", insufficient_sample: "--border", not_compared: "--border", neither: "--border" };
   const cs = c.competitor_share != null ? c.competitor_share : null;
@@ -1362,7 +1544,7 @@ function CepRow({ c, competitor, focal, artIdx }) {
   return (
     <div className="gaprow" style={{ gridTemplateColumns: "220px 1fr" }}>
       <div>
-        <div className="gaplabel" style={{ fontSize: 12 }}>{String(c.cep).replace(/_/g, " ").slice(0, 60)}</div>
+        <div className="gaplabel" style={{ fontSize: 12 }} data-tip={cepTip(msgIdx, c.cep, c.ownership_basis)}>{String(c.cep).replace(/_/g, " ").slice(0, 60)}</div>
         <span className="pill" style={{ color: `var(${own[c.ownership] || "--border"})`, borderColor: `var(${own[c.ownership] || "--border"})` }}
               data-tip={c.ownership_basis || "who currently owns this buying intent"}>{String(c.ownership).replace(/_/g, " ")}</span>
       </div>
@@ -1393,7 +1575,7 @@ function CepRow({ c, competitor, focal, artIdx }) {
   );
 }
 
-function CepOwnership({ pkg }) {
+function CepOwnership({ pkg, msgIdx }) {
   const artIdx = artifactIndex(pkg);
   // Defensive placeholder filter (synthesis filters at the source; old
   // packages may still carry a literal "not_observed" row).
@@ -1418,10 +1600,10 @@ function CepOwnership({ pkg }) {
             }>
               {String(g).replace(/_/g, " ")} ({rows.length})
             </div>
-            {rows.map((c) => <CepRow key={c.cep} c={c} competitor={competitor} focal={focal} artIdx={artIdx} />)}
+            {rows.map((c) => <CepRow key={c.cep} c={c} competitor={competitor} focal={focal} artIdx={artIdx} msgIdx={msgIdx} />)}
           </div>
         ))}
-        {legacy.map((c) => <CepRow key={c.cep} c={c} competitor={competitor} focal={focal} artIdx={artIdx} />)}
+        {legacy.map((c) => <CepRow key={c.cep} c={c} competitor={competitor} focal={focal} artIdx={artIdx} msgIdx={msgIdx} />)}
       </div>
     </>
   );
@@ -1692,6 +1874,7 @@ function NewRunForm({ onSubmit, focalDefault }) {
       execution_mode: exec,
       lookback_days: lookback,
       current_days: currentDays,
+      include_linkedin: includeLinkedin,
     });
     setBusy(false);
     setCompany("");
@@ -1727,6 +1910,12 @@ function NewRunForm({ onSubmit, focalDefault }) {
           <select className="nr-sel" value={currentDays} onChange={(e) => setCurrentDays(Number(e.target.value))}>
             {CURRENT_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
+        </div>
+        <div className="nr-field">
+          <label data-tip="Individual employee/company posts collected via the Exa Agent and classified one by one. Uses Exa credits — untick to save them on runs where the feed doesn't matter." style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+            <input type="checkbox" checked={includeLinkedin} onChange={(e) => setIncludeLinkedin(e.target.checked)} style={{ margin: 0 }} />
+            Collect LinkedIn posts (uses Exa credits)
+          </label>
         </div>
         <div className="nr-field">
           <label data-tip="live fetches real public data; fixture is a deterministic synthetic test run">Data source</label>
@@ -1836,7 +2025,7 @@ export default function App() {
 
   const focalDefault = (runs && runs.find((r) => r.compare_to)?.compare_to) || "rippling.com";
   const srcIdx = pkg ? themeSourceIndex(pkg) : {};
-  const msgIdx = pkg ? themeMessagingIndex(pkg) : {};
+  const msgIdx = pkg ? buildMessagingIndexes(pkg) : {};
 
   return (
     <div className={`app ${menuOpen ? "menu-open" : ""}`}>
@@ -1903,10 +2092,16 @@ export default function App() {
               <>
                 <TabIntro q="What did we find, and what should Rippling do about it?"
                           why="Start with the scorecard (the whole analysis as actions), take the top plays, then ask the chat anything — it answers only from this run's collected evidence and cites its sources." />
+                {pkg.bottom_line && (
+                  <div className="card" style={{ borderLeft: "3px solid var(--good)" }}>
+                    <div className="title">The bottom line <Info tip="Composed only from this run's verified numbers — the top-ranked play, the ownership split, and what's moving. No model prose; every clause traces to a chart below." /></div>
+                    <div className="row" style={{ color: "var(--text)" }}>{pkg.bottom_line}</div>
+                  </div>
+                )}
                 <StrategicScorecard pkg={pkg} go={setTab} msgIdx={msgIdx} />
                 <TopActions pkg={pkg} onOpenBoard={() => setTab("product")} />
                 <ChatPanel key={selected} runId={selected} pkg={pkg} />
-                <Positioning pkg={pkg} />
+                <Positioning pkg={pkg} msgIdx={msgIdx} />
                 <DataVisuals pkg={pkg} msgIdx={msgIdx} />
               </>
             )}
@@ -1914,14 +2109,14 @@ export default function App() {
               <>
                 <TabIntro q="Where can we beat them — and where should we not try?"
                           why="Follow the numbers: the map shows where their claims outrun their proof (1), the EDA joins turn that into specific openings (2–3), the gaps score every repeated claim (4), and the Action Board turns the best ones into runnable plays (5). Sections 6–8 are the reference detail behind them." />
-                <AttackDefendMatrix pkg={pkg} />
-                <ClaimVsRecord pkg={pkg} />
-                <FunnelVoids pkg={pkg} />
+                <AttackDefendMatrix pkg={pkg} msgIdx={msgIdx} />
+                <ClaimVsRecord pkg={pkg} msgIdx={msgIdx} />
+                <FunnelVoids pkg={pkg} msgIdx={msgIdx} />
                 <GapsSection pkg={pkg} srcIdx={srcIdx} msgIdx={msgIdx} />
                 <Opportunities pkg={pkg} srcIdx={srcIdx} />
-                <KeyTopicsComparison pkg={pkg} msgIdx={msgIdx} />
-                <VerticalThemeHeatmap pkg={pkg} />
-                <VerticalAnalysis pkg={pkg} />
+                <KeyTopicsComparison pkg={pkg} msgIdx={msgIdx} srcIdx={srcIdx} />
+                <VerticalThemeHeatmap pkg={pkg} msgIdx={msgIdx} />
+                <VerticalAnalysis pkg={pkg} msgIdx={msgIdx} />
               </>
             )}
             {tab === "linkedin" && (
@@ -1931,7 +2126,7 @@ export default function App() {
                 <ChannelProofSplit pkg={pkg} />
                 <LinkedInThemeBar pkg={pkg} msgIdx={msgIdx} />
                 <LinkedInPosts pkg={pkg} />
-                <PersonaChannelHeatmap pkg={pkg} />
+                <PersonaChannelHeatmap pkg={pkg} msgIdx={msgIdx} />
               </>
             )}
             {tab === "changes" && (() => {
@@ -1964,8 +2159,8 @@ export default function App() {
               <>
                 <TabIntro q="Which buying moments do they own — and where is the demand?"
                           why="Work top to bottom: who owns each buying intent (1), whether that ownership is backed by proof or just page volume (2), which comparison SERPs are undefended (3), then the traffic and sales-motion context behind it all (4–5)." />
-                <CepOwnership pkg={pkg} />
-                <ProofVsVoice pkg={pkg} />
+                <CepOwnership pkg={pkg} msgIdx={msgIdx} />
+                <ProofVsVoice pkg={pkg} msgIdx={msgIdx} />
                 {(pkg.insight_graphics || {}).affinity_defense
                   ? <AffinityDefense pkg={pkg} />
                   : <AffinityBar pkg={pkg} />}

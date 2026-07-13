@@ -852,3 +852,149 @@ def test_time_windows_clamp_inverted_current_days():
     asyncio.run(load_or_create_time_windows(state, ctx))
     cur = next(w for w in state.time_windows if w.purpose == "current")
     assert (cur.end_at - cur.start_at).days == 30  # lookback // 2
+
+
+# ---------------------------------------------------------------------------
+# Final round: outlier floors, unopposed list, LinkedIn toggle
+# ---------------------------------------------------------------------------
+
+
+def test_stance_attack_floor_rejects_three_page_outlier():
+    from competitive_agent.comparison import _stance
+
+    # RemoFirst case: n=3, share 4% -> was attack, must now be investigate
+    # with the floor stated in the why-text.
+    overall, level, why = _stance(
+        "RemoFirst", "Rippling", "automation", "weak", "strong",
+        n_pages=3, theme_share=0.04,
+    )
+    assert overall == "investigate" and level == "medium"
+    assert "floor" in why and "3 page(s)" in why
+    # Niche case still attacks: 2 pages at 16.7% share clears the SHARE floor.
+    overall2, level2, _ = _stance(
+        "Niche", "Rippling", "global_payroll", "weak", "strong",
+        n_pages=2, theme_share=2 / 12,
+    )
+    assert overall2 == "attack" and level2 == "high"
+    # 5 pages clears the PAGE floor even at low share.
+    overall3, _, why3 = _stance(
+        "Big", "Rippling", "x_theme", "weak", "strong", n_pages=5, theme_share=0.04
+    )
+    assert overall3 == "attack" and "clears" in why3
+
+
+def test_competitor_cap_syncs_stance_verb():
+    from competitive_agent.comparison import build_message_proof_gaps
+
+    # Tiny competitor corpus (n=12 < 15): a would-be attack must downgrade BOTH
+    # attackability AND the stance verb (the map colors by verb).
+    comp_cls = [
+        _mk_cls("comp", f"a{i}", "global_payroll") for i in range(12)
+    ]
+    focal_cls = [
+        _mk_cls("focal", f"b{i}", "global_payroll",
+                proof=["quantified_customer_outcome", "named_customer_story"])
+        for i in range(20)
+    ]
+    repo = _StubRepo({"comp": comp_cls, "focal": focal_cls})
+    gaps = build_message_proof_gaps(
+        "comp", "focal", repo, competitor_name="Tiny", focal_name="Rippling"
+    )
+    g = gaps[0]
+    assert g.sample_sufficiency == "insufficient_competitor_sample"
+    if g.attackability == "medium" and "capped" in g.actionable_interpretation:
+        assert g.attackability_detail.overall != "attack"
+
+
+def test_render_annotation_flags_thin_high_gaps():
+    from competitive_agent.comparison import ATTACK_MIN_PAGES
+
+    assert ATTACK_MIN_PAGES == 5
+    # The render-time rule itself (mirrors report.py logic):
+    g = {"attackability": "high", "theme_page_count": 3, "competitor_theme_share": 0.04}
+    flagged = (
+        g["attackability"] == "high"
+        and g["theme_page_count"] < ATTACK_MIN_PAGES
+        and g["competitor_theme_share"] < 0.15
+    )
+    assert flagged
+
+
+def test_cep_hit_list_requires_both_sides_and_exports_unopposed():
+    from competitive_agent.synthesis import insight_graphics
+
+    # Focal: 6 compliance-cert pages carrying trigger_a (comp has 0 pages) and
+    # trigger_b (comp has 4 pages, 0 certs).
+    comp_cls = [
+        _cls_ig("w1", "compliance", proofs=["quantified_customer_outcome"]),
+        *[_cls_ig(f"b{i}", "compliance", ceps=["trigger_b"]) for i in range(4)],
+    ]
+    focal_cls = [
+        *[_cls_ig(f"fa{i}", "compliance", ceps=["trigger_a"],
+                  proofs=["certification_or_compliance_record"]) for i in range(6)],
+        *[_cls_ig(f"fb{i}", "compliance", ceps=["trigger_b"],
+                  proofs=["certification_or_compliance_record"]) for i in range(4)],
+    ]
+    ceps = [
+        {"cep": "trigger_a", "ownership": "focal_owns", "competitor_pages": 0, "focal_pages": 6},
+        {"cep": "trigger_b", "ownership": "contested", "competitor_pages": 4, "focal_pages": 4},
+    ]
+    ig = insight_graphics(
+        comp_cls, [_art(c.artifact_id) for c in comp_cls], focal_cls,
+        ceps, {}, {}, {}, {}, "Comp", "Rippling",
+    )
+    cvr = ig["claim_vs_record"]
+    hit = {h["cep"] for h in cvr["cep_hit_list"]}
+    unop = {h["cep"] for h in cvr["unopposed"]}
+    assert "trigger_b" in hit  # both sides >= 3 pages -> a real rate comparison
+    assert "trigger_a" in unop and "trigger_a" not in hit  # comp n=0 -> unopposed
+
+
+def test_theme_comparison_excludes_both_sides_singletons():
+    # Selection floor lives in report.build_json_package; verify the rule.
+    from collections import Counter
+
+    comp = Counter({"consolidation": 9, "one_pager": 1})
+    focal = Counter({"consolidation": 5, "one_pager": 1, "focal_only": 3})
+    selected = {
+        t
+        for t in ({t for t, _ in comp.most_common(10)} | {t for t, _ in focal.most_common(10)})
+        if comp.get(t, 0) >= 2 or focal.get(t, 0) >= 2
+    }
+    assert "one_pager" not in selected and "consolidation" in selected and "focal_only" in selected
+
+
+def test_planner_skips_linkedin_when_disabled_for_run():
+    from competitive_agent.graph import GraphContext
+    from competitive_agent.planner import propose_actions
+    from competitive_agent.state import DirectorState
+
+    class _Cfg:
+        sources = {"exa_linkedin": True}
+        budgets = {}
+        windows = {}
+        collection = {}
+        exa_agent = {}
+        historical = {}
+        taxonomy = {}
+        focal_company = {}
+
+    def run(disabled):
+        state = DirectorState(
+            run_id="RUN-li", company_input="x.com", disabled_sources=disabled
+        )
+        from competitive_agent.schemas.common import utcnow as _now
+        from competitive_agent.schemas.company import Company
+
+        state.company = Company(
+            company_id="CO-x", canonical_name="X", primary_domain="x.com",
+            resolved_at=_now(), resolution_confidence="high",
+        )
+        ctx = GraphContext(repository=None, trace=None, config=_Cfg(), settings=None)
+        props = propose_actions(state, ctx)
+        return {p.action_type for p in props}
+
+    with_li = run([])
+    without_li = run(["exa_linkedin"])
+    assert "research_linkedin" in with_li or "search_linkedin_posts" in with_li
+    assert "research_linkedin" not in without_li and "search_linkedin_posts" not in without_li

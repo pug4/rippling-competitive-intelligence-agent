@@ -1139,6 +1139,7 @@ def insight_graphics(
     comp_side = side(competitor_cls)
     if comp_side["voice_n"]:
         hit_list: list[dict[str, Any]] = []
+        unopposed: list[dict[str, Any]] = []
         guardrail: list[dict[str, Any]] = []
         if has_focal:
             for row in ceps:
@@ -1158,10 +1159,17 @@ def insight_graphics(
                     "focal": {"cert_n": f_cert, "n": len(fp), "rate": round(f_rate, 4)},
                 }
                 if f_rate - c_rate >= 0.05 and len(fp) >= 3:
-                    hit_list.append(entry)
+                    # "X% vs 0% over n=0" is not a rate comparison (outlier
+                    # audit): a hit-list entry needs BOTH sides to have >=3
+                    # pages; competitor <3 = no competing content -> unopposed.
+                    if len(cp) >= 3:
+                        hit_list.append(entry)
+                    else:
+                        unopposed.append(entry)
                 elif row.get("ownership") == "competitor_advantage" and abs(f_rate - c_rate) < 0.05:
                     guardrail.append(entry)
             hit_list.sort(key=lambda e: -(e["focal"]["rate"] - e["competitor"]["rate"]))
+            unopposed.sort(key=lambda e: -e["focal"]["rate"])
         block: dict[str, Any] = {
             "board_column": "ATTACK",
             "title": (
@@ -1182,6 +1190,8 @@ def insight_graphics(
         if has_focal:
             block["focal"] = side(focal_cls)
             block["cep_hit_list"] = hit_list[:4]
+            # Rendered as "no competing content", never as a rate comparison.
+            block["unopposed"] = unopposed[:4]
             block["guardrail"] = guardrail[:3]
             block["action"] = (
                 f"Buy audit/certification intent where {focal_name}'s record rate beats "

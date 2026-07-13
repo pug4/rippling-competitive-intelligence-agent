@@ -47,6 +47,8 @@ class NewRunRequest(BaseModel):
     # How many trailing days count as "recent" (the current window); the rest
     # of the lookback becomes the prior/comparison window.
     current_days: int | None = None
+    # Collect individual LinkedIn posts via the Exa Agent (costs Exa credits).
+    include_linkedin: bool = True
 
 
 def _validate_windows(lookback_days: int | None, current_days: int | None) -> None:
@@ -75,6 +77,7 @@ def _run_job(job_id: str, req: NewRunRequest) -> None:
             compare_to=(req.compare_to or None),
             lookback_days=req.lookback_days,
             current_days=req.current_days,
+            include_linkedin=req.include_linkedin,
         )
         with _JOBS_LOCK:
             _JOBS[job_id].update(status="done", run_id=state.run_id, stop_reason=state.stop_reason)

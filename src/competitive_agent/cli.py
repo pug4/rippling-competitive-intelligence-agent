@@ -29,6 +29,9 @@ def analyze(
         None, "--current-days", help="Recent-window size in days (rest of lookback = prior)"
     ),
     focus: list[str] = typer.Option(None, "--focus", help="Repeatable focus dimension"),
+    skip_linkedin: bool = typer.Option(
+        False, "--skip-linkedin", help="Skip LinkedIn post collection (saves Exa credits)"
+    ),
 ) -> None:
     """Analyze one company's public marketing strategy."""
     from .runner import run_analysis
@@ -43,6 +46,7 @@ def analyze(
             compare_to=compare,
             lookback_days=lookback_days,
             current_days=current_days,
+            include_linkedin=not skip_linkedin,
             user_focus=list(focus or []),
         )
     except Exception as exc:

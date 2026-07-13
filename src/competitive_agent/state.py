@@ -50,6 +50,9 @@ class DirectorState(VersionedModel):
     # None -> config windows.current_days (90). Set per-run from the UI/API
     # so users can choose how the comparison is split.
     current_days: int | None = None
+    # Per-run source opt-outs (config source-flag names, e.g. 'exa_linkedin').
+    # The planner skips proposing actions for these; global config unchanged.
+    disabled_sources: list[str] = Field(default_factory=list)
     user_focus: list[str] = Field(default_factory=list)
     retry_mode: str | None = None
     # Retry mode that re-analyzes a parent's evidence without collecting anew:

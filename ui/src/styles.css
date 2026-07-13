@@ -213,16 +213,16 @@ summary { cursor: pointer; font-size: 14px; }
 
 /* actionability: scorecard, action tags, attack/defend quadrant */
 .atag { font-size: 11px; font-weight: 700; letter-spacing: .05em; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); display: inline-block; margin: 2px 4px 2px 0; white-space: nowrap; }
-.sctile { cursor: pointer; transition: border-color .15s; }
+.sctile { cursor: pointer; transition: border-color .15s; min-width: 0; overflow: hidden; }
 .sctile:hover { border-color: var(--accent); }
 .scstack { display: flex; height: 16px; border-radius: 4px; overflow: hidden; margin: 8px 0 6px; background: var(--panel2); }
 .scseg { min-width: 3px; }
 .sclegend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
 .scdot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 3px; vertical-align: middle; }
 .scaction { margin-top: 8px; font-size: 13px; color: var(--text); border-top: 1px dashed var(--border); padding-top: 6px; }
-.scdelta { display: grid; grid-template-columns: 150px 1fr auto; gap: 6px; align-items: center; padding: 2px 0; }
+.scdelta { display: grid; grid-template-columns: 130px minmax(0, 1fr) max-content; gap: 6px; align-items: center; padding: 2px 0; }
 .sclabel { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.scbarwrap { background: var(--panel2); border-radius: 3px; height: 10px; }
+.scbarwrap { background: var(--panel2); border-radius: 3px; height: 10px; min-width: 0; }
 .scbar { height: 10px; border-radius: 3px; min-width: 2px; }
 .scbar.comp { background: var(--bad); }
 .scbar.focal { background: var(--accent); }
@@ -256,3 +256,7 @@ summary { cursor: pointer; font-size: 14px; }
 .winpick .nr-field { min-width: 150px; }
 .winpick .nr-btn { padding: 7px 12px; width: auto; }
 .winpick .reset { background: none; border: 1px solid var(--border); color: var(--muted); }
+
+/* chat grounded-source chips */
+.chatsrc { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; max-width: 88%; }
+.chatsrc .chip { font-size: 10px; padding: 2px 8px; }

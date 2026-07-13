@@ -199,6 +199,11 @@ def already_saying_it(message: str, focal_index: dict[str, dict[str, Any]]) -> s
 
 
 MAX_GAPS = 6
+# Outlier floor for a full ATTACK verdict (user: "Where to win" surfaced an
+# attack resting on 3 pages / 4% of corpus). report.py imports these for the
+# render-time annotation of persisted gaps — never duplicate the literals.
+ATTACK_MIN_PAGES = 5
+ATTACK_MIN_SHARE = 0.15
 
 
 _STRENGTH_ORDER = {"none": 0, "weak": 1, "moderate": 2, "strong": 3}
@@ -322,7 +327,10 @@ def build_message_proof_gaps(
         if sample_sufficiency in ("insufficient_competitor_sample", "insufficient_both") and (
             attack_level == "high"
         ):
-            attack_level = "medium"
+            # Sync the STANCE with the cap: "capped, don't run the attack yet"
+            # IS investigate — verb and attackability must never diverge (the
+            # map colors by verb).
+            overall, attack_level = "investigate", "medium"
             interpretation += (
                 f" Attackability capped at medium: only {n_comp} classified competitor pages — "
                 "the corpus is too small for a high-confidence verdict."
@@ -409,21 +417,31 @@ def _stance(
     R3: an "attack" verdict must not rest on a thin theme, on a modal tie where
     one page is actually strong, or on news/blog coverage only (which isn't the
     competitor's own marketing surface). "Thin" is HYBRID (niche-competitor
-    normalization): <3 pages AND <15% of the corpus — 2 pages of a 12-page
-    niche site (16.7%) is a real investment, 2 pages of 130 is noise."""
-    thin = (n_pages < 3 and theme_share < 0.15) or has_strong_page or news_only
+    normalization + outlier floor): a full ATTACK verdict needs at least
+    ATTACK_MIN_PAGES pages OR ATTACK_MIN_SHARE of the corpus. The modal
+    strength read needs >=3 agreeing pages to be meaningful (ties break weak),
+    so 3-4 page themes can look 'weak' off a 2-2 split — 2 pages of a 12-page
+    niche site (16.7%) is a real investment, 3 pages of 75 is an outlier."""
+    thin = (
+        (n_pages < ATTACK_MIN_PAGES and theme_share < ATTACK_MIN_SHARE)
+        or has_strong_page
+        or news_only
+    )
     if strength in ("weak", "none") and focal_strength in ("strong", "moderate") and not thin:
         return (
             "attack",
             "high",
             f"{competitor} repeats the “{theme}” message but the observed public proof is "
-            f"{strength}; {focal} shows {focal_strength} proof on the same theme. This is a direct "
-            "out-prove opening (the evidence shows a proof gap, not that the capability is absent).",
+            f"{strength}; {focal} shows {focal_strength} proof on the same theme "
+            f"({n_pages} pages, clears the ≥{ATTACK_MIN_PAGES}-page/≥{ATTACK_MIN_SHARE:.0%} "
+            "floor). This is a direct out-prove opening (the evidence shows a proof gap, "
+            "not that the capability is absent).",
         )
     if strength in ("weak", "none") and focal_strength in ("strong", "moderate") and thin:
         why = (
-            "only " + str(n_pages) + " page(s)"
-            if n_pages < 3
+            f"only {n_pages} page(s) — below the ≥{ATTACK_MIN_PAGES}-page / "
+            f"≥{ATTACK_MIN_SHARE:.0%}-of-corpus floor for a full ATTACK verdict"
+            if (n_pages < ATTACK_MIN_PAGES and theme_share < ATTACK_MIN_SHARE)
             else "one page already carries strong proof"
             if has_strong_page
             else "grounded only in third-party news/blog coverage, not the competitor's own pages"

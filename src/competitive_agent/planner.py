@@ -426,6 +426,9 @@ def propose_actions(state: DirectorState, ctx: Any) -> list[ResearchAction]:
     def _optional(flag, source, action, dim, params, rationale, rel=0.5, require_dim=True):
         # Optional sources are attempted once each (allowed() filters executed
         # keys). require_dim=False runs the source once regardless of coverage.
+        # A per-run opt-out (e.g. the UI's LinkedIn toggle) beats the global flag.
+        if flag in (getattr(state, "disabled_sources", None) or []):
+            return
         if flags.get(flag) and (not require_dim or _needs(state, dim)):
             proposals.append(_mk(state, action, source, dim, params, rationale, reliability=rel))
 
