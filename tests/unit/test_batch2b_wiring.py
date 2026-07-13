@@ -215,21 +215,27 @@ async def test_focal_gate_drops_false_premise_opportunity(tmp_path: Path) -> Non
     assert "goals" in verdict["x_phrase"].lower()
     assert any("rippling.com/goals" in ev["url"] for ev in verdict["focal_evidence"])
 
-    # The false-premise opportunity is DROPPED (state + persisted store).
-    assert "OPP-false" not in state.opportunity_ids
-    remaining = {
-        o.opportunity_id
+    # The false-premise opportunity is KEPT but CAVEATED in place — a fuzzy
+    # x-phrase match must never empty the Action Board; the PMM sees a "verify
+    # this premise" note instead of losing the whole play.
+    assert "OPP-false" in state.opportunity_ids
+    persisted = {
+        o.opportunity_id: o
         for o in repo.list_opportunities(comp_run)
         if isinstance(o, MarketingOpportunity)
     }
-    assert "OPP-false" not in remaining
-    # The clean play SURVIVES — the gate is selective, not a blanket delete.
+    assert "OPP-false" in persisted
+    assert str(persisted["OPP-false"].why_this_could_backfire).startswith("[focal-claims gate:")
+    # The clean play SURVIVES untouched (no caveat).
     assert "OPP-clean" in state.opportunity_ids
-    assert "OPP-clean" in remaining
+    assert "OPP-clean" in persisted
+    assert not str(persisted["OPP-clean"].why_this_could_backfire or "").startswith(
+        "[focal-claims gate:"
+    )
 
-    # The withdrawal is disclosed honestly in the run's limitations.
+    # The caveat is disclosed honestly in the run's limitations.
     assert any(
-        "withdrawn by the focal-claims gate" in lim.lower()
+        "caveated by the focal-claims gate" in lim.lower()
         and "Attack the missing goals story" in lim
         for lim in state.limitations
     )

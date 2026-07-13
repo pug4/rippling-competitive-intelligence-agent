@@ -1362,31 +1362,45 @@ async def _run_focal_claims_gate(state: DirectorState, ctx: GraphContext) -> Non
     if not contradicted:
         return
 
-    dropped_ids = {
+    flagged_opp_ids = {
         f.get("id") for f in contradicted if f.get("source") == "opportunity" and f.get("id")
     }
-    softened_ids = {
+    softened_gap_ids = {
         f.get("id") for f in contradicted if f.get("source") == "proof_gap" and f.get("id")
     }
-    if not dropped_ids and not softened_ids:
+    if not flagged_opp_ids and not softened_gap_ids:
         return
 
     _WITHDRAWN = "[withdrawn by focal-claims gate:"
-    kept_opportunities = [o for o in opportunities if o.opportunity_id not in dropped_ids]
-    dropped = [o for o in opportunities if o.opportunity_id in dropped_ids]
+    _FLAG = "[focal-claims gate:"
     phrase_by_id = {(f.get("source"), f.get("id")): f.get("x_phrase", "") for f in contradicted}
 
-    # Idempotent: opportunities are REGENERATED against a fuller corpus across
-    # breadth cycles, so the gate re-runs every critique pass — but it must not
-    # double-annotate a proof-gap it already softened on an earlier pass.
-    changed = bool(dropped)
+    # A contradicted opportunity is CAVEATED IN PLACE, never deleted. The gate's
+    # x-phrase match can be a fuzzy read of the play's OWN strategy language
+    # (e.g. "Rippling should produce stronger proof"), so deleting a whole play
+    # on it is too destructive — it can empty the Action Board. Instead the PMM
+    # sees an honest "verify this premise" note; a genuinely false-premised play
+    # reads as "verify — {focal} already has X" and is trivial to discard.
+    # Idempotent: skip an opportunity/gap the gate already annotated.
+    changed = False
+    for o in opportunities:
+        if o.opportunity_id in flagged_opp_ids and not str(
+            o.why_this_could_backfire or ""
+        ).startswith(_FLAG):
+            x = phrase_by_id.get(("opportunity", o.opportunity_id), "")
+            o.why_this_could_backfire = (
+                f"{_FLAG} {focal_name} appears to already have '{x}' in its own corpus "
+                "— verify this premise before spending; do not present it as a clean gap] "
+                + (o.why_this_could_backfire or "")
+            )
+            changed = True
     for g in proof_gaps:
-        if g.claim_id in softened_ids and not str(g.actionable_interpretation).startswith(
+        if g.claim_id in softened_gap_ids and not str(g.actionable_interpretation).startswith(
             _WITHDRAWN
         ):
             # Soften IN PLACE: drop attackability to low, flip the stance to
-            # concede, prepend an honest withdrawal note — the row stays for
-            # transparency but is no longer sold as a clean attack.
+            # concede, prepend an honest note — the row stays for transparency
+            # but is no longer sold as a clean attack.
             x = phrase_by_id.get(("proof_gap", g.claim_id), "")
             g.attackability = "low"
             if g.attackability_detail is not None:
@@ -1401,28 +1415,29 @@ async def _run_focal_claims_gate(state: DirectorState, ctx: GraphContext) -> Non
 
     # REPLACE the persisted set (opportunities + proof-gaps share one table):
     # gaps first (matching generate_opportunities' insertion order), then the
-    # surviving opportunities, so ordering — hence the 'top play' — stays stable.
+    # opportunities (ALL kept; contradicted ones caveated), so ordering — hence
+    # the 'top play' — stays stable.
     ctx.repository.delete_opportunities(state.run_id)
     for g in proof_gaps:
         ctx.repository.save_opportunity(state.run_id, g)
-    for o in kept_opportunities:
+    for o in opportunities:
         ctx.repository.save_opportunity(state.run_id, o)
-    state.opportunity_ids = [oid for oid in state.opportunity_ids if oid not in dropped_ids]
 
-    for o in dropped:
-        phrase = phrase_by_id.get(("opportunity", o.opportunity_id), "")
-        limitation = (
-            f"Recommendation withdrawn by the focal-claims gate: “{o.title}” "
-            f"rested on a false premise ({focal_name} already has '{phrase}')."
-        )
-        if limitation not in state.limitations:
-            state.limitations.append(limitation)
+    for o in opportunities:
+        if o.opportunity_id in flagged_opp_ids:
+            phrase = phrase_by_id.get(("opportunity", o.opportunity_id), "")
+            limitation = (
+                f"Recommendation caveated by the focal-claims gate: “{o.title}” "
+                f"— verify the premise ({focal_name} may already have '{phrase}')."
+            )
+            if limitation not in state.limitations:
+                state.limitations.append(limitation)
     if ctx.trace:
         ctx.trace.append(
             "focal_gate_applied",
             {
-                "dropped": sorted(i for i in dropped_ids if i),
-                "softened": sorted(i for i in softened_ids if i),
+                "caveated": sorted(i for i in flagged_opp_ids if i),
+                "softened": sorted(i for i in softened_gap_ids if i),
                 "contradicted": len(contradicted),
             },
         )
