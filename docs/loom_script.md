@@ -1,160 +1,190 @@
-# Loom script (5–10 min) — honest, greppable, no stage tricks
+# Loom script (~8 min) — the four required walk-throughs
 
-Rippling grades: **does it work / accurate**, **real agentic loop**, **tool
-usage (ad libraries first)**, **output quality + Rippling-relevance**, and
-**decisions & trade-offs** (this Loom). The rule for this script: *every claim I
-make on camera has a grep or a URL the reviewer could run themselves.* I lead
-with what's real and I own the gaps honestly — that's the whole pitch.
+The assignment asks the Loom to cover exactly four things:
+**(1) architecture decisions, (2) tool & model choices, (3) how the eval works,
+(4) a live demo.** This script is organized in that order. The rule for every
+claim: it has a grep or a URL a reviewer could run themselves. Lead with what's
+real; own the gaps.
 
-**Before recording:** `make api` on :8000, UI on :5173 with the live Deel run
-`RUN-b256fab1c1dd` selected. Frozen reference copy in `docs/reference_scenario/`.
+**Before recording, have open:**
+- Terminal in the repo.
+- `make api` on :8000, UI on :5173, with the freshly-completed **Deel vs
+  Rippling** run selected (the one with `decision_by: model` in its trace, real
+  ad creatives, and LinkedIn posts). A frozen reference copy is in
+  `docs/reference_scenario/`.
+- `docs/SYSTEMS_GUIDE.md` (the architecture map) in case you want to point at it.
 
 ---
 
 ## 0. Framing (30s)
 
-> "This is a conversational research agent. Give it any competitor — name or
-> domain — and it produces an evidence-grounded read of their public marketing:
-> how they position now, how it changed, how it compares to Rippling, and what
-> defensible campaigns that surfaces. It's not hardcoded to one company — the
-> focal company and taxonomy are config. The design bias throughout is: *show
-> the evidence, or don't make the claim.*"
+> "This is a conversational research agent. You give it any competitor — a name
+> or a domain — and it produces an evidence-grounded read of their public
+> marketing: how they position now, how it's changed, how it compares to
+> Rippling, and what campaigns that surfaces. It works for any competitor —
+> Rippling and the taxonomy are just config. The one design bias throughout:
+> *show the evidence, or don't make the claim.*"
 
-## 1. Architecture — a real agentic loop, not a script (90s)
+---
 
-> **Before recording — pick the demo run.** The polished flagship
-> `RUN-b256fab1c1dd` was collected *before* the LLM-in-loop landed, so its trace
-> uses the deterministic scorer. For the `decision_by: model` beat, grep a run
-> created *after* it — the best move is to **re-run `deel.com` live once** (needs
-> the Anthropic usage limit raised — see the handoff note) so ONE run has
-> everything: model decisions, real ad creatives, and the full corpus. If you
-> can't re-run live, grep `decision_by` on any post-loop run and show the
-> polished outputs on the flagship, noting the flagship predates the loop.
+## 1. Architecture decisions — why I structured it this way (2:00)
 
-- Open the demo run's `trace.jsonl`. Scroll the `event_type` stream:
-  `coverage_assessed → actions_proposed → action_selected`. *"It assesses what
-  it knows, proposes candidate actions, and picks the next one."*
-- **The key beat — the model is in the loop.** `grep '"decision_by"'
-  trace.jsonl`: *"the next-action decision isn't a hardcoded score. A reasoning
-  model gets the coverage state, the scored candidates, and what just
-  succeeded or came back empty, and picks the next action with a written
-  rationale — `decision_by: model`. When the model is unavailable it falls back
-  to the deterministic scorer, `decision_by: heuristic`. Two different
-  competitors genuinely diverge — verified live on workday vs deel vs gusto:
-  the model chose news/wayback/comparison-page pulls the heuristic wouldn't."*
-- `grep tool_failed` / `grep source_skipped`: *"a provider failure or empty
-  source is a typed result, not a crash — recorded, and the loop reacts to it."*
-- `grep stop_selected`: *"it stops for an explainable reason and the brief says
-  exactly which — required coverage, or budget/runtime-bounded with what wasn't
-  attempted disclosed."*
-- **Why this structure:** a checkpointed 25-node state machine (`graph.py` +
-  `nodes.py`) over a `DirectorState` — killable and resumable at any node. A
-  node crash is recorded `status='failed'` with an honest error brief; it is
-  never reported "complete." (`docs/SYSTEMS_GUIDE.md` §2.)
+*Say the decision, then the reason. Four decisions.*
 
-## 2. Tool & model choices (45s — assignment-required)
+**(a) A typed, checkpointed state machine — not a linear script, not a raw ReAct
+blob.**
+> "The core is a 25-node state machine over a checkpointed state object. I chose
+> this so every run is resumable and every decision is *traced* — and so I could
+> put an LLM inside the decision while keeping collection deterministic and
+> safe. Open `outputs/runs/<RUN>/trace.jsonl`: it's the agent's full decision
+> log — coverage assessed, actions proposed, action selected, with the
+> alternatives it passed over."
 
-> "Model routing (`config/model_routes.yaml`): high-volume bounded
-> classification runs on **Haiku** — fast, cheap, schema-forced. The reasoning
-> tier (**Sonnet**) does the things that need judgment: the in-loop planner,
-> temporal judgment, claim judging, opportunity generation + critique, and the
-> chat. Tools: **Exa** for retrieval only (search, domain-scoped discovery,
-> date-windowed prior sampling, LinkedIn post extraction, the Similarweb
-> partner) — every Exa result is re-classified and verbatim-verified by our own
-> pipeline. **Wayback CDX** gives real capture dates. **SerpApi** gives real
-> Google ad creatives (next section). Each tool is one `BaseTool` contract that
-> turns every failure into a typed result — that's the graceful-degradation
-> story."
+**(b) The load-bearing split: models do bounded per-item work; code does
+everything numeric.**
+> "The single most important decision. The models classify one page, judge one
+> claim, pick one next action, draft one play. Python does every comparative
+> number — ownership shares, proof gaps, rankings, every chart. Why: it makes a
+> re-render deterministic, verdicts can't drift between reads, and a hallucinated
+> number physically can't reach the brief."
 
-## 3. Tool usage — real ad creatives (60s — ad libraries are listed first)
+**(c) A real agentic loop — the LLM makes the research decision.**
+> `grep '"decision_by"' outputs/runs/<RUN>/trace.jsonl`
+> "The next action isn't a hardcoded score. A reasoning model gets the coverage
+> state, the scored candidates, and what just succeeded or came back empty, and
+> picks the next action with a written rationale — `decision_by: model`. It can
+> only choose from the deterministically-generated candidates, so it can never
+> invent an action, and if the model is unavailable it falls back to the
+> deterministic scorer — `decision_by: heuristic`. Point it at two competitors
+> and the research paths genuinely diverge — I verified that live on Deel,
+> Gusto, and Workday."
 
-- **Where to win / Demand tab → the ads section.** *"The assignment lists ad
-  libraries first, so this had to be real. We pull live Google ad creatives
-  from the Ads Transparency Center via SerpApi: verified advertiser, format,
-  run dates, and the actual copy on video ads."* Show a real Deel creative and
-  its Transparency permalink — the reviewer can open it.
-- **Own the honesty boundary out loud:** *"Text and image creatives are
-  rendered images — the copy is baked into the pixels, so we mark them 'copy not
-  machine-readable' rather than OCR-guess. And Google shows no spend, CPC, or
-  impressions for commercial ads — so we claim none. Meta needs a developer
-  token I didn't set up, so Meta is an honest typed skip, not fake data."* This
-  is the trade-off the rubric rewards.
+**(d) The honesty layer is part of the architecture, not a disclaimer.**
+> "Three things are enforced in code: a grounding gate drops any claim without
+> verbatim evidence; every quote is containment-checked against the stored page;
+> and comparisons are corpus-size-normalized so a 12-page niche site reads
+> fairly against a 116-page corpus. The application is the accuracy gate, not
+> the model. And Rippling runs through the *same* pipeline as an isolated mirror,
+> so every 'them vs us' number uses symmetric methodology."
 
-## 4. Accuracy is enforced by the application (60s)
+*(Optional: point at `docs/SYSTEMS_GUIDE.md` §2 for the loop diagram.)*
 
-- **Evidence & trust tab → Claims ledger.** Expand a claim: status, why we hold
-  this confidence, alternative explanations, verbatim evidence rows. *"Grounding
-  gate on this run: every material claim cited, zero broken evidence refs. If
-  the model quotes something not in the page, the app drops it at extraction —
-  the application is the accuracy gate, not the model."*
-- **Data honesty card:** what we attempted and found nothing, what failed, what
-  we excluded. *"Absence is a finding, never hidden. ROAS/CAC/spend are banned —
-  we never estimate what isn't public."*
+---
 
-## 5. Output quality + Rippling-relevance (75s)
+## 2. Tool & model choices — what I used and why (1:30)
 
-- **Overview → the bottom line + scorecard:** *"composed only from verified
-  numbers — the ownership split, what's moving, how many repeated claims are
-  clean attack openings, the top play with a THIN caveat when it rests on few
-  pages."* Corpus sizes and the stop reason in the trust-envelope line.
-- **The required brief section** (`brief.md` → "The assignment deliverable"):
-  the four questions answered from the evidence — messaging themes, product
-  positioning, what changed, and **the gaps/plays for Rippling** — every row
-  cited to a source artifact. *"This is the deliverable, and every claim in it
-  is one click from its evidence."*
-- **Download bar** at the top of the run: the markdown brief and the JSON
-  package (sources, claims, confidence, timestamps) — the two required outputs.
+**Model routing** (`config/model_routes.yaml`):
+> "Two tiers. High-volume, bounded, schema-forced classification runs on
+> **Haiku** — fast and cheap, and it's doing containment-checked extraction, not
+> reasoning. Everything that needs judgment runs on the **Sonnet** reasoning
+> tier: the in-loop planner, the temporal judge, claim judging, opportunity
+> generation and critique, and the chat. I put reasoning where the task needs
+> it and volume where it doesn't."
 
-## 6. Conversational — the chat is the interface (75s)
+**Tools** (each is one `BaseTool` contract that turns every failure into a typed
+result — that's the graceful-degradation story):
+> "**Exa** for retrieval only — neural search, domain-scoped discovery,
+> date-windowed prior sampling, per-post LinkedIn extraction, and the Similarweb
+> traffic partner. Every Exa result re-enters my own classification and
+> verbatim-verification, so a bad result can't become a fact. **Wayback** gives
+> real archive capture dates for the temporal analysis. **SerpApi** pulls real
+> Google ad creatives from the Transparency Center — the assignment lists ad
+> libraries first, so that had to be real, not synthetic. **Gemini with Google
+> Search grounding** gives live SERP intelligence for keyword targeting."
 
-- **Ask the chat a question it CAN answer** → grounded rich-text answer with
-  source chips.
-- **The generative beat:** ask for a chart — *"the chat builds new graphs and
-  tables on demand. The model chooses what to chart; Python computes every
-  number from the real package, so a fabricated chart can't reach the screen."*
-- **Ask something the data CAN'T answer** → *"it doesn't bluff. It says what's
-  missing and offers to go get it — a scoped research request. One click
-  re-drives the SAME run scoped to those sources, appends evidence, re-verifies,
-  and the tabs grow in place."* Show the "✦ Ask AI" panel opening from a section
-  with that element's context.
+**Own the gaps honestly:**
+> "Meta needs a developer token I didn't set up, so Meta ads are a *typed honest
+> skip*, not fake data. And image/text ad creatives are rendered images, so I
+> mark their copy 'not machine-readable' rather than OCR-guess. Google shows no
+> spend or impressions for commercial ads, so I claim none."
 
-## 7. Eval system (45s — assignment-required)
+---
 
-> "Layered, and honest about which layers are objective. Schema/excerpt validity
-> and the grounding gate are objective and final — they verify the pipeline's
-> own invariants and fail the build on a violation. Classification quality is
-> inter-model agreement — an independent Sonnet labeler vs. the production Haiku
-> classifier — and I label it **provisional, pending human adjudication**; I
-> don't ship an accuracy number I haven't earned. A known measurement bug (a
-> segment-vocabulary mismatch) is logged in `docs/eval_harness_issues.md`, not
-> silently fixed. And the whole thing was hardened by an independent red-team
-> loop over a **frozen** test surface — grades only move when the product
-> actually improves (`docs/improvement_log.md`)."
+## 3. How the eval system works (1:30)
 
-## 8. Live demo — point it at a fresh competitor (60s)
+*The key message: layered, and honest about which layers are objective.*
 
-- Run one live from the UI (or `competitive-agent analyze <domain> --compare
-  rippling.com --execution-mode live`). Watch the live strip stream sources,
-  themes, and the agent's own decisions. *"Refresh the page — it's still there;
-  the run survives restarts."*
-- If short on time, open a second finished run (Gusto/Vanta) and show the
-  research path is different — the loop adapted to that competitor's industry.
+> "The eval is layered, and I'm explicit about which layers are real."
+
+**Objective and final:**
+> "Schema and excerpt validity, and the grounding gate — a material claim with
+> no verbatim evidence, or a dangling evidence id, *fails the build*. These
+> verify the pipeline's own invariants and they're non-negotiable."
+> `uv run competitive-agent eval --suite all`
+
+**Provisional — and labeled as such:**
+> "Classification quality is measured by inter-model agreement: an independent
+> Sonnet labeler versus the production Haiku classifier, on a held-out split. I
+> label it *provisional, pending human adjudication* — I don't ship an accuracy
+> number I haven't earned. And when I found a real measurement bug — a
+> segment-vocabulary mismatch between the labeler and the taxonomy — I logged it
+> in `docs/eval_harness_issues.md` rather than quietly fixing it."
+
+**The frozen-surface discipline:**
+> "The whole thing was hardened by an independent red-team loop over a *frozen*
+> test surface — new tests only, never weakening an existing one — so the grade
+> can only move when the product actually improves. That log is
+> `docs/improvement_log.md`."
+> `uv run competitive-agent eval-benchmark --package-run <RUN>`
+
+---
+
+## 4. Live demo — point it at a competitor (2:30)
+
+*Use the finished Deel run (or run one live if Anthropic budget allows).*
+
+**The agentic loop is real (30s):**
+> `grep '"decision_by"' trace.jsonl` → *"model decisions with written
+> rationales."* `grep tool_failed` / `grep source_skipped` → *"failures are typed
+> results, the loop reacts to them."* `grep stop_selected` → *"it stops for an
+> explainable reason."*
+
+**The output — the deliverable (45s):**
+> Open the brief (or the Overview tab). *"Start with the bottom line — composed
+> only from verified numbers. Then the required deliverable section: the four
+> questions answered from the evidence — their messaging themes, how they
+> position their products, what changed recently, and the gaps and plays for
+> Rippling — every row cited to a source artifact."* Point at the **download
+> bar**: the markdown brief and the JSON package — the two required outputs.
+
+**Real evidence (30s):**
+> The ad creatives — *"real Google Transparency creatives with their permalink,
+> not synthetic."* The LinkedIn tab — *"employee posts individually classified
+> for theme and stance."*
+
+**Conversational (45s):**
+> Ask the chat a grounded question → cited answer. Ask it to *chart* something →
+> *"the chat builds a graph on demand: the model picks what to chart, Python
+> computes every number, so a fabricated chart can't appear."* Ask something the
+> data can't answer → *"it doesn't bluff — it offers a scoped deeper-research
+> pass on this same run."* Show the **✦ Ask AI** button on any section opening
+> the context panel.
+
+---
 
 ## Close (20s)
 
 > "Everything you saw is reproducible from a stored run, runs locally, and works
 > for any competitor at any size. Where I have gaps — Meta ads, image-ad OCR,
 > human-adjudicated accuracy — they're disclosed in the product, not hidden.
-> That's the bar I held: show the evidence, or don't make the claim."
+> That's the bar I held the whole way: show the evidence, or don't make the
+> claim."
 
 ---
 
-## Anticipated Q&A — see `docs/loom_talking_points.md` for the full set
+## Q&A prep — see `docs/loom_talking_points.md`
 
-Short list of the ones a sharp reviewer will ask: *how do I know the numbers
-aren't hallucinated* (grounding gate + verbatim containment + deterministic
-recompute) · *what did the model decide vs the code* (model: bounded per-item +
-next-action; code: everything numeric) · *what about a tiny competitor*
-(corpus-size normalization) · *why is Meta empty* (no dev token — honest skip) ·
-*is the eval real* (objective layers final, classification provisional) · *what
-breaks it* (JS-only sites, ad image OCR, thin prior windows).
+The likely follow-ups and crisp answers: *how do I know it's not hallucinated*
+(grounding gate + verbatim containment + deterministic recompute) · *model vs
+code* (model: per-item + next-action; code: everything numeric) · *tiny
+competitor* (corpus-size normalization) · *why Meta is empty* (no token — honest
+skip) · *is the eval real* (objective layers final, classification provisional) ·
+*what breaks it* (JS-only sites, ad-image OCR, thin prior windows).
+
+## Data sources referenced (all public)
+First-party website (sitemap + pages + pricing) · Wayback Machine (dated
+snapshots) · Exa (search, discovery, LinkedIn extraction, Similarweb traffic) ·
+SerpApi Google Ads Transparency Center (real ad creatives) · Meta Ad Library
+(when a token is set) · Gemini + Google Search grounding (live SERP intel) ·
+G2/Capterra/TrustRadius reviews · public news/press. No logins, no paywalls, no
+non-public data.
