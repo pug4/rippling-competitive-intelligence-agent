@@ -230,6 +230,41 @@ ATTACK_MIN_SHARE = 0.15
 
 _STRENGTH_ORDER = {"none": 0, "weak": 1, "moderate": 2, "strong": 3}
 
+# The holistic proof-distribution assessment (which weights HOW MANY pages carry
+# strong proof, so one strong page cannot inflate it) mapped onto a single
+# strength. "weak-to-moderate" — real proof, sparse density — reads as moderate
+# so the stance never treats a proven-but-sparse theme as an unproven attack lane.
+_ASSESSMENT_TO_STRENGTH: dict[str, ProofStrength] = {
+    "strong": "strong",
+    "weak-to-moderate": "moderate",
+    "weak": "weak",
+    "none": "none",
+}
+
+
+def _assessment_strength(dist: Any) -> ProofStrength:
+    """A theme's headline proof strength = its distribution assessment, NOT the
+    modal per-page read. The modal collapsed to "none" whenever a claim was
+    repeated widely but proven on only a minority of pages — erasing, e.g., a
+    quantified customer outcome shown on 3 of 10 pages and mispositioning a
+    well-proven theme at the map origin as an open attack lane."""
+    return _ASSESSMENT_TO_STRENGTH.get(getattr(dist, "overall_assessment", "none"), "none")
+
+
+def _strongest_proof_page(slot: dict[str, Any]) -> str | None:
+    """classification id of the page carrying the theme's strongest proof — so
+    the map can name the proof (e.g. the Bitpanda quantified outcome) instead of
+    leaving strongest_proof_id null while claiming the theme has no proof."""
+    per_proof = slot.get("per_page_proof") or []
+    ids = slot.get("classification_ids") or []
+    best: ProofStrength = "none"
+    best_id: str | None = None
+    for i, types in enumerate(per_proof):
+        s = _proof_strength(set(types))
+        if _STRENGTH_ORDER[s] > _STRENGTH_ORDER[best]:
+            best, best_id = s, (ids[i] if i < len(ids) else None)
+    return best_id
+
 
 def _vertical_strengths(
     slot: dict[str, Any], verticals_by_artifact: dict[str, list[str]] | None
@@ -299,11 +334,16 @@ def build_message_proof_gaps(
     for theme, slot in comp.items():
         if slot["count"] < 2:  # a gap needs a REPEATED claim (§19.1)
             continue
-        strength = _theme_strength(slot)
-        focal_slot = focal.get(theme)
-        focal_strength = _theme_strength(focal_slot) if focal_slot else "none"
-        missing = [p for p in _PROOF_STRENGTH_ORDER[:4] if p not in slot["proof_types"]]
         dist = proof_distribution(slot.get("per_page_proof", []))
+        strength = _assessment_strength(dist)
+        focal_slot = focal.get(theme)
+        focal_dist = (
+            proof_distribution(focal_slot.get("per_page_proof", [])) if focal_slot else None
+        )
+        focal_strength = _assessment_strength(focal_dist) if focal_dist else "none"
+        modal_strength = _theme_strength(slot)  # typical-page read, for the density note
+        strongest_id = _strongest_proof_page(slot)
+        missing = [p for p in _PROOF_STRENGTH_ORDER[:4] if p not in slot["proof_types"]]
         specificity = _modal(slot.get("specificities", []))
         n_pages = slot["count"]
         theme_share = round(n_pages / n_comp, 4)
@@ -328,6 +368,21 @@ def build_message_proof_gaps(
             news_only=news_only,
             theme_share=theme_share,
         )
+        # Density nuance: the headline strength says the proof EXISTS; this says
+        # it is thin on the ground. When a theme is proven but the modal page is
+        # unproven, the honest read is "repeated more than proven" — an out-prove
+        # opening — not the false "no proof" the modal read used to imply.
+        if (
+            strength in ("moderate", "strong")
+            and modal_strength in ("none", "weak")
+            and n_pages >= 3
+        ):
+            proven = sum(1 for t in slot.get("per_page_proof", []) if set(t))
+            interpretation += (
+                f" Proof is concentrated: {proven} of {n_pages} pages repeating this theme carry "
+                f"any proof, so {competitor_name} repeats it more than it proves it — an out-prove "
+                "opening if the focal company can prove it more consistently."
+            )
         # Small-corpus guards: disclose, never fabricate. A <15-page focal
         # mirror cannot establish that focal proof is genuinely missing; a
         # <15-page competitor corpus caps how confident any verdict can be.
@@ -387,7 +442,7 @@ def build_message_proof_gaps(
                 lifecycle="stable",
                 proof_types_observed=sorted(slot["proof_types"]),
                 proof_distribution=dist,
-                strongest_proof_id=None,
+                strongest_proof_id=strongest_id,
                 proof_strength=strength,
                 missing_proof=missing,
                 focal_equivalent_claim=(focal_slot["message"] if focal_slot else None),
@@ -487,10 +542,10 @@ def _stance(
     return (
         "reframe",
         "low",
-        f"{competitor} proves “{theme}” strongly and {focal}'s observed proof is {focal_strength}. "
-        "Don't attack the claim head-on — reframe around a structural advantage, or concede this "
-        "ground. (Strong competitor proof here is what the evidence shows; it is not a claim about "
-        f"{focal}'s underlying capability.)",
+        f"{competitor} proves “{theme}” with {strength} public proof and {focal}'s observed proof "
+        f"is {focal_strength}. Don't attack the claim head-on — reframe around a structural "
+        f"advantage, or out-prove it. ({strength.capitalize()} competitor proof here is what the "
+        f"evidence shows; it is not a claim about {focal}'s underlying capability.)",
     )
 
 

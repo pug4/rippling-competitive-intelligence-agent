@@ -658,6 +658,41 @@ def test_gap_shares_populated_for_normal_corpora():
     assert g.sample_sufficiency == "ok"
 
 
+def test_concentrated_proof_is_not_reported_as_no_proof():
+    """A claim repeated widely but proven on only a MINORITY of pages must not be
+    reported as 'none observed proof'. The old modal per-page read collapsed to
+    'none' (most pages are bare repetition), erasing a real quantified customer
+    outcome and mispositioning a well-proven theme at the map origin as an open
+    attack lane. The honest read: the proof EXISTS (headline strength), it is
+    sparse (an out-prove opening), and Rippling should reframe — not attack it
+    as unproven."""
+    from competitive_agent.comparison import build_message_proof_gaps
+
+    # 10 competitor pages on 'global_hiring': 3 carry a quantified customer
+    # outcome, 7 are bare repetition (modal per-page strength = "none").
+    comp_cls = [
+        _mk_cls("comp", f"s{i}", "global_hiring", proof=["quantified_customer_outcome"])
+        for i in range(3)
+    ] + [_mk_cls("comp", f"b{i}", "global_hiring") for i in range(7)]
+    # Focal corpus large enough to avoid the small-focal downgrade, with no proof
+    # of its own on the theme.
+    focal_cls = [_mk_cls("focal", f"f{i}", "other_theme") for i in range(20)]
+    repo = _StubRepo({"comp": comp_cls, "focal": focal_cls})
+    gaps = build_message_proof_gaps(
+        "comp", "focal", repo, competitor_name="Deel", focal_name="Rippling"
+    )
+    g = next(x for x in gaps if x.short_label == "global hiring")
+    # Proof exists — not erased to "none" by the modal read.
+    assert g.proof_strength in ("moderate", "strong")
+    # Deel has proof here -> reframe / out-prove, NOT "investigate as unproven".
+    assert g.attackability_detail.overall == "reframe"
+    # The false "none observed proof" wording is gone; the proof page is named.
+    assert "none observed proof" not in g.actionable_interpretation
+    assert g.strongest_proof_id is not None
+    # The density nuance survives as an out-prove opening, not a false absence.
+    assert "repeats it more than it proves it" in g.actionable_interpretation
+
+
 # ---------------------------------------------------------------------------
 # EDA insight graphics — the five judged joins, reproduced deterministically
 # ---------------------------------------------------------------------------
