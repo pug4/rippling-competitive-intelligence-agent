@@ -30,11 +30,11 @@ RUNS_DIR = REPO / "outputs" / "runs"
 OUT_DIR = REPO / "ui" / "public" / "demo"
 
 # The runs bundled into the static demo. Chosen to show breadth:
-#   - RUN-0bce45e711b2  deel.com vs rippling.com  (ideal: model decisions, claims, 12 ad creatives, 59 LinkedIn)
+#   - RUN-aef919c2a9f1  deel.com vs rippling.com  (accurate: balanced 136 vs 62, model decisions, 10 claims, 3 plays, 12 ads, 48 LinkedIn)
 #   - RUN-f4f7b2e276f6  vanta.com                 (industry adaptivity / compliance)
 #   - RUN-aa58e6d812da  remofirst.com             (niche; share-normalization)
 DEMO_RUNS = [
-    "RUN-0bce45e711b2",
+    "RUN-aef919c2a9f1",
     "RUN-f4f7b2e276f6",
     "RUN-aa58e6d812da",
 ]
